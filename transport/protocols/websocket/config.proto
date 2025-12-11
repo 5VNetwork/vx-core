@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package x.transport.protocols.websocket;
+option go_package = "github.com/5vnetwork/vx-core/transport/protocols/websocket";
+
+message Header {
+  string key = 1;
+  string value = 2;
+}
+
+message WebsocketConfig {
+  string host = 1;
+
+  // URL path to the WebSocket service. Empty value means root(/).
+  string path = 2;
+
+  repeated Header header = 3;
+
+  int32 max_early_data = 5;
+
+  bool use_browser_forwarding = 6;
+
+  string early_data_header_name = 7;
+}

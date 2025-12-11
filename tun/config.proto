@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package x.tun;
+option go_package = "github.com/5vnetwork/vx-core/tun";
+
+message Config {
+  // Defaults to "172.23.27.1/24". IP will be the ip address of the interface
+  // Ending number determines OnLinkPrefixLength
+  string ip4 = 1;
+  // Defaults to "fd00::1/64". no zone.
+  string ip6 = 2;
+  // defaults to "vtun"
+  string name = 3;
+  // defaults to 8192
+  uint32 mtu = 4;
+  // path to a dir containing four folders: amd64, x86, arm, arm64.
+  // Each folder contains the wintun.dll for the corresponding platform.
+  // Absolute or relative to cwd
+  string path = 5;
+  // If unset, dns nameserver address of the tun will be set to the next ip of
+  // [ip4]. Same for dns6.
+  repeated string dns4 = 6;
+  repeated string dns6 = 7;
+  // If set, the tun will only accept packets with the specified routes.
+  bool strict_route = 8;
+  // Only used when strict_route is set.
+  repeated string routes4 = 9;
+  repeated string routes6 = 10;
+}
+
+// message Prefix {
+//   string ip = 1;
+//   // Number of leading ones in the network mask.
+//   uint32 prefix = 2;
+// }
+
+message MonitorConfig {}

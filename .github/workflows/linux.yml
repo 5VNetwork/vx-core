@@ -1,0 +1,80 @@
+name: Build Multi-Platform
+
+on:
+  push:
+    # branches:
+    #   - main
+    tags:
+      - 'v*'
+  # pull_request:
+  #   branches:
+  #     - main
+  # for manual trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  # Build using goreleaser for Linux targets
+  goreleaser-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # fetch all history
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Cache cross-compilation toolchains
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-toolchains-${{ hashFiles('.github/workflows/linux.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-toolchains-
+
+      - name: Install cross-compilation toolchains
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu \
+            gcc-arm-linux-gnueabihf \
+            g++-arm-linux-gnueabihf
+
+      - name: Run GoReleaser (Snapshot)
+        uses: goreleaser/goreleaser-action@v6
+        # make this step only run for non-tagged commits
+        # if: "!startsWith(github.ref, 'refs/tags/v')"
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: build --id x-so-amd64 --id x-so-arm64 --id x-linux-amd64 --id x-linux-arm64  --clean --snapshot
+
+      - name: Upload results to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          files: |
+            dist/**/*.so
+            dist/**/x-linux-arm64
+            dist/**/x-linux-amd64
+
+      # - name: Upload Linux artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: linux-builds
+      #     path: |
+      #       dist/**/*.so
+      #       dist/**/x-*
+      #     retention-days: 7

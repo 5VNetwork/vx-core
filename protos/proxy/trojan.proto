@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package x.proxy;
+option go_package = "github.com/5vnetwork/vx-core/app/configs/proxy";
+import "protos/user.proto";
+
+message TrojanClientConfig {
+  string password = 2;
+  bool special = 3;
+  bool vision = 4;
+}
+
+message TrojanServerConfig {
+  repeated x.UserConfig users = 1;
+  bool vision = 2;
+  reserved 3;
+}

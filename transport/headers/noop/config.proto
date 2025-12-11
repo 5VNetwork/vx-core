@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package x.transport.headers.noop;
+option go_package = "github.com/5vnetwork/vx-core/transport/headers/noop";
+
+message Config {}
+
+message ConnectionConfig {}

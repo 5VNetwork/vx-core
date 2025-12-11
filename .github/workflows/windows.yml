@@ -1,0 +1,115 @@
+name: Build Windows DLL and EXE
+
+on:
+  push:
+    tags:
+      - "v*"
+  # for manual trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  # Build Windows
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Cache Zig
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\zig
+            ~\.cache\zig
+          key: ${{ runner.os }}-zig-${{ hashFiles('.zig-version', '.github/workflows/windows.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-zig-
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+
+      - name: verify zig installation
+        run: |
+          zig version
+
+      - name: Run GoReleaser (Snapshot)
+        uses: goreleaser/goreleaser-action@v6
+        # make this step only run for non-tagged commits
+        # if: "!startsWith(github.ref, 'refs/tags/v')"
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: build --id x-dll --clean --snapshot
+
+      - name: Create Windows AMD64 archive
+        run: |
+          mkdir -p release
+          # Collect amd64 binaries
+          cp dist/x-dll_windows_amd64_v1/x.dll release/
+          # Create zip
+          cd release
+          7z a -tzip ../x_win_x86_64.zip *
+          cd ..
+          Remove-Item -Recurse -Force release
+
+      - name: Create Windows ARM64 archive
+        run: |
+          mkdir -p release
+          # Collect arm64 binaries
+          cp dist/x-dll_windows_arm64_v8.0/x.dll release/
+          # Create zip
+          cd release
+          7z a -tzip ../x_win_arm64.zip *
+          cd ..
+          Remove-Item -Recurse -Force  release
+
+      - name: Upload Windows artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          files: |
+            x_win_x86_64.zip
+            x_win_arm64.zip
+
+  # build-win:
+  #   runs-on: windows-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v5
+
+  #     - name: Set up Go
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version: stable
+  #         cache: true
+  #         cache-dependency-path: go.sum
+
+  #     - name:
+  #         Build Windows DLL
+  #       run: |
+  #         go build -o x.dll -buildmode=c-shared -buildvcs=false -ldflags="-s -w" -trimpath -tags=client lib/main.go
+
+  #     - name: Build Windows EXE
+  #       run: |
+  #         go build -o vx_core.exe -buildvcs=false -ldflags="-s -w" -trimpath -tags=client ./app/x_windows
+
+  #     - name: Build Windows Service
+  #       run: |
+  #         go build -o service_install.exe -buildvcs=false -ldflags="-s -w" -trimpath ./infra/service
+
+  #     - name: Upload to GitHub Release
+  #       uses: softprops/action-gh-release@v2
+  #       with:
+  #         tag_name: latest
+  #         files: x.dll, vx_core.exe, service_install.exe

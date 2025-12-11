@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package x.transport.security.reality;
+option go_package = "github.com/5vnetwork/vx-core/transport/security/reality";
+
+message RealityConfig {
+  bool show = 1;
+  // server only
+  string dest = 2;
+  // string type = 3;
+  // server only
+  uint64 xver = 4;
+  // server only
+  repeated string server_names = 5;
+  // server only
+  bytes private_key = 6;
+  // server only
+  bytes min_client_ver = 7;
+  // server only
+  bytes max_client_ver = 8;
+  // server only
+  // miliseconds
+  uint64 max_time_diff = 9;
+  // server only
+  repeated bytes short_ids = 10;
+
+
+  string Fingerprint = 21;
+  string server_name = 22;
+  string pbk = 28;
+  // must be 8 bytes
+  string sid = 29;
+  string spider_x = 25;
+  string master_key_log = 27;
+  
+  bytes short_id = 24;
+  repeated int64 spider_y = 26;
+  bytes public_key = 23;
+}

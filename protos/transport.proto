@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package x;
+option go_package = "github.com/5vnetwork/vx-core/app/configs";
+
+import "protos/tls/tls.proto";
+import "transport/security/reality/config.proto";
+import "transport/protocols/tcp/config.proto";
+import "transport/protocols/kcp/config.proto";
+import "transport/protocols/websocket/config.proto";
+import "transport/protocols/http/config.proto";
+import "transport/protocols/quic/config.proto";
+import "transport/protocols/grpc/config.proto";
+import "transport/protocols/httpupgrade/config.proto";
+import "transport/protocols/splithttp/config.proto";
+
+import "protos/dlhelper.proto";
+
+message TransportConfig {
+  x.SocketConfig socket = 3;
+  oneof protocol {
+    x.transport.protocols.tcp.TcpConfig tcp = 5;
+    x.transport.protocols.kcp.KcpConfig kcp = 6;
+    x.transport.protocols.websocket.WebsocketConfig websocket = 7;
+    x.transport.protocols.http.HttpConfig http = 8;
+    x.transport.protocols.quic.QuicConfig quic = 9;
+    x.transport.protocols.grpc.GrpcConfig grpc = 10;
+    x.transport.protocols.httpupgrade.HttpUpgradeConfig httpupgrade = 11;
+    x.transport.protocols.splithttp.SplitHttpConfig splithttp = 12;
+  }
+  oneof security {
+    x.tls.TlsConfig tls = 20;
+    x.transport.security.reality.RealityConfig reality = 21;
+  }
+}

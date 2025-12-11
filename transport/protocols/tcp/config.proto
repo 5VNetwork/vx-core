@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package x.transport.protocols.tcp;
+option go_package = "github.com/5vnetwork/vx-core/transport/protocols/tcp";
+import "google/protobuf/any.proto";
+
+message TcpConfig {
+  google.protobuf.Any header_settings = 2;
+}

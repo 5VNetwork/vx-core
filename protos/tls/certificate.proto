@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package x.tls;
+
+option go_package = "github.com/5vnetwork/vx-core/transport/security/tls";
+
+message Certificate {
+    bytes certificate = 1;
+    bytes key = 2;
+    string certificate_filepath = 4;
+    string key_filepath = 5;
+}

@@ -1,0 +1,77 @@
+syntax = "proto3";
+package x;
+option go_package = "github.com/5vnetwork/vx-core/app/configs";
+
+import "protos/transport.proto";
+import "google/protobuf/any.proto";
+
+import "protos/tls/tls.proto";
+import "transport/security/reality/config.proto";
+import "transport/protocols/websocket/config.proto";
+import "transport/protocols/http/config.proto";
+import "transport/protocols/grpc/config.proto";
+import "transport/protocols/httpupgrade/config.proto";
+import "transport/protocols/splithttp/config.proto";
+import "transport/protocols/tcp/config.proto";
+import "protos/dlhelper.proto";
+import "protos/user.proto";
+
+message ProxyInboundConfig {
+  string address = 1;
+  string tag = 2;
+  // if both port and ports are null, 5 random ports will be used
+  uint32 port = 3;
+  repeated uint32 ports = 4;
+  x.TransportConfig transport = 6;
+  google.protobuf.Any protocol = 7;
+  repeated google.protobuf.Any protocols = 8;
+  repeated x.UserConfig users = 9;
+}
+
+message InboundManagerConfig {
+  repeated ProxyInboundConfig handlers = 1;
+  repeated MultiProxyInboundConfig multi_inbounds = 2;
+}
+
+message MultiProxyInboundConfig {
+  string address = 1;
+  string tag = 2;
+  repeated uint32 ports = 3;
+  repeated google.protobuf.Any protocols = 4;
+
+  message Security {
+    oneof security {
+      x.tls.TlsConfig tls = 20;
+      x.transport.security.reality.RealityConfig reality = 21;
+    }
+    repeated string domains = 1;
+    string regular_expression = 2;
+    bool always = 3;
+  }
+  repeated Security security_configs = 5;
+
+  message Protocol {
+    oneof protocol {
+      x.transport.protocols.websocket.WebsocketConfig websocket = 7;
+      x.transport.protocols.http.HttpConfig http = 8;
+      x.transport.protocols.grpc.GrpcConfig grpc = 10;
+      x.transport.protocols.httpupgrade.HttpUpgradeConfig httpupgrade = 11;
+      x.transport.protocols.splithttp.SplitHttpConfig splithttp = 12;
+      x.transport.protocols.tcp.TcpConfig tcp = 13;
+    }
+    string alpn = 1;
+    string sni = 2;
+    string path = 3;
+    bool h2 = 4;
+    bool always = 5;
+  }
+  repeated Protocol transport_protocols = 6;
+  x.SocketConfig socket = 8;
+  repeated x.UserConfig users = 9;
+}
+
+message WfpConfig {
+   uint32 tcp_port = 1;
+   uint32 udp_port = 2;
+}
+

@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package x;
+option go_package = "github.com/5vnetwork/vx-core/app/configs";
+
+import "protos/transport.proto";
+import "common/net/net.proto";
+import "google/protobuf/any.proto";
+
+message OutboundHandlerConfig {
+  string tag = 1;
+  x.TransportConfig transport = 3;
+  bool enable_mux = 4;
+  MuxConfig mux_config = 12;
+  string address = 5;
+  uint32 port = 6;
+  repeated x.common.net.PortRange ports = 7;
+  google.protobuf.Any protocol = 8;
+  bool uot = 9;
+  DomainStrategy domain_strategy = 10;
+  // bool pre_connect = 11;
+}
+
+message MuxConfig {
+  uint32 max_connection = 1;
+  uint32 max_concurrency = 2;
+}
+
+enum DomainStrategy {
+  PreferIPv4 = 0;
+  PreferIPv6 = 1;
+  IPv4Only = 2;
+  IPv6Only = 43;
+}
+
+message ChainHandlerConfig {
+  repeated OutboundHandlerConfig handlers = 1;
+  string tag = 2;
+}
+
+message OutboundConfig {
+  // @deprecated
+  repeated OutboundHandlerConfig outbound_handlers = 1;
+  // @deprecated
+  repeated ChainHandlerConfig chain_handlers = 2;
+  repeated HandlerConfig handlers = 3;
+}
+
+message HandlerConfig {
+  oneof type {
+    OutboundHandlerConfig outbound = 1;
+    ChainHandlerConfig chain = 2;
+  }
+  optional bool support_ipv6 = 3;
+}
+
+message HandlerConfigs {
+  repeated HandlerConfig configs = 1;
+}

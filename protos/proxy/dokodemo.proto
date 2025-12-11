@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package x.proxy;
+option go_package = "github.com/5vnetwork/vx-core/app/configs/proxy";
+import "common/net/net.proto";
+
+message DokodemoConfig {
+  string address = 1;
+  uint32 port = 2;
+  repeated x.common.net.Network networks = 7;
+}

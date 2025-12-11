@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package x;
+
+option go_package = "github.com/5vnetwork/vx-core/app/configs/server";
+
+import "protos/inbound.proto";
+import "protos/outbound.proto";
+import "protos/router.proto";
+import "protos/policy.proto";
+import "protos/logger.proto";
+import "protos/geo.proto";
+import "protos/user.proto";
+
+message ServerConfig {
+  uint32 id = 1;
+  repeated x.ProxyInboundConfig inbounds = 3;
+  repeated x.MultiProxyInboundConfig multi_inbounds = 11;
+  x.PolicyConfig policy = 4;
+  x.RouterConfig router = 5;
+  x.LoggerConfig log = 6;
+  repeated x.UserConfig users = 7;
+  repeated x.OutboundHandlerConfig outbounds = 9;
+  x.GeoConfig geo = 10;
+}

@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package x.transport.headers.utp;
+option go_package = "github.com/5vnetwork/vx-core/transport/headers/utp";
+
+message Config {
+  uint32 version = 1;
+}

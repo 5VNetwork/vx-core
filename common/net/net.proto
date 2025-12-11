@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package x.common.net;
+option go_package = "github.com/5vnetwork/vx-core/common/net";
+
+enum Network {
+  Unknown = 0;
+  TCP = 2;
+  UDP = 3;
+  UNIX = 4;
+}
+
+message NetworkList { repeated Network network = 1; }
+
+message Endpoint {
+  Network network = 1;
+  string address = 2;
+  uint32 port = 3;
+}
+
+enum PacketAddrType {
+  None = 0;
+  Packet = 1;
+}
+
+message IPPort {
+  string ip = 1;
+  uint32 port = 2;
+}
+
+// Address of a network host. It may be either an IP address or a domain
+// address.
+message IPOrDomain {
+  oneof address {
+    // IP address. Must by either 4 or 16 bytes.
+    bytes ip = 1;
+
+    // Domain address.
+    string domain = 2;
+  }
+}
+
+
+// PortRange represents a range of ports.
+message PortRange {
+  // The port that this range starts from.
+  uint32 from = 1;
+  // The port that this range ends with (inclusive).
+  uint32 to = 2;
+}
+
+// PortList is a list of ports.
+message PortList {
+  repeated PortRange range = 1;
+}

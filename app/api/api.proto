@@ -1,0 +1,391 @@
+syntax = "proto3";
+
+package x.api;
+option go_package = "github.com/5vnetwork/vx-core/app/api";
+
+import "protos/outbound.proto";
+import "protos/inbound.proto";
+import "protos/router.proto";
+import "common/geo/geo.proto";
+import "protos/geo.proto";
+import "protos/server/server.proto";
+
+message ApiServerConfig {
+  string listen_addr = 1;
+  string geoip_path = 2;
+  string tun_name = 3;
+  uint32 log_level = 4;
+  string db_path = 5;
+  // milliseconds since epoch
+  uint32 last_update_time = 6;
+  // minutes
+  uint32 interval = 7;
+  bool bind_to_default_nic = 8;
+  bytes client_cert = 9;
+}
+
+service Api {
+  rpc UpdateTmStatus(UpdateTmStatusRequest) returns(Receipt);
+  // rpc SetTunName(SetTunNameRequest) returns (SetTunNameResponse);
+  rpc Download(DownloadRequest) returns (DownloadResponse);
+  // rpc HandlerIp(HandlerIpRequest) returns (HandlerIpResponse);
+  rpc HandlerUsable(HandlerUsableRequest) returns (HandlerUsableResponse);
+  rpc SpeedTest(SpeedTestRequest) returns (stream SpeedTestResponse);
+  rpc RttTest(RttTestRequest) returns (RttTestResponse);
+  rpc GeoIP(GeoIPRequest) returns (GeoIPResponse);
+  rpc GetServerPublicKey(GetServerPublicKeyRequest) returns (GetServerPublicKeyResponse);
+  rpc MonitorServer(MonitorServerRequest) returns (stream MonitorServerResponse);
+  rpc ServerAction(ServerActionRequest) returns (ServerActionResponse);
+  rpc VproxyStatus(VproxyStatusRequest) returns (VproxyStatusResponse);
+  rpc VX(VXRequest) returns (Receipt);
+  rpc ServerConfig(ServerConfigRequest) returns (ServerConfigResponse);
+  rpc UpdateServerConfig(UpdateServerConfigRequest) returns (UpdateServerConfigResponse);
+  // rpc XStatusChangeNotify(XStatusChangeNotifyRequest) returns (XStatusChangeNotifyResponse);
+  // rpc SetSubscriptionInterval(SetSubscriptionIntervalRequest) returns (SetSubscriptionIntervalResponse);
+  rpc UpdateSubscription(UpdateSubscriptionRequest) returns (UpdateSubscriptionResponse);
+  rpc ProcessGeoFiles(ProcessGeoFilesRequest) returns (ProcessGeoFilesResponse);
+  rpc Decode(DecodeRequest) returns (DecodeResponse);
+  rpc Deploy(DeployRequest) returns (DeployResponse);
+  rpc GenerateCert(GenerateCertRequest) returns (GenerateCertResponse);
+  rpc GetCertDomain(GetCertDomainRequest) returns (GetCertDomainResponse);
+  rpc AddInbound(AddInboundRequest) returns (AddInboundResponse);
+  rpc UploadLog(UploadLogRequest) returns (UploadLogResponse);
+  rpc DefaultNICHasGlobalV6(DefaultNICHasGlobalV6Request) returns (DefaultNICHasGlobalV6Response);
+  rpc ParseClashRuleFile(ParseClashRuleFileRequest) returns (ParseClashRuleFileResponse);
+  rpc ParseGeositeConfig(ParseGeositeConfigRequest) returns (ParseGeositeConfigResponse);
+  rpc ParseGeoIPConfig(ParseGeoIPConfigRequest) returns (ParseGeoIPConfigResponse);
+  rpc RunRealiScanner(RunRealiScannerRequest) returns (RunRealiScannerResponse);
+  rpc GenerateX25519KeyPair(GenerateX25519KeyPairRequest) returns (GenerateX25519KeyPairResponse);
+  rpc StartMacSystemProxy(StartMacSystemProxyRequest) returns (Receipt);
+  rpc StopMacSystemProxy(StopMacSystemProxyRequest) returns (Receipt);
+  rpc CloseDb(CloseDbRequest) returns (Receipt);
+  rpc OpenDb(OpenDbRequest) returns (Receipt);
+  rpc InboundConfigToOutboundConfig(InboundConfigToOutboundConfigRequest) returns (InboundConfigToOutboundConfigResponse);
+  rpc ToUrl(ToUrlRequest) returns (ToUrlResponse);
+}
+
+message XStatusChangeNotifyRequest {
+  enum Status {
+    STATUS_START = 0;
+    STATUS_STOP = 1;
+    STATUS_STARTING = 2;
+    STATUS_STOPPING = 3;
+  }
+  Status status = 1;
+}
+message XStatusChangeNotifyResponse {
+}
+
+message SetSubscriptionIntervalRequest {
+  // minus means no auto update
+  // minutes
+  int32 interval = 1;
+}
+message SetSubscriptionIntervalResponse {
+}
+
+message UpdateSubscriptionRequest {
+  int64 id = 1;
+  bool all = 2;
+  repeated x.HandlerConfig handlers = 3;
+}
+message UpdateSubscriptionResponse {
+  int32 success = 1;
+  int32 fail = 2;
+  int32 success_nodes = 3;
+  map<string, string> error_reasons = 5;
+  repeated string failed_nodes = 6;
+}
+
+message SetTunNameRequest {
+  string tun_name = 1;
+}
+message SetTunNameResponse {
+}
+
+message DownloadRequest {
+  string url = 1;
+  repeated x.HandlerConfig handlers = 2;
+  // if nil, download to memory
+  string dest = 3;
+}
+message DownloadResponse {
+  // key is handler id, value is usage in bytes
+  map<string, uint32> usage = 1;
+  // if request to download to memory, this is the data
+  bytes data = 3;
+}
+
+message HandlerIpRequest {
+  x.OutboundHandlerConfig handler = 1;
+}
+
+message RttTestRequest {
+  string addr = 1;
+  uint32 port = 2;
+}
+
+message RttTestResponse {
+  uint32 ping = 1;  
+}
+
+message HandlerIpResponse {
+  // ipv6 address of the server
+  string ip6 = 1;
+  // ipv4 address of the server
+  string ip4 = 2;
+}
+
+message HandlerUsableRequest {
+  x.HandlerConfig handler = 1;
+}
+
+message HandlerUsableResponse {
+  int32 ping = 1;
+  string ip = 2;
+}
+
+// speed test
+message SpeedTestRequest {
+  repeated x.HandlerConfig handlers = 1;
+  // 1 or 10
+  uint32 size = 2;
+}
+message SpeedTestResponse {
+  // rate
+  // uint64 up = 2;
+  // rate. If 0, it means unusable
+  int32 down = 3;
+  string tag = 4;
+  // uint32 usage_up = 6;
+  uint32 usage_down = 7;
+}
+
+message GeoIPRequest {
+  repeated string ips = 1;
+}
+message GeoIPResponse {
+  // country code. length is same as ips in GeoIPRequest
+  // country code is Alpha-2(ISO 3166)
+  repeated string countries = 1;
+}
+
+// server status
+message ServerSshConfig {
+  string address = 1;
+  uint32 port = 2;
+  string username = 3;
+  string sudo_password = 4;
+  bytes ssh_key = 6;
+  string ssh_key_path = 7;
+  string ssh_key_passphrase = 8;
+  bytes server_pub_key = 9;
+}
+message MonitorServerRequest {
+  ServerSshConfig ssh_config = 1;
+  uint32 interval = 2;
+}
+message MonitorServerResponse {
+  uint32 cpu = 1;
+  uint64 used_memory = 2;
+  uint64 total_memory = 3;
+  uint32 used_disk = 4;
+  uint32 total_disk = 5;
+  uint32 net_in_speed = 6;
+  uint32 net_out_speed = 7;
+  uint64 net_in_usage = 8;
+  uint64 net_out_usage = 9;
+}
+message DeployRequest {
+  ServerSshConfig ssh_config = 1;
+  bytes hysteria_config = 2;
+  bytes xray_config = 3;
+  map<string, bytes> files = 4;
+  x.ServerConfig vx_config = 5;
+}
+message DeployResponse {
+}
+message ServerActionRequest {
+  enum Action {
+    ACTION_SHUTDOWN = 0;
+    ACTION_RESTART = 1;
+    // ACTION_SUSPEND = 2;
+  }
+  Action action = 1;
+  ServerSshConfig ssh_config = 2;
+}
+message ServerActionResponse {
+}
+message VproxyStatusRequest {
+  ServerSshConfig ssh_config = 1;
+}
+message VproxyStatusResponse {
+  bool installed = 1;
+  string version = 2;
+  string start_time = 3;
+  float memory = 4;
+}
+message VXRequest {
+  ServerSshConfig ssh_config = 1;
+  bool start = 2;
+  bool stop = 3;
+  bool restart = 4;
+  bool install = 5;
+  bool uninstall = 6;
+  bool update = 7;
+}
+message ServerConfigRequest {
+  ServerSshConfig ssh_config = 1;
+}
+message ServerConfigResponse {
+  x.ServerConfig config = 1;
+}
+message UpdateServerConfigRequest {
+  ServerSshConfig ssh_config = 1;
+  x.ServerConfig config = 2;
+}
+message UpdateServerConfigResponse {
+}
+
+message ProcessGeoFilesRequest {
+  repeated string geosite_codes = 1;
+  repeated string geoip_codes = 2;
+  string geosite_path = 3;
+  string geoip_path = 4;
+  string dst_geosite_path = 5;
+  string dst_geoip_path = 6;
+}
+message ProcessGeoFilesResponse {}
+
+message DecodeRequest {
+  string data = 1;
+}
+message DecodeResponse {
+  repeated x.OutboundHandlerConfig handlers = 1;
+  repeated string failed_nodes = 2;
+}
+
+message GetServerPublicKeyRequest {
+  ServerSshConfig ssh_config = 1;
+}
+message GetServerPublicKeyResponse {
+  bytes public_key = 1;
+}
+
+
+message GenerateCertRequest {
+  string domain = 1;
+}
+message GenerateCertResponse {
+  // pem format
+  bytes cert = 1;
+  // pem format
+  bytes key = 2;
+  bytes cert_hash = 3;
+}
+
+message GetCertDomainRequest {
+  bytes cert = 1;
+}
+message GetCertDomainResponse {
+  string domain = 1;
+}
+
+message AddInboundRequest {
+  x.ProxyInboundConfig inbound = 1;
+}
+message AddInboundResponse{
+}
+
+message UploadLogRequest {
+  string body = 1;
+  string version = 2;
+  string secret = 3;
+  bytes  ca = 4;
+  string url = 5;
+  string sni = 6;
+}
+message UploadLogResponse {
+}
+
+message DefaultNICHasGlobalV6Request {
+}
+message DefaultNICHasGlobalV6Response {
+  bool has_global_v6 = 1;
+}
+
+message UpdateTmStatusRequest {
+  bool on = 1;
+}
+message Receipt {}
+
+message ParseClashRuleFileRequest {
+  bytes content = 1;
+}
+message ParseClashRuleFileResponse {
+  repeated x.common.geo.Domain domains = 1;
+  repeated x.common.geo.CIDR cidrs = 2;
+  repeated x.AppId app_ids = 3;
+}
+message ParseGeositeConfigRequest {
+  x.GeositeConfig config = 1;
+}
+message ParseGeositeConfigResponse {
+  repeated x.common.geo.Domain domains = 1;
+}
+message ParseGeoIPConfigRequest {
+  x.GeoIPConfig config = 1;
+}
+message ParseGeoIPConfigResponse {
+  repeated x.common.geo.CIDR cidrs = 1;
+}
+
+message RunRealiScannerRequest {
+  string addr = 1;
+}
+message RunRealiScannerResponse {
+  repeated RealiScannerResult results = 1;
+}
+message RealiScannerResult {
+  string ip = 1;
+  string domain = 2;
+}
+
+message GenerateX25519KeyPairRequest {}
+message GenerateX25519KeyPairResponse {
+  string pub = 1;
+  string pri = 2;
+}
+
+message StartMacSystemProxyRequest {
+  string http_proxy_address = 1;
+  uint32 http_proxy_port = 2;
+  string https_proxy_address = 3;
+  uint32 https_proxy_port = 4;
+  string socks_proxy_address = 5;
+  uint32 socks_proxy_port = 6;
+}
+message StopMacSystemProxyRequest {}
+
+message CloseDbRequest {}
+message OpenDbRequest {
+  string path = 1;
+}
+
+message InboundConfigToOutboundConfigRequest {
+  x.ProxyInboundConfig inbound = 1;
+  x.MultiProxyInboundConfig multi_inbound = 2;
+  string server_address = 3;
+  string server_name = 4;
+}
+message InboundConfigToOutboundConfigResponse {
+  repeated x.OutboundHandlerConfig outbound_configs = 1;
+}
+
+message ToUrlRequest {
+  repeated x.OutboundHandlerConfig outbound_confogs = 1;
+}
+message ToUrlResponse {
+  repeated string urls = 1;
+  repeated string failed_nodes = 2;
+}

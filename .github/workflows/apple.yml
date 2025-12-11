@@ -1,0 +1,87 @@
+name: Build iOS-macOS Library
+
+on:
+  push:
+    # branches:
+    #   - main
+    tags:
+      - "v*"
+  # pull_request:
+  #   branches:
+  #     - main
+  # for manual trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  # Build macOS/iOS frameworks
+  build-ios-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Cache gomobile
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/gomobile
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-gomobile-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gomobile-
+
+      - name: Install gomobile
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          go install golang.org/x/mobile/cmd/gobind
+          gomobile init
+
+      - name: Build macOS frameworks
+        run: |
+          gomobile bind  -ldflags="-s -w" -trimpath -o tm.xcframework -target=macos -tags=client -v ./x_darwin
+
+      - name: Create archives
+        run: |
+          zip -r tm-macos.xcframework.zip tm.xcframework
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          files: |
+            tm-macos.xcframework.zip
+
+      - name: Build iOS frameworks
+        run: |
+          gomobile bind  -ldflags="-s -w" -trimpath -o tm.xcframework -target=ios -tags=client,ios -v ./x_darwin
+
+      - name: Create archives
+        run: |
+          zip -r tm-ios.xcframework.zip tm.xcframework
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          files: |
+            tm-ios.xcframework.zip
+
+      # - name: Upload macOS-iOS artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: darwin-builds
+      #     path: |
+      #       tm-macos.xcframework/**
+      #       tm-ios.xcframework/**
+      #     retention-days: 7

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package x;
+option go_package = "github.com/5vnetwork/vx-core/app/configs";
+
+message DispatcherConfig { 
+  // SniffingConfig sniff = 1; 
+  bool fallback_to_proxy = 2;
+  bool fallback_to_domain = 3;
+  repeated string destination_override = 4;
+  bool sniff = 5;
+  bool ipv6_fallback_to_domain = 6;
+}
+
+// message SniffingConfig {
+//   bool always = 1;
+//   // bool only_when_no_domain = 3;
+//   // Override target destination if sniff'ed protocol is in the given list.
+//   // Supported values are "http", "tls", "quic".
+//   // repeated string destination_override = 2;
+// }

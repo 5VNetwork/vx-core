@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package x.proxy;
+option go_package = "github.com/5vnetwork/vx-core/app/configs/proxy";
+import "protos/user.proto";
+
+enum ShadowsocksCipherType {
+  AES_128_GCM = 0;
+  AES_256_GCM = 1;
+  CHACHA20_POLY1305 = 2;
+  NONE = 3;
+}
+
+message ShadowsocksAccount {
+  ShadowsocksCipherType cipher_type = 2;
+  bool iv_check = 3;
+  x.UserConfig user = 4;
+  bool experiment_reduced_iv_head_entropy = 90001;
+}
+
+message ShadowsocksServerConfig { 
+  reserved 2;
+  ShadowsocksCipherType cipher_type = 3;
+  bool iv_check = 4;
+  x.UserConfig user = 5;
+  bool experiment_reduced_iv_head_entropy = 90001;
+}
+
+message ShadowsocksClientConfig {
+  ShadowsocksCipherType cipher_type = 1;
+  string password = 2;
+}
+
+message Shadowsocks2022ClientConfig {
+  string method = 1;
+  bytes psk = 2;
+  repeated bytes ipsk = 4;
+}

@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package x.transport.protocols.splithttp;
+option go_package = "github.com/5vnetwork/vx-core/transport/protocols/splithttp";
+
+import "protos/tls/tls.proto";
+import "transport/security/reality/config.proto";
+
+message RangeConfig {
+  int32 from = 1;
+  int32 to = 2;
+}
+
+message XmuxConfig {
+  RangeConfig maxConcurrency = 1;
+  RangeConfig maxConnections = 2;
+  RangeConfig cMaxReuseTimes = 3;
+  RangeConfig hMaxRequestTimes = 4;
+  RangeConfig hMaxReusableSecs = 5;
+  int64 hKeepAlivePeriod = 6;
+}
+
+message SplitHttpConfig {
+  string host = 1;
+  string path = 2;
+  string mode = 3;
+  map<string, string> headers = 4;
+  RangeConfig xPaddingBytes = 5;
+  bool noGRPCHeader = 6;
+  // server only
+  bool noSSEHeader = 7;
+  RangeConfig scMaxEachPostBytes = 8;
+  RangeConfig scMinPostsIntervalMs = 9;
+  // server only
+  int64 scMaxBufferedPosts = 10;
+  // server only
+  RangeConfig scStreamUpServerSecs = 11;
+  XmuxConfig xmux = 12;
+  DownConfig downloadSettings = 13;
+}
+
+message DownConfig {
+  string address = 8;
+  uint32 port = 9;
+  SplitHttpConfig xhttp_config = 2;
+  oneof security {
+    x.tls.TlsConfig tls = 20;
+    x.transport.security.reality.RealityConfig reality = 21;
+  }
+}

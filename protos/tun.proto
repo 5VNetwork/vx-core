@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package x;
+option go_package = "github.com/5vnetwork/vx-core/app/configs";
+
+message TunConfig {
+  string tag = 2;
+  Mode mode = 3;
+  // whether to bind outbound traffic to the primary physical interface
+  bool should_bind_device = 4;
+  TunDeviceConfig device = 5;
+  enum TUN46Setting {
+    FOUR_ONLY = 0;
+    BOTH = 1;
+    DYNAMIC = 2;
+  }
+  TUN46Setting tun46_setting = 8;
+}
+
+enum Mode {
+  MODE_SYSTEM = 0;
+  MODE_GVISOR = 1;
+}
+
+message TunDeviceConfig {
+  string cidr4 = 1;
+  string cidr6 = 2;
+  string name = 3;
+  uint32 mtu = 4;
+  // path to a dir containing four folders: amd64, x86, arm, arm64.
+  // Each folder contains the wintun.dll for the corresponding platform.
+  // Absolute or relative to cwd
+  // Windows only
+  string path = 5;
+  repeated string dns4 = 6;
+  repeated string dns6 = 7;
+  repeated string routes4 = 9;
+  repeated string routes6 = 10;
+  // !Windows
+  uint32 fd = 11;
+  // apps that does not use tun. Android only
+  repeated string black_list_apps = 12;
+  // apps that use tun. Android only
+  repeated string white_list_apps = 13;
+}
