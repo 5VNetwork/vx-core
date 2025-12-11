@@ -46,6 +46,7 @@ builds:
           {{- if eq .Arch "amd64" }}CXX=zig c++ -target x86_64-windows-gnu{{- end }}
           {{- if eq .Arch "arm64"}}CXX=zig c++ -target aarch64-windows-gnu{{- end }}
         {{- end }}
+    binary: x.dll
 
   - id: x-so-amd64
     skip: true
