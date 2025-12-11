@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package x;
+option go_package = "github.com/5vnetwork/vx-core/app/configs";
+
+import "common/geo/geo.proto";
+import "common/net/net.proto";
+
+message RouterConfig {
+  // defaults to As_Is
+  repeated RuleConfig rules = 1;
+}
+
+message SelectorsConfig {
+  repeated SelectorConfig selectors = 1;
+}
+
+message RuleConfig {
+  // either outbound_tag or banlancer_tag should be specified but not both
+  // when both are empty, it means blocks
+  string outbound_tag = 1;
+  string selector_tag = 2;
+
+  // used to match source ip
+  repeated string src_cidrs = 5;
+  // used to match source ip
+  repeated string src_ip_tags = 6;
+
+  // used to match dst ip
+  repeated string dst_cidrs = 8;
+  // used to match dst ip
+  repeated string dst_ip_tags = 9;
+  // resolve domain to ip when ip is not available
+  bool resolve_domain = 26;
+
+  // used to match domain
+  repeated x.common.geo.Domain geo_domains = 11;
+  repeated string domain_tags = 13;
+  // skip sniff for connectiosn use ip targets
+  bool skip_sniff = 27;
+
+  repeated string usernames = 14;
+  repeated string inbound_tags = 15;
+  repeated x.common.net.Network networks = 16;
+  repeated x.common.net.PortRange src_port_ranges = 17;
+  repeated x.common.net.PortRange dst_port_ranges = 18;
+  repeated AppId app_ids = 19;
+  bool ipv6 = 20;
+  // for debugging
+  string rule_name = 21;
+  bool fake_ip = 22;
+  bool match_all = 23;
+  repeated string app_tags = 24;
+  repeated string all_tags = 25;
+}
+
+message SelectorConfig {
+  string tag = 1;
+  message Filter {
+    // If an outbound's tag has prefix of any of the prefixes, match! 
+    repeated string prefixes = 1;
+    // A outbound handler will match if its tag is one of the tags
+    repeated string tags = 2;
+    repeated string group_tags = 3;
+    // If true, a handler will be selected if it does not match all conditions
+    bool inverse = 4;
+    repeated int64 sub_ids = 5;
+    repeated int64 handler_ids = 6;
+    bool selected = 7;
+    bool all = 8;
+  }
+  // how to select handlers to be used
+  enum SelectingStrategy {
+    ALL = 0;
+    ALL_OK = 1;
+    LEAST_PING = 2;
+    MOST_THROUGHPUT = 3;
+    // select good ones
+    TOP_PING = 4;
+    TOP_THROUGHPUT = 5;
+  }
+  // if there are many handlers, how to balance them
+  enum BalanceStrategy {
+    RANDOM = 0;
+    // balance based on app first, if no app, based on root domain
+    MEMORY = 1;
+  }
+  Filter filter = 2;
+  SelectingStrategy strategy = 3;
+  BalanceStrategy balance_strategy = 4;
+  // if not empty, these handlers will be used as land handlers
+  // ids of the outbound handler
+  repeated int64 land_handlers = 6;
+  bool select_from_om = 7;
+}
+
+message AppId {
+  enum Type {
+    // The value is used as is. "keyword"
+    Keyword = 0;
+    Prefix = 1;
+    Exact = 2;
+  }
+  Type type = 1;
+  string value = 2;
+}

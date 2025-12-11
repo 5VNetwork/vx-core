@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package x.transport.protocols.http;
+option go_package = "github.com/5vnetwork/vx-core/transport/protocols/http";
+
+import "transport/headers/http/config.proto";
+
+message HttpConfig {
+  repeated string host = 1;
+  string path = 2;
+  string method = 3;
+  repeated x.transport.headers.http.Header header = 4;
+}

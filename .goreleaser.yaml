@@ -1,0 +1,200 @@
+# This is an example .goreleaser.yml file with some sensible defaults.
+# Make sure to check the documentation at https://goreleaser.com
+
+# The lines below are called `modelines`. See `:help modeline`
+# Feel free to remove those if you don't want/need to use them.
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+
+version: 2
+
+project_name: x
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+    # you may remove this if you don't need go generate
+    - go generate ./...
+
+builds:
+  - id: x-dll
+    skip: '{{ if eq (index .Env "VX_SERVER") "1" }}true{{ end }}'
+    main: ./x_dll/main.go
+    goos:
+    - windows
+    goarch:
+    - amd64
+    - arm64
+    binary: x
+    ldflags:
+    - -s -w
+    buildmode: c-shared
+    flags:
+    - -trimpath
+    - -buildvcs=false
+    tags:
+    - client
+    env:
+    - CGO_ENABLED=1
+    - >-
+        {{- if eq .Os "windows" }}
+          {{- if eq .Arch "amd64" }}CC=zig cc -target x86_64-windows-gnu{{- end }}
+          {{- if eq .Arch "arm64"}}CC=zig cc -target aarch64-windows-gnu{{- end }}
+        {{- end }}
+    - >-
+        {{- if eq .Os "windows" }}
+          {{- if eq .Arch "amd64" }}CXX=zig c++ -target x86_64-windows-gnu{{- end }}
+          {{- if eq .Arch "arm64"}}CXX=zig c++ -target aarch64-windows-gnu{{- end }}
+        {{- end }}
+
+  - id: x-so-amd64
+    skip: '{{ if eq (index .Env "VX_SERVER") "1" }}true{{ end }}'
+    main: ./x_linux
+    env:
+      - CGO_ENABLED=1
+    flags:
+      - -trimpath
+      - -buildmode=c-shared
+    tags:
+      - client
+    ldflags:
+      - -s
+      - -w
+      - -X "github.com/5vnetwork/x/common.Version={{.Version}}"
+    goarch:
+      - amd64
+    goos:
+      - linux
+    binary: x-{{.Os}}-{{.Arch}}.so
+
+  - id: x-so-arm64
+    skip: '{{ if eq (index .Env "VX_SERVER") "1" }}true{{ end }}'
+    main: ./x_linux
+    env:
+      - CGO_ENABLED=1
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
+    flags:
+      - -trimpath
+      - -buildmode=c-shared
+    tags:
+      - client
+    ldflags:
+      - -s
+      - -w
+      - -X "github.com/5vnetwork/x/common.Version={{.Version}}"
+    goarch:
+      - arm64
+    goos:
+      - linux
+    binary: x-{{.Os}}-{{.Arch}}.so
+
+  - id: x-linux-amd64
+    skip: '{{ if eq (index .Env "VX_SERVER") "1" }}true{{ end }}'
+    main: ./cmd/client
+    env:
+      - CGO_ENABLED=1
+    flags:
+      - -trimpath
+    tags:
+      - client
+    ldflags:
+      - -s
+      - -w
+      - -X "github.com/5vnetwork/vx-core/common.Version={{.Version}}"
+    goarch:
+      - amd64
+    goos:
+      - linux
+    binary: x-{{.Os}}-{{.Arch}}
+
+  - id: x-linux-arm64
+    skip: '{{ if eq (index .Env "VX_SERVER") "1" }}true{{ end }}'
+    main: ./cmd/client
+    env:
+      - CGO_ENABLED=1
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
+    flags:
+      - -trimpath
+    tags:
+      - client
+    ldflags:
+      - -s
+      - -w
+      - -X "github.com/5vnetwork/vx-core/common.Version={{.Version}}"
+    goarch:
+      - arm64
+    goos:
+      - linux
+    binary: x-{{.Os}}-{{.Arch}}
+    
+  - id: vx
+    main: ./cmd/server
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    tags:
+      - server
+    ldflags:
+      - -s
+      - -w
+      - -X "github.com/5vnetwork/vx-core/common.Version={{.Version}}"
+    targets:
+      # 32
+      - linux_386
+      # 64
+      - linux_amd64_v1
+      # arm64-v8a
+      - linux_arm64
+      # arm32-v7a
+      - linux_arm_7
+      # arm32-v6
+      - linux_arm_6
+      # arm32-v5
+      - linux_arm_5
+      # mips32
+      - linux_mips
+      # mipsle
+      - linux_mipsle
+      # mips64
+      - linux_mips64
+      # mips64le
+      - linux_mips64le
+      # ppc64
+      - linux_ppc64
+      # ppc64le
+      - linux_ppc64le
+      # riscv64
+      - linux_riscv64
+      # s390x
+      - linux_s390x
+    binary: vx
+
+archives:
+  # Archive for vx build - each build result will be zipped separately
+  - ids:
+      - vx
+    formats:
+      - zip
+    name_template: "vx-{{ .Os }}-{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}"
+ 
+checksum:
+  # You can change the name of the checksums file.
+  #
+  # Default: '{{ .ProjectName }}_{{ .Version }}_checksums.txt', or,
+  #   when split is set: '{{ .ArtifactName }}.{{ .Algorithm }}'.
+  # Templates: allowed.
+  algorithm: sha256
+  # If true, will create one checksum file for each artifact.
+  split: true
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^infra:"
+      - "^ignore:"

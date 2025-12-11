@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package x.tls;
+
+option go_package = "github.com/5vnetwork/vx-core/transport/security/tls";
+
+import "protos/tls/certificate.proto";
+message TlsConfig {
+    // certs to be provided to peer
+    repeated Certificate certificates = 1;
+    // certs to be used as root CA
+    repeated bytes root_cas = 2;
+    // certs to issue certificates which will be provided to peer
+    repeated Certificate issue_cas = 3;
+    // if not specified, the server name will be destination domain of the connection if
+    // it is a domain
+    string server_name = 4;
+    bool disable_system_root = 5;
+    bool allow_insecure = 6;
+    repeated string next_protocol = 7;
+    bool enable_session_resumption = 8;
+    // A list of byte slice, each of which is a hash of a cert chain.
+    repeated bytes pinned_peer_certificate_chain_sha256 = 9;
+    bool verify_client_certificate = 10;
+    // utls-related
+    string imitate = 11;
+    // utls-related
+    bool noSNI = 12;
+    // utls-related
+    ForceALPN force_alpn = 13;
+    string master_key_log = 14;
+    // server ech key
+    bytes ech_key = 15;
+    // client ech config
+    bytes ech_config = 16;
+    // client only
+    // enable ech
+    bool enable_ech = 17;
+}
+
+enum ForceALPN{
+  //优先使用用户在 TLS 设置中手动制定了 APLN 的值，否则使用传输协议的默认 ALPN 设置。
+  TRANSPORT_PREFERENCE_TAKE_PRIORITY = 0;
+  //不发送 ALPN TLS 扩展
+  NO_ALPN = 1;
+  //以 uTLS 的特征模板中的 ALPN 设置为准
+  UTLS_PRESET = 2;
+}
+

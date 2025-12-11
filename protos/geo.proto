@@ -1,0 +1,70 @@
+syntax = "proto3";
+package x;
+option go_package = "github.com/5vnetwork/vx-core/app/configs";
+
+import "common/geo/geo.proto";
+import "protos/router.proto";
+
+message GreatDomainSetConfig {
+  string name = 3;
+  string opposite_name = 4;
+  repeated string ex_names = 5;
+  repeated string in_names = 6;
+}
+
+message AtomicDomainSetConfig {
+  string name = 1;
+  // either one of the following two fields should be set
+  repeated x.common.geo.Domain domains = 2;
+  GeositeConfig geosite = 3;
+  bool use_bloom_filter = 4;
+  repeated string clash_files = 5;
+}
+
+message DomainSetConfig {
+  string name = 1;
+  repeated string tags = 2;
+}
+
+message GreatIPSetConfig {
+  string name = 3;
+  string opposite_name = 4;
+  repeated string ex_names = 5;
+  repeated string in_names = 6;
+}
+
+message AtomicIPSetConfig {
+  string name = 3;
+  repeated x.common.geo.CIDR cidrs = 2;
+  GeoIPConfig geoip = 1;
+  bool inverse = 4;
+  repeated string clash_files = 5;
+}
+
+message GeoConfig {
+  repeated DomainSetConfig domain_sets = 1;
+  // There should be no same name in great_domain_sets and atomic_domain_sets.
+  // Same for great_ip_sets and atomic_ip_sets.
+  repeated GreatDomainSetConfig great_domain_sets = 3;
+  repeated GreatIPSetConfig great_ip_sets = 4;
+  repeated AtomicDomainSetConfig atomic_domain_sets = 5;
+  repeated AtomicIPSetConfig atomic_ip_sets = 6;
+  repeated AppSetConfig app_sets = 7;
+}
+
+message GeositeConfig {
+  repeated string codes = 1;
+  repeated string attributes = 2;
+  string filepath = 3;
+}
+
+message GeoIPConfig {
+  string filepath = 1;
+  repeated string codes = 2;
+}
+
+message AppSetConfig {
+  string name = 1;
+  repeated x.AppId app_ids = 2;
+  repeated string clash_files = 3;
+}

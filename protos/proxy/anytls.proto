@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package x.proxy;
+option go_package = "github.com/5vnetwork/vx-core/app/configs/proxy";
+import "protos/user.proto";
+
+message AnytlsClientConfig {
+  string password = 2;
+}
+
+message AnytlsServerConfig {
+  repeated x.UserConfig users = 1;
+}

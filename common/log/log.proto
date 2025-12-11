@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package x.common.log;
+
+option go_package = "github.com/5vnetwork/vx-core/common/log";
+
+enum LogLevel {
+        DEBUG = 0;
+        INFO = 1;
+        WARNING = 2;
+        ERROR = 3;
+        SEVERE = 4;
+        NONE = 5;
+    }

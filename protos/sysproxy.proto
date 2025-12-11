@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package x;
+option go_package = "github.com/5vnetwork/vx-core/app/configs";
+
+message SysProxyConfig {
+  string http_proxy_address = 1;
+  uint32 http_proxy_port = 2;
+  string https_proxy_address = 3;
+  uint32 https_proxy_port = 4;
+  string socks_proxy_address = 5;
+  uint32 socks_proxy_port = 6;
+}
+

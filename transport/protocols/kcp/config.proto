@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package x.transport.protocols.kcp;
+option go_package = "github.com/5vnetwork/vx-core/transport/protocols/kcp";
+
+import "google/protobuf/any.proto";
+
+message KcpConfig {
+  uint32 mtu = 1;
+  uint32 tti = 2;
+  uint32 uplink_capacity = 3;
+  uint32 downlink_capacity = 4;
+  bool congestion = 5;
+  uint32 write_buffer = 6;
+  uint32 read_buffer = 7;
+  google.protobuf.Any header_config = 8;
+  reserved 9;
+  string seed = 10;
+}

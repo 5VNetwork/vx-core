@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package x.common;
+
+option go_package = "github.com/5vnetwork/vx-core/app/configs/common";
+
+
+message Header {
+  string key = 1;
+  string value = 2;
+}

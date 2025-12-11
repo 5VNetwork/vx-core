@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+package x.transport.headers.tls;
+option go_package = "github.com/5vnetwork/vx-core/transport/headers/tls";
+
+message PacketConfig {}

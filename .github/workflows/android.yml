@@ -1,0 +1,94 @@
+name: Build Android Library
+
+on:
+  push:
+    # branches:
+    #   - main
+    tags:
+      - "v*"
+  # pull_request:
+  #   branches:
+  #     - main
+  # for manual trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  # Build Android library
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        # with:
+        #   cmdline-tools-version: 11479570
+
+      - name: Cache Android SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            /usr/local/lib/android/sdk
+            ~/.android
+          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-android-sdk-
+
+      - name: Cache gomobile
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/gomobile
+            ~/.gomobile
+          key: ${{ runner.os }}-gomobile-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gomobile-
+
+      - name: List available NDK versions
+        run: sdkmanager --list | grep "ndk;" || true
+
+      - name: Install NDK
+        run: sdkmanager "ndk;28.2.13676358"
+
+      - name: Install gomobile
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          go install golang.org/x/mobile/cmd/gobind@latest
+          gomobile init
+
+      - name:
+          Build Android AAR
+          # export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/26.3.11579264
+        run: |
+          gomobile bind -ldflags="-s -w" -trimpath -o x.aar -target=android -androidapi=21 -v -javapkg="io.tm.android" ./x_android
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          files: x.aar
+
+      # - name: Upload Android artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: android-builds
+      #     path: x.aar
+      #     retention-days: 7

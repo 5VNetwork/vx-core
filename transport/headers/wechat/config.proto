@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+package x.transport.internet.headers.wechat;
+option go_package = "github.com/5vnetwork/vx-core/transport/headers/wechat";
+
+message VideoConfig {}

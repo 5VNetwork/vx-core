@@ -1,0 +1,99 @@
+package tls_test
+
+import (
+	gotls "crypto/tls"
+	"crypto/x509"
+	"testing"
+	"time"
+
+	"github.com/5vnetwork/vx-core/common"
+	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
+
+	. "github.com/5vnetwork/vx-core/transport/security/tls"
+)
+
+func TestCertificateIssuing(t *testing.T) {
+	certificate := ParseCertificate(cert.MustGenerate(nil, cert.Authority(true), cert.KeyUsage(x509.KeyUsageCertSign)))
+
+	c := &TlsConfig{
+		IssueCas: []*Certificate{
+			certificate,
+		},
+	}
+
+	tlsConfig, err := c.GetTLSConfig()
+	common.Must(err)
+	v2rayCert, err := tlsConfig.GetCertificate(&gotls.ClientHelloInfo{
+		ServerName: "www.v2fly.org",
+	})
+	common.Must(err)
+
+	x509Cert, err := x509.ParseCertificate(v2rayCert.Certificate[0])
+	common.Must(err)
+	if !x509Cert.NotAfter.After(time.Now()) {
+		t.Error("NotAfter: ", x509Cert.NotAfter)
+	}
+}
+
+func TestExpiredCertificate(t *testing.T) {
+	caCert := cert.MustGenerate(nil, cert.Authority(true), cert.KeyUsage(x509.KeyUsageCertSign))
+	expiredCert := cert.MustGenerate(caCert, cert.NotAfter(time.Now().Add(time.Minute*-2)), cert.CommonName("www.v2fly.org"), cert.DNSNames("www.v2fly.org"))
+
+	certificate := ParseCertificate(caCert)
+
+	certificate2 := ParseCertificate(expiredCert)
+
+	c := &TlsConfig{
+		IssueCas: []*Certificate{
+			certificate,
+			certificate2,
+		},
+	}
+
+	tlsConfig, err := c.GetTLSConfig()
+	common.Must(err)
+	v2rayCert, err := tlsConfig.GetCertificate(&gotls.ClientHelloInfo{
+		ServerName: "www.v2fly.org",
+	})
+	common.Must(err)
+
+	x509Cert, err := x509.ParseCertificate(v2rayCert.Certificate[0])
+	common.Must(err)
+	if !x509Cert.NotAfter.After(time.Now()) {
+		t.Error("NotAfter: ", x509Cert.NotAfter)
+	}
+}
+
+func TestInsecureCertificates(t *testing.T) {
+	c := &TlsConfig{}
+
+	tlsConfig, err := c.GetTLSConfig()
+	common.Must(err)
+	if len(tlsConfig.CipherSuites) > 0 {
+		t.Fatal("Unexpected tls cipher suites list: ", tlsConfig.CipherSuites)
+	}
+}
+
+func BenchmarkCertificateIssuing(b *testing.B) {
+	certificate := ParseCertificate(cert.MustGenerate(nil, cert.Authority(true), cert.KeyUsage(x509.KeyUsageCertSign)))
+
+	c := &TlsConfig{
+		IssueCas: []*Certificate{
+			certificate,
+		},
+	}
+
+	tlsConfig, err := c.GetTLSConfig()
+	common.Must(err)
+	lenCerts := len(tlsConfig.Certificates)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, _ = tlsConfig.GetCertificate(&gotls.ClientHelloInfo{
+			ServerName: "www.v2fly.org",
+		})
+		delete(tlsConfig.NameToCertificate, "www.v2fly.org")
+		tlsConfig.Certificates = tlsConfig.Certificates[:lenCerts]
+	}
+}

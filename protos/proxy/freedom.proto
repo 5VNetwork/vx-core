@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+package x.proxy;
+option go_package = "github.com/5vnetwork/vx-core/app/configs/proxy";
+
+message FreedomConfig {}

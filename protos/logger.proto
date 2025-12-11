@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package x;
+option go_package = "github.com/5vnetwork/vx-core/app/configs";
+
+message LoggerConfig {
+  Level log_level = 1;
+  string file_path = 2;
+  // whether use console writer for stderr output
+  bool console_writer = 3;
+  bool show_color = 4;
+  bool show_caller = 5;
+  string log_file_dir = 9;
+  bool redact = 10;
+
+  bool user_log = 6;
+  bool log_app_id = 7;
+}
+
+enum Level {
+  DEBUG = 0;
+  INFO = 1;
+  WARN = 2;
+  ERROR = 3;
+  FATAL = 4;
+  DISABLED = 5;
+}

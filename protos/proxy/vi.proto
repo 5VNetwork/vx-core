@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package x.proxy;
+option go_package = "github.com/5vnetwork/vx-core/app/configs/proxy";
+import "protos/user.proto";
+
+message ViClientConfig {
+  string address = 1;
+  uint32 port = 2;
+  // uuid
+  string secret = 3;
+}
+
+message ViServerConfig {
+  repeated x.UserConfig users = 1;
+}

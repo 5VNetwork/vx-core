@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package x.proxy;
+option go_package = "github.com/5vnetwork/vx-core/app/configs/proxy";
+import "protos/user.proto";
+
+import "protos/tls/tls.proto";
+enum Obfs {
+  Salamander = 0;
+}
+
+message QuicConfig {
+  // MB
+  uint32 initial_stream_receive_window = 5;
+  uint32 max_stream_receive_window = 6;
+  uint32 initial_connection_receive_window = 7;
+  uint32 max_connection_receive_window = 8;
+  // bytes
+  uint64 initial_stream_receive_window_bytes = 13;
+  uint64 max_stream_receive_window_bytes = 14;
+  uint64 initial_connection_receive_window_bytes = 15;
+  uint64 max_connection_receive_window_bytes = 16;
+
+  uint32 max_idle_timeout = 9;
+  uint32 keep_alive_period = 10;
+  bool disable_path_mtu_discovery = 11;
+  // server only
+  uint32 max_incoming_streams = 12;
+}
+
+message BandwidthConfig {
+  // for client, this is upload
+  uint32 max_tx = 1;
+  // for client, this is download
+  uint32 max_rx = 2;
+}
+
+message Hysteria2ClientConfig {
+  string auth = 3;
+  x.tls.TlsConfig tls_config = 4;
+  QuicConfig quic = 12;
+  bool fast_open = 13;
+  BandwidthConfig bandwidth = 14;
+  ObfsConfig obfs = 15;
+}
+
+message Hysteria2ServerConfig {
+  repeated x.UserConfig users = 1;
+  ObfsConfig obfs = 2;
+  BandwidthConfig bandwidth = 3;
+  QuicConfig quic = 4;
+  bool ignore_client_bandwidth = 7;
+  x.tls.TlsConfig tls_config = 8;
+}
+
+message ObfsConfig {
+  oneof obfs {
+    SalamanderConfig salamander = 1;
+  }
+}
+
+message SalamanderConfig {
+  string password = 1;
+}

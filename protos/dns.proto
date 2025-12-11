@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package x;
+option go_package = "github.com/5vnetwork/vx-core/app/configs";
+
+import "common/geo/geo.proto";
+
+message DnsConfig {
+  repeated Record records = 1;
+  repeated DnsServerConfig dns_servers = 3;
+  repeated DnsRuleConfig dns_rules = 4;
+  bool enable_fake_dns = 5;
+}
+
+message DnsRules {
+  repeated DnsRuleConfig rules = 1;
+}
+
+message DnsRuleConfig {
+  string dns_server_name = 1;
+  // used to construct preferred domains
+  repeated x.common.geo.Domain domains = 10;
+  // used to construct preferred domains
+  repeated string domain_tags = 11;
+  // types
+  repeated DnsType included_types = 12;
+  // for debug and display purpose
+  string rule_name = 20;
+}
+
+enum DnsType {
+  DnsType_A = 0;
+  DnsType_AAAA = 1;
+}
+
+message DnsServerConfig {
+  oneof type {
+    PlainDnsServer plain_dns_server = 1;
+    DohDnsServer doh_dns_server = 2;
+    QuicDnsServer quic_dns_server = 3;
+    FakeDnsServer fake_dns_server = 4;
+    TlsDnsServer tls_dns_server = 5;
+  }
+  string name = 10;
+  string client_ip = 11;
+}
+
+message PlainDnsServer {
+  repeated string addresses = 2;
+  bool use_default_dns = 3;
+}
+
+message TlsDnsServer {
+  repeated string addresses = 2;
+}
+
+message DohDnsServer {
+  string url = 2;
+}
+
+message QuicDnsServer {
+  string address = 2;
+  string serverName = 3;
+}
+
+message Record {
+  string domain = 2;
+  repeated string ip = 3;
+  // ProxiedDomain indicates the mapped domain has the same IP address on this
+  // domain.
+  string proxied_domain = 4;
+}
+
+
+message DnsHijackConfig {
+  // dns handler name
+  string name = 1;
+  // dns servers to use for direct dns queries
+  repeated string direct_addresses = 2;
+  bool use_default_dns = 3;
+
+  repeated string proxy_addresses = 4;
+
+  // used as inbound tag for proxy dns server
+  string dns_conn_proxy = 5;
+  string dns_conn_direct = 6;
+  string dns_server_proxy = 7;
+
+  // domain sets that contains all proxy domains
+  // all domains in the sets will be resolved by proxy dns server
+  repeated string proxy_tags = 8;
+
+
+  bool direct_return_nil_aaaa_if_not_support = 9;
+  bool proxy_return_nil_aaaa_if_not_support = 10;
+}
+
+
+message FakeDnsServer {
+  message PoolConfig {
+    string cidr = 1;
+    // FakeDNS 所记忆的「IP - 域名映射」数量。当域名数量超过此数值时，会依据 LRU
+    // 规则淘汰老旧域名。
+    uint32 lru_size = 2;
+  }
+  repeated PoolConfig pool_configs = 1;
+}
+
+

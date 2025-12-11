@@ -1,0 +1,241 @@
+syntax = "proto3";
+
+package x.clientgrpc;
+
+option go_package = "github.com/5vnetwork/vx-core/app/clientgrpc";
+
+import "protos/inbound.proto";
+
+import "protos/outbound.proto";
+import "protos/router.proto";
+import "protos/geo.proto";
+import "app/userlogger/config.proto";
+import "common/geo/geo.proto";
+
+service ClientService {
+  // server to client
+  rpc Communicate(CommunicateRequest) returns (stream CommunicateMessage);
+  // inbound
+  rpc AddInbound(AddInboundRequest) returns (AddInboundResponse);
+  rpc RemoveInbound(RemoveInboundRequest) returns (RemoveInboundResponse);
+  
+  // stats
+  rpc GetStatsStream(GetStatsRequest) returns (stream
+  StatsResponse) {}
+  rpc SetOutboundHandlerSpeed(SetOutboundHandlerSpeedRequest)
+  returns (SetOutboundHandlerSpeedResponse);
+  // log
+  // rpc ChangeLogLevel(ChangeLogLevelRequest) returns (ChangeLogLevelResponse);
+  // rpc LogStream(LogStreamRequest) returns (stream LogMessage);
+  rpc UserLogStream(UserLogStreamRequest) returns (stream x.userlogger.UserLogMessage);
+  rpc ToggleUserLog(ToggleUserLogRequest) returns (ToggleUserLogResponse);
+  rpc ToggleLogAppId(ToggleLogAppIdRequest) returns (ToggleLogAppIdResponse);
+  
+  // outbound
+  rpc ChangeOutbound(ChangeOutboundRequest) returns (ChangeOutboundResponse);
+  rpc CurrentOutbound(CurrentOutboundRequest) returns (CurrentOutboundResponse);
+  // rpc SetLandHandler(SetLandHandlerRequest) returns (SetLandHandlerResponse);
+
+  // routing
+  rpc ChangeRoutingMode(ChangeRoutingModeRequest)
+      returns (ChangeRoutingModeResponse);
+  rpc ChangeSelector(ChangeSelectorRequest)
+      returns (ChangeSelectorResponse);
+  rpc UpdateSelectorBalancer(UpdateSelectorBalancerRequest)
+      returns (Receipt);
+  rpc UpdateSelectorFilter(UpdateSelectorFilterRequest)
+      returns (Receipt);
+  rpc NotifyHandlerChange(HandlerChangeNotify) returns (HandlerChangeNotifyResponse);
+  // fake dns
+  rpc SwitchFakeDns(SwitchFakeDnsRequest) returns (SwitchFakeDnsResponse);
+  // geo
+  rpc UpdateGeo(UpdateGeoRequest) returns (UpdateGeoResponse);
+  rpc AddGeoDomain(AddGeoDomainRequest) returns (Receipt);
+  rpc RemoveGeoDomain(RemoveGeoDomainRequest) returns (Receipt);
+  rpc ReplaceGeoDomains(ReplaceDomainSetRequest) returns (Receipt);
+  rpc ReplaceGeoIPs(ReplaceIPSetRequest) returns (Receipt);
+
+  // app id
+  rpc UpdateRouter(UpdateRouterRequest) returns (UpdateRouterResponse);
+  // subscription
+  rpc SetSubscriptionInterval(SetSubscriptionIntervalRequest)
+  returns (SetSubscriptionIntervalResponse);
+  rpc SetAutoSubscriptionUpdate(SetAutoSubscriptionUpdateRequest)
+  returns (Receipt);
+
+  rpc RttTest(RttTestRequest) returns (RttTestResponse);
+}
+
+message RttTestRequest {
+  string addr = 1;
+  uint32 port = 2;
+}
+
+message RttTestResponse {
+  uint32 ping = 1;  
+}
+
+
+message Receipt {
+}
+
+message CommunicateRequest {}
+message CommunicateMessage {
+  oneof message {
+    HandlerError handler_error = 1;
+    SubscriptionUpdated subscription_update = 2;
+    HandlerBeingUsed handler_being_used = 3;
+    HandlerUpdated handler_updated = 4;
+  }
+}
+message HandlerError {
+  string tag = 1;
+  string error = 2;
+}
+message HandlerBeingUsed {
+  string tag4 = 1;
+  string tag6 = 2;
+}
+message HandlerUpdated { int64 id = 1; }
+message SubscriptionUpdated {}
+
+// inbound
+message AddInboundRequest { x.ProxyInboundConfig handler_config = 1; }
+message AddInboundResponse {}
+message RemoveInboundRequest { string tag = 1; }
+message RemoveInboundResponse {}
+
+message OutboundStats {
+  uint64 up = 1;
+  uint64 down = 2;
+  // download
+  uint64 rate = 3;
+  uint64 ping = 4;
+  string id = 5;
+}
+message GetStatsRequest { uint32 interval = 1; }
+message StatsResponse {
+  repeated OutboundStats stats = 1;
+  int32 connections = 2;
+  uint64 memory = 3;
+}
+
+message SetOutboundHandlerSpeedRequest {
+  string tag = 1;
+  int32 speed = 2;
+}
+message SetOutboundHandlerSpeedResponse {}
+
+// log
+// message ChangeLogLevelRequest { x.Level level = 1; }
+// message ChangeLogLevelResponse {}
+// message LogStreamRequest {}
+// message LogMessage { string message = 1; }
+message UserLogStreamRequest {}
+message ToggleUserLogRequest { bool enable = 1; }
+message ToggleUserLogResponse {}
+message ToggleLogAppIdRequest { bool enable = 1; }
+message ToggleLogAppIdResponse {}
+
+// outbound
+message ChangeOutboundRequest {
+  // handlers to be added
+  repeated x.HandlerConfig handlers = 1;
+  // handlers to be removed
+  repeated string tags = 2;
+  // delete all proxy outbound handlers
+  bool delete_all = 3;
+}
+message ChangeOutboundResponse {}
+message CurrentOutboundRequest {}
+message CurrentOutboundResponse { repeated string outbound_tags = 1; }
+
+// message SetLandHandlerRequest {
+//   repeated x.OutboundHandlerConfig handlers = 1;
+// }
+// message SetLandHandlerResponse {}
+
+// routing
+message ChangeRoutingModeRequest {
+  x.RouterConfig router_config = 1;
+  x.GeoConfig geo_config = 2;
+}
+message ChangeRoutingModeResponse {}
+message ChangeSelectorRequest {
+  repeated x.SelectorConfig selectors_to_add = 1;
+  string selector_to_remove = 2;
+  bool delete_all = 3;
+}
+message UpdateSelectorBalancerRequest {
+  string tag = 1;
+  x.SelectorConfig.BalanceStrategy balance_strategy = 2;
+}
+message UpdateSelectorFilterRequest {
+  string tag = 1;
+  x.SelectorConfig.Filter filter = 2;
+  bool select_from_om = 3;
+}
+message ChangeSelectorResponse {}
+message HandlerChangeNotify {}
+message HandlerChangeNotifyResponse {}
+// fake dns
+message SwitchFakeDnsRequest { bool enable = 1; }
+message SwitchFakeDnsResponse {}
+
+// geo
+message UpdateGeoRequest { x.GeoConfig geo = 1; }
+message UpdateGeoResponse {}
+message AddGeoDomainRequest {
+  string domain_set_name = 1;
+  x.common.geo.Domain domain = 2;
+}
+message RemoveGeoDomainRequest {
+  string domain_set_name = 1;
+  x.common.geo.Domain domain = 2;
+}
+message ReplaceDomainSetRequest {
+  x.AtomicDomainSetConfig set = 1;
+}
+message ReplaceIPSetRequest {
+  x.AtomicIPSetConfig set = 1;
+}
+
+
+// speed test
+// message SpeedTestRequest {
+//   repeated x.OutboundHandlerConfig handlers = 1;
+// }
+// message SpeedTestResponse {
+//   uint32 ping = 1;
+//   // rate
+//   float up = 2;
+//   // rate
+//   float down = 3;
+//   string tag = 4;
+//   // if the test is successful. Other fields are invalid if this is false.
+//   bool ok = 5;
+//   uint32 usage_up = 6;
+//   uint32 usage_down = 7;
+// }
+
+// app id
+message UpdateRouterRequest { x.RouterConfig router_config = 1; }
+message UpdateRouterResponse {}
+
+// subscription
+message SetSubscriptionIntervalRequest {
+  // minus means no auto update
+  // minutes
+  int32 interval = 1;
+}
+message SetSubscriptionIntervalResponse {}
+message SetAutoSubscriptionUpdateRequest {
+  bool enable = 1;
+}
+
+message SetProxyShareRequest {
+  bool enable = 1;
+  string listen_addr = 2;
+  uint32 listen_port = 3;
+}
+message SetProxyShareResponse {}

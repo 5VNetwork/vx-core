@@ -1,0 +1,11 @@
+syntax = "proto3";
+package x;
+option go_package = "github.com/5vnetwork/vx-core/app/configs";
+
+message UserConfig {
+  string id = 1;
+  uint32 user_level = 2;
+  string secret = 3;
+}
+
+message UserManagerConfig { repeated UserConfig users = 1; }

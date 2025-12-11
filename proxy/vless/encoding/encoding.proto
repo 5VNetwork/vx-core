@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package x.proxy.vless;
+option go_package = "github.com/5vnetwork/vx-core/proxy/vless/encoding";
+
+message Addons {
+  string Flow = 1;
+  bytes Seed = 2;
+  }

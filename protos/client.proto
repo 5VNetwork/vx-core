@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package x;
+
+option go_package = "github.com/5vnetwork/vx-core/app/configs";
+
+import "protos/inbound.proto";
+import "protos/outbound.proto";
+import "protos/dns.proto";
+import "protos/router.proto";
+import "protos/policy.proto";
+import "protos/logger.proto";
+import "protos/geo.proto";
+import "protos/dispatcher.proto";
+import "protos/tun.proto";
+import "protos/sysproxy.proto";
+
+
+message TmConfig {
+  x.InboundManagerConfig inbound_manager = 1;
+  x.DnsConfig dns = 3;
+  x.PolicyConfig policy = 4;
+  x.SelectorsConfig selectors = 5;
+  x.RouterConfig router = 6;
+  x.LoggerConfig log = 7;
+  x.DispatcherConfig dispatcher = 8;
+  x.GeoConfig geo = 13;
+  GrpcConfig grpc = 15;
+  x.TunConfig tun = 17;
+  x.SysProxyConfig sys_proxy = 18;
+  string db_path = 19;
+  // used by system extension to communicate with its containing app
+  string service_secret = 22;
+  uint32 service_port = 23;
+  // if true, a component for monitoring default nic will be added
+  bool default_nic_monitor = 20;
+  // subscription
+  SubscriptionConfig subscription = 21;
+  bool hysteria2_reject_quic = 24;
+
+  // outbound
+  x.OutboundConfig outbound = 30;
+  string redirect_std_err = 31;
+  // based on dst, src, network, if there is no handler matched or the
+  // matched handler does not support ipv6, reject the request
+  bool reject_ipv6 = 32;
+  x.WfpConfig wfp = 33;
+  bool use_real_latency = 34;
+}
+
+message GrpcConfig { 
+  // listen address
+  string address = 1;
+  uint32 port = 2;
+  bytes client_cert = 3;
+  int32 uid = 4;
+  int32 gid = 5;
+}
+
+message SubscriptionConfig {
+  uint32 last_update_time = 21;
+  uint32 interval = 22;
+  bool periodic_update = 23;
+}

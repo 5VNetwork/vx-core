@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+package x.transport.headers.wireguard;
+option go_package = "github.com/5vnetwork/vx-core/transport/headers/wireguard";
+
+message WireguardConfig {}

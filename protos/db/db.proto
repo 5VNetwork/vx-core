@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package x.db;
+
+option go_package = "github.com/5vnetwork/vx-core/app/xsqlite";
+
+service DbService {
+  rpc GetHandler(GetHandlerRequest) returns (DbOutboundHandler);
+  rpc GetAllHandlers(GetAllHandlersRequest) returns (DbHandlers);
+  rpc GetHandlersByGroup(GetHandlersByGroupRequest) returns (DbHandlers);
+  rpc GetBatchedHandlers(GetBatchedHandlersRequest) returns (DbHandlers);
+  rpc UpdateHandler(UpdateHandlerRequest) returns (Receipt);
+}
+
+message Receipt {}
+
+message GetHandlerRequest {
+  int64 id = 1;
+}
+message GetAllHandlersRequest {
+}
+message GetHandlersByGroupRequest {
+  string group = 1;
+}
+message GetBatchedHandlersRequest {
+  uint32 batch_size = 1;
+  uint32 offset = 2;
+}
+message DbHandlers {
+  repeated DbOutboundHandler handlers = 1;
+}
+message DbOutboundHandler {
+  int64 id = 1;
+  string tag = 2;
+  int32 ok = 3;
+  float speed = 4;
+  int32 speed_test_time = 5;
+  int32 ping = 6;
+  int32 ping_test_time = 7;
+  int32 support6 = 8;
+  int32 support6_test_time = 9;
+  bytes config = 10;
+  bool selected = 11;
+  int64 sub_id = 12;
+}
+message UpdateHandlerRequest {
+  int64 id = 1;
+  optional int32 ok = 2;
+  optional float speed = 3;
+  optional int32 ping = 4;
+  optional int32 support6 = 5;
+  optional int32 speed_test_time = 6;
+  optional int32 ping_test_time = 7;
+  optional int32 support6_test_time = 8;
+}
