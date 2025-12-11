@@ -14,7 +14,6 @@ import (
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/tun"
-	"github.com/rs/zerolog/log"
 )
 
 func Tun(config *configs.TmConfig, fc *Builder, client *client.Client) error {
@@ -81,7 +80,6 @@ func NewTunSystemInbound(
 	}
 
 	if device.IP6().IsValid() {
-		log.Info().Msg("666666666666666666666")
 		napIp6 := device.IP6().Next().AsSlice()
 		rejector.NatIp6 = napIp6
 		opts = append(opts, system.WithRejector(rejector))

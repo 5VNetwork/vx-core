@@ -197,3 +197,4 @@ changelog:
       - "^docs:"
       - "^test:"
       - "^infra:"
+      - "^ignore:"
