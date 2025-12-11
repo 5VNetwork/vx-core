@@ -90,7 +90,7 @@ builds:
     binary: x-{{.Os}}-{{.Arch}}.so
 
   - id: x-linux-amd64
-    skip: '{{ if ne .Env.ENABLE_X_LINUX_AMD64 "1" }}true{{ end }}'
+    skip: '{{ if eq (index .Env "VX_SERVER") "1" }}true{{ end }}'
     main: ./cmd/client
     env:
       - CGO_ENABLED=1
