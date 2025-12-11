@@ -77,7 +77,7 @@ jobs:
       - name: Upload Windows artifacts to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: latest
+          tag_name: build
           files: |
             x_win_x86_64.zip
             x_win_arm64.zip

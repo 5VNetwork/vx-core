@@ -18,7 +18,7 @@ before:
 
 builds:
   - id: x-dll
-    skip: true
+    skip: '{{ if eq (index .Env "VX_SERVER") "1" }}true{{ end }}'
     main: ./x_dll/main.go
     goos:
     - windows
@@ -48,7 +48,7 @@ builds:
         {{- end }}
 
   - id: x-so-amd64
-    skip: true
+    skip: '{{ if eq (index .Env "VX_SERVER") "1" }}true{{ end }}'
     main: ./x_linux
     env:
       - CGO_ENABLED=1
@@ -68,7 +68,7 @@ builds:
     binary: x-{{.Os}}-{{.Arch}}.so
 
   - id: x-so-arm64
-    skip: true
+    skip: '{{ if eq (index .Env "VX_SERVER") "1" }}true{{ end }}'
     main: ./x_linux
     env:
       - CGO_ENABLED=1
@@ -90,7 +90,7 @@ builds:
     binary: x-{{.Os}}-{{.Arch}}.so
 
   - id: x-linux-amd64
-    skip: true
+    skip: '{{ if ne .Env.ENABLE_X_LINUX_AMD64 "1" }}true{{ end }}'
     main: ./cmd/client
     env:
       - CGO_ENABLED=1
@@ -109,7 +109,7 @@ builds:
     binary: x-{{.Os}}-{{.Arch}}
 
   - id: x-linux-arm64
-    skip: true
+    skip: '{{ if eq (index .Env "VX_SERVER") "1" }}true{{ end }}'
     main: ./cmd/client
     env:
       - CGO_ENABLED=1
@@ -197,3 +197,4 @@ changelog:
       - "^docs:"
       - "^test:"
       - "^infra:"
+      - "^ignore:"

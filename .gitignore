@@ -32,6 +32,4 @@ infra
 Dockerfile
 image.tar
 wfp/
-x_windows_service/
-service/
 **/.DS_Store
