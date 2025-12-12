@@ -188,6 +188,9 @@ func (p *Packet) Clone() *Packet {
 }
 
 func (p *Packet) Release() {
+	if p == nil {
+		return
+	}
 	p.Payload.Release()
 }
 
