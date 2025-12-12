@@ -58,6 +58,7 @@ type NativeTun struct {
 	closeOnce sync.Once
 	close     atomic.Bool
 	forcedMTU int
+	mtu       int32
 	// outSizes  []int
 	ip4        netip.Addr
 	ip6        netip.Addr
@@ -106,6 +107,7 @@ func NewTun(config *TunOption) (TunDeviceWithInfo, error) {
 		handle:    windows.InvalidHandle,
 		events:    make(chan Event, 10),
 		forcedMTU: int(config.Mtu),
+		mtu:       int32(config.Mtu),
 	}
 
 	/* configure the TUN device */
@@ -350,6 +352,7 @@ retry:
 		packet, err := tun.session.ReceivePacket()
 		switch err {
 		case nil:
+			// TODO: no copy
 			n := copy(bufs[0][offset:], packet)
 			sizes[0] = n
 			tun.session.ReleaseReceivePacket(packet)
@@ -431,7 +434,7 @@ func (rate *rateJuggler) update(packetLen uint64) {
 }
 
 func (t *NativeTun) ReadPacket() (*buf.Buffer, error) {
-	b := buf.New()
+	b := buf.NewWithSize(t.mtu)
 	var sizeArray [1]int
 	_, err := t.Read([][]byte{b.BytesTo(b.Cap())}, sizeArray[:], 0)
 	if err != nil {
@@ -459,7 +462,7 @@ func (t *NativeTun) WritePackets(b buf.MultiBuffer) error {
 }
 
 func (t *NativeTun) ReadPackets() (buf.MultiBuffer, error) {
-	b := buf.New()
+	b := buf.NewWithSize(t.mtu)
 	var sizeArray [1]int
 	_, err := t.Read([][]byte{b.BytesTo(b.Cap())}, sizeArray[:], 0)
 	if err != nil {
