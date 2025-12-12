@@ -147,7 +147,7 @@ func (t *tm) CloseInbound() error {
 }
 
 func getTunDeviceWithInfo(fd int32, config *configs.TunConfig, enable6 bool) (tun.TunDeviceWithInfo, error) {
-	tunDevice, err := tun.NewTun(int(fd))
+	tunDevice, err := tun.NewTun(int(fd), int(config.GetDevice().GetMtu()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tun: %w", err)
 	}

@@ -10,9 +10,10 @@ import (
 type tunWrapper struct {
 	device tun.Device
 	name   string
+	mtu    int32
 }
 
-func NewTun(fd int) (TunDevice, error) {
+func NewTun(fd int, mtu int) (TunDevice, error) {
 	device, name, err := tun.CreateUnmonitoredTUNFromFD(fd)
 	if err != nil {
 		return nil, err
@@ -20,6 +21,7 @@ func NewTun(fd int) (TunDevice, error) {
 	t := &tunWrapper{
 		device: device,
 		name:   name,
+		mtu:    int32(mtu),
 	}
 	return t, nil
 }
@@ -38,7 +40,7 @@ func (t *tunWrapper) WritePacket(pkt *buf.Buffer) error {
 }
 
 func (t *tunWrapper) ReadPacket() (*buf.Buffer, error) {
-	b := buf.New()
+	b := buf.NewWithSize(t.mtu)
 	bufs := make([][]byte, 1)
 	bufs[0] = b.BytesTo(b.Cap())
 	sizes := []int{0}
