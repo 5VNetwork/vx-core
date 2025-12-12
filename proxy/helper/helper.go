@@ -24,7 +24,7 @@ func Relay(ctx context.Context, leftReader buf.Reader, leftWriter buf.Writer,
 	rightReader buf.Reader, rightWriter buf.Writer) error {
 	leftToRight := func() error {
 		var err error
-		if runtime.GOOS == "linux" || runtime.GOOS == "android" {
+		if runtime.GOOS == "linux" {
 			err = spliceCopy(ctx, leftReader, rightWriter, true)
 			if err == nil {
 				rightWriter.CloseWrite()
@@ -46,7 +46,7 @@ func Relay(ctx context.Context, leftReader buf.Reader, leftWriter buf.Writer,
 
 	rightToLeft := func() error {
 		var err error
-		if runtime.GOOS == "linux" || runtime.GOOS == "android" {
+		if runtime.GOOS == "linux" {
 			err = spliceCopy(ctx, rightReader, leftWriter, false)
 			if err == nil {
 				leftWriter.CloseWrite()
