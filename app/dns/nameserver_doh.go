@@ -139,8 +139,9 @@ func (d *DoHNameServer) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool)
 	question := msg.Question[0]
 	cachedMsg, ok := d.cache.Get(&question)
 	if ok {
-		log.Ctx(ctx).Debug().Str("domain", question.Name).Str("type", dns.TypeToString[question.Qtype]).
-			Str("reply", cachedMsg.String()).Msg("doh cache hit")
+		log.Ctx(ctx).Debug().Str("domain", question.Name).
+			Str("type", dns.TypeToString[question.Qtype]).
+			Any("reply", cachedMsg).Msg("doh cache hit")
 		return makeReply(msg, cachedMsg), nil
 	}
 

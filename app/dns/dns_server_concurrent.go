@@ -267,7 +267,7 @@ func (ns *DnsServerConcurrent) HandleQuery(ctx context.Context, msg *dns.Msg, tc
 			Dur("duration", time.Since(startTime)).
 			Int("rcode", int(reply.Msg.Rcode)).
 			Str("type", dns.TypeToString[question.Qtype]).
-			Str("reply", reply.String()).Msg("dnsConcurrent reply")
+			Any("reply", reply).Msg("dnsConcurrent reply")
 		if reply.Rcode == dns.RcodeSuccess && !reply.Truncated {
 			ns.rrCache.Set(reply.Msg)
 		}

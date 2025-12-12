@@ -102,8 +102,9 @@ func (s *QUICNameServer) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool
 	question := msg.Question[0]
 	cachedMsg, ok := s.cache.Get(&question)
 	if ok {
-		log.Ctx(ctx).Debug().Str("domain", question.Name).Str("type", dns.TypeToString[question.Qtype]).
-			Str("reply", cachedMsg.String()).Msg("dns quic cache hit")
+		log.Ctx(ctx).Debug().Str("domain", question.Name).
+			Str("type", dns.TypeToString[question.Qtype]).
+			Any("reply", cachedMsg).Msg("dns quic cache hit")
 		return makeReply(msg, cachedMsg), nil
 	}
 

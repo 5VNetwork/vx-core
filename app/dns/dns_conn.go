@@ -131,7 +131,7 @@ func (ns *dnsConnImpl) handleRequest(p *udp.Packet) {
 		return
 	}
 
-	log.Debug().Str("question", msg.Question[0].String()).
+	log.Debug().Any("question", msg.Question[0]).
 		Str("type", dns.TypeToString[msg.Question[0].Qtype]).
 		Str("name", ns.tag).
 		Uint16("id", msg.Id).Msg("dns request")
