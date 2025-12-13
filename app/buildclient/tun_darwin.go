@@ -46,8 +46,11 @@ func NewTunGvisorInbound(config *configs.TunConfig, f *Builder,
 		log.Info().Int("newFd", newFd).Send()
 		rw := os.NewFile(uintptr(newFd), "/dev/tun")
 		udpRw := gvisor.NewReadWriteCloserSplitUdp(rw, offset)
-		le = gvisor.NewIOLinkEndpoint(udpRw, gvisor.IOLinkEndpointWithOffset(4),
-			gvisor.IOLinkEndpointWithRejector(rejector))
+		le = gvisor.NewIOLinkEndpoint(udpRw,
+			gvisor.IOLinkEndpointWithOffset(4),
+			gvisor.IOLinkEndpointWithRejector(rejector),
+			gvisor.IOLinkEndpointWithMtu(config.Device.Mtu),
+		)
 
 		opts := []system.Option{
 			system.WithTag(config.Tag),
