@@ -3,7 +3,6 @@ package trojan
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/errors"
@@ -75,13 +74,12 @@ func (c *Client) HandleFlow(ctx context.Context, dst net.Destination, rw buf.Rea
 
 	err = buf.CopyOnceTimeout(rw, bodyWriter, proxy.FirstPayloadTimeout)
 	if err != nil {
-		if err == buf.ErrNotTimeoutReader || err == buf.ErrReadTimeout ||
-			errors.Is(err, os.ErrDeadlineExceeded) {
+		if err == buf.ErrNotTimeoutReader || err == buf.ErrReadTimeout {
 			if err := connWriter.WriteHeader(); err != nil {
-				return errors.New("failed to write request header").Base(err)
+				return fmt.Errorf("failed to write request header: %w", err)
 			}
 		} else {
-			return errors.New("failed to write a request payload").Base(err)
+			return fmt.Errorf("copy once timeout: %w", err)
 		}
 	}
 	if err = bufferWriter.SetBuffered(false); err != nil {

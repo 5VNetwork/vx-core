@@ -3,7 +3,6 @@ package shadowsocks
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/errors"
@@ -75,8 +74,7 @@ func (c *Client) HandleFlow(ctx context.Context, dst net.Destination, rw buf.Rea
 				return errors.New("failed to write request").Base(err)
 			}
 			if err = buf.CopyOnceTimeout(rw, bodyWriter, proxy.FirstPayloadTimeout); err != nil &&
-				err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout &&
-				!errors.Is(err, os.ErrDeadlineExceeded) {
+				err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
 				return errors.New("failed to write A request payload").Base(err)
 			}
 			if err := bufferedWriter.SetBuffered(false); err != nil {

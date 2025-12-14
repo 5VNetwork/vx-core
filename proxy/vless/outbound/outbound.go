@@ -6,7 +6,6 @@ import (
 	gotls "crypto/tls"
 	"fmt"
 	"io"
-	"os"
 	"reflect"
 	"time"
 	"unsafe"
@@ -341,8 +340,7 @@ func (h *Handler) handle(ctx context.Context, dst net.Destination, rw buf.Reader
 		}
 		err1 := buf.CopyOnceTimeout(clientReader, serverWriter, time.Millisecond*500)
 		if err1 != nil {
-			if err1 != buf.ErrReadTimeout && err1 != os.ErrDeadlineExceeded &&
-				err1 != buf.ErrNotTimeoutReader {
+			if err1 != buf.ErrReadTimeout && err1 != buf.ErrNotTimeoutReader {
 				return err1
 			} else if requestAddons.Flow == vless.XRV {
 				mb := make(buf.MultiBuffer, 1)

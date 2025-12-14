@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -174,6 +175,9 @@ func CopyOnceTimeout(reader Reader, writer Writer, timeout time.Duration) error 
 		ddl.SetReadDeadline(time.Time{})
 		if mb.Len() > 0 {
 			return writer.WriteMultiBuffer(mb)
+		}
+		if err != nil && strings.Contains(err.Error(), "i/o timeout") {
+			return nil
 		}
 		return err
 	} else {

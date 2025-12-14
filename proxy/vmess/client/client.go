@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"hash/crc64"
-	"os"
 	"time"
 
 	"github.com/5vnetwork/vx-core/common/buf"
@@ -25,7 +24,6 @@ import (
 
 	"github.com/5vnetwork/vx-core/proxy"
 
-	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
 )
 
@@ -131,8 +129,7 @@ func (h *Client) HandleFlow(ctx context.Context, dst net.Destination, rw buf.Rea
 			return fmt.Errorf("failed to start encoding, %w", err)
 		}
 		if err := buf.CopyOnceTimeout(input, bodyWriter, proxy.FirstPayloadTimeout); err != nil &&
-			err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout &&
-			!errors.Is(err, os.ErrDeadlineExceeded) {
+			err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
 			return fmt.Errorf("failed to write first payload, %w", err)
 		}
 
@@ -176,13 +173,6 @@ func (h *Client) HandleFlow(ctx context.Context, dst net.Destination, rw buf.Rea
 	}
 
 	err = task.Run(ctx, requestDone, responseDone)
-	if err != nil {
-		// when the server does not send vmess end packet, and the underlying is websocket
-		var closeError *websocket.CloseError
-		if errors.As(err, &closeError) && closeError.Code == websocket.CloseNormalClosure {
-			return nil
-		}
-	}
 	return err
 }
 

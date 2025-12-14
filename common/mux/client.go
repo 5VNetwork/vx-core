@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -142,8 +141,7 @@ func (m *client) merge(ctx context.Context, dest net.Destination, s *clientSessi
 
 func writeFirstPayload(reader buf.Reader, writer *MuxWriter) error {
 	err := buf.CopyOnceTimeout(reader, writer, time.Millisecond*100)
-	if err == buf.ErrNotTimeoutReader || err == buf.ErrReadTimeout ||
-		errors.Is(err, os.ErrDeadlineExceeded) {
+	if err == buf.ErrNotTimeoutReader || err == buf.ErrReadTimeout {
 		return writer.WriteMultiBuffer(buf.MultiBuffer{})
 	}
 	return err
