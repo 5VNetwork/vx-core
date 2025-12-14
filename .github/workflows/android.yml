@@ -76,8 +76,9 @@ jobs:
 
       - name:
           Build Android AAR
-          # export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/26.3.11579264
         run: |
+          ls -la $ANDROID_HOME/ndk/ || echo "NDK directory not found"
+          export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/28.2.13676358
           gomobile bind -ldflags="-s -w" -trimpath -o x.aar -target=android -androidapi=21 -v -javapkg="io.tm.android" ./x_android
 
       - name: Upload to GitHub Release
