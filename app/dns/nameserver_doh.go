@@ -175,7 +175,7 @@ func (d *DoHNameServer) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool)
 		Str("reply", rply.String()).Msg("doh reply")
 
 	if d.ipToDomain != nil {
-		d.ipToDomain.SetDomain(msg, d.dohURL)
+		d.ipToDomain.SetDomain(msg, net.ParseAddress(d.dohURL))
 	}
 	d.cache.Set(rply)
 

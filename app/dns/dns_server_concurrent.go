@@ -440,7 +440,7 @@ func (w *DnsServerConcurrent) handleTcpReply(ctx context.Context, t2 *t2,
 			w.dnsConnImpl.handlerReply(msg)
 		}
 		if w.ipToDomain != nil {
-			w.ipToDomain.SetDomain(msg, ns.String())
+			w.ipToDomain.SetDomain(msg, ns.Address)
 		}
 	}
 }
@@ -477,7 +477,7 @@ func (w *DnsServerConcurrent) handleReply(b *udp.Packet) {
 		w.dnsConnImpl.handlerReply(msg)
 	}
 	if w.ipToDomain != nil {
-		w.ipToDomain.SetDomain(msg, b.Source.String())
+		w.ipToDomain.SetDomain(msg, b.Source.Address)
 	}
 }
 

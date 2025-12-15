@@ -145,7 +145,7 @@ func (d *DnsServerSerial) HandleQuery(ctx context.Context, msg *dns.Msg, tcp boo
 			d.cache.Set(rspMsg)
 		}
 		if d.ipToDomain != nil {
-			d.ipToDomain.SetDomain(rspMsg, dest.String())
+			d.ipToDomain.SetDomain(rspMsg, dest.Address)
 		}
 		return rspMsg, nil
 	}

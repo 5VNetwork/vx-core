@@ -166,7 +166,7 @@ func (s *QUICNameServer) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool
 		s.cache.Set(rply)
 	}
 	if s.ipToDomain != nil {
-		s.ipToDomain.SetDomain(msg, s.destination.String())
+		s.ipToDomain.SetDomain(msg, s.destination.Address)
 	}
 	return rply, nil
 }

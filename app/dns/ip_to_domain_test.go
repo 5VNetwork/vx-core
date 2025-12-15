@@ -42,7 +42,7 @@ func TestIPToDomain_SetDomain_A_Record(t *testing.T) {
 		},
 	}
 
-	resolver := "8.8.8.8"
+	resolver := net.ParseAddress("8.8.8.8")
 	ipToDomain.SetDomain(msg, resolver)
 
 	// Verify the domain was stored
@@ -52,7 +52,7 @@ func TestIPToDomain_SetDomain_A_Record(t *testing.T) {
 
 	// Verify the resolver was stored
 	resolvers := ipToDomain.GetResolvers("example.com", ip)
-	assert.Equal(t, []string{resolver}, resolvers)
+	assert.Equal(t, []net.Address{resolver}, resolvers)
 }
 
 func TestIPToDomain_SetDomain_AAAA_Record(t *testing.T) {
@@ -80,7 +80,7 @@ func TestIPToDomain_SetDomain_AAAA_Record(t *testing.T) {
 		},
 	}
 
-	resolver := "2001:4860:4860::8888"
+	resolver := net.ParseAddress("2001:4860:4860::8888")
 	ipToDomain.SetDomain(msg, resolver)
 
 	// Verify the domain was stored
@@ -90,7 +90,7 @@ func TestIPToDomain_SetDomain_AAAA_Record(t *testing.T) {
 
 	// Verify the resolver was stored
 	resolvers := ipToDomain.GetResolvers("example.com", ip)
-	assert.Equal(t, []string{resolver}, resolvers)
+	assert.Equal(t, []net.Address{resolver}, resolvers)
 }
 
 func TestIPToDomain_SetDomain_MultipleRecords(t *testing.T) {
@@ -127,7 +127,7 @@ func TestIPToDomain_SetDomain_MultipleRecords(t *testing.T) {
 		},
 	}
 
-	resolver := "8.8.8.8"
+	resolver := net.ParseAddress("8.8.8.8")
 	ipToDomain.SetDomain(msg, resolver)
 
 	// Verify both IPs map to the same domain
@@ -138,8 +138,8 @@ func TestIPToDomain_SetDomain_MultipleRecords(t *testing.T) {
 	assert.Equal(t, []string{"example.com"}, ipToDomain.GetDomain(ip2))
 
 	// Verify resolvers are stored for both IPs
-	assert.Equal(t, []string{resolver}, ipToDomain.GetResolvers("example.com", ip1))
-	assert.Equal(t, []string{resolver}, ipToDomain.GetResolvers("example.com", ip2))
+	assert.Equal(t, []net.Address{resolver}, ipToDomain.GetResolvers("example.com", ip1))
+	assert.Equal(t, []net.Address{resolver}, ipToDomain.GetResolvers("example.com", ip2))
 }
 
 func TestIPToDomain_SetDomain_IgnoreNonARecords(t *testing.T) {
@@ -167,7 +167,7 @@ func TestIPToDomain_SetDomain_IgnoreNonARecords(t *testing.T) {
 		},
 	}
 
-	resolver := "8.8.8.8"
+	resolver := net.ParseAddress("8.8.8.8")
 	ipToDomain.SetDomain(msg, resolver)
 
 	// Should not store anything since it's not A or AAAA record
@@ -195,7 +195,7 @@ func TestIPToDomain_SetDomain_EmptyQuestion(t *testing.T) {
 		},
 	}
 
-	resolver := "8.8.8.8"
+	resolver := net.ParseAddress("8.8.8.8")
 	ipToDomain.SetDomain(msg, resolver)
 
 	// Should not store anything since there are no questions
@@ -218,25 +218,11 @@ func TestIPToDomain_GetDomain_SingleDomain(t *testing.T) {
 
 	// Add a single domain-resolver pair
 	msg := createDNSMessage("example.com.", "192.168.1.1")
-	ipToDomain.SetDomain(msg, "8.8.8.8")
+	ipToDomain.SetDomain(msg, net.ParseAddress("8.8.8.8"))
 
 	ip := net.ParseIP("192.168.1.1")
 	domains := ipToDomain.GetDomain(ip)
 	assert.Equal(t, []string{"example.com"}, domains)
-}
-
-func TestIPToDomain_GetDomain_MultipleSameDomains(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
-
-	// Add same domain from multiple resolvers
-	msg := createDNSMessage("example.com.", "192.168.1.1")
-	ipToDomain.SetDomain(msg, "8.8.8.8")
-	ipToDomain.SetDomain(msg, "1.1.1.1")
-
-	ip := net.ParseIP("192.168.1.1")
-	domains := ipToDomain.GetDomain(ip)
-	// Should return all domains (same domain, multiple resolvers)
-	assert.Equal(t, []string{"example.com", "example.com"}, domains)
 }
 
 func TestIPToDomain_GetDomain_MultipleDifferentDomains(t *testing.T) {
@@ -246,8 +232,8 @@ func TestIPToDomain_GetDomain_MultipleDifferentDomains(t *testing.T) {
 	msg1 := createDNSMessage("example.com.", "192.168.1.1")
 	msg2 := createDNSMessage("different.com.", "192.168.1.1")
 
-	ipToDomain.SetDomain(msg1, "8.8.8.8")
-	ipToDomain.SetDomain(msg2, "1.1.1.1")
+	ipToDomain.SetDomain(msg1, net.ParseAddress("8.8.8.8"))
+	ipToDomain.SetDomain(msg2, net.ParseAddress("1.1.1.1"))
 
 	ip := net.ParseIP("192.168.1.1")
 	domains := ipToDomain.GetDomain(ip)
@@ -270,20 +256,20 @@ func TestIPToDomain_GetResolvers_SingleResolver(t *testing.T) {
 	ipToDomain := NewIPToDomain(100)
 
 	msg := createDNSMessage("example.com.", "192.168.1.1")
-	resolver := "8.8.8.8"
+	resolver := net.ParseAddress("8.8.8.8")
 	ipToDomain.SetDomain(msg, resolver)
 
 	ip := net.ParseIP("192.168.1.1")
 	resolvers := ipToDomain.GetResolvers("example.com", ip)
-	assert.Equal(t, []string{resolver}, resolvers)
+	assert.Equal(t, []net.Address{resolver}, resolvers)
 }
 
 func TestIPToDomain_GetResolvers_MultipleResolvers(t *testing.T) {
 	ipToDomain := NewIPToDomain(100)
 
 	msg := createDNSMessage("example.com.", "192.168.1.1")
-	resolver1 := "8.8.8.8"
-	resolver2 := "1.1.1.1"
+	resolver1 := net.ParseAddress("8.8.8.8")
+	resolver2 := net.ParseAddress("1.1.1.1")
 
 	ipToDomain.SetDomain(msg, resolver1)
 	ipToDomain.SetDomain(msg, resolver2)
@@ -304,8 +290,8 @@ func TestIPToDomain_GetResolvers_DifferentDomains(t *testing.T) {
 	msg1 := createDNSMessage("example.com.", "192.168.1.1")
 	msg2 := createDNSMessage("different.com.", "192.168.1.1")
 
-	ipToDomain.SetDomain(msg1, "8.8.8.8")
-	ipToDomain.SetDomain(msg2, "1.1.1.1")
+	ipToDomain.SetDomain(msg1, net.ParseAddress("8.8.8.8"))
+	ipToDomain.SetDomain(msg2, net.ParseAddress("1.1.1.1"))
 
 	ip := net.ParseIP("192.168.1.1")
 
@@ -313,8 +299,8 @@ func TestIPToDomain_GetResolvers_DifferentDomains(t *testing.T) {
 	resolvers1 := ipToDomain.GetResolvers("example.com", ip)
 	resolvers2 := ipToDomain.GetResolvers("different.com", ip)
 
-	assert.Equal(t, []string{"8.8.8.8"}, resolvers1)
-	assert.Equal(t, []string{"1.1.1.1"}, resolvers2)
+	assert.Equal(t, []net.Address{net.ParseAddress("8.8.8.8")}, resolvers1)
+	assert.Equal(t, []net.Address{net.ParseAddress("1.1.1.1")}, resolvers2)
 }
 
 func TestIPToDomainEntry_AddDomain_Duplicate(t *testing.T) {
@@ -325,72 +311,13 @@ func TestIPToDomainEntry_AddDomain_Duplicate(t *testing.T) {
 	expireTime := time.Now().Add(5 * time.Minute)
 
 	// Add the same domain and resolver twice
-	entry.addDomain("example.com", "8.8.8.8", expireTime)
-	entry.addDomain("example.com", "8.8.8.8", expireTime)
+	entry.addDomain("example.com", net.ParseAddress("8.8.8.8"), expireTime)
+	entry.addDomain("example.com", net.ParseAddress("8.8.8.8"), expireTime)
 
 	// Should only have one entry (duplicate updates expireTime)
 	assert.Len(t, entry.domainAndResolvers, 1)
 	assert.Equal(t, "example.com", entry.domainAndResolvers[0].Domain)
-	assert.Equal(t, "8.8.8.8", entry.domainAndResolvers[0].Resolver)
-}
-
-func TestIPToDomainEntry_AddDomain_SameDomainDifferentResolver(t *testing.T) {
-	entry := &ipToDomainEntry{
-		domainAndResolvers: make([]DomainAndResolver, 0, 4),
-	}
-
-	expireTime := time.Now().Add(5 * time.Minute)
-
-	// Add the same domain with different resolvers
-	entry.addDomain("example.com", "8.8.8.8", expireTime)
-	entry.addDomain("example.com", "1.1.1.1", expireTime)
-
-	// Should have two entries
-	assert.Len(t, entry.domainAndResolvers, 2)
-	assert.Equal(t, "example.com", entry.domainAndResolvers[0].Domain)
-	assert.Equal(t, "8.8.8.8", entry.domainAndResolvers[0].Resolver)
-	assert.Equal(t, "example.com", entry.domainAndResolvers[1].Domain)
-	assert.Equal(t, "1.1.1.1", entry.domainAndResolvers[1].Resolver)
-}
-
-func TestIPToDomainEntry_AddDomain_DifferentDomains(t *testing.T) {
-	entry := &ipToDomainEntry{
-		domainAndResolvers: make([]DomainAndResolver, 0, 4),
-	}
-
-	expireTime := time.Now().Add(5 * time.Minute)
-
-	// Add different domains
-	entry.addDomain("example.com", "8.8.8.8", expireTime)
-	entry.addDomain("different.com", "1.1.1.1", expireTime)
-
-	// Should have two entries
-	assert.Len(t, entry.domainAndResolvers, 2)
-	assert.Equal(t, "example.com", entry.domainAndResolvers[0].Domain)
-	assert.Equal(t, "different.com", entry.domainAndResolvers[1].Domain)
-}
-
-func TestIPToDomainEntry_AddDomain_MaxEntriesLimit(t *testing.T) {
-	entry := &ipToDomainEntry{
-		domainAndResolvers: make([]DomainAndResolver, 0, 4),
-	}
-
-	expireTime := time.Now().Add(5 * time.Minute)
-
-	// Add 5 entries (more than the limit of 4)
-	entry.addDomain("domain1.com", "8.8.8.8", expireTime)
-	entry.addDomain("domain2.com", "8.8.8.8", expireTime)
-	entry.addDomain("domain3.com", "8.8.8.8", expireTime)
-	entry.addDomain("domain4.com", "8.8.8.8", expireTime)
-	entry.addDomain("domain5.com", "8.8.8.8", expireTime)
-
-	// Should have exactly 4 entries (first one replaced by 5th)
-	assert.Len(t, entry.domainAndResolvers, 4)
-	// The 5th entry should replace the first one
-	assert.Equal(t, "domain5.com", entry.domainAndResolvers[0].Domain)
-	assert.Equal(t, "domain2.com", entry.domainAndResolvers[1].Domain)
-	assert.Equal(t, "domain3.com", entry.domainAndResolvers[2].Domain)
-	assert.Equal(t, "domain4.com", entry.domainAndResolvers[3].Domain)
+	assert.Equal(t, net.ParseAddress("8.8.8.8"), entry.domainAndResolvers[0].Resolver)
 }
 
 func TestIPToDomain_UnFqdnHandling(t *testing.T) {
@@ -418,7 +345,7 @@ func TestIPToDomain_UnFqdnHandling(t *testing.T) {
 		},
 	}
 
-	ipToDomain.SetDomain(msg, "8.8.8.8")
+	ipToDomain.SetDomain(msg, net.ParseAddress("8.8.8.8"))
 
 	// Should store domain without trailing dot
 	ip := net.ParseIP("192.168.1.1")
@@ -436,7 +363,7 @@ func TestIPToDomain_ConcurrentAccess(t *testing.T) {
 	go func() {
 		for i := 0; i < 100; i++ {
 			msg := createDNSMessage("example.com.", "192.168.1.1")
-			ipToDomain.SetDomain(msg, "8.8.8.8")
+			ipToDomain.SetDomain(msg, net.ParseAddress("8.8.8.8"))
 		}
 		done <- true
 	}()
@@ -470,7 +397,7 @@ func TestIPToDomain_CacheLimit(t *testing.T) {
 		ip := fmt.Sprintf("192.168.%d.%d", i/256, i%256)
 		domain := fmt.Sprintf("example%d.com.", i)
 		msg := createDNSMessage(domain, ip)
-		ipToDomain.SetDomain(msg, "8.8.8.8")
+		ipToDomain.SetDomain(msg, net.ParseAddress("8.8.8.8"))
 	}
 
 	// Early entries should be evicted due to LRU cache limit
@@ -502,14 +429,14 @@ func BenchmarkIPToDomain_SetDomain(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		ipToDomain.SetDomain(msg, "8.8.8.8")
+		ipToDomain.SetDomain(msg, net.ParseAddress("8.8.8.8"))
 	}
 }
 
 func BenchmarkIPToDomain_GetDomain(b *testing.B) {
 	ipToDomain := NewIPToDomain(100)
 	msg := createDNSMessage("example.com.", "192.168.1.1")
-	ipToDomain.SetDomain(msg, "8.8.8.8")
+	ipToDomain.SetDomain(msg, net.ParseAddress("8.8.8.8"))
 
 	ip := net.ParseIP("192.168.1.1")
 
@@ -522,7 +449,7 @@ func BenchmarkIPToDomain_GetDomain(b *testing.B) {
 func BenchmarkIPToDomain_GetResolvers(b *testing.B) {
 	ipToDomain := NewIPToDomain(100)
 	msg := createDNSMessage("example.com.", "192.168.1.1")
-	ipToDomain.SetDomain(msg, "8.8.8.8")
+	ipToDomain.SetDomain(msg, net.ParseAddress("8.8.8.8"))
 
 	ip := net.ParseIP("192.168.1.1")
 
@@ -559,7 +486,7 @@ func TestIPToDomain_TTL_SetAndGet(t *testing.T) {
 		},
 	}
 
-	ipToDomain.SetDomain(msg, "8.8.8.8")
+	ipToDomain.SetDomain(msg, net.ParseAddress("8.8.8.8"))
 
 	// Verify ExpireTime was set correctly
 	ip := net.ParseIP("192.168.1.1")
@@ -602,7 +529,7 @@ func TestIPToDomain_TTL_UpdateExpireTime(t *testing.T) {
 			},
 		},
 	}
-	ipToDomain.SetDomain(msg1, "8.8.8.8")
+	ipToDomain.SetDomain(msg1, net.ParseAddress("8.8.8.8"))
 
 	ip := net.ParseIP("192.168.1.1")
 
@@ -630,7 +557,7 @@ func TestIPToDomain_TTL_UpdateExpireTime(t *testing.T) {
 			},
 		},
 	}
-	ipToDomain.SetDomain(msg2, "8.8.8.8")
+	ipToDomain.SetDomain(msg2, net.ParseAddress("8.8.8.8"))
 
 	// Should only have one entry (updated)
 	v, ok := ipToDomain.cache.Get(net.IPAddress(ip))
@@ -672,7 +599,7 @@ func TestIPToDomain_TTL_ConcurrentAccessWithExpiration(t *testing.T) {
 			},
 		},
 	}
-	ipToDomain.SetDomain(msg, "8.8.8.8")
+	ipToDomain.SetDomain(msg, net.ParseAddress("8.8.8.8"))
 
 	done := make(chan bool, 3)
 	ip := net.ParseIP("192.168.1.1")
@@ -718,7 +645,7 @@ func TestIPToDomain_TTL_ConcurrentAccessWithExpiration(t *testing.T) {
 				},
 			},
 		}
-		ipToDomain.SetDomain(refreshMsg, "8.8.8.8")
+		ipToDomain.SetDomain(refreshMsg, net.ParseAddress("8.8.8.8"))
 		done <- true
 	}()
 

@@ -24,7 +24,7 @@ type ipToDomainEntry struct {
 	domainAndResolvers []DomainAndResolver
 }
 
-func (e *ipToDomainEntry) addDomain(d, resolver string, expireTime time.Time) {
+func (e *ipToDomainEntry) addDomain(d string, resolver net.Address, expireTime time.Time) {
 	e.lock.Lock()
 	defer e.lock.Unlock()
 
@@ -51,20 +51,20 @@ func (e *ipToDomainEntry) addDomain(d, resolver string, expireTime time.Time) {
 		Resolver:   resolver,
 		ExpireTime: expireTime,
 	}
-	if len(e.domainAndResolvers) >= 4 {
-		e.domainAndResolvers[0] = entry
+	if len(e.domainAndResolvers) == 0 {
+		e.domainAndResolvers = append(e.domainAndResolvers, entry)
 	} else {
-		e.domainAndResolvers = append(e.domainAndResolvers, DomainAndResolver{
-			Domain:     d,
-			Resolver:   resolver,
-			ExpireTime: expireTime,
-		})
+		if len(e.domainAndResolvers) < cap(e.domainAndResolvers) {
+			e.domainAndResolvers = append(e.domainAndResolvers, entry)
+		}
+		copy(e.domainAndResolvers[1:], e.domainAndResolvers[:len(e.domainAndResolvers)-1])
+		e.domainAndResolvers[0] = entry
 	}
 }
 
 type DomainAndResolver struct {
 	Domain     string
-	Resolver   string
+	Resolver   net.Address
 	ExpireTime time.Time
 }
 
@@ -85,7 +85,7 @@ func (i *IPToDomain) GetDomain(ip net.IP) []string {
 	return domains
 }
 
-func (i *IPToDomain) GetResolvers(domain string, ip net.IP) []string {
+func (i *IPToDomain) GetResolvers(domain string, ip net.IP) []net.Address {
 	v, ok := i.cache.Get(net.IPAddress(ip))
 	if !ok {
 		return nil
@@ -94,7 +94,7 @@ func (i *IPToDomain) GetResolvers(domain string, ip net.IP) []string {
 
 	entry.lock.RLock()
 	defer entry.lock.RUnlock()
-	var resolvers []string
+	var resolvers []net.Address
 	for _, dr := range entry.domainAndResolvers {
 		if dr.Domain == domain {
 			resolvers = append(resolvers, dr.Resolver)
@@ -103,7 +103,7 @@ func (i *IPToDomain) GetResolvers(domain string, ip net.IP) []string {
 	return resolvers
 }
 
-func (i *IPToDomain) SetDomain(reply *dns.Msg, src string) {
+func (i *IPToDomain) SetDomain(reply *dns.Msg, src net.Address) {
 	if len(reply.Question) == 0 {
 		return
 	}
@@ -121,7 +121,7 @@ func (i *IPToDomain) SetDomain(reply *dns.Msg, src string) {
 			entryI, ok := i.cache.Get(net.IPAddress(a.A))
 			if !ok {
 				entryI = &ipToDomainEntry{
-					domainAndResolvers: make([]DomainAndResolver, 4),
+					domainAndResolvers: make([]DomainAndResolver, 0, 4),
 				}
 				i.cache.Put(net.IPAddress(a.A), entryI)
 			}
@@ -132,7 +132,7 @@ func (i *IPToDomain) SetDomain(reply *dns.Msg, src string) {
 			entryI, ok := i.cache.Get(net.IPAddress(aaaa.AAAA))
 			if !ok {
 				entryI = &ipToDomainEntry{
-					domainAndResolvers: make([]DomainAndResolver, 4),
+					domainAndResolvers: make([]DomainAndResolver, 0, 4),
 				}
 				i.cache.Put(net.IPAddress(aaaa.AAAA), entryI)
 			}

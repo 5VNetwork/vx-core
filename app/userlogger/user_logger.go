@@ -28,7 +28,7 @@ type UserLogger struct {
 
 type ipToDomain interface {
 	GetDomain(ip net.IP) []string
-	GetResolvers(domain string, ip net.IP) []string
+	GetResolvers(domain string, ip net.IP) []net.Address
 }
 
 func NewUserLogger(enabled bool, logAppId bool, size int) *UserLogger {
@@ -205,7 +205,11 @@ func (s *UserLogger) LogSessionError(info *session.Info, err error) {
 		if s.dns != nil {
 			resolvers := s.dns.GetResolvers(domain, info.Target.Address.IP())
 			if len(resolvers) > 0 {
-				se.Dns = strings.Join(resolvers, ",")
+				resolversStr := make([]string, len(resolvers))
+				for i, resolver := range resolvers {
+					resolversStr[i] = resolver.String()
+				}
+				se.Dns = strings.Join(resolversStr, ",")
 			}
 		}
 	}
