@@ -88,7 +88,7 @@ jobs:
       - name: Trigger vx-service workflow
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.PAT_TOKEN }}  # Personal Access Token with repo scope
+          token: ${{ secrets.TRIGGER_TOKEN }}  # Personal Access Token with repo scope
           repository: 5VNetwork/vx-service  # Your vx-service repository
           event-type: tag-pushed
           client-payload: |
