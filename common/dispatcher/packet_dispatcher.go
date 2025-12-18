@@ -12,10 +12,12 @@ import (
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/net/udp"
 	"github.com/5vnetwork/vx-core/common/pipe"
+	"github.com/5vnetwork/vx-core/common/session"
 	"github.com/5vnetwork/vx-core/common/signal"
 	"github.com/5vnetwork/vx-core/common/signal/done"
 	"github.com/5vnetwork/vx-core/i"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -122,11 +124,13 @@ func (s *PacketDispatcher) getTimeoutLink(dest net.Destination) (*tLink, error) 
 		return nil, errors.New("too many links")
 	}
 
-	// ctx := session.ContextWithInfo(s.ctx, newInfo)
-	// ctx = log.With().Uint32("sid", uint32(newInfo.ID)).Uint32("old_id", uint32(s.info.ID)).Logger().WithContext(ctx)
-	// log.Ctx(ctx).Debug().Str("dst", dest.String()).Msg("new udp sub session")
+	ctx := s.ctx
+	if zerolog.GlobalLevel() == zerolog.DebugLevel {
+		ctx = session.GetCtx(ctx)
+		log.Ctx(ctx).Debug().Any("dst", dest).Msg("new udp sub session")
+	}
 
-	ctx, cancel := context.WithCancel(s.ctx)
+	ctx, cancel := context.WithCancel(ctx)
 	iLink, oLink := pipe.NewLinks(int32(s.bufferSize), false)
 	tLink := &tLink{
 		Link: iLink,
@@ -134,14 +138,14 @@ func (s *PacketDispatcher) getTimeoutLink(dest net.Destination) (*tLink, error) 
 
 	if s.requestTimeout > 0 {
 		tLink.requestActivityChecker = signal.NewActivityChecker(func() {
-			tLink.Interrupt(errors.ErrIdle)
 			log.Ctx(ctx).Debug().Msg("request timeout")
+			s.removeTLink(dest, tLink)
 		}, s.requestTimeout)
 	}
 	if s.responseTimeout > 0 {
 		tLink.responseActivityChecker = signal.NewActivityChecker(func() {
-			tLink.Interrupt(errors.ErrIdle)
 			log.Ctx(ctx).Debug().Msg("response timeout")
+			s.removeTLink(dest, tLink)
 		}, s.responseTimeout)
 	}
 	if s.linkLifetime > 0 {

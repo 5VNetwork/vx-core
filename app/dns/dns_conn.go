@@ -97,9 +97,7 @@ func (t *dnsConnImpl) dnsCleanup() error {
 	t.dnsLock.Lock()
 	for _, info := range t.dnsMsgIds {
 		if info.addedAt.Before(time.Now().Add(-time.Second * 10)) {
-			log.Debug().Uint16("id", info.id).
-				Str("src", info.src.String()).
-				Str("dst", info.dst.String()).Msg("dns cleanup")
+			log.Debug().Uint16("id", info.id).Msg("dns cleanup")
 			delete(t.dnsMsgIds, info.id)
 		}
 	}
@@ -156,6 +154,10 @@ func (ns *dnsConnImpl) handleRequest(p *udp.Packet) {
 	existing, ok := ns.dnsMsgIds[msg.Id]
 	if ok {
 		existing.addedAt = time.Now()
+		if time.Since(existing.firstAddedAt) > time.Second*4 {
+			log.Warn().Uint16("id", msg.Id).
+				Msg("dns request no reponse yet")
+		}
 	} else {
 		ns.dnsMsgIds[msg.Id] = &dnsInfo{
 			id:           msg.Id,
