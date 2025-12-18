@@ -131,8 +131,12 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 				},
 			}
 
-			common.Must(fc.addComponent(internalDns))
-			common.Must(fc.addComponent(dns))
+			if err := fc.addComponent(internalDns); err != nil {
+				return err
+			}
+			if err := fc.addComponent(dns); err != nil {
+				return err
+			}
 			om.AddHandlers(idns.NewHandlerV().WithTag("dns").WithDns(dns))
 			return nil
 		})

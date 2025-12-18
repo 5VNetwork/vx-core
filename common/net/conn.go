@@ -264,3 +264,8 @@ func (c *NetConnToPacketConn) ReadFrom(p []byte) (n int, addr Addr, err error) {
 func (c *NetConnToPacketConn) WriteTo(p []byte, addr Addr) (n int, err error) {
 	return c.Write(p)
 }
+
+// suppress quic-go log
+func (c *NetConnToPacketConn) SetReadBuffer(bytes int) error {
+	return nil
+}

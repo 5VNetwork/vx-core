@@ -18,7 +18,13 @@ import (
 	"github.com/5vnetwork/vx-core/common/uot"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/proxy/helper"
+	"github.com/sirupsen/logrus"
 )
+
+func init() {
+	// to suppress logrus log in anytls package
+	logrus.SetLevel(logrus.FatalLevel)
+}
 
 type Client struct {
 	ClientConfig
