@@ -32,12 +32,12 @@ func IDFromContext(ctx context.Context) (uint32, bool) {
 	return id, ok
 }
 func GetCtx(ctx context.Context) context.Context {
-	oid, ok := IDFromContext(ctx)
+	oid, hasExistingId := IDFromContext(ctx)
 
 	id := rand.Uint32()
 	ctx = ContextWithID(ctx, id)
 	l := log.Ctx(ctx).With().Uint32("sid", id)
-	if ok {
+	if hasExistingId {
 		l = l.Uint32("oid", oid)
 	}
 

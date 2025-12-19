@@ -69,7 +69,7 @@ func (h *TunGvisorInbound) HandleUdp(conn tun_net.UDPConn) {
 }
 
 func (h *TunGvisorInbound) HandleUdpFlow(conn tun_net.UDPConn, src, dest net.Destination) {
-	ctx, cancel := inbound.GetCtx(context.Background(), src, dest, h.Tag())
+	ctx, cancel := inbound.GetCtx(src, dest, h.Tag())
 	err := h.option.Handler.HandleFlow(ctx, dest, buf.NewRWD(buf.NewReader(conn), buf.NewWriter(conn), conn))
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msg("failed to handle UDP connection")
@@ -86,7 +86,7 @@ func (h *TunGvisorInbound) HandleUdpPacketConn(conn tun_net.UDPConn, src, dest n
 	h.Lock()
 	s, ok := h.udpSession[src]
 	if !ok {
-		ctx, cancel = inbound.GetCtx(context.Background(), src, dest, h.Tag())
+		ctx, cancel = inbound.GetCtx(src, dest, h.Tag())
 		l1, l2 := udp.NewLink(10)
 		s = &udpSession0{
 			ctx:     ctx,

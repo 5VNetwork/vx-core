@@ -119,7 +119,6 @@ func (w *udpWorker) handlePacket(b *buf.Buffer, source *net.UDPAddr) {
 	// create a new myUdpConn
 	if !found || myUConn.done.Done() {
 		ctx, cancelCause := inbound.GetCtx(
-			context.Background(),
 			src, nethelper.UDPDestination(nethelper.IPAddress(w.address),
 				nethelper.Port(w.port)), w.tag)
 		myUConn = newMyUdpConn(w.udpConn, source, w.addr)

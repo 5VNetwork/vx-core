@@ -1,7 +1,6 @@
 package system
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -264,7 +263,7 @@ func (t *TunSystemInbound) handleConn(conn net.Conn) {
 		mynet.Port(t.listenPort4),
 	)
 
-	ctx, cancelCause := inbound.GetCtx(context.Background(), src, gateway, t.tag)
+	ctx, cancelCause := inbound.GetCtx(src, gateway, t.tag)
 	ctx = inbound.ContextWithRawConn(ctx, conn)
 
 	defer func() {
@@ -523,7 +522,7 @@ func (t *TunSystemInbound) handleUdpPacket(b *buf.Buffer) {
 			}
 		}
 
-		ctx, cancelCause := inbound.GetCtx(context.Background(), p.Source, p.Target, t.tag)
+		ctx, cancelCause := inbound.GetCtx(p.Source, p.Target, t.tag)
 
 		if p.Target.Port != 443 {
 			s = udp_session.NewUdpSessionFullCone(ctx,

@@ -49,7 +49,7 @@ func (t *TunSorter) OnPacketReceived(b []byte) (n int, err error) {
 
 func (t *TunSorter) onNewConnection(connection *trackedUDPConnection) {
 	connection.c = make(chan *udp.Packet, 100)
-	ctx, cancel := inbound.GetCtx(context.Background(), connection.src, connection.src, "gvisor")
+	ctx, cancel := inbound.GetCtx(connection.src, connection.src, "gvisor")
 	go func() {
 		err := t.dispatcher.HandlePacketConn(ctx, net.Destination{}, connection)
 		if err != nil {

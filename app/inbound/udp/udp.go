@@ -41,7 +41,7 @@ func (t *UdpPacketHandler) HandleUdpPacket(p *udp.Packet) {
 	defer t.Unlock()
 	s, found := t.udpSrcToUdpSession[p.Source]
 	if !found {
-		ctx, cancel := inbound.GetCtx(context.Background(), p.Source, p.Target, t.tag)
+		ctx, cancel := inbound.GetCtx(p.Source, p.Target, t.tag)
 		s = &udpSessionFullCone{
 			cancelCause:   cancel,
 			src:           p.Source,
