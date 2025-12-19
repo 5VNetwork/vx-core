@@ -191,11 +191,11 @@ func (ns *DnsServerConcurrent) HandleQuery(ctx context.Context, msg *dns.Msg, tc
 
 	cachedMsg, ok := ns.rrCache.Get(&question)
 	if ok {
-		log.Ctx(ctx).Debug().Str("question", question.String()).Msg("cache hit")
+		log.Ctx(ctx).Debug().Any("question", question).Msg("cache hit")
 		return makeReply(msg, cachedMsg), nil
 	}
 
-	log.Ctx(ctx).Debug().Str("question", question.String()).Msg("cache miss")
+	log.Ctx(ctx).Debug().Any("question", question).Msg("cache miss")
 
 	lock := &ns.udpWaitingLock
 	waiting := ns.udpWaiting

@@ -106,7 +106,7 @@ func (d *DnsServerSerial) HandleQuery(ctx context.Context, msg *dns.Msg, tcp boo
 	cachedMsg, ok := d.cache.Get(&question)
 	if ok {
 		log.Ctx(ctx).Debug().Str("domain", question.Name).Str("type", dns.TypeToString[question.Qtype]).
-			Str("reply", cachedMsg.String()).Msg("dns1 cache hit")
+			Any("reply", cachedMsg).Msg("dns1 cache hit")
 		return makeReply(msg, cachedMsg), nil
 	}
 

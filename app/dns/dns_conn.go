@@ -137,7 +137,7 @@ func (ns *dnsConnImpl) handleRequest(p *udp.Packet) {
 	question := msg.Question[0]
 	cachedMsg, ok := ns.rrCache.Get(&question)
 	if ok {
-		log.Debug().Str("question", question.String()).Msg("cache hit")
+		log.Debug().Any("question", question).Msg("cache hit")
 		rspMsg := makeReply(&msg, cachedMsg)
 		err := msgIntoPacket(rspMsg, p)
 		if err != nil {
