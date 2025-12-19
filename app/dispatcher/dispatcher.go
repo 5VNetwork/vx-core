@@ -207,7 +207,7 @@ func (p *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, 
 	info := infoFromContext(ctx, dst)
 	ctx = session.ContextWithInfo(ctx, info)
 
-	defer p.PacketConns.Add(1)
+	p.PacketConns.Add(1)
 	defer p.PacketConns.Add(-1)
 
 	p.populateAppId(ctx, info)
@@ -306,7 +306,7 @@ func (p *Dispatcher) idle(ctx context.Context, info *session.Info, rw interface{
 		ctx, cancelCause = context.WithCancelCause(ctx)
 		idleChecker := signal.NewActivityChecker(func() {
 			cancelCause(errors.ErrIdle)
-			log.Ctx(ctx).Debug().Msg("flow idle timeout")
+			log.Ctx(ctx).Debug().Msg("idle timeout")
 		}, idleTimeout)
 		if r, ok := rw.(i.DeadlineRW); ok {
 			rw = &TimeoutDeadlineRW{
