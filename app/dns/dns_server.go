@@ -78,11 +78,15 @@ func (p *IpOptionDnsServer) HandleQuery(ctx context.Context, msg *dns.Msg, tcp b
 		!p.IpOption.IPv6Enable && msg.Question[0].Qtype == dns.TypeAAAA {
 		log.Ctx(ctx).Debug().Str("domain", msg.Question[0].Name).Str("type", dns.Type(msg.Question[0].Qtype).String()).
 			Uint16("id", msg.Id).Msg("ip option dns server return empty answer")
-		resp := new(dns.Msg)
-		resp.SetReply(msg)
-		resp.RecursionAvailable = true
-		resp.Rcode = dns.RcodeSuccess
-		return resp, nil
+		return emptyReply(msg), nil
 	}
 	return p.DnsServer.HandleQuery(ctx, msg, tcp)
+}
+
+func emptyReply(msg *dns.Msg) *dns.Msg {
+	resp := new(dns.Msg)
+	resp.SetReply(msg)
+	resp.RecursionAvailable = true
+	resp.Rcode = dns.RcodeSuccess
+	return resp
 }

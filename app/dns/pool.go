@@ -79,53 +79,42 @@ func (h Pools) GetDomainFromFakeDNS(ip nethelper.Address) string {
 	return ""
 }
 
-func (h Pools) GetFakeIP(domain string) ([]net.IP, error) {
+func (h Pools) GetFakeIP(domain string) []net.IP {
 	ips := make([]net.IP, 0, 2)
-	ipv4, _ := h.GetFakeIPv4(domain)
+	ipv4 := h.GetFakeIPv4(domain)
 	if ipv4 != nil {
 		ips = append(ips, ipv4)
 	}
-	ipv6, _ := h.GetFakeIPv6(domain)
+	ipv6 := h.GetFakeIPv6(domain)
 	if ipv6 != nil {
 		ips = append(ips, ipv6)
 	}
 	if len(ips) == 0 {
-		return nil, errors.New("cannot create a fake ip for" + domain)
+		return nil
 	}
-	log.Debug().Str("domain", domain).Msgf("fake ip %s", ips)
-	return ips, nil
+	return ips
 }
-func (h Pools) GetFakeIPv4(domain string) (net.IP, error) {
+func (h Pools) GetFakeIPv4(domain string) net.IP {
 	for _, p := range h {
 		ip := p.GetFakeIPForDomain(domain, true)
 		if ip != nil {
-			log.Debug().Str("domain", domain).Str("fake_ip", ip.String()).Msg("fake ip 4")
-			return ip.IP(), nil
+			log.Debug().Str("domain", domain).IPAddr("fake_ip", ip.IP()).Msg("fake ip 4")
+			return ip.IP()
 		}
 	}
-	return nil, errors.New("cannot create a fake ipv4 for" + domain)
+	return nil
 }
 
-func (h Pools) GetFakeIPv6(domain string) (net.IP, error) {
+func (h Pools) GetFakeIPv6(domain string) net.IP {
 	for _, p := range h {
 		ip := p.GetFakeIPForDomain(domain, false)
 		if ip != nil {
-			log.Debug().Str("domain", domain).Str("fake_ip", ip.String()).Msg("fake ip 6")
-			return ip.IP(), nil
+			log.Debug().Str("domain", domain).IPAddr("fake_ip", ip.IP()).Msg("fake ip 6")
+			return ip.IP()
 		}
 	}
-	return nil, errors.New("cannot create a fake ipv6 for" + domain)
+	return nil
 }
-
-// func (h Pools) GetFakeIPForDomain(domain string, ipv4 bool) nethelper.Address {
-// 	for _, p := range h {
-// 		addr := p.GetFakeIPForDomain(domain, ipv4)
-// 		if addr != nil {
-// 			return addr
-// 		}
-// 	}
-// 	return nil
-// }
 
 type Pool struct {
 	domainToIP cache.Lru

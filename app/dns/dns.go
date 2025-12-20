@@ -180,7 +180,7 @@ func (dsp *Dns) dispatchWorker() {
 					} else if fakeDns, ok := rule.dnsServer.(*FakeDns); ok {
 						rply, err := fakeDns.HandleQuery(context.Background(), &msg, false)
 						if err != nil {
-							log.Err(err).Msg("fakeDns.HandleQuery")
+							log.Debug().Err(err).Msg("fakeDns.HandleQuery")
 							p.Release()
 							break
 						}

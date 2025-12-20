@@ -60,11 +60,10 @@ func NewFakeDns(pools Pools) *FakeDns {
 }
 
 func (f *FakeDns) IsIPInIPPool(ip net.Address) bool {
-	pools := f.pools
-	if pools == nil {
+	if f.pools == nil {
 		return false
 	}
-	return pools.IsIPInIPPool(ip)
+	return f.pools.IsIPInIPPool(ip)
 }
 
 func (f *FakeDns) GetDomainFromFakeDNS(ip net.Address) string {
@@ -73,14 +72,6 @@ func (f *FakeDns) GetDomainFromFakeDNS(ip net.Address) string {
 		return ""
 	}
 	return pools.GetDomainFromFakeDNS(ip)
-}
-
-func (f *FakeDns) GetFakeIP(domain string) ([]net.IP, error) {
-	pools := f.pools
-	if pools == nil {
-		return nil, errors.New("fake dns pool is not initialized")
-	}
-	return pools.GetFakeIP(domain)
 }
 
 func (f *FakeDns) GetResolver(domain string, ip net.Address) (string, bool) {
@@ -107,9 +98,9 @@ func (f *FakeDns) HandleQuery(ctx context.Context, msg *dns.Msg, _ bool) (*dns.M
 	}
 	domain := UnFqdn(msg.Question[0].Name)
 	if msg.Question[0].Qtype == dns.TypeA {
-		ip, err := pools.GetFakeIPv4(domain)
-		if err != nil {
-			return nil, err
+		ip := pools.GetFakeIPv4(domain)
+		if len(ip) == 0 {
+			return emptyReply(msg), nil
 		}
 		log.Ctx(ctx).Debug().Str("domain", domain).IPAddr("ip", ip).Msg("fake dns")
 		resp.Answer = append(resp.Answer, &dns.A{
@@ -122,9 +113,9 @@ func (f *FakeDns) HandleQuery(ctx context.Context, msg *dns.Msg, _ bool) (*dns.M
 			A: ip,
 		})
 	} else {
-		ip, err := pools.GetFakeIPv6(domain)
-		if err != nil {
-			return nil, err
+		ip := pools.GetFakeIPv6(domain)
+		if len(ip) == 0 {
+			return emptyReply(msg), nil
 		}
 		log.Ctx(ctx).Debug().Str("domain", domain).IPAddr("ip", ip).Msg("fake dns")
 		resp.Answer = append(resp.Answer, &dns.AAAA{
