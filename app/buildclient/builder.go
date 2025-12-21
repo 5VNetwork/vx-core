@@ -90,11 +90,8 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 	}
 
 	// monitor
-	if config.Log.LogLevel == configs.Level_DEBUG || runtime.GOOS == "ios" {
-		interval := time.Second * 5
-		if config.Log.LogLevel == configs.Level_DEBUG {
-			interval = time.Second * 1
-		}
+	if config.Log.LogLevel == configs.Level_DEBUG {
+		interval := time.Second * 1
 		dir := path.Dir(config.RedirectStdErr)
 		monitor := memmon.NewMonitor(interval, dir)
 		builder.requireFeature(func(d *dispatcher.Dispatcher) {

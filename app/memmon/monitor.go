@@ -24,7 +24,6 @@ type Monitor struct {
 }
 
 func NewMonitor(interval time.Duration, path string) *Monitor {
-
 	return &Monitor{
 		done:     done.New(),
 		Interval: interval,
@@ -87,7 +86,6 @@ func (mon *Monitor) log() {
 
 func Log() {
 	var m runtime.MemStats
-
 	runtime.ReadMemStats(&m)
 	log.Debug().
 		Int("HeapAlloc", int(units.BytesToMB(m.HeapAlloc))).
@@ -102,11 +100,6 @@ func Log() {
 		Uint32("live objects", uint32(m.Mallocs-m.Frees)).
 		Int("NumGoroutine", runtime.NumGoroutine()).
 		Msg("Memory stats")
-
-	if (m.Alloc+m.StackInuse > 25*1024*1024) && runtime.GOOS == "ios" {
-		log.Debug().Msg("Memory threshold exceeded, forcing GC")
-		runtime.GC()
-	}
 }
 
 // TakeHeapSnapshot saves current heap profile to file
