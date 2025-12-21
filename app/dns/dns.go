@@ -132,6 +132,17 @@ func (dsp *Dns) ReadPacket() (*udp.Packet, error) {
 	}
 }
 
+func (dsp *Dns) writeReply(p *udp.Packet, reply *dns.Msg) {
+	err := msgIntoPacket(reply, p)
+	if err != nil {
+		p.Release()
+		log.Err(err).Msg("msgIntoPacket")
+		return
+	}
+	p.Source, p.Target = p.Target, p.Source
+	dsp.writeResponse(p)
+}
+
 func (dsp *Dns) dispatchWorker() {
 	var msg dns.Msg
 	for {
@@ -155,18 +166,10 @@ func (dsp *Dns) dispatchWorker() {
 
 			if dsp.local != nil {
 				if rp, ok := dsp.local.ReplyFor(&msg); ok {
-					err := msgIntoPacket(rp, p)
-					if err != nil {
-						p.Release()
-						log.Err(err).Msg("msgIntoPacket")
-						continue
-					}
-					p.Source, p.Target = p.Target, p.Source
-					dsp.writeResponse(p)
+					dsp.writeReply(p, rp)
 					continue
 				}
 			}
-
 			found := false
 			for _, rule := range dsp.dnsRules {
 				if rule.match(&DnsMsgMeta{Msg: &msg, Src: &p.Source}) {
@@ -175,23 +178,15 @@ func (dsp *Dns) dispatchWorker() {
 						err := dnsConn.WritePacket(p)
 						if err != nil {
 							log.Error().Err(err).Msg("failed to write packet to dns conn")
-							break
 						}
 					} else if fakeDns, ok := rule.dnsServer.(*FakeDns); ok {
 						rply, err := fakeDns.HandleQuery(context.Background(), &msg, false)
 						if err != nil {
 							log.Debug().Err(err).Msg("fakeDns.HandleQuery")
 							p.Release()
-							break
+						} else {
+							dsp.writeReply(p, rply)
 						}
-						err = msgIntoPacket(rply, p)
-						if err != nil {
-							log.Err(err).Msg("msgIntoPacket")
-							p.Release()
-							break
-						}
-						p.Source, p.Target = p.Target, p.Source
-						dsp.writeResponse(p)
 					} else {
 						go func() {
 							msg := msg.Copy()
@@ -202,21 +197,15 @@ func (dsp *Dns) dispatchWorker() {
 								log.Err(err).Msg("DnsServer.HandleQuery")
 								return
 							}
-							err = msgIntoPacket(reply, p)
-							if err != nil {
-								p.Release()
-								log.Err(err).Msg("msgIntoPacket")
-								return
-							}
-							p.Source, p.Target = p.Target, p.Source
-							dsp.writeResponse(p)
+							dsp.writeReply(p, reply)
 						}()
 					}
 					break
 				}
 			}
 			if !found {
-				p.Release()
+				reply := emptyReply(&msg)
+				dsp.writeReply(p, reply)
 			}
 		}
 	}
