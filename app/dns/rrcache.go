@@ -12,14 +12,26 @@ type rrCache struct {
 	sync.Mutex
 	cleanupCache *task.Periodic
 	cache        map[dns.Question]*rrCacheEntry
+	// if not zero, dns responses will be cached for this duration.
+	// if zero, the minimum ttl of all answers will be used.
+	duration uint32
 }
 
-func NewRrCache() *rrCache {
+type RrCacheSetting struct {
+	Duration uint32
+}
+
+func NewRrCache(setting RrCacheSetting) *rrCache {
 	c := &rrCache{
-		cache: make(map[dns.Question]*rrCacheEntry),
+		cache:    make(map[dns.Question]*rrCacheEntry),
+		duration: setting.Duration,
+	}
+	cleanInterval := time.Second * 30
+	if setting.Duration != 0 {
+		cleanInterval = time.Duration(setting.Duration) * time.Second
 	}
 	c.cleanupCache = &task.Periodic{
-		Interval: time.Second * 30,
+		Interval: cleanInterval,
 		Execute:  c.cleanCache,
 	}
 	return c
@@ -62,19 +74,19 @@ func (c *rrCache) Set(msg *dns.Msg) {
 		}
 	}
 
-	var ttl uint32 = 3600
-	if msg.Rcode == dns.RcodeSuccess && len(msg.Answer) > 0 {
-		// minimum ttl of all answers
+	// set cache duration
+	duration := c.duration
+	if duration == 0 {
+		// set duration to minimum ttl of all answers
 		for _, answer := range msg.Answer {
-			if answer.Header().Ttl < ttl {
-				ttl = answer.Header().Ttl
+			if answer.Header().Ttl < duration {
+				duration = answer.Header().Ttl
 			}
 		}
-	} else {
-		ttl = 5
 	}
+
 	c.cache[msg.Question[0]] = &rrCacheEntry{
-		Msg: msg, expiredAt: time.Now().Add(time.Duration(ttl) * time.Second)}
+		Msg: msg, expiredAt: time.Now().Add(time.Duration(duration) * time.Second)}
 }
 
 func (c *rrCache) Get(question *dns.Question) (*dns.Msg, bool) {

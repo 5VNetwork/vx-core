@@ -69,6 +69,7 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 			dis := pd.NewPacketDispatcher(ctx, h)
 			internalDnsDirect := idns.NewDnsServerConcurrent(idns.DnsServerConcurrentOption{
 				Name:       "internal-dns-direct",
+				RrCache:    idns.NewRrCache(idns.RrCacheSetting{}),
 				Handler:    h,
 				IPToDomain: ipToDomain,
 				Dispatcher: dis,
@@ -92,7 +93,8 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 				pd.WithLinkLifetime(time.Minute*5),
 			)
 			internalDndProxy := idns.NewDnsServerConcurrent(idns.DnsServerConcurrentOption{
-				Name: "internal-dns-proxy",
+				Name:    "internal-dns-proxy",
+				RrCache: idns.NewRrCache(idns.RrCacheSetting{Duration: 3600}),
 				NameserverAddrs: []mynet.AddressPort{
 					{
 						Address: mynet.CfDns4,
@@ -108,7 +110,7 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 			var dnsServers []idns.DnsServer
 			var dnsRules []*idns.DnsRule
 			for _, dsConfig := range config.Dns.DnsServers {
-				ds, err := newDnsServer(dsConfig, h, ipToDomain, fc, client, dailer, internalDns)
+				ds, err := newDnsServer(dsConfig, h, ipToDomain, fc, client, dailer, internalDns, config.Dns.CacheDuration)
 				if err != nil {
 					return err
 				}
@@ -156,7 +158,12 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 	return nil
 }
 func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain *idns.IPToDomain,
-	fc *Builder, client *client.Client, dailer i.Dialer, ipResolver i.IPResolver) (idns.DnsServer, error) {
+	fc *Builder, client *client.Client, dailer i.Dialer, ipResolver i.IPResolver, globalDuration uint32) (idns.DnsServer, error) {
+	duration := config.CacheDuration
+	if duration == 0 {
+		duration = globalDuration
+	}
+	rrCache := idns.NewRrCache(idns.RrCacheSetting{Duration: duration})
 
 	switch c := config.Type.(type) {
 	case *configs.DnsServerConfig_DohDnsServer:
@@ -165,6 +172,7 @@ func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain
 			Name:       config.Name,
 			Url:        c.DohDnsServer.Url,
 			IpToDomain: ipToDomain,
+			RrCache:    rrCache,
 			ClientIP:   net.ParseIP(config.ClientIp),
 		})
 	case *configs.DnsServerConfig_FakeDnsServer:
@@ -192,6 +200,7 @@ func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain
 			pd.WithResponseTimeout(time.Second*4),
 			pd.WithLinkLifetime(time.Minute*5),
 		)
+
 		ns := idns.NewDnsServerConcurrent(idns.DnsServerConcurrentOption{
 			Name:            config.Name,
 			Handler:         handler,
@@ -199,6 +208,7 @@ func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain
 			NameserverAddrs: addressPorts,
 			ClientIp:        net.ParseIP(config.ClientIp),
 			Dispatcher:      dis,
+			RrCache:         rrCache,
 		})
 		if c.PlainDnsServer.UseDefaultDns {
 			fc.requireFeature(func(info i.DefaultInterfaceInfo) {
@@ -231,6 +241,7 @@ func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain
 			IPToDomain:      ipToDomain,
 			Tls:             true,
 			NameserverAddrs: addressPorts,
+			RrCache:         rrCache,
 			ClientIp:        net.ParseIP(config.ClientIp),
 		}), nil
 	case *configs.DnsServerConfig_QuicDnsServer:
@@ -243,6 +254,7 @@ func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain
 			IpToDomain:  ipToDomain,
 			IPResolver:  ipResolver,
 			ClientIp:    net.ParseIP(config.ClientIp),
+			RrCache:     rrCache,
 		})
 	default:
 		return nil, fmt.Errorf("unsupported DNS server type: %s", config.Type)

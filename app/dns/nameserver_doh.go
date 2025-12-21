@@ -42,14 +42,20 @@ type DoHNameServerOption struct {
 	Url        string
 	IpToDomain *IPToDomain
 	Tls        *tls.Config
+	RrCache    *rrCache
 }
 
 // NewDoHNameServer creates DOH server object for remote resolving.
 func NewDoHNameServer(option DoHNameServerOption) (*DoHNameServer, error) {
+	rrCache := option.RrCache
+	if rrCache == nil {
+		rrCache = NewRrCache(RrCacheSetting{})
+	}
+
 	s := &DoHNameServer{
 		name:     option.Name,
 		dohURL:   option.Url,
-		cache:    NewRrCache(),
+		cache:    rrCache,
 		clientIp: option.ClientIP,
 	}
 
@@ -172,7 +178,7 @@ func (d *DoHNameServer) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool)
 	log.Ctx(ctx).Debug().Str("domain", msg.Question[0].Name).
 		Dur("time", time.Since(startTime)).
 		Str("type", dns.TypeToString[msg.Question[0].Qtype]).
-		Str("reply", rply.String()).Msg("doh reply")
+		Any("reply", rply).Msg("doh reply")
 
 	if d.ipToDomain != nil {
 		d.ipToDomain.SetDomain(msg, net.ParseAddress(d.dohURL))

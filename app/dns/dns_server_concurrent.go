@@ -72,22 +72,26 @@ type DnsServerConcurrentOption struct {
 	Tls             bool
 	ClientIp        net.IP
 	Dispatcher      packetDispatcher
+	RrCache         *rrCache
 }
 
 func NewDnsServerConcurrent(opts DnsServerConcurrentOption) *DnsServerConcurrent {
-	cache := NewRrCache()
+	rrCache := opts.RrCache
+	if rrCache == nil {
+		rrCache = NewRrCache(RrCacheSetting{})
+	}
 	ns := &DnsServerConcurrent{
 		udpWaiting: make(map[uint16]*request),
 		tcpWaiting: make(map[uint16]*request),
 		tag:        opts.Name,
-		rrCache:    cache,
+		rrCache:    rrCache,
 		ipToDomain: opts.IPToDomain,
 		useTls:     opts.Tls,
 		clientIp:   opts.ClientIp,
 		nextId:     1,
 		dispatcher: opts.Dispatcher,
 	}
-	ns.dnsConnImpl = NewDnsConnImpl(opts.Name, cache,
+	ns.dnsConnImpl = NewDnsConnImpl(opts.Name, rrCache,
 		func(msg *dns.Msg) error {
 			if len(ns.clientIp) > 0 {
 				addClientIP(msg, ns.clientIp)
@@ -418,7 +422,7 @@ func (w *DnsServerConcurrent) handleTcpReply(ctx context.Context, t2 *t2,
 			return
 		}
 		if len(msg.Question) != 1 {
-			log.Warn().Int("question_length", len(msg.Question)).Str("msg", msg.String()).Msg("question length is not 1")
+			log.Warn().Int("question_length", len(msg.Question)).Any("msg", msg).Msg("question length is not 1")
 		}
 		w.tcpWaitingLock.Lock()
 		pending, ok := w.tcpWaiting[msg.Id]
@@ -454,7 +458,7 @@ func (w *DnsServerConcurrent) handleReply(b *udp.Packet) {
 	}
 
 	if len(msg.Question) != 1 {
-		log.Debug().Int("question_length", len(msg.Question)).Str("msg", msg.String()).Msg("question length is not 1")
+		log.Debug().Int("question_length", len(msg.Question)).Any("msg", msg).Msg("question length is not 1")
 	}
 
 	w.udpWaitingLock.Lock()

@@ -37,7 +37,7 @@ func NewDnsServerSerial(dests []net.AddressPort, dialer i.Dialer, ipToDomain *IP
 		udpClient: &dns.Client{
 			Net: "udp",
 		},
-		cache:      NewRrCache(),
+		cache:      NewRrCache(RrCacheSetting{}),
 		doen:       done.New(),
 		ipToDomain: ipToDomain,
 	}

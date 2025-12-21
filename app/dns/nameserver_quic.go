@@ -47,12 +47,17 @@ type QuicNameServerOption struct {
 	Handler     i.PacketHandler
 	IpToDomain  *IPToDomain
 	IPResolver  i.IPResolver
+	RrCache     *rrCache
 }
 
 // NewQUICNameServer creates DNS-over-QUIC client object for local resolving
 func NewQUICNameServer(option QuicNameServerOption) (*QUICNameServer, error) {
+	rrCache := option.RrCache
+	if rrCache == nil {
+		rrCache = NewRrCache(RrCacheSetting{})
+	}
 	s := &QUICNameServer{
-		cache:         NewRrCache(),
+		cache:         rrCache,
 		name:          option.Name,
 		destination:   option.Destination,
 		packetHandler: option.Handler,
@@ -161,7 +166,7 @@ func (s *QUICNameServer) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool
 	log.Ctx(ctx).Debug().Str("domain", msg.Question[0].Name).
 		Dur("t", time.Since(startTime)).
 		Str("type", dns.TypeToString[msg.Question[0].Qtype]).
-		Str("reply", rply.String()).Msg("dns quic reply")
+		Any("reply", rply).Msg("dns quic reply")
 	if s.cache != nil {
 		s.cache.Set(rply)
 	}

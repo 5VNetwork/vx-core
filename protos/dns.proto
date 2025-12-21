@@ -10,6 +10,9 @@ message DnsConfig {
   repeated DnsServerConfig dns_servers = 3;
   repeated DnsRuleConfig dns_rules = 4;
   bool enable_fake_dns = 5;
+  // if not zero, dns responses will be cached for this duration.
+  // if zero, the minimum ttl of all answers will be used.
+  uint32 cache_duration = 6;
 }
 
 message DnsRules {
@@ -43,6 +46,9 @@ message DnsServerConfig {
   }
   string name = 10;
   string client_ip = 11;
+  // if not zero, dns responses will be cached for this duration.
+  // if zero, the minimum ttl of all answers will be used.
+  uint32 cache_duration = 12;
 }
 
 message PlainDnsServer {

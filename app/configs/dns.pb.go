@@ -68,6 +68,9 @@ type DnsConfig struct {
 	DnsServers    []*DnsServerConfig     `protobuf:"bytes,3,rep,name=dns_servers,json=dnsServers,proto3" json:"dns_servers,omitempty"`
 	DnsRules      []*DnsRuleConfig       `protobuf:"bytes,4,rep,name=dns_rules,json=dnsRules,proto3" json:"dns_rules,omitempty"`
 	EnableFakeDns bool                   `protobuf:"varint,5,opt,name=enable_fake_dns,json=enableFakeDns,proto3" json:"enable_fake_dns,omitempty"`
+	// if not zero, dns responses will be cached for this duration.
+	// if zero, the minimum ttl of all answers will be used.
+	CacheDuration uint32 `protobuf:"varint,6,opt,name=cache_duration,json=cacheDuration,proto3" json:"cache_duration,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -128,6 +131,13 @@ func (x *DnsConfig) GetEnableFakeDns() bool {
 		return x.EnableFakeDns
 	}
 	return false
+}
+
+func (x *DnsConfig) GetCacheDuration() uint32 {
+	if x != nil {
+		return x.CacheDuration
+	}
+	return 0
 }
 
 type DnsRules struct {
@@ -263,9 +273,12 @@ type DnsServerConfig struct {
 	//	*DnsServerConfig_QuicDnsServer
 	//	*DnsServerConfig_FakeDnsServer
 	//	*DnsServerConfig_TlsDnsServer
-	Type          isDnsServerConfig_Type `protobuf_oneof:"type"`
-	Name          string                 `protobuf:"bytes,10,opt,name=name,proto3" json:"name,omitempty"`
-	ClientIp      string                 `protobuf:"bytes,11,opt,name=client_ip,json=clientIp,proto3" json:"client_ip,omitempty"`
+	Type     isDnsServerConfig_Type `protobuf_oneof:"type"`
+	Name     string                 `protobuf:"bytes,10,opt,name=name,proto3" json:"name,omitempty"`
+	ClientIp string                 `protobuf:"bytes,11,opt,name=client_ip,json=clientIp,proto3" json:"client_ip,omitempty"`
+	// if not zero, dns responses will be cached for this duration.
+	// if zero, the minimum ttl of all answers will be used.
+	CacheDuration uint32 `protobuf:"varint,12,opt,name=cache_duration,json=cacheDuration,proto3" json:"cache_duration,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -364,6 +377,13 @@ func (x *DnsServerConfig) GetClientIp() string {
 		return x.ClientIp
 	}
 	return ""
+}
+
+func (x *DnsServerConfig) GetCacheDuration() uint32 {
+	if x != nil {
+		return x.CacheDuration
+	}
+	return 0
 }
 
 type isDnsServerConfig_Type interface {
@@ -877,13 +897,14 @@ var File_protos_dns_proto protoreflect.FileDescriptor
 
 const file_protos_dns_proto_rawDesc = "" +
 	"\n" +
-	"\x10protos/dns.proto\x12\x01x\x1a\x14common/geo/geo.proto\"\xbc\x01\n" +
+	"\x10protos/dns.proto\x12\x01x\x1a\x14common/geo/geo.proto\"\xe3\x01\n" +
 	"\tDnsConfig\x12#\n" +
 	"\arecords\x18\x01 \x03(\v2\t.x.RecordR\arecords\x123\n" +
 	"\vdns_servers\x18\x03 \x03(\v2\x12.x.DnsServerConfigR\n" +
 	"dnsServers\x12-\n" +
 	"\tdns_rules\x18\x04 \x03(\v2\x10.x.DnsRuleConfigR\bdnsRules\x12&\n" +
-	"\x0fenable_fake_dns\x18\x05 \x01(\bR\renableFakeDns\"2\n" +
+	"\x0fenable_fake_dns\x18\x05 \x01(\bR\renableFakeDns\x12%\n" +
+	"\x0ecache_duration\x18\x06 \x01(\rR\rcacheDuration\"2\n" +
 	"\bDnsRules\x12&\n" +
 	"\x05rules\x18\x01 \x03(\v2\x10.x.DnsRuleConfigR\x05rules\"\xd8\x01\n" +
 	"\rDnsRuleConfig\x12&\n" +
@@ -894,7 +915,7 @@ const file_protos_dns_proto_rawDesc = "" +
 	"domainTags\x121\n" +
 	"\x0eincluded_types\x18\f \x03(\x0e2\n" +
 	".x.DnsTypeR\rincludedTypes\x12\x1b\n" +
-	"\trule_name\x18\x14 \x01(\tR\bruleName\"\xf3\x02\n" +
+	"\trule_name\x18\x14 \x01(\tR\bruleName\"\x9a\x03\n" +
 	"\x0fDnsServerConfig\x12=\n" +
 	"\x10plain_dns_server\x18\x01 \x01(\v2\x11.x.PlainDnsServerH\x00R\x0eplainDnsServer\x127\n" +
 	"\x0edoh_dns_server\x18\x02 \x01(\v2\x0f.x.DohDnsServerH\x00R\fdohDnsServer\x12:\n" +
@@ -903,7 +924,8 @@ const file_protos_dns_proto_rawDesc = "" +
 	"\x0etls_dns_server\x18\x05 \x01(\v2\x0f.x.TlsDnsServerH\x00R\ftlsDnsServer\x12\x12\n" +
 	"\x04name\x18\n" +
 	" \x01(\tR\x04name\x12\x1b\n" +
-	"\tclient_ip\x18\v \x01(\tR\bclientIpB\x06\n" +
+	"\tclient_ip\x18\v \x01(\tR\bclientIp\x12%\n" +
+	"\x0ecache_duration\x18\f \x01(\rR\rcacheDurationB\x06\n" +
 	"\x04type\"V\n" +
 	"\x0ePlainDnsServer\x12\x1c\n" +
 	"\taddresses\x18\x02 \x03(\tR\taddresses\x12&\n" +
