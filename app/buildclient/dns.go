@@ -89,7 +89,7 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 					context.Background()), "internal-dns-proxy")
 			dis = pd.NewPacketDispatcher(ctx, h,
 				// pd.WithRequestTimeout(time.Second*4),
-				pd.WithResponseTimeout(time.Second*4),
+				// pd.WithResponseTimeout(time.Second*4),
 				pd.WithLinkLifetime(time.Minute*5),
 			)
 			internalDndProxy := idns.NewDnsServerConcurrent(idns.DnsServerConcurrentOption{
@@ -197,7 +197,7 @@ func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain
 		dis := pd.NewPacketDispatcher(ctx,
 			handler,
 			// pd.WithRequestTimeout(time.Second*4),
-			pd.WithResponseTimeout(time.Second*4),
+			// pd.WithResponseTimeout(time.Second*4),
 			pd.WithLinkLifetime(time.Minute*5),
 		)
 
@@ -231,7 +231,7 @@ func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain
 		dis := pd.NewPacketDispatcher(ctx,
 			handler,
 			// pd.WithRequestTimeout(time.Second*4),
-			pd.WithResponseTimeout(time.Second*4),
+			// pd.WithResponseTimeout(time.Second*4),
 			pd.WithLinkLifetime(time.Minute*5),
 		)
 		return idns.NewDnsServerConcurrent(idns.DnsServerConcurrentOption{
