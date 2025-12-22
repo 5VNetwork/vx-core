@@ -111,20 +111,19 @@ type wrappedClient struct {
 }
 
 func (c *wrappedClient) isActive() bool {
-	return time.Now().Unix()-c.lastActiveTime.Load() < c.idle
 	// if runtime.GOOS == "ios" {
 	// 	if time.Now().Unix()-c.lastActiveTime.Load() < 5 {
 	// 		log.Debug().Int32("id", c.id).Msg("hys client active")
 	// 		return true
 	// 	}
 	// } else {
-	// 	if time.Now().Unix()-c.lastActiveTime.Load() < c.idle {
-	// 		log.Debug().Int32("id", c.id).Msg("hys client active")
-	// 		return true
-	// 	}
+	if time.Now().Unix()-c.lastActiveTime.Load() < c.idle {
+		log.Debug().Int32("id", c.id).Msg("hys client active")
+		return true
+	}
 	// }
 
-	// return false
+	return false
 }
 
 func (w *wrappedClient) addTimer(hc *HysClient) {
@@ -273,6 +272,7 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 			}
 			c := &ddlPacketConn{
 				PacketConn: conn,
+				id:         id,
 				idle:       int64(config.QUICConfig.MaxIdleTimeout.Seconds())}
 			c.lastReadTime.Store(time.Now().Unix())
 			idleTimer = &c.lastReadTime
@@ -292,6 +292,7 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 		}
 		c := &ddlPacketConn{
 			PacketConn: conn,
+			id:         id,
 			idle:       int64(config.QUICConfig.MaxIdleTimeout.Seconds())}
 		c.lastReadTime.Store(time.Now().Unix())
 		idleTimer = &c.lastReadTime
@@ -327,6 +328,7 @@ func (c *connFactory) New(addr net.Addr) (net.PacketConn, error) {
 
 type ddlPacketConn struct {
 	net.PacketConn
+	id           int32
 	idle         int64
 	lastReadTime atomic.Int64
 }
@@ -342,7 +344,7 @@ func (c *ddlPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
 
 func (c *ddlPacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
 	if time.Now().Unix()-c.lastReadTime.Load() > c.idle {
-		return 0, errors.New("abort connection due to no read activity")
+		log.Debug().Int32("id", c.id).Msg("hys client no read activity but still sending data")
 	}
 	return c.PacketConn.WriteTo(p, addr)
 }
