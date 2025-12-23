@@ -266,9 +266,9 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 		for _, ip := range ips {
 			udpAddr.IP = ip
 			config.ServerAddr = udpAddr
-			conn, err := factory.New(udpAddr)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create connection: %w", err)
+			conn, err1 := factory.New(udpAddr)
+			if err1 != nil {
+				return nil, fmt.Errorf("failed to create connection: %w", err1)
 			}
 			c := &ddlPacketConn{
 				PacketConn: conn,
