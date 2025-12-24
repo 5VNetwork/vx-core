@@ -1,11 +1,13 @@
 # vx-core
 
-A proxy tool originated from [v2ray-core](https://www.v2fly.org/). It powers our multi-platform proxy
-client app: [VX](https://github.com/5vnetwork/vx)
+[English](README.md) | [中文](README.zh.md) 
 
-## Features
+---
 
-### Supported Proxy Protocols
+A proxy tool originated from [v2ray-core](https://www.v2fly.org/). It powers our
+multi-platform proxy client app: [VX](https://github.com/5vnetwork/vx)
+
+## Supported Proxy Protocols
 
 - **VMESS** - Versatile protocol with AEAD encryption
 - **Shadowsocks** - Classic proxy protocol with multiple encryption methods
