@@ -70,7 +70,11 @@ func (h *Server) AddUser(user i.User) {
 }
 
 func (h *Server) RemoveUser(uid, secret string) {
-	h.users.Remove(secret)
+	if secret == "" {
+		h.users.RemoveByUid(uid)
+	} else {
+		h.users.Remove(secret)
+	}
 }
 
 func (h *Server) WithOnUnauthorizedRequest(f i.UnauthorizedReport) {

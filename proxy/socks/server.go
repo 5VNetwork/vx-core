@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sync"
 	"time"
 
 	pc "github.com/5vnetwork/vx-core/app/configs/proxy"
@@ -25,8 +26,10 @@ type Server struct {
 	udpEnabled bool
 	authType   pc.AuthType
 	policy     i.TimeoutSetting
-	users      map[string]string // username to password. username is uuid in string format, password is uuid in string format
-	handler    i.Handler
+
+	usersLock sync.RWMutex
+	users     map[string]string // username to password. username is uuid in string format, password is uuid in string format
+	handler   i.Handler
 }
 
 // NewServer creates a new Server object.
@@ -51,11 +54,15 @@ type SocksServerConfig struct {
 }
 
 func (s *Server) AddUser(user i.User) {
+	s.usersLock.Lock()
+	defer s.usersLock.Unlock()
 	s.users[user.Uid()] = user.Secret()
 }
 
-func (s *Server) RemoveUser(id string) {
-	delete(s.users, id)
+func (s *Server) RemoveUser(uid, secret string) {
+	s.usersLock.Lock()
+	defer s.usersLock.Unlock()
+	delete(s.users, uid)
 }
 
 func (s *Server) Network() []nethelper.Network {

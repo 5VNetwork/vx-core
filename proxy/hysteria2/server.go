@@ -89,7 +89,16 @@ func (in *Inbound) AddUser(user i.User) {
 func (in *Inbound) RemoveUser(uid, secret string) {
 	in.usersLock.Lock()
 	defer in.usersLock.Unlock()
-	delete(in.users, secret)
+	if secret == "" {
+		for _, user := range in.users {
+			if user.Uid == uid {
+				delete(in.users, user.Secret)
+				return
+			}
+		}
+	} else {
+		delete(in.users, secret)
+	}
 }
 
 func (in *Inbound) WithOnUnauthorizedRequest(f i.UnauthorizedReport) {

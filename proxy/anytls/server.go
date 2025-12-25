@@ -41,8 +41,18 @@ func (h *Server) AddUser(user i.User) {
 }
 
 func (h *Server) RemoveUser(uid, secret string) {
-	var sum = sha256.Sum256([]byte(secret))
-	h.secrets.Delete(sum)
+	if secret == "" {
+		h.secrets.Range(func(key, value any) bool {
+			if value.(string) == uid {
+				h.secrets.Delete(key)
+				return false
+			}
+			return true
+		})
+	} else {
+		var sum = sha256.Sum256([]byte(secret))
+		h.secrets.Delete(sum)
+	}
 }
 
 func (h *Server) WithOnUnauthorizedRequest(f i.UnauthorizedReport) {
