@@ -12,6 +12,7 @@ import (
 	"github.com/5vnetwork/vx-core/transport/protocols/splithttp"
 
 	"github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/util/clashparser"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/transport/headers/http"
 	"github.com/5vnetwork/vx-core/transport/headers/srtp"
@@ -35,8 +36,27 @@ type DecodeResult struct {
 	FailedNodes []string
 }
 
-// Decode parses subscription content into outbound handler configurations
 func Decode(content string) (*DecodeResult, error) {
+	result, err := decodeClashConfig(content)
+	if err != nil {
+		return decodeCommon(content)
+	}
+	return result, nil
+}
+
+func decodeClashConfig(content string) (*DecodeResult, error) {
+	configs, errs, err := clashparser.ParseClashConfig([]byte(content))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse clash config: %w", err)
+	}
+	return &DecodeResult{
+		Configs:     configs,
+		FailedNodes: errs,
+	}, nil
+}
+
+// Decode parses subscription content into outbound handler configurations
+func decodeCommon(content string) (*DecodeResult, error) {
 	// If content doesn't contain ':', assume it's base64 encoded
 	if !strings.Contains(content, ":") {
 		decoded, err := DecodeBase64(content)
