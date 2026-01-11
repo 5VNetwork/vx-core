@@ -305,6 +305,8 @@ func getTransportConfig(query url.Values) (*configs.TransportConfig, error) {
 			allowInsecure := false
 			if query.Get("allowInsecure") == "1" {
 				allowInsecure = true
+			} else if query.Get("insecure") == "1" {
+				allowInsecure = true
 			}
 			var nextProtocol []string
 			if alpn := query.Get("alpn"); alpn != "" {
