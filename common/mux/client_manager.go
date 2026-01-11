@@ -198,5 +198,5 @@ type ClientStrategy struct {
 
 var DefaultClientStrategy = ClientStrategy{
 	MaxConnection:  16,
-	MaxConcurrency: 2,
+	MaxConcurrency: 1,
 }
