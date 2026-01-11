@@ -4,6 +4,7 @@ package scenarios
 
 import (
 	"context"
+	"crypto/x509"
 	"testing"
 
 	"github.com/5vnetwork/vx-core/app/buildclient"
@@ -18,6 +19,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/common/uuid"
+	"github.com/5vnetwork/vx-core/test"
 	"github.com/5vnetwork/vx-core/test/servers/tcp"
 	"github.com/5vnetwork/vx-core/transport/protocols/websocket"
 	"github.com/5vnetwork/vx-core/transport/security/tls"
@@ -378,6 +380,116 @@ func TestTlsEch(t *testing.T) {
 	common.Must(err)
 	client, err := buildclient.NewX(clientConfig)
 	common.Must(err)
+	common.Must(server.Start(context.Background()))
+	defer server.Stop(context.Background())
+	common.Must(client.Start())
+	defer client.Close()
+
+	if err := TestTCPConn(clientPort, 1024, Timeout)(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestTlsRootCA(t *testing.T) {
+	tcpServer := tcp.Server{
+		MsgProcessor: Xor,
+	}
+	dest, err := tcpServer.Start()
+	common.Must(err)
+	defer tcpServer.Close()
+
+	// Generate a CA certificate
+	caCert := cert.MustGenerate(nil,
+		cert.Authority(true),
+		cert.KeyUsage(x509.KeyUsageCertSign|x509.KeyUsageKeyEncipherment|x509.KeyUsageDigitalSignature),
+		cert.CommonName("Test Root CA"),
+	)
+
+	// Generate a server certificate signed by the CA
+	serverCertDer := cert.MustGenerate(caCert,
+		cert.CommonName("localhost"),
+		cert.DNSNames("localhost"),
+	)
+
+	// Get PEM-encoded CA certificate for RootCas
+	caCertPEM, _ := caCert.ToPEM()
+
+	userID := protocol.NewID(uuid.New())
+	serverPort := tcp.PickPort()
+	serverConfig := &server.ServerConfig{
+		Inbounds: []*configs.ProxyInboundConfig{
+			{
+				Address: net.LocalHostIP.String(),
+				Port:    uint32(serverPort),
+				Transport: &configs.TransportConfig{
+					Security: &configs.TransportConfig_Tls{
+						Tls: &tls.TlsConfig{
+							Certificates: []*tls.Certificate{
+								tls.ParseCertificate(serverCertDer),
+							},
+						},
+					},
+				},
+				Protocol: serial.ToTypedMessage(
+					&proxyconfig.VmessServerConfig{
+						Accounts: []*configs.UserConfig{
+							{
+								Secret: userID.String(),
+							},
+						},
+					},
+				),
+			},
+		},
+	}
+
+	clientPort := tcp.PickPort()
+	t.Log("client port", clientPort)
+	clientConfig := &configs.TmConfig{
+		InboundManager: &configs.InboundManagerConfig{
+			Handlers: []*configs.ProxyInboundConfig{
+				{
+					Address: net.LocalHostIP.String(),
+					Port:    uint32(clientPort),
+					Protocol: serial.ToTypedMessage(
+						&proxyconfig.DokodemoConfig{
+							Address:  dest.Address.String(),
+							Port:     uint32(dest.Port),
+							Networks: []net.Network{net.Network_TCP},
+						},
+					),
+				},
+			},
+		},
+		Outbound: &configs.OutboundConfig{
+			OutboundHandlers: []*configs.OutboundHandlerConfig{
+				{
+					Address: net.LocalHostIP.String(),
+					Port:    uint32(serverPort),
+					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+						Id: userID.String(),
+					}),
+					Transport: &configs.TransportConfig{
+						Security: &configs.TransportConfig_Tls{
+							Tls: &tls.TlsConfig{
+								RootCas:           [][]byte{caCertPEM},
+								ServerName:        "app.com",
+								AllowInsecure:     false,
+								DisableSystemRoot: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	server, err := buildserver.NewX(serverConfig)
+	common.Must(err)
+	client, err := buildclient.NewX(clientConfig)
+	common.Must(err)
+
+	test.InitZeroLog()
+
 	common.Must(server.Start(context.Background()))
 	defer server.Stop(context.Background())
 	common.Must(client.Start())

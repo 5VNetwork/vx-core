@@ -329,7 +329,7 @@ func TestTrojanFullCone(t *testing.T) {
 	}
 }
 
-func TestTrojanTCPTls(t *testing.T) {
+func TestTrojanTCPTlsVision(t *testing.T) {
 	tlsCert := tls.ParseCertificate(cert.MustGenerate(nil))
 	goTlsCert, err := gotls.X509KeyPair(tlsCert.Certificate, tlsCert.Key)
 	if err != nil {

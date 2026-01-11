@@ -60,7 +60,7 @@ func (c *Client) HandleFlow(ctx context.Context, dst net.Destination, rw buf.Rea
 
 	var bodyWriter buf.Writer
 	bufferWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
-	connWriter := &ConnWriter{Writer: bufferWriter, Target: target, Account: account}
+	connWriter := &ConnWriter{Writer: bufferWriter, Target: target, Account: account, UseVision: c.Vision}
 
 	if target.Network == net.Network_UDP {
 		bodyWriter = &PacketWriter{writer: connWriter, client: true, Dest: target}

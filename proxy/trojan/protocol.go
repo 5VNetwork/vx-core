@@ -1,6 +1,7 @@
 package trojan
 
 import (
+	"bytes"
 	"encoding/binary"
 	"io"
 	gonet "net"
@@ -16,6 +17,7 @@ import (
 var (
 	crlf = []byte{'\r', '\n'}
 
+	visionCrlf = []byte{0x00, 0x00}
 	addrParser = address_parser.SocksAddressSerializer
 )
 
@@ -28,6 +30,7 @@ const (
 type ConnWriter struct {
 	io.Writer
 	Target     net.Destination
+	UseVision  bool
 	Account    *MemoryAccount
 	headerSent bool
 }
@@ -103,8 +106,15 @@ func (c *ConnWriter) writeHeader() error {
 	if err := addrParser.WriteAddressPort(&buffer, c.Target.Address, c.Target.Port); err != nil {
 		return err
 	}
-	if _, err := buffer.Write(crlf); err != nil {
-		return err
+
+	if c.UseVision {
+		if _, err := buffer.Write(visionCrlf); err != nil {
+			return err
+		}
+	} else {
+		if _, err := buffer.Write(crlf); err != nil {
+			return err
+		}
 	}
 
 	_, err := c.Writer.Write(buffer.Bytes())
@@ -213,8 +223,8 @@ func (w *PacketWriter) writePacket(payload []byte, dest net.Destination) (int, e
 }
 
 // ParseHeader parses the trojan protocol header
-func ParseHeader(reader io.Reader) (dst net.Destination, err error) {
-	var crlf [2]byte
+func (s *Server) ParseHeader(reader io.Reader) (dst net.Destination, vision bool, err error) {
+	var crlfBuf [2]byte
 	var command [1]byte
 	// var hash [56]byte
 	// if _, err := io.ReadFull(c.Reader, hash[:]); err != nil {
@@ -226,7 +236,7 @@ func ParseHeader(reader io.Reader) (dst net.Destination, err error) {
 	// }
 
 	if _, err := io.ReadFull(reader, command[:]); err != nil {
-		return dst, errors.New("failed to read command").Base(err)
+		return dst, vision, errors.New("failed to read command").Base(err)
 	}
 	network := net.Network_TCP
 	if command[0] == commandUDP {
@@ -235,15 +245,19 @@ func ParseHeader(reader io.Reader) (dst net.Destination, err error) {
 
 	addr, port, err := addrParser.ReadAddressPort(nil, reader)
 	if err != nil {
-		return dst, errors.New("failed to read address and port").Base(err)
+		return dst, vision, errors.New("failed to read address and port").Base(err)
 	}
 	dst = net.Destination{Network: network, Address: addr, Port: port}
 
-	if _, err := io.ReadFull(reader, crlf[:]); err != nil {
-		return dst, errors.New("failed to read crlf").Base(err)
+	if _, err := io.ReadFull(reader, crlfBuf[:]); err != nil {
+		return dst, vision, errors.New("failed to read crlf").Base(err)
 	}
 
-	return dst, nil
+	if s.Vision && bytes.Equal(crlfBuf[:], visionCrlf) {
+		return dst, true, nil
+	} else {
+		return dst, false, nil
+	}
 }
 
 // PacketPayload combines udp payload and destination

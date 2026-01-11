@@ -26,8 +26,9 @@ func TestTCPRequest(t *testing.T) {
 	writer := &ConnWriter{Writer: buffer, Target: destination, Account: ma}
 	common.Must(writer.WriteMultiBuffer(buf.MultiBuffer{data}))
 
+	server := NewServer(ServerSettings{Vision: false})
 	buffer.AdvanceStart(58)
-	dst, err := ParseHeader(buffer)
+	dst, _, err := server.ParseHeader(buffer)
 	common.Must(err)
 
 	if r := cmp.Diff(dst, destination); r != "" {
@@ -53,7 +54,7 @@ func TestUDPRequest(t *testing.T) {
 	common.Must(writer.WriteMultiBuffer(buf.MultiBuffer{data}))
 
 	buffer.AdvanceStart(58)
-	_, err := ParseHeader(buffer)
+	_, _, err := NewServer(ServerSettings{Vision: false}).ParseHeader(buffer)
 	common.Must(err)
 
 	packetReader := &PacketReader{reader: buffer}
@@ -89,7 +90,7 @@ func TestLargeUDPRequest(t *testing.T) {
 	common.Must(writer.WriteMultiBuffer(buf.MultiBuffer{data, data}))
 
 	buffer.AdvanceStart(58)
-	_, err := ParseHeader(buffer)
+	_, _, err := NewServer(ServerSettings{Vision: false}).ParseHeader(buffer)
 	common.Must(err)
 
 	packetReader := &PacketReader{reader: buffer}

@@ -116,12 +116,12 @@ func (s *Server) auth(ctx context.Context, reader io.Reader) (*MemoryAccount, er
 
 func (s *Server) processCommon(ctx context.Context, conn net.Conn,
 	user *MemoryAccount) error {
-	destination, err := ParseHeader(conn)
+	destination, useVision, err := s.ParseHeader(conn)
 	if err != nil {
 		return err
 	}
 
-	if s.Vision {
+	if useVision {
 		conn = vision.NewVisionConn(ctx, conn, false, 0)
 	}
 
