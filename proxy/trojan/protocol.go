@@ -1,7 +1,6 @@
 package trojan
 
 import (
-	"bytes"
 	"encoding/binary"
 	"io"
 	gonet "net"
@@ -220,44 +219,6 @@ func (w *PacketWriter) writePacket(payload []byte, dest net.Destination) (int, e
 	}
 
 	return length, nil
-}
-
-// ParseHeader parses the trojan protocol header
-func (s *Server) ParseHeader(reader io.Reader) (dst net.Destination, vision bool, err error) {
-	var crlfBuf [2]byte
-	var command [1]byte
-	// var hash [56]byte
-	// if _, err := io.ReadFull(c.Reader, hash[:]); err != nil {
-	// 	return errors.New("failed to read user hash").Base(err)
-	// }
-
-	// if _, err := io.ReadFull(c.Reader, crlf[:]); err != nil {
-	// 	return errors.New("failed to read crlf").Base(err)
-	// }
-
-	if _, err := io.ReadFull(reader, command[:]); err != nil {
-		return dst, vision, errors.New("failed to read command").Base(err)
-	}
-	network := net.Network_TCP
-	if command[0] == commandUDP {
-		network = net.Network_UDP
-	}
-
-	addr, port, err := addrParser.ReadAddressPort(nil, reader)
-	if err != nil {
-		return dst, vision, errors.New("failed to read address and port").Base(err)
-	}
-	dst = net.Destination{Network: network, Address: addr, Port: port}
-
-	if _, err := io.ReadFull(reader, crlfBuf[:]); err != nil {
-		return dst, vision, errors.New("failed to read crlf").Base(err)
-	}
-
-	if s.Vision && bytes.Equal(crlfBuf[:], visionCrlf) {
-		return dst, true, nil
-	} else {
-		return dst, false, nil
-	}
 }
 
 // PacketPayload combines udp payload and destination
