@@ -365,6 +365,9 @@ func (p *Dispatcher) logUserError(ctx context.Context, info *session.Info, err e
 				if errors.Is(err, io.EOF) {
 					return
 				}
+				if errors.Is(err, context.Canceled) {
+					return
+				}
 				p.UserLogger.LogSessionError(info, err)
 			}
 		}
