@@ -6,14 +6,20 @@ option go_package = "github.com/5vnetwork/vx-core/app/configs";
 message TunConfig {
   string tag = 2;
   Mode mode = 3;
-  // whether to bind outbound traffic to the primary physical interface
+  // whether to bind outbound traffic to the primary physical interface.
+  // This should be true if default route is to tun.
   bool should_bind_device = 4;
   TunDeviceConfig device = 5;
   enum TUN46Setting {
+    // Apply only ipv4 settings of [device] to the tun.
     FOUR_ONLY = 0;
+    // Apply both ipv4 and ipv6 settings of [device] to the tun.
     BOTH = 1;
+    // Apply ipv4 and ipv6 settings of [device] to the tun based on default nic.
+    // When default nic has no global ipv6 address, apply only ipv4 settings of [device] to the tun.
     DYNAMIC = 2;
   }
+  // Controls whether to apply ipv4 and ipv6 settings of [device] to the tun.
   TUN46Setting tun46_setting = 8;
 }
 

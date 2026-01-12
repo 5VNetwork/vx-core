@@ -64,9 +64,13 @@ func (Mode) EnumDescriptor() ([]byte, []int) {
 type TunConfig_TUN46Setting int32
 
 const (
+	// Apply only ipv4 settings of [device] to the tun.
 	TunConfig_FOUR_ONLY TunConfig_TUN46Setting = 0
-	TunConfig_BOTH      TunConfig_TUN46Setting = 1
-	TunConfig_DYNAMIC   TunConfig_TUN46Setting = 2
+	// Apply both ipv4 and ipv6 settings of [device] to the tun.
+	TunConfig_BOTH TunConfig_TUN46Setting = 1
+	// Apply ipv4 and ipv6 settings of [device] to the tun based on default nic.
+	// When default nic has no global ipv6 address, apply only ipv4 settings of [device] to the tun.
+	TunConfig_DYNAMIC TunConfig_TUN46Setting = 2
 )
 
 // Enum value maps for TunConfig_TUN46Setting.
@@ -114,12 +118,14 @@ type TunConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Tag   string                 `protobuf:"bytes,2,opt,name=tag,proto3" json:"tag,omitempty"`
 	Mode  Mode                   `protobuf:"varint,3,opt,name=mode,proto3,enum=x.Mode" json:"mode,omitempty"`
-	// whether to bind outbound traffic to the primary physical interface
-	ShouldBindDevice bool                   `protobuf:"varint,4,opt,name=should_bind_device,json=shouldBindDevice,proto3" json:"should_bind_device,omitempty"`
-	Device           *TunDeviceConfig       `protobuf:"bytes,5,opt,name=device,proto3" json:"device,omitempty"`
-	Tun46Setting     TunConfig_TUN46Setting `protobuf:"varint,8,opt,name=tun46_setting,json=tun46Setting,proto3,enum=x.TunConfig_TUN46Setting" json:"tun46_setting,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// whether to bind outbound traffic to the primary physical interface.
+	// This should be true if default route is to tun.
+	ShouldBindDevice bool             `protobuf:"varint,4,opt,name=should_bind_device,json=shouldBindDevice,proto3" json:"should_bind_device,omitempty"`
+	Device           *TunDeviceConfig `protobuf:"bytes,5,opt,name=device,proto3" json:"device,omitempty"`
+	// Controls whether to apply ipv4 and ipv6 settings of [device] to the tun.
+	Tun46Setting  TunConfig_TUN46Setting `protobuf:"varint,8,opt,name=tun46_setting,json=tun46Setting,proto3,enum=x.TunConfig_TUN46Setting" json:"tun46_setting,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *TunConfig) Reset() {

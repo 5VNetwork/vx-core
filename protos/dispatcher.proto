@@ -9,7 +9,8 @@ message DispatcherConfig {
   bool fallback_to_domain = 3;
   repeated string destination_override = 4;
   bool sniff = 5;
-  bool ipv6_fallback_to_domain = 6;
+  reserved 6;
+  bool ipv6_use_domain = 7;
 }
 
 // message SniffingConfig {

@@ -27,6 +27,8 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 	d.DestinationOverride = config.GetDispatcher().GetDestinationOverride()
 	d.FallbackToProxy = config.GetDispatcher().GetFallbackToProxy()
 	d.FallbackToDomain = config.GetDispatcher().GetFallbackToDomain()
+	d.Ipv6UseDomain = config.GetDispatcher().GetIpv6UseDomain()
+
 	d.Sniff = config.GetDispatcher().GetSniff()
 	d.OutStats = outbound.NewOutStats()
 

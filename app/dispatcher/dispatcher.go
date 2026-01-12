@@ -45,10 +45,10 @@ type Dispatcher struct {
 	FallbackToProxy bool
 	// when fallback to domain for connections go proxy and use ip targets
 	FallbackToDomain bool
-	// Fallback to ipv4
-	Ipv6FallbackToDomain bool
-	Om                   i.OutboundManager
-	Sm                   *selector.Selectors
+	// Fallback to use domain if handler does not support ipv6
+	Ipv6UseDomain bool
+	Om            i.OutboundManager
+	Sm            *selector.Selectors
 
 	// rewrite destination
 	Sniff               bool
@@ -161,7 +161,7 @@ func (p *Dispatcher) HandleFlow(ctx context.Context, dst net.Destination, rw buf
 	rw = rw0.(buf.ReaderWriter)
 	rw = p.stats(ctx, info, rw, handler).(buf.ReaderWriter)
 
-	if p.Ipv6FallbackToDomain && info.Target.Address.Family().IsIP() && info.Target.Address.Family().IsIPv6() {
+	if p.Ipv6UseDomain && info.Target.Address.Family().IsIP() && info.Target.Address.Family().IsIPv6() {
 		if handlerSupport6, ok := handler.(i.HandlerWith6Info); ok && !handlerSupport6.Support6() && info.SniffedDomain != "" {
 			log.Ctx(ctx).Debug().Str("handler", handler.Tag()).Str("dst", info.Target.String()).Msg("ipv6 not supported, replace it with the domain")
 			info.Target.Address = mynet.DomainAddress(info.SniffedDomain)
