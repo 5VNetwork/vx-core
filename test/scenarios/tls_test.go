@@ -473,7 +473,7 @@ func TestTlsRootCA(t *testing.T) {
 						Security: &configs.TransportConfig_Tls{
 							Tls: &tls.TlsConfig{
 								RootCas:           [][]byte{caCertPEM},
-								ServerName:        "app.com",
+								ServerName:        "localhost",
 								AllowInsecure:     false,
 								DisableSystemRoot: true,
 							},

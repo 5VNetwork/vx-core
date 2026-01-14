@@ -320,8 +320,8 @@ func testVConnServerTls13withProxyHeader(t *testing.T) {
 	conn, err := l.Accept()
 	common.Must(err)
 	t.Log("client connected")
-	certBytes, _ := os.ReadFile("../rsa_cert.pem")
-	keyBytes, _ := os.ReadFile("../rsa_private.pem")
+	certBytes, _ := os.ReadFile("rsa_cert.pem")
+	keyBytes, _ := os.ReadFile("rsa_private.pem")
 	cert, err := tls.X509KeyPair(certBytes, keyBytes)
 	common.Must(err)
 	conn = tls.Server(conn, &tls.Config{

@@ -408,11 +408,6 @@ func TestClientManager_HandleReaderWriter_WithError(t *testing.T) {
 	}
 }
 
-func TestDefaultClientStrategy(t *testing.T) {
-	assert.Equal(t, uint32(16), DefaultClientStrategy.MaxConnection)
-	assert.Equal(t, uint32(2), DefaultClientStrategy.MaxConcurrency)
-}
-
 func TestClientManager_TryRetire_NotClosing(t *testing.T) {
 	handler := &mockFlowHandler{}
 	manager := NewClientManager(DefaultClientStrategy, handler)

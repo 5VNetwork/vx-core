@@ -102,7 +102,7 @@ func TestTester_TestUsable_Failure(t *testing.T) {
 	tester := &Tester{
 		ResultReporter: mockReporter,
 		UsableTestFunc: func(ctx context.Context, h i.Outbound) (bool, error) {
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(200 * time.Millisecond)
 			return false, nil
 		},
 	}
