@@ -37,7 +37,7 @@ func NewPacketDispatcher0(ctx context.Context, dispatcher i.FlowHandler) *Packet
 		dispatcher:   dispatcher,
 		tLinks:       make(map[net.Destination][]*tLink0),
 		done:         done.New(),
-		bufferSize:   buf.BufferSize,
+		bufferSize:   buf.BufferSize * 2,
 		linkLifetime: 5 * time.Minute,
 	}
 
@@ -114,7 +114,7 @@ func (s *PacketDispatcher0) getTimeoutLink(dest net.Destination) ([]*tLink0, err
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
-	iLink, oLink := pipe.NewLinks(int32(s.bufferSize), false)
+	iLink, oLink := pipe.NewLinks(int32(s.bufferSize), true)
 	tLink := &tLink0{
 		ctx:  ctx,
 		Link: iLink,
