@@ -107,22 +107,25 @@ type wrappedClient struct {
 
 	dialing atomic.Int32
 
-	lastActiveTime atomic.Int64
+	lastActiveTime *atomic.Int64
 }
 
 func (c *wrappedClient) isActive() bool {
-	if runtime.GOOS == "ios" {
-		if time.Now().Unix()-c.lastActiveTime.Load() < 5 {
-			log.Debug().Int32("id", c.id).Msg("hys client active")
-			return true
-		}
-	} else {
-		if time.Now().Unix()-c.lastActiveTime.Load() < c.idle {
-			log.Debug().Int32("id", c.id).Msg("hys client active")
-			return true
-		}
+	if time.Now().Unix()-c.lastActiveTime.Load() < c.idle {
+		log.Debug().Int32("id", c.id).Msg("hys client active")
+		return true
 	}
-
+	// if runtime.GOOS == "ios" {
+	// 	if time.Now().Unix()-c.lastActiveTime.Load() < 5 {
+	// 		log.Debug().Int32("id", c.id).Msg("hys client active")
+	// 		return true
+	// 	}
+	// } else {
+	// 	if time.Now().Unix()-c.lastActiveTime.Load() < c.idle {
+	// 		log.Debug().Int32("id", c.id).Msg("hys client active")
+	// 		return true
+	// 	}
+	// }
 	return false
 }
 
@@ -252,6 +255,8 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 	config := *d.config
 	var cl client.Client
 	var err error
+	factory := d.config.ConnFactory
+	var idleTimer *atomic.Int64
 
 	if d.address.Family().IsDomain() {
 		ctx := log.With().Int32("id", id).Str("domain", d.address.Domain()).
@@ -264,6 +269,18 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 		for _, ip := range ips {
 			udpAddr.IP = ip
 			config.ServerAddr = udpAddr
+			conn, err1 := factory.New(udpAddr)
+			if err1 != nil {
+				return nil, fmt.Errorf("failed to create connection: %w", err1)
+			}
+			c := &ddlPacketConn{
+				PacketConn: conn,
+				id:         id,
+				idle:       int64(config.QUICConfig.MaxIdleTimeout.Seconds())}
+			c.lastReadTime.Store(time.Now().Unix())
+			idleTimer = &c.lastReadTime
+			config.ConnFactory = &connFactory{
+				PacketConn: c}
 			cl, _, err = client.NewClient(&config)
 			if err == nil {
 				break
@@ -272,6 +289,18 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 	} else {
 		udpAddr.IP = d.address.IP()
 		config.ServerAddr = udpAddr
+		conn, err1 := factory.New(udpAddr)
+		if err1 != nil {
+			return nil, fmt.Errorf("failed to create connection: %w", err)
+		}
+		c := &ddlPacketConn{
+			PacketConn: conn,
+			id:         id,
+			idle:       int64(config.QUICConfig.MaxIdleTimeout.Seconds())}
+		c.lastReadTime.Store(time.Now().Unix())
+		idleTimer = &c.lastReadTime
+		config.ConnFactory = &connFactory{
+			PacketConn: c}
 		cl, _, err = client.NewClient(&config)
 	}
 	if err != nil {
@@ -280,9 +309,9 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 	wrappedClient := &wrappedClient{
 		Client: cl,
 		id:     id,
-		idle:   int64(min(15, config.QUICConfig.MaxIdleTimeout.Seconds())),
+		idle:   int64(config.QUICConfig.MaxIdleTimeout.Seconds()),
 	}
-	wrappedClient.lastActiveTime.Store(time.Now().Unix())
+	wrappedClient.lastActiveTime = idleTimer
 
 	// ccc.client = wrappedClient
 	d.Lock()
@@ -290,6 +319,39 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 	log.Debug().Interface("client", cl).Int32("id", wrappedClient.id).Msg("new hys client")
 	d.Unlock()
 	return wrappedClient, nil
+}
+
+type connFactory struct {
+	net.PacketConn
+}
+
+func (c *connFactory) New(addr net.Addr) (net.PacketConn, error) {
+	return c.PacketConn, nil
+}
+
+type ddlPacketConn struct {
+	net.PacketConn
+	id           int32
+	idle         int64
+	lastReadTime atomic.Int64
+}
+
+func (c *ddlPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
+	n, addr, err = c.PacketConn.ReadFrom(p)
+	if err != nil {
+		return n, addr, err
+	}
+	c.lastReadTime.Store(time.Now().Unix())
+	log.Debug().Int32("id", c.id).Msg("hys client read from")
+	return n, addr, err
+}
+
+func (c *ddlPacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
+	if time.Now().Unix()-c.lastReadTime.Load() > c.idle {
+		log.Debug().Int32("id", c.id).Msg("hys client no read activity but still sending data")
+	}
+	log.Debug().Int32("id", c.id).Msg("hys client write to")
+	return c.PacketConn.WriteTo(p, addr)
 }
 
 type hysConnFactory struct {
@@ -491,7 +553,7 @@ func (d *HysClient) tcp(ctx context.Context, dest net.Destination) (net.Conn, *w
 			}
 		}
 		// if runtime.GOOS == "ios" {
-		conn = &ActiveTimeConn{Conn: conn, lastActiveTime: &cl.lastActiveTime}
+		// conn = &ActiveTimeConn{Conn: conn, lastActiveTime: &cl.lastActiveTime}
 		// }
 		d.increaseUsedSession(cl)
 		log.Ctx(ctx).Debug().Int32("id", cl.id).Int32("used_session", cl.usedSession.Load()).Msg("using hys client")
@@ -580,7 +642,7 @@ func (d *HysClient) udp(ctx context.Context) (client.HyUDPConn, *wrappedClient, 
 			continue
 		}
 		// if runtime.GOOS == "ios" {
-		udpConn = &ActiveTimeHyUDPConn{HyUDPConn: udpConn, lastActiveTime: &cl.lastActiveTime}
+		// udpConn = &ActiveTimeHyUDPConn{HyUDPConn: udpConn, lastActiveTime: &cl.lastActiveTime}
 		// }
 
 		d.increaseUsedSession(cl)
