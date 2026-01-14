@@ -342,7 +342,7 @@ func (c *ddlPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
 		return n, addr, err
 	}
 	c.lastReadTime.Store(time.Now().Unix())
-	log.Debug().Int32("id", c.id).Msg("hys client read from")
+	// log.Debug().Int32("id", c.id).Msg("hys client read from")
 	return n, addr, err
 }
 
@@ -350,7 +350,7 @@ func (c *ddlPacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
 	if time.Now().Unix()-c.lastReadTime.Load() > c.idle {
 		log.Debug().Int32("id", c.id).Msg("hys client no read activity but still sending data")
 	}
-	log.Debug().Int32("id", c.id).Msg("hys client write to")
+	// log.Debug().Int32("id", c.id).Msg("hys client write to")
 	return c.PacketConn.WriteTo(p, addr)
 }
 
