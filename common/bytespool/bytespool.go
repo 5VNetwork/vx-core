@@ -68,6 +68,9 @@ func (b Buffer) Release() {
 //
 // v2ray:api:stable
 func Free(b []byte) {
+	if b == nil || cap(b) == 0 {
+		return
+	}
 	size := int32(cap(b))
 	b = b[0:cap(b)]
 	for i := numPools - 1; i >= 0; i-- {
