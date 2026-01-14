@@ -34,6 +34,18 @@ func ToTypedMessages(messages ...proto.Message) []*anypb.Any {
 	return anyMessages
 }
 
+func ToTypedMessage0(message proto.Message) (*anypb.Any, error) {
+	if message == nil {
+		panic("message is nil")
+	}
+	a := new(anypb.Any)
+	err := a.MarshalFrom(message)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal message: %v", err)
+	}
+	return a, nil
+}
+
 // ToTypedMessage converts a proto Message into TypedMessage.
 func ToTypedMessage(message proto.Message) *anypb.Any {
 	if message == nil {
@@ -45,11 +57,6 @@ func ToTypedMessage(message proto.Message) *anypb.Any {
 		panic(fmt.Sprintf("failed to marshal message: %v", err))
 	}
 	return a
-	// settings, _ := proto.Marshal(message)
-	// return &anypb.Any{
-	// 	TypeUrl: V2RayTypeURLHeader + GetMessageType(message),
-	// 	Value:   settings,
-	// }
 }
 
 // // GetMessageType returns the name of this proto Message.

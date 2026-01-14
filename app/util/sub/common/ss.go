@@ -88,11 +88,16 @@ func ParseSsFromLink(link string) (*configs.OutboundHandlerConfig, error) {
 		return nil, fmt.Errorf("unsupported cipher type: %s", cipher)
 	}
 
+	ssAny, err := serial.ToTypedMessage0(ssConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal ss config: %v", err)
+	}
+
 	outboundConfig := &configs.OutboundHandlerConfig{
 		Address:  u.Hostname(),
 		Tag:      u.Fragment,
 		Ports:    ports,
-		Protocol: serial.ToTypedMessage(ssConfig),
+		Protocol: ssAny,
 	}
 
 	return outboundConfig, nil
