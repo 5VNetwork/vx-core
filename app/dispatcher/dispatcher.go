@@ -147,11 +147,11 @@ func (p *Dispatcher) HandleFlow(ctx context.Context, dst net.Destination, rw buf
 
 	/* determine which outbound */
 	rw0, handler, err := p.determineOutbound(ctx, info, rw)
-	p.logRoute(ctx, info, handler, true)
 	if err != nil {
 		p.logUserError(ctx, info, err)
 		return err
 	}
+	p.logRoute(ctx, info, handler, true)
 	rw = rw0.(buf.ReaderWriter)
 
 	ctx, idleChecker, rw0 := p.idle(ctx, info, rw)
