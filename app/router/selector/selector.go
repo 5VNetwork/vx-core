@@ -5,7 +5,6 @@ package selector
 
 import (
 	"context"
-	"math/rand"
 	"slices"
 	"strconv"
 	"sync"
@@ -164,6 +163,9 @@ func (s *Selector) Load() {
 		if _, ok := s.strategy.(*leastPingStrategy); ok && os.GetPing() == 0 {
 			handlersToBeTestedForPing = append(handlersToBeTestedForPing, os)
 		}
+		if _, ok := s.strategy.(*allOkStrategy); ok && os.GetOk() == 0 {
+			handlersToBeTestedForPing = append(handlersToBeTestedForPing, os)
+		}
 	}
 	s.filteredHandlers = handlers
 	s.handlersLock.Unlock()
@@ -217,8 +219,8 @@ func (s *Selector) setHandlers() {
 
 	if len(selectedHandlers) == 0 {
 		s.enterRecoveryIfNot()
-		// random pick one handler
-		selectedHandlers = []outHandler{handlers[rand.Intn(len(handlers))]}
+		// use all handlers
+		selectedHandlers = handlers
 	} else if s.isRecovery {
 		s.exitRecovery()
 	}
@@ -493,8 +495,15 @@ type allOkStrategy struct{}
 func (s *allOkStrategy) Select(handlers []outHandler) []outHandler {
 	okHandlers := make([]outHandler, 0, len(handlers))
 	for _, h := range handlers {
-		if h.GetOk() >= 0 {
+		if h.GetOk() > 0 {
 			okHandlers = append(okHandlers, h)
+		}
+	}
+	if len(okHandlers) == 0 {
+		for _, h := range handlers {
+			if h.GetOk() >= 0 {
+				okHandlers = append(okHandlers, h)
+			}
 		}
 	}
 	return okHandlers
