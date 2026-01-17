@@ -32,7 +32,6 @@ import (
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/signal/done"
 	"github.com/5vnetwork/vx-core/i"
-	"google.golang.org/protobuf/encoding/protojson"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -85,18 +84,6 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 		return nil, fmt.Errorf("failed to set log: %w", err)
 	}
 	x.Logger = l
-
-	// print config in json
-	if config.Log.LogLevel == configs.Level_DEBUG {
-		jsonMarshaler := protojson.MarshalOptions{
-			Indent: "  ",
-		}
-		json, err := jsonMarshaler.Marshal(config)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal config: %w", err)
-		}
-		log.Debug().Msgf("config: %s", string(json))
-	}
 
 	if config.DefaultNicMonitor {
 		err := Netmon(config, builder, x)
