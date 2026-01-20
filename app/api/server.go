@@ -388,7 +388,10 @@ func (a *Api) UpdateServerConfig(ctx context.Context, req *UpdateServerConfigReq
 }
 
 func updateVXConfig(sshClient *sshhelper.Client, config *server.ServerConfig) error {
-	configJson, err := protojson.Marshal(config)
+	jsonMarshaler := protojson.MarshalOptions{
+		Indent: "  ",
+	}
+	configJson, err := jsonMarshaler.Marshal(config)
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
