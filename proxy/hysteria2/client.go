@@ -28,6 +28,7 @@ import (
 	"github.com/apernet/hysteria/core/v2/client"
 	"github.com/apernet/hysteria/extras/v2/obfs"
 	"github.com/apernet/quic-go"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -111,7 +112,7 @@ type wrappedClient struct {
 }
 
 func (c *wrappedClient) isActive() bool {
-	if time.Now().Unix()-c.lastActiveTime.Load() < c.idle {
+	if time.Now().Unix()-c.lastActiveTime.Load() <= c.idle {
 		log.Debug().Int32("id", c.id).Msg("hys client active")
 		return true
 	}
@@ -133,8 +134,10 @@ func (w *wrappedClient) addTimer(hc *HysClient) {
 	w.timerLock.Lock()
 	defer w.timerLock.Unlock()
 	if w.timer == nil {
-		w.timer = time.AfterFunc(time.Duration(w.idle)*time.Second, func() {
-			hc.removeClient(w)
+		w.timer = time.AfterFunc(10*time.Second, func() {
+			if w.dialing.Load() == 0 && w.usedSession.Load() == 0 {
+				hc.removeClient(w)
+			}
 		})
 	}
 }
@@ -143,7 +146,9 @@ func (w *wrappedClient) removeTimer() {
 	w.timerLock.Lock()
 	defer w.timerLock.Unlock()
 	if w.timer != nil {
-		w.timer.Stop()
+		if !w.timer.Stop() {
+			log.Warn().Int32("id", w.id).Msg("hys client timer not stopped")
+		}
 		w.timer = nil
 	}
 }
@@ -276,6 +281,7 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 			c := &ddlPacketConn{
 				PacketConn: conn,
 				id:         id,
+				debug:      zerolog.GlobalLevel() == zerolog.DebugLevel,
 				idle:       int64(config.QUICConfig.MaxIdleTimeout.Seconds())}
 			c.lastReadTime.Store(time.Now().Unix())
 			idleTimer = &c.lastReadTime
@@ -283,6 +289,7 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 				PacketConn: c}
 			cl, _, err = client.NewClient(&config)
 			if err == nil {
+				log.Debug().Int32("id", id).Any("local_addr", conn.LocalAddr()).Msg("hys client created")
 				break
 			}
 		}
@@ -296,12 +303,16 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 		c := &ddlPacketConn{
 			PacketConn: conn,
 			id:         id,
+			debug:      zerolog.GlobalLevel() == zerolog.DebugLevel,
 			idle:       int64(config.QUICConfig.MaxIdleTimeout.Seconds())}
 		c.lastReadTime.Store(time.Now().Unix())
 		idleTimer = &c.lastReadTime
 		config.ConnFactory = &connFactory{
 			PacketConn: c}
 		cl, _, err = client.NewClient(&config)
+		if err == nil {
+			log.Debug().Int32("id", id).Any("local_addr", conn.LocalAddr()).Msg("hys client created")
+		}
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client: %w", err)
@@ -309,7 +320,7 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 	wrappedClient := &wrappedClient{
 		Client: cl,
 		id:     id,
-		idle:   int64(config.QUICConfig.MaxIdleTimeout.Seconds()),
+		idle:   5,
 	}
 	wrappedClient.lastActiveTime = idleTimer
 
@@ -334,6 +345,7 @@ type ddlPacketConn struct {
 	id           int32
 	idle         int64
 	lastReadTime atomic.Int64
+	debug        bool
 }
 
 func (c *ddlPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
@@ -342,15 +354,19 @@ func (c *ddlPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
 		return n, addr, err
 	}
 	c.lastReadTime.Store(time.Now().Unix())
-	// log.Debug().Int32("id", c.id).Msg("hys client read from")
+	if c.debug {
+		log.Debug().Int32("id", c.id).Msg("hys client read from")
+	}
 	return n, addr, err
 }
 
 func (c *ddlPacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
-	if time.Now().Unix()-c.lastReadTime.Load() > c.idle {
-		log.Debug().Int32("id", c.id).Msg("hys client no read activity but still sending data")
+	if c.debug {
+		if time.Now().Unix()-c.lastReadTime.Load() > c.idle {
+			log.Debug().Int32("id", c.id).Msg("hys client no read activity but still sending data")
+		}
+		log.Debug().Int32("id", c.id).Msg("hys client write to")
 	}
-	// log.Debug().Int32("id", c.id).Msg("hys client write to")
 	return c.PacketConn.WriteTo(p, addr)
 }
 
