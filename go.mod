@@ -21,7 +21,7 @@ require (
 	github.com/pires/go-proxyproto v0.8.1
 	github.com/pkg/sftp v1.13.6
 	github.com/quic-go/quic-go v0.59.0
-	github.com/refraction-networking/utls v1.8.1
+	github.com/refraction-networking/utls v1.8.2
 	github.com/rs/zerolog v1.33.0
 	github.com/seiflotfy/cuckoofilter v0.0.0-20240715131351-a2f2c23f1771
 	github.com/shirou/gopsutil v2.21.11+incompatible
