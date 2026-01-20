@@ -108,7 +108,8 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 	if runtime.GOOS == "ios" {
 		size = 100
 	}
-	ul := userlogger.NewUserLogger(config.Log.UserLog, config.Log.LogAppId, size)
+	ul := userlogger.NewUserLogger(config.GetUserLog().GetEnable(),
+		config.GetUserLog().GetLogAppId(), size)
 	x.UserLogger = ul
 	common.Must(builder.addComponent(ul))
 	builder.requireOptionalFeatures(func(ipToDomain *dns.IPToDomain) {

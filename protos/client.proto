@@ -46,6 +46,8 @@ message TmConfig {
   bool reject_ipv6 = 32;
   x.WfpConfig wfp = 33;
   bool use_real_latency = 34;
+
+  x.UserLoggerConfig user_log = 35;
 }
 
 message GrpcConfig { 

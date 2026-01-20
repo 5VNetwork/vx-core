@@ -76,15 +76,19 @@ func (Level) EnumDescriptor() ([]byte, []int) {
 type LoggerConfig struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	LogLevel Level                  `protobuf:"varint,1,opt,name=log_level,json=logLevel,proto3,enum=x.Level" json:"log_level,omitempty"`
-	FilePath string                 `protobuf:"bytes,2,opt,name=file_path,json=filePath,proto3" json:"file_path,omitempty"`
-	// whether use console writer for stderr output
-	ConsoleWriter bool   `protobuf:"varint,3,opt,name=console_writer,json=consoleWriter,proto3" json:"console_writer,omitempty"`
-	ShowColor     bool   `protobuf:"varint,4,opt,name=show_color,json=showColor,proto3" json:"show_color,omitempty"`
-	ShowCaller    bool   `protobuf:"varint,5,opt,name=show_caller,json=showCaller,proto3" json:"show_caller,omitempty"`
-	LogFileDir    string `protobuf:"bytes,9,opt,name=log_file_dir,json=logFileDir,proto3" json:"log_file_dir,omitempty"`
-	Redact        bool   `protobuf:"varint,10,opt,name=redact,proto3" json:"redact,omitempty"`
-	UserLog       bool   `protobuf:"varint,6,opt,name=user_log,json=userLog,proto3" json:"user_log,omitempty"`
-	LogAppId      bool   `protobuf:"varint,7,opt,name=log_app_id,json=logAppId,proto3" json:"log_app_id,omitempty"`
+	// Where to write logs
+	FilePath string `protobuf:"bytes,2,opt,name=file_path,json=filePath,proto3" json:"file_path,omitempty"`
+	// Whether use console writer which makes logs more human-readable
+	ConsoleWriter bool `protobuf:"varint,3,opt,name=console_writer,json=consoleWriter,proto3" json:"console_writer,omitempty"`
+	// Whether use color logging
+	ShowColor bool `protobuf:"varint,4,opt,name=show_color,json=showColor,proto3" json:"show_color,omitempty"`
+	// Wehther show caller
+	ShowCaller bool `protobuf:"varint,5,opt,name=show_caller,json=showCaller,proto3" json:"show_caller,omitempty"`
+	// If specified and file_path is not set, logs will be written to the directory.
+	// Log file name will be the current timestamp: 2006-01-02T15:04:05.txt
+	LogFileDir string `protobuf:"bytes,9,opt,name=log_file_dir,json=logFileDir,proto3" json:"log_file_dir,omitempty"`
+	// Whether redact domain and ip address in logs
+	Redact        bool `protobuf:"varint,10,opt,name=redact,proto3" json:"redact,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -168,14 +172,55 @@ func (x *LoggerConfig) GetRedact() bool {
 	return false
 }
 
-func (x *LoggerConfig) GetUserLog() bool {
+type UserLoggerConfig struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// user logger
+	// Whether output logs for VX client. Client only
+	Enable bool `protobuf:"varint,1,opt,name=enable,proto3" json:"enable,omitempty"`
+	// Whether log app id, specified by users in the app. Client only
+	LogAppId      bool `protobuf:"varint,2,opt,name=log_app_id,json=logAppId,proto3" json:"log_app_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserLoggerConfig) Reset() {
+	*x = UserLoggerConfig{}
+	mi := &file_protos_logger_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserLoggerConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserLoggerConfig) ProtoMessage() {}
+
+func (x *UserLoggerConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_protos_logger_proto_msgTypes[1]
 	if x != nil {
-		return x.UserLog
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserLoggerConfig.ProtoReflect.Descriptor instead.
+func (*UserLoggerConfig) Descriptor() ([]byte, []int) {
+	return file_protos_logger_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *UserLoggerConfig) GetEnable() bool {
+	if x != nil {
+		return x.Enable
 	}
 	return false
 }
 
-func (x *LoggerConfig) GetLogAppId() bool {
+func (x *UserLoggerConfig) GetLogAppId() bool {
 	if x != nil {
 		return x.LogAppId
 	}
@@ -186,7 +231,7 @@ var File_protos_logger_proto protoreflect.FileDescriptor
 
 const file_protos_logger_proto_rawDesc = "" +
 	"\n" +
-	"\x13protos/logger.proto\x12\x01x\"\xac\x02\n" +
+	"\x13protos/logger.proto\x12\x01x\"\xff\x01\n" +
 	"\fLoggerConfig\x12%\n" +
 	"\tlog_level\x18\x01 \x01(\x0e2\b.x.LevelR\blogLevel\x12\x1b\n" +
 	"\tfile_path\x18\x02 \x01(\tR\bfilePath\x12%\n" +
@@ -198,10 +243,11 @@ const file_protos_logger_proto_rawDesc = "" +
 	"\flog_file_dir\x18\t \x01(\tR\n" +
 	"logFileDir\x12\x16\n" +
 	"\x06redact\x18\n" +
-	" \x01(\bR\x06redact\x12\x19\n" +
-	"\buser_log\x18\x06 \x01(\bR\auserLog\x12\x1c\n" +
+	" \x01(\bR\x06redactJ\x04\b\x06\x10\aJ\x04\b\a\x10\b\"H\n" +
+	"\x10UserLoggerConfig\x12\x16\n" +
+	"\x06enable\x18\x01 \x01(\bR\x06enable\x12\x1c\n" +
 	"\n" +
-	"log_app_id\x18\a \x01(\bR\blogAppId*J\n" +
+	"log_app_id\x18\x02 \x01(\bR\blogAppId*J\n" +
 	"\x05Level\x12\t\n" +
 	"\x05DEBUG\x10\x00\x12\b\n" +
 	"\x04INFO\x10\x01\x12\b\n" +
@@ -223,10 +269,11 @@ func file_protos_logger_proto_rawDescGZIP() []byte {
 }
 
 var file_protos_logger_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_protos_logger_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_protos_logger_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_protos_logger_proto_goTypes = []any{
-	(Level)(0),           // 0: x.Level
-	(*LoggerConfig)(nil), // 1: x.LoggerConfig
+	(Level)(0),               // 0: x.Level
+	(*LoggerConfig)(nil),     // 1: x.LoggerConfig
+	(*UserLoggerConfig)(nil), // 2: x.UserLoggerConfig
 }
 var file_protos_logger_proto_depIdxs = []int32{
 	0, // 0: x.LoggerConfig.log_level:type_name -> x.Level
@@ -248,7 +295,7 @@ func file_protos_logger_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_protos_logger_proto_rawDesc), len(file_protos_logger_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
