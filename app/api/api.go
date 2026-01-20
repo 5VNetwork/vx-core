@@ -16,6 +16,7 @@ import (
 	idns "github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/sysproxy"
 	"github.com/5vnetwork/vx-core/app/util"
+	"github.com/5vnetwork/vx-core/proxy/freedom"
 	"github.com/5vnetwork/vx-core/transport/dlhelper"
 
 	"github.com/5vnetwork/vx-core/app/configs"
@@ -26,6 +27,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/util/downloader"
 	"github.com/5vnetwork/vx-core/app/xsqlite"
 	"github.com/5vnetwork/vx-core/common"
+	"github.com/5vnetwork/vx-core/common/dispatcher"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
 	"github.com/5vnetwork/vx-core/common/signal"
@@ -180,7 +182,13 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 		}
 
 		dialer := transport.NewBindToDefaultNICDialer(api.mon, &dlhelper.SocketSetting{})
-		dnsServer1 := idns.NewDnsServerSerial(nameServersDirect, dialer, nil)
+		freedomHandler := freedom.New(dialer, dialer, "direct", nil)
+		dnsServer1 := idns.NewDnsServerConcurrent(idns.DnsServerConcurrentOption{
+			NameserverAddrs: nameServersDirect,
+			Name:            "api-dns-server",
+			Handler:         freedomHandler,
+			Dispatcher:      dispatcher.NewPacketDispatcher(context.Background(), freedomHandler),
+		})
 		resolver := idns.NewDnsServerToResolver(dnsServer1)
 		api.dnsServer = resolver
 		api.ipResolver = resolver
@@ -191,8 +199,13 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 		})
 		dnsServer1.Start()
 	} else {
-		dialer := transport.DefaultDialer
-		dnsServer1 := idns.NewDnsServerSerial(nameServersDirect, dialer, nil)
+		freedomHandler := freedom.New(transport.DefaultDialer, transport.DefaultPacketListener, "direct", nil)
+		dnsServer1 := idns.NewDnsServerConcurrent(idns.DnsServerConcurrentOption{
+			NameserverAddrs: nameServersDirect,
+			Name:            "api-dns-server",
+			Handler:         freedomHandler,
+			Dispatcher:      dispatcher.NewPacketDispatcher(context.Background(), freedomHandler),
+		})
 		resolver := idns.NewDnsServerToResolver(dnsServer1)
 		api.dnsServer = resolver
 		api.ipResolver = resolver
