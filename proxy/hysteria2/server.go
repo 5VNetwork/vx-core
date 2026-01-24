@@ -296,13 +296,13 @@ func (in *Inbound) TCPRequest(addr net.Addr, id, reqAddr string) {
 	log.Debug().Any("src_addr", addr).Str("user_id", id).Str("req_addr", reqAddr).Msgf("hysteria2 tcp request")
 }
 func (in *Inbound) TCPError(addr net.Addr, id, reqAddr string, err error) {
-	log.Debug().Str("error", err.Error()).Any("src_addr", addr).Str("user_id", id).Str("req_addr", reqAddr).Msgf("hysteria2 tcp error")
+	log.Debug().Err(err).Any("src_addr", addr).Str("user_id", id).Str("req_addr", reqAddr).Msgf("hysteria2 tcp error")
 }
 func (in *Inbound) UDPRequest(addr net.Addr, id string, sessionID uint32, reqAddr string) {
 	log.Debug().Any("src_addr", addr).Str("user_id", id).Uint32("session_id", sessionID).Str("req_addr", reqAddr).Msgf("hysteria2 udp request")
 }
 func (in *Inbound) UDPError(addr net.Addr, id string, sessionID uint32, err error) {
-	log.Debug().Str("error", err.Error()).Any("src_addr", addr).Str("user_id", id).Uint32("session_id", sessionID).Msgf("hysteria2 udp error")
+	log.Debug().Err(err).Any("src_addr", addr).Str("user_id", id).Uint32("session_id", sessionID).Msgf("hysteria2 udp error")
 }
 
 // Implements server.Outbound
