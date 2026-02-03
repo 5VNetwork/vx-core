@@ -17,7 +17,7 @@ type StaticDnsServer struct {
 	cache map[dns.Question]*dns.Msg
 }
 
-func NewStaticDnsServer(records []*configs.Record) *StaticDnsServer {
+func NewStaticDnsServer(records []*configs.Record, recordStrings ...string) *StaticDnsServer {
 	s := &StaticDnsServer{
 		cache: make(map[dns.Question]*dns.Msg),
 	}
@@ -90,15 +90,25 @@ func NewStaticDnsServer(records []*configs.Record) *StaticDnsServer {
 			s.cache[question] = msg
 		}
 	}
+	for _, recordString := range recordStrings {
+		record, err := dns.NewRR(recordString)
+		if err != nil {
+			log.Warn().Err(err).Str("record", recordString).Msg("failed to create record")
+			continue
+		}
+		s.cache[dns.Question{Name: record.Header().Name,
+			Qtype: record.Header().Rrtype, Qclass: record.Header().Class}] = &dns.Msg{Answer: []dns.RR{record}}
+	}
 	return s
 }
 
 var ErrNotFound = errors.New("not found")
 
 func (s *StaticDnsServer) ReplyFor(msg *dns.Msg) (*dns.Msg, bool) {
+	log.Debug().Any("msg", msg).Msg("ReplyFor")
 	entry, ok := s.cache[msg.Question[0]]
 	if !ok {
 		return nil, false
 	}
-	return entry, true
+	return makeReply(msg, entry), true
 }

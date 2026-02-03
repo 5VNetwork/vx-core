@@ -50,7 +50,7 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 	common.Must(fc.addComponent(ipToDomain))
 
 	// static
-	staticDnsServer := idns.NewStaticDnsServer(dnsConfig.GetRecords())
+	staticDnsServer := idns.NewStaticDnsServer(dnsConfig.GetRecords(), dnsConfig.GetRecordStrings()...)
 
 	// internal dns
 	err := fc.requireFeature(func(h *dispatcher.Dispatcher) error {

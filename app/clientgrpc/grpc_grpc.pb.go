@@ -10,8 +10,8 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-// Requires gRPC-Go v1.64.0 or later.
-const _ = grpc.SupportPackageIsVersion9
+// Requires gRPC-Go v1.32.0 or later.
+const _ = grpc.SupportPackageIsVersion7
 
 const (
 	ClientService_Communicate_FullMethodName               = "/x.clientgrpc.ClientService/Communicate"
@@ -46,17 +46,17 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ClientServiceClient interface {
 	// server to client
-	Communicate(ctx context.Context, in *CommunicateRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[CommunicateMessage], error)
+	Communicate(ctx context.Context, in *CommunicateRequest, opts ...grpc.CallOption) (ClientService_CommunicateClient, error)
 	// inbound
 	AddInbound(ctx context.Context, in *AddInboundRequest, opts ...grpc.CallOption) (*AddInboundResponse, error)
 	RemoveInbound(ctx context.Context, in *RemoveInboundRequest, opts ...grpc.CallOption) (*RemoveInboundResponse, error)
 	// stats
-	GetStatsStream(ctx context.Context, in *GetStatsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StatsResponse], error)
+	GetStatsStream(ctx context.Context, in *GetStatsRequest, opts ...grpc.CallOption) (ClientService_GetStatsStreamClient, error)
 	SetOutboundHandlerSpeed(ctx context.Context, in *SetOutboundHandlerSpeedRequest, opts ...grpc.CallOption) (*SetOutboundHandlerSpeedResponse, error)
 	// log
 	// rpc ChangeLogLevel(ChangeLogLevelRequest) returns (ChangeLogLevelResponse);
 	// rpc LogStream(LogStreamRequest) returns (stream LogMessage);
-	UserLogStream(ctx context.Context, in *UserLogStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[userlogger.UserLogMessage], error)
+	UserLogStream(ctx context.Context, in *UserLogStreamRequest, opts ...grpc.CallOption) (ClientService_UserLogStreamClient, error)
 	ToggleUserLog(ctx context.Context, in *ToggleUserLogRequest, opts ...grpc.CallOption) (*ToggleUserLogResponse, error)
 	ToggleLogAppId(ctx context.Context, in *ToggleLogAppIdRequest, opts ...grpc.CallOption) (*ToggleLogAppIdResponse, error)
 	// outbound
@@ -92,13 +92,12 @@ func NewClientServiceClient(cc grpc.ClientConnInterface) ClientServiceClient {
 	return &clientServiceClient{cc}
 }
 
-func (c *clientServiceClient) Communicate(ctx context.Context, in *CommunicateRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[CommunicateMessage], error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &ClientService_ServiceDesc.Streams[0], ClientService_Communicate_FullMethodName, cOpts...)
+func (c *clientServiceClient) Communicate(ctx context.Context, in *CommunicateRequest, opts ...grpc.CallOption) (ClientService_CommunicateClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ClientService_ServiceDesc.Streams[0], ClientService_Communicate_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[CommunicateRequest, CommunicateMessage]{ClientStream: stream}
+	x := &clientServiceCommunicateClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -108,13 +107,26 @@ func (c *clientServiceClient) Communicate(ctx context.Context, in *CommunicateRe
 	return x, nil
 }
 
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ClientService_CommunicateClient = grpc.ServerStreamingClient[CommunicateMessage]
+type ClientService_CommunicateClient interface {
+	Recv() (*CommunicateMessage, error)
+	grpc.ClientStream
+}
+
+type clientServiceCommunicateClient struct {
+	grpc.ClientStream
+}
+
+func (x *clientServiceCommunicateClient) Recv() (*CommunicateMessage, error) {
+	m := new(CommunicateMessage)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
 
 func (c *clientServiceClient) AddInbound(ctx context.Context, in *AddInboundRequest, opts ...grpc.CallOption) (*AddInboundResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AddInboundResponse)
-	err := c.cc.Invoke(ctx, ClientService_AddInbound_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_AddInbound_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -122,22 +134,20 @@ func (c *clientServiceClient) AddInbound(ctx context.Context, in *AddInboundRequ
 }
 
 func (c *clientServiceClient) RemoveInbound(ctx context.Context, in *RemoveInboundRequest, opts ...grpc.CallOption) (*RemoveInboundResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(RemoveInboundResponse)
-	err := c.cc.Invoke(ctx, ClientService_RemoveInbound_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_RemoveInbound_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) GetStatsStream(ctx context.Context, in *GetStatsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StatsResponse], error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &ClientService_ServiceDesc.Streams[1], ClientService_GetStatsStream_FullMethodName, cOpts...)
+func (c *clientServiceClient) GetStatsStream(ctx context.Context, in *GetStatsRequest, opts ...grpc.CallOption) (ClientService_GetStatsStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ClientService_ServiceDesc.Streams[1], ClientService_GetStatsStream_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[GetStatsRequest, StatsResponse]{ClientStream: stream}
+	x := &clientServiceGetStatsStreamClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -147,26 +157,38 @@ func (c *clientServiceClient) GetStatsStream(ctx context.Context, in *GetStatsRe
 	return x, nil
 }
 
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ClientService_GetStatsStreamClient = grpc.ServerStreamingClient[StatsResponse]
+type ClientService_GetStatsStreamClient interface {
+	Recv() (*StatsResponse, error)
+	grpc.ClientStream
+}
+
+type clientServiceGetStatsStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *clientServiceGetStatsStreamClient) Recv() (*StatsResponse, error) {
+	m := new(StatsResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
 
 func (c *clientServiceClient) SetOutboundHandlerSpeed(ctx context.Context, in *SetOutboundHandlerSpeedRequest, opts ...grpc.CallOption) (*SetOutboundHandlerSpeedResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SetOutboundHandlerSpeedResponse)
-	err := c.cc.Invoke(ctx, ClientService_SetOutboundHandlerSpeed_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_SetOutboundHandlerSpeed_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) UserLogStream(ctx context.Context, in *UserLogStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[userlogger.UserLogMessage], error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &ClientService_ServiceDesc.Streams[2], ClientService_UserLogStream_FullMethodName, cOpts...)
+func (c *clientServiceClient) UserLogStream(ctx context.Context, in *UserLogStreamRequest, opts ...grpc.CallOption) (ClientService_UserLogStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ClientService_ServiceDesc.Streams[2], ClientService_UserLogStream_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[UserLogStreamRequest, userlogger.UserLogMessage]{ClientStream: stream}
+	x := &clientServiceUserLogStreamClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -176,13 +198,26 @@ func (c *clientServiceClient) UserLogStream(ctx context.Context, in *UserLogStre
 	return x, nil
 }
 
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ClientService_UserLogStreamClient = grpc.ServerStreamingClient[userlogger.UserLogMessage]
+type ClientService_UserLogStreamClient interface {
+	Recv() (*userlogger.UserLogMessage, error)
+	grpc.ClientStream
+}
+
+type clientServiceUserLogStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *clientServiceUserLogStreamClient) Recv() (*userlogger.UserLogMessage, error) {
+	m := new(userlogger.UserLogMessage)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
 
 func (c *clientServiceClient) ToggleUserLog(ctx context.Context, in *ToggleUserLogRequest, opts ...grpc.CallOption) (*ToggleUserLogResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ToggleUserLogResponse)
-	err := c.cc.Invoke(ctx, ClientService_ToggleUserLog_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_ToggleUserLog_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -190,9 +225,8 @@ func (c *clientServiceClient) ToggleUserLog(ctx context.Context, in *ToggleUserL
 }
 
 func (c *clientServiceClient) ToggleLogAppId(ctx context.Context, in *ToggleLogAppIdRequest, opts ...grpc.CallOption) (*ToggleLogAppIdResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ToggleLogAppIdResponse)
-	err := c.cc.Invoke(ctx, ClientService_ToggleLogAppId_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_ToggleLogAppId_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -200,9 +234,8 @@ func (c *clientServiceClient) ToggleLogAppId(ctx context.Context, in *ToggleLogA
 }
 
 func (c *clientServiceClient) ChangeOutbound(ctx context.Context, in *ChangeOutboundRequest, opts ...grpc.CallOption) (*ChangeOutboundResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ChangeOutboundResponse)
-	err := c.cc.Invoke(ctx, ClientService_ChangeOutbound_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_ChangeOutbound_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -210,9 +243,8 @@ func (c *clientServiceClient) ChangeOutbound(ctx context.Context, in *ChangeOutb
 }
 
 func (c *clientServiceClient) CurrentOutbound(ctx context.Context, in *CurrentOutboundRequest, opts ...grpc.CallOption) (*CurrentOutboundResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CurrentOutboundResponse)
-	err := c.cc.Invoke(ctx, ClientService_CurrentOutbound_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_CurrentOutbound_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -220,9 +252,8 @@ func (c *clientServiceClient) CurrentOutbound(ctx context.Context, in *CurrentOu
 }
 
 func (c *clientServiceClient) ChangeRoutingMode(ctx context.Context, in *ChangeRoutingModeRequest, opts ...grpc.CallOption) (*ChangeRoutingModeResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ChangeRoutingModeResponse)
-	err := c.cc.Invoke(ctx, ClientService_ChangeRoutingMode_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_ChangeRoutingMode_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -230,9 +261,8 @@ func (c *clientServiceClient) ChangeRoutingMode(ctx context.Context, in *ChangeR
 }
 
 func (c *clientServiceClient) ChangeSelector(ctx context.Context, in *ChangeSelectorRequest, opts ...grpc.CallOption) (*ChangeSelectorResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ChangeSelectorResponse)
-	err := c.cc.Invoke(ctx, ClientService_ChangeSelector_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_ChangeSelector_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -240,9 +270,8 @@ func (c *clientServiceClient) ChangeSelector(ctx context.Context, in *ChangeSele
 }
 
 func (c *clientServiceClient) UpdateSelectorBalancer(ctx context.Context, in *UpdateSelectorBalancerRequest, opts ...grpc.CallOption) (*Receipt, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_UpdateSelectorBalancer_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_UpdateSelectorBalancer_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -250,9 +279,8 @@ func (c *clientServiceClient) UpdateSelectorBalancer(ctx context.Context, in *Up
 }
 
 func (c *clientServiceClient) UpdateSelectorFilter(ctx context.Context, in *UpdateSelectorFilterRequest, opts ...grpc.CallOption) (*Receipt, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_UpdateSelectorFilter_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_UpdateSelectorFilter_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -260,9 +288,8 @@ func (c *clientServiceClient) UpdateSelectorFilter(ctx context.Context, in *Upda
 }
 
 func (c *clientServiceClient) NotifyHandlerChange(ctx context.Context, in *HandlerChangeNotify, opts ...grpc.CallOption) (*HandlerChangeNotifyResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(HandlerChangeNotifyResponse)
-	err := c.cc.Invoke(ctx, ClientService_NotifyHandlerChange_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_NotifyHandlerChange_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -270,9 +297,8 @@ func (c *clientServiceClient) NotifyHandlerChange(ctx context.Context, in *Handl
 }
 
 func (c *clientServiceClient) SwitchFakeDns(ctx context.Context, in *SwitchFakeDnsRequest, opts ...grpc.CallOption) (*SwitchFakeDnsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SwitchFakeDnsResponse)
-	err := c.cc.Invoke(ctx, ClientService_SwitchFakeDns_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_SwitchFakeDns_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -280,9 +306,8 @@ func (c *clientServiceClient) SwitchFakeDns(ctx context.Context, in *SwitchFakeD
 }
 
 func (c *clientServiceClient) UpdateGeo(ctx context.Context, in *UpdateGeoRequest, opts ...grpc.CallOption) (*UpdateGeoResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateGeoResponse)
-	err := c.cc.Invoke(ctx, ClientService_UpdateGeo_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_UpdateGeo_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -290,9 +315,8 @@ func (c *clientServiceClient) UpdateGeo(ctx context.Context, in *UpdateGeoReques
 }
 
 func (c *clientServiceClient) AddGeoDomain(ctx context.Context, in *AddGeoDomainRequest, opts ...grpc.CallOption) (*Receipt, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_AddGeoDomain_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_AddGeoDomain_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -300,9 +324,8 @@ func (c *clientServiceClient) AddGeoDomain(ctx context.Context, in *AddGeoDomain
 }
 
 func (c *clientServiceClient) RemoveGeoDomain(ctx context.Context, in *RemoveGeoDomainRequest, opts ...grpc.CallOption) (*Receipt, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_RemoveGeoDomain_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_RemoveGeoDomain_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -310,9 +333,8 @@ func (c *clientServiceClient) RemoveGeoDomain(ctx context.Context, in *RemoveGeo
 }
 
 func (c *clientServiceClient) ReplaceGeoDomains(ctx context.Context, in *ReplaceDomainSetRequest, opts ...grpc.CallOption) (*Receipt, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_ReplaceGeoDomains_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_ReplaceGeoDomains_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -320,9 +342,8 @@ func (c *clientServiceClient) ReplaceGeoDomains(ctx context.Context, in *Replace
 }
 
 func (c *clientServiceClient) ReplaceGeoIPs(ctx context.Context, in *ReplaceIPSetRequest, opts ...grpc.CallOption) (*Receipt, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_ReplaceGeoIPs_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_ReplaceGeoIPs_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -330,9 +351,8 @@ func (c *clientServiceClient) ReplaceGeoIPs(ctx context.Context, in *ReplaceIPSe
 }
 
 func (c *clientServiceClient) UpdateRouter(ctx context.Context, in *UpdateRouterRequest, opts ...grpc.CallOption) (*UpdateRouterResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateRouterResponse)
-	err := c.cc.Invoke(ctx, ClientService_UpdateRouter_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_UpdateRouter_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -340,9 +360,8 @@ func (c *clientServiceClient) UpdateRouter(ctx context.Context, in *UpdateRouter
 }
 
 func (c *clientServiceClient) SetSubscriptionInterval(ctx context.Context, in *SetSubscriptionIntervalRequest, opts ...grpc.CallOption) (*SetSubscriptionIntervalResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SetSubscriptionIntervalResponse)
-	err := c.cc.Invoke(ctx, ClientService_SetSubscriptionInterval_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_SetSubscriptionInterval_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -350,9 +369,8 @@ func (c *clientServiceClient) SetSubscriptionInterval(ctx context.Context, in *S
 }
 
 func (c *clientServiceClient) SetAutoSubscriptionUpdate(ctx context.Context, in *SetAutoSubscriptionUpdateRequest, opts ...grpc.CallOption) (*Receipt, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_SetAutoSubscriptionUpdate_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_SetAutoSubscriptionUpdate_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -360,9 +378,8 @@ func (c *clientServiceClient) SetAutoSubscriptionUpdate(ctx context.Context, in 
 }
 
 func (c *clientServiceClient) RttTest(ctx context.Context, in *RttTestRequest, opts ...grpc.CallOption) (*RttTestResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(RttTestResponse)
-	err := c.cc.Invoke(ctx, ClientService_RttTest_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ClientService_RttTest_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -371,20 +388,20 @@ func (c *clientServiceClient) RttTest(ctx context.Context, in *RttTestRequest, o
 
 // ClientServiceServer is the server API for ClientService service.
 // All implementations must embed UnimplementedClientServiceServer
-// for forward compatibility.
+// for forward compatibility
 type ClientServiceServer interface {
 	// server to client
-	Communicate(*CommunicateRequest, grpc.ServerStreamingServer[CommunicateMessage]) error
+	Communicate(*CommunicateRequest, ClientService_CommunicateServer) error
 	// inbound
 	AddInbound(context.Context, *AddInboundRequest) (*AddInboundResponse, error)
 	RemoveInbound(context.Context, *RemoveInboundRequest) (*RemoveInboundResponse, error)
 	// stats
-	GetStatsStream(*GetStatsRequest, grpc.ServerStreamingServer[StatsResponse]) error
+	GetStatsStream(*GetStatsRequest, ClientService_GetStatsStreamServer) error
 	SetOutboundHandlerSpeed(context.Context, *SetOutboundHandlerSpeedRequest) (*SetOutboundHandlerSpeedResponse, error)
 	// log
 	// rpc ChangeLogLevel(ChangeLogLevelRequest) returns (ChangeLogLevelResponse);
 	// rpc LogStream(LogStreamRequest) returns (stream LogMessage);
-	UserLogStream(*UserLogStreamRequest, grpc.ServerStreamingServer[userlogger.UserLogMessage]) error
+	UserLogStream(*UserLogStreamRequest, ClientService_UserLogStreamServer) error
 	ToggleUserLog(context.Context, *ToggleUserLogRequest) (*ToggleUserLogResponse, error)
 	ToggleLogAppId(context.Context, *ToggleLogAppIdRequest) (*ToggleLogAppIdResponse, error)
 	// outbound
@@ -413,14 +430,11 @@ type ClientServiceServer interface {
 	mustEmbedUnimplementedClientServiceServer()
 }
 
-// UnimplementedClientServiceServer must be embedded to have
-// forward compatible implementations.
-//
-// NOTE: this should be embedded by value instead of pointer to avoid a nil
-// pointer dereference when methods are called.
-type UnimplementedClientServiceServer struct{}
+// UnimplementedClientServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedClientServiceServer struct {
+}
 
-func (UnimplementedClientServiceServer) Communicate(*CommunicateRequest, grpc.ServerStreamingServer[CommunicateMessage]) error {
+func (UnimplementedClientServiceServer) Communicate(*CommunicateRequest, ClientService_CommunicateServer) error {
 	return status.Errorf(codes.Unimplemented, "method Communicate not implemented")
 }
 func (UnimplementedClientServiceServer) AddInbound(context.Context, *AddInboundRequest) (*AddInboundResponse, error) {
@@ -429,13 +443,13 @@ func (UnimplementedClientServiceServer) AddInbound(context.Context, *AddInboundR
 func (UnimplementedClientServiceServer) RemoveInbound(context.Context, *RemoveInboundRequest) (*RemoveInboundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveInbound not implemented")
 }
-func (UnimplementedClientServiceServer) GetStatsStream(*GetStatsRequest, grpc.ServerStreamingServer[StatsResponse]) error {
+func (UnimplementedClientServiceServer) GetStatsStream(*GetStatsRequest, ClientService_GetStatsStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetStatsStream not implemented")
 }
 func (UnimplementedClientServiceServer) SetOutboundHandlerSpeed(context.Context, *SetOutboundHandlerSpeedRequest) (*SetOutboundHandlerSpeedResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetOutboundHandlerSpeed not implemented")
 }
-func (UnimplementedClientServiceServer) UserLogStream(*UserLogStreamRequest, grpc.ServerStreamingServer[userlogger.UserLogMessage]) error {
+func (UnimplementedClientServiceServer) UserLogStream(*UserLogStreamRequest, ClientService_UserLogStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method UserLogStream not implemented")
 }
 func (UnimplementedClientServiceServer) ToggleUserLog(context.Context, *ToggleUserLogRequest) (*ToggleUserLogResponse, error) {
@@ -496,7 +510,6 @@ func (UnimplementedClientServiceServer) RttTest(context.Context, *RttTestRequest
 	return nil, status.Errorf(codes.Unimplemented, "method RttTest not implemented")
 }
 func (UnimplementedClientServiceServer) mustEmbedUnimplementedClientServiceServer() {}
-func (UnimplementedClientServiceServer) testEmbeddedByValue()                       {}
 
 // UnsafeClientServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to ClientServiceServer will
@@ -506,13 +519,6 @@ type UnsafeClientServiceServer interface {
 }
 
 func RegisterClientServiceServer(s grpc.ServiceRegistrar, srv ClientServiceServer) {
-	// If the following call pancis, it indicates UnimplementedClientServiceServer was
-	// embedded by pointer and is nil.  This will cause panics if an
-	// unimplemented method is ever invoked, so we test this at initialization
-	// time to prevent it from happening at runtime later due to I/O.
-	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
-		t.testEmbeddedByValue()
-	}
 	s.RegisterService(&ClientService_ServiceDesc, srv)
 }
 
@@ -521,11 +527,21 @@ func _ClientService_Communicate_Handler(srv interface{}, stream grpc.ServerStrea
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ClientServiceServer).Communicate(m, &grpc.GenericServerStream[CommunicateRequest, CommunicateMessage]{ServerStream: stream})
+	return srv.(ClientServiceServer).Communicate(m, &clientServiceCommunicateServer{stream})
 }
 
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ClientService_CommunicateServer = grpc.ServerStreamingServer[CommunicateMessage]
+type ClientService_CommunicateServer interface {
+	Send(*CommunicateMessage) error
+	grpc.ServerStream
+}
+
+type clientServiceCommunicateServer struct {
+	grpc.ServerStream
+}
+
+func (x *clientServiceCommunicateServer) Send(m *CommunicateMessage) error {
+	return x.ServerStream.SendMsg(m)
+}
 
 func _ClientService_AddInbound_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddInboundRequest)
@@ -568,11 +584,21 @@ func _ClientService_GetStatsStream_Handler(srv interface{}, stream grpc.ServerSt
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ClientServiceServer).GetStatsStream(m, &grpc.GenericServerStream[GetStatsRequest, StatsResponse]{ServerStream: stream})
+	return srv.(ClientServiceServer).GetStatsStream(m, &clientServiceGetStatsStreamServer{stream})
 }
 
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ClientService_GetStatsStreamServer = grpc.ServerStreamingServer[StatsResponse]
+type ClientService_GetStatsStreamServer interface {
+	Send(*StatsResponse) error
+	grpc.ServerStream
+}
+
+type clientServiceGetStatsStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *clientServiceGetStatsStreamServer) Send(m *StatsResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
 
 func _ClientService_SetOutboundHandlerSpeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetOutboundHandlerSpeedRequest)
@@ -597,11 +623,21 @@ func _ClientService_UserLogStream_Handler(srv interface{}, stream grpc.ServerStr
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ClientServiceServer).UserLogStream(m, &grpc.GenericServerStream[UserLogStreamRequest, userlogger.UserLogMessage]{ServerStream: stream})
+	return srv.(ClientServiceServer).UserLogStream(m, &clientServiceUserLogStreamServer{stream})
 }
 
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ClientService_UserLogStreamServer = grpc.ServerStreamingServer[userlogger.UserLogMessage]
+type ClientService_UserLogStreamServer interface {
+	Send(*userlogger.UserLogMessage) error
+	grpc.ServerStream
+}
+
+type clientServiceUserLogStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *clientServiceUserLogStreamServer) Send(m *userlogger.UserLogMessage) error {
+	return x.ServerStream.SendMsg(m)
+}
 
 func _ClientService_ToggleUserLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ToggleUserLogRequest)

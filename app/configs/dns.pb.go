@@ -65,6 +65,7 @@ func (DnsType) EnumDescriptor() ([]byte, []int) {
 type DnsConfig struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Records       []*Record              `protobuf:"bytes,1,rep,name=records,proto3" json:"records,omitempty"`
+	RecordStrings []string               `protobuf:"bytes,2,rep,name=record_strings,json=recordStrings,proto3" json:"record_strings,omitempty"`
 	DnsServers    []*DnsServerConfig     `protobuf:"bytes,3,rep,name=dns_servers,json=dnsServers,proto3" json:"dns_servers,omitempty"`
 	DnsRules      []*DnsRuleConfig       `protobuf:"bytes,4,rep,name=dns_rules,json=dnsRules,proto3" json:"dns_rules,omitempty"`
 	EnableFakeDns bool                   `protobuf:"varint,5,opt,name=enable_fake_dns,json=enableFakeDns,proto3" json:"enable_fake_dns,omitempty"`
@@ -108,6 +109,13 @@ func (*DnsConfig) Descriptor() ([]byte, []int) {
 func (x *DnsConfig) GetRecords() []*Record {
 	if x != nil {
 		return x.Records
+	}
+	return nil
+}
+
+func (x *DnsConfig) GetRecordStrings() []string {
+	if x != nil {
+		return x.RecordStrings
 	}
 	return nil
 }
@@ -897,9 +905,10 @@ var File_protos_dns_proto protoreflect.FileDescriptor
 
 const file_protos_dns_proto_rawDesc = "" +
 	"\n" +
-	"\x10protos/dns.proto\x12\x01x\x1a\x14common/geo/geo.proto\"\xe3\x01\n" +
+	"\x10protos/dns.proto\x12\x01x\x1a\x14common/geo/geo.proto\"\x8a\x02\n" +
 	"\tDnsConfig\x12#\n" +
-	"\arecords\x18\x01 \x03(\v2\t.x.RecordR\arecords\x123\n" +
+	"\arecords\x18\x01 \x03(\v2\t.x.RecordR\arecords\x12%\n" +
+	"\x0erecord_strings\x18\x02 \x03(\tR\rrecordStrings\x123\n" +
 	"\vdns_servers\x18\x03 \x03(\v2\x12.x.DnsServerConfigR\n" +
 	"dnsServers\x12-\n" +
 	"\tdns_rules\x18\x04 \x03(\v2\x10.x.DnsRuleConfigR\bdnsRules\x12&\n" +
