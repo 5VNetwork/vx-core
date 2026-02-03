@@ -5,6 +5,7 @@ package uri
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"net"
 	"net/url"
@@ -35,7 +36,7 @@ func toHysteria(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
 		}
 		queryParameters.Set("insecure", strconv.Itoa(allowInsecure))
 		if len(tlsConfig.PinnedPeerCertificateChainSha256) > 0 {
-			queryParameters.Add("pinSHA256", string(tlsConfig.PinnedPeerCertificateChainSha256[0]))
+			queryParameters.Add("pinSHA256", hex.EncodeToString(tlsConfig.PinnedPeerCertificateChainSha256[0]))
 		}
 		if len(tlsConfig.EchConfig) > 0 {
 			queryParameters.Add("echConfig", base64.StdEncoding.EncodeToString(tlsConfig.EchConfig))
