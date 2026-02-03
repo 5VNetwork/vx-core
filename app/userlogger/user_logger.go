@@ -5,16 +5,19 @@ package userlogger
 
 import (
 	"context"
-	"errors"
+	"io"
 	"strings"
 	"sync/atomic"
 	"time"
 
+	"github.com/5vnetwork/vx-core/app/router"
 	"github.com/5vnetwork/vx-core/common/appid"
 	"github.com/5vnetwork/vx-core/common/buf"
+	"github.com/5vnetwork/vx-core/common/errors"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/session"
 	"github.com/5vnetwork/vx-core/common/signal/done"
+	"github.com/5vnetwork/vx-core/i"
 	"github.com/rs/zerolog/log"
 )
 
@@ -128,6 +131,17 @@ func (s *UserLogger) LogReject(info *session.Info, reason string) {
 	}
 }
 
+func (s *UserLogger) AfterHandlerSelection(ctx context.Context, info *session.Info, rw any,
+	handler i.Outbound) (context.Context, any, error) {
+	tag := ""
+	if handler != nil {
+		tag = handler.Tag()
+	}
+	s.LogRoute(info, tag)
+
+	return ctx, rw, nil
+}
+
 func (s *UserLogger) LogRoute(info *session.Info, tag string) {
 	if !s.enabled.Load() {
 		return
@@ -194,39 +208,56 @@ func (s *UserLogger) LogSessionError(info *session.Info, err error) {
 	if s.done.Done() {
 		return
 	}
-	se := &SessionError{
-		Up:   uint32(info.SessionUpCounter.Load()),
-		Down: uint32(info.SessionDownCounter.Load()),
-		Sid:  uint32(info.ID),
-	}
-	if err != nil {
-		se.Message = err.Error()
-	}
 
-	domain := info.SniffedDomain
-	if info.Target.Address.Family().IsIP() && domain != "" {
-		if s.dns != nil {
-			resolvers := s.dns.GetResolvers(domain, info.Target.Address.IP())
-			if len(resolvers) > 0 {
-				resolversStr := make([]string, len(resolvers))
-				for i, resolver := range resolvers {
-					resolversStr[i] = resolver.String()
+	if err == router.ErrBlocked {
+		s.LogReject(info, err.Error())
+	} else if err == router.ErrNoHandler {
+		s.LogRoute(info, "")
+	} else if info.SessionDownCounter.Load() == 0 || info.SessionUpCounter.Load() == 0 {
+		// udp idle is not considered an error
+		if info.Target.Network == net.Network_UDP && errors.Is(err, errors.ErrIdle) {
+			return
+		}
+		if errors.Is(err, io.EOF) {
+			return
+		}
+		if errors.Is(err, context.Canceled) {
+			return
+		}
+		se := &SessionError{
+			Up:   uint32(info.SessionUpCounter.Load()),
+			Down: uint32(info.SessionDownCounter.Load()),
+			Sid:  uint32(info.ID),
+		}
+		if err != nil {
+			se.Message = err.Error()
+		}
+		domain := info.SniffedDomain
+		if info.Target.Address.Family().IsIP() && domain != "" {
+			if s.dns != nil {
+				resolvers := s.dns.GetResolvers(domain, info.Target.Address.IP())
+				if len(resolvers) > 0 {
+					resolversStr := make([]string, len(resolvers))
+					for i, resolver := range resolvers {
+						resolversStr[i] = resolver.String()
+					}
+					se.Dns = strings.Join(resolversStr, ",")
 				}
-				se.Dns = strings.Join(resolversStr, ",")
 			}
+		}
+
+		msg := &UserLogMessage{
+			Message: &UserLogMessage_SessionError{
+				SessionError: se,
+			},
+		}
+		s.buf.Add(msg)
+		select {
+		case s.ch <- struct{}{}:
+		default:
 		}
 	}
 
-	msg := &UserLogMessage{
-		Message: &UserLogMessage_SessionError{
-			SessionError: se,
-		},
-	}
-	s.buf.Add(msg)
-	select {
-	case s.ch <- struct{}{}:
-	default:
-	}
 }
 
 func (s *UserLogger) LogError(err error) {

@@ -47,18 +47,18 @@ import (
 // }
 
 func (s *ClientGrpc) ToggleUserLog(ctx context.Context, in *ToggleUserLogRequest) (*ToggleUserLogResponse, error) {
-	s.Client.Dispatcher.UserLogger.SetEnabled(in.Enable)
+	s.Client.UserLogger.SetEnabled(in.Enable)
 	return &ToggleUserLogResponse{}, nil
 }
 
 func (s *ClientGrpc) ToggleLogAppId(ctx context.Context, in *ToggleLogAppIdRequest) (*ToggleLogAppIdResponse, error) {
-	s.Client.Dispatcher.UserLogger.LogAppId.Store(in.Enable)
+	s.Client.UserLogger.LogAppId.Store(in.Enable)
 	return &ToggleLogAppIdResponse{}, nil
 }
 
 func (s *ClientGrpc) UserLogStream(in *UserLogStreamRequest, stream ClientService_UserLogStreamServer) error {
 	log.Debug().Msg("user log stream request received")
-	ul := s.Client.Dispatcher.UserLogger
+	ul := s.Client.UserLogger
 	ul.SetEnabled(true)
 	slice := make([]*userlogger.UserLogMessage, 100)
 	for {

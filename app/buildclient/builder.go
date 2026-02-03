@@ -22,6 +22,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/app/logger"
 	"github.com/5vnetwork/vx-core/app/memmon"
+	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/subscription"
 	"github.com/5vnetwork/vx-core/app/tester"
@@ -71,6 +72,7 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 		Components:          &common.Components{},
 		AllFakeDns:          &dns.AllFakeDns{},
 		Hysteria2RejectQuic: config.Hysteria2RejectQuic,
+		OutStats:            outbound.NewOutStats(),
 	}
 	builder.addComponent(x.AllFakeDns)
 	x.FakeDnsEnabled.Store(config.Dns.GetEnableFakeDns())

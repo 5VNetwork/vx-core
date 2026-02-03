@@ -5,12 +5,6 @@
 
 package dispatcher
 
-import (
-	"context"
-
-	"github.com/5vnetwork/vx-core/common/session"
-)
-
 // func (d *Dispatcher) recordlinkStats(ctx context.Context, info *session.Info) {
 // 	linkMetrics, err := net.GetTCPConnectionRTT(info.RawConn)
 // 	if err != nil {
@@ -35,8 +29,3 @@ import (
 // 		Uint32("bw", linkMetrics.Bandwidth).
 // 		Uint32("rtt", linkMetrics.Rtt).Msg("link stats")
 // }
-
-// for debug purpose
-func (p *Dispatcher) populateAppId(ctx context.Context, info *session.Info) {
-
-}

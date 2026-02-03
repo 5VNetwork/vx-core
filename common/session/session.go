@@ -66,9 +66,10 @@ type Sockopt struct {
 }
 
 type Info struct {
-	ID      ID
-	Source  net.Destination
-	Gateway net.Destination
+	ID        ID
+	Source    net.Destination
+	Gateway   net.Destination
+	StartTime int64
 	// if not nil, this is the original target address and it is an ip in fake dns pool
 	FakeIP          net.IP
 	Target          net.Destination
@@ -90,11 +91,18 @@ type Info struct {
 	// session traffic meter, and outbound link traffic meter.
 	UpCounter   UpCounters
 	DownCounter DownCounters
-	// for debug purpose
+	// The following Counters are typycally included in the above Counters.
 	SessionUpCounter   atomic.Uint64
 	SessionDownCounter atomic.Uint64
 	// the selector being used initially
 	UsedSelector string
+}
+
+func (c *Info) CleanUp() {
+	if c.ActivityChecker != nil {
+		c.ActivityChecker.Cancel()
+		c.ActivityChecker = nil
+	}
 }
 
 type UpCounter interface {
@@ -117,6 +125,17 @@ func (c DownCounters) DownTraffic(n uint64) {
 	for _, counter := range c {
 		counter.DownTraffic(n)
 	}
+}
+
+type AtomicCounter struct {
+	Counter *atomic.Uint64
+}
+
+func (c AtomicCounter) UpTraffic(n uint64) {
+	c.Counter.Add(n)
+}
+func (c AtomicCounter) DownTraffic(n uint64) {
+	c.Counter.Add(n)
 }
 
 type Option func(*Info)

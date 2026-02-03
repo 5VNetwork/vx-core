@@ -40,6 +40,7 @@ type Client struct {
 	InboundManager  *proxy.InboundManager
 	UserLogger      *userlogger.UserLogger
 	OutboundManager *outbound.Manager
+	OutStats        *outbound.OutStats
 	// might be nil
 	DB        Db
 	Tetser    *tester.Tester

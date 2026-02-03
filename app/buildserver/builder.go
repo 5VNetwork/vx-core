@@ -211,10 +211,16 @@ type DispatcherResult struct {
 }
 
 func NewDispatcher(params DispatcherParams) (DispatcherResult, error) {
-	dp := dispatcher.New()
-	dp.TimeoutPolicy = params.Timeout
-	dp.StatsPolicy = params.Policy
-	dp.InboundStats = params.InStats
+	dp := &dispatcher.Dispatcher{
+		SessinoErrorLogger: &dispatcher.NullSessionErrorLogger{},
+	}
+	dp.AddBeforeHandlerSelectionHook(&dispatcher.IdleHook{
+		TimeoutPolicy: params.Timeout,
+	})
+	dp.AddAfterHandlerSelectionHook(&dispatcher.StatsHook{
+		StatsPolicy:  params.Policy,
+		InboundStats: params.InStats,
+	})
 	dp.Router = params.Router
 	return DispatcherResult{Handler: dp, Dispatcher: dp}, nil
 }
