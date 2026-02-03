@@ -68,36 +68,60 @@ func Relay(ctx context.Context, leftReader buf.Reader, leftWriter buf.Writer,
 	return task.Run(ctx, leftToRight, rightToLeft)
 }
 
-func spliceCopy(ctx context.Context, reader, writer any, up bool) error {
-	originalReader, originalWriter := reader, writer
+func spliceCopy(ctx context.Context, reader buf.Reader, writer buf.Writer, up bool) error {
 	// unwrap both reader and writer until they are not Unwrapper
 	unwrapReader, unwrapWriter := true, true
 	info := session.InfoFromContext(ctx)
 
+	var innerMostReader any
+	var innerMostWriter any
+	// This loop is for finding the innermost reader and writer
 	for {
+		// try find the innermost reader
 		if unwrapReader {
-			if unwrapper, ok := reader.(buf.UnwrapReader); ok {
-				if unwrapper.OkayToUnwrapReader() == 1 {
-					reader = unwrapper.UnwrapReader()
-				} else if unwrapper.OkayToUnwrapReader() == -1 {
-					unwrapReader = false
-				}
-			} else {
-				unwrapReader = false
-			}
-		}
-
-		mb, err := readFromReader(reader)
-		if mb.Len() > 0 {
-			if unwrapWriter {
-				if unwrapper, ok := writer.(buf.UnwrapWriter); ok {
-					if unwrapper.OkayToUnwrapWriter() == 1 {
-						writer = unwrapper.UnwrapWriter()
-					} else if unwrapper.OkayToUnwrapWriter() == -1 {
-						unwrapWriter = false
+			var r any = reader
+			for {
+				if unwrapper, ok := r.(buf.UnwrapReader); ok {
+					if unwrapper.OkayToUnwrapReader() == 1 {
+						log.Debug().Type("reader", r).Msg("unwrap reader")
+						r = unwrapper.UnwrapReader()
+					} else if unwrapper.OkayToUnwrapReader() == -1 {
+						unwrapReader = false
+						innerMostReader = r
+						break
+					} else if unwrapper.OkayToUnwrapReader() == 0 {
+						break
 					}
 				} else {
-					unwrapWriter = false
+					unwrapReader = false
+					innerMostReader = r
+					break
+				}
+			}
+		}
+		mb, err := readFromReader(reader)
+		if mb.Len() > 0 {
+			// try find the innermost writer
+			if unwrapWriter {
+				var w any = writer
+				for {
+					if unwrapper, ok := w.(buf.UnwrapWriter); ok {
+						if unwrapper.OkayToUnwrapWriter() == 1 {
+							log.Debug().Type("writer", w).Msg("unwrap writer")
+							w = unwrapper.UnwrapWriter()
+							log.Debug().Type("writer", w).Msg("unwraped writer")
+						} else if unwrapper.OkayToUnwrapWriter() == -1 {
+							unwrapWriter = false
+							innerMostWriter = w
+							break
+						} else if unwrapper.OkayToUnwrapWriter() == 0 {
+							break
+						}
+					} else {
+						unwrapWriter = false
+						innerMostWriter = w
+						break
+					}
 				}
 			}
 			if err := writeToWriter(writer, mb); err != nil {
@@ -112,9 +136,9 @@ func spliceCopy(ctx context.Context, reader, writer any, up bool) error {
 		}
 	}
 
-	if readFromer, ok := writer.(io.ReaderFrom); ok {
+	if readFromer, ok := innerMostWriter.(io.ReaderFrom); ok {
 		// splice copy
-		if ioReader, ok := reader.(io.Reader); ok {
+		if ioReader, ok := innerMostReader.(io.Reader); ok {
 			log.Ctx(ctx).Debug().Bool("up", up).Msg("readFrom")
 			if info != nil && info.ActivityChecker != nil {
 				info.ActivityChecker.Cancel()
@@ -133,20 +157,8 @@ func spliceCopy(ctx context.Context, reader, writer any, up bool) error {
 			return err
 		}
 	}
-	// var bufReader buf.Reader
-	// if ioReader, ok := reader.(io.Reader); ok {
-	// 	bufReader = buf.NewReader(ioReader)
-	// } else if bufReader, ok = reader.(buf.Reader); !ok {
-	// 	return errors.New("invalid reader")
-	// }
-	// var bufWriter buf.Writer
-	// if ioWriter, ok := writer.(io.Writer); ok {
-	// 	bufWriter = buf.NewWriter(ioWriter)
-	// } else if bufWriter, ok = writer.(buf.Writer); !ok {
-	// 	return errors.New("invalid writer")
-	// }
-	// splice copy is not feasible. so use original reader and writer
-	return buf.Copy(originalReader.(buf.Reader), originalWriter.(buf.Writer))
+	// splice copy is not feasible. so use buf.Copy
+	return buf.Copy(reader, writer)
 }
 
 func writeToWriter(writer any, mb buf.MultiBuffer) error {
@@ -193,7 +205,6 @@ func GetLinks(network net.Network, userLevel uint32, policy i.BufferPolicy) (*pi
 }
 
 func RelayUDPPacketConn(ctx context.Context, left udp.PacketReaderWriter, right udp.PacketReaderWriter) error {
-
 	leftToRight := func() error {
 		for {
 			p, err := left.ReadPacket()

@@ -46,35 +46,53 @@ func copyReaderToWriter(ctx context.Context, info *session.Info, reader, writer 
 	// unwrap both reader and writer until they are not Unwrapper
 	unwrapReader, unwrapWriter := true, true
 
+	var innerMostReader any
+	var innerMostWriter any
+	// This loop is for finding the innermost reader and writer
 	for {
+		// try find the innermost reader
 		if unwrapReader {
-			if unwrapper, ok := reader.(buf.UnwrapReader); ok {
-				if unwrapper.OkayToUnwrapReader() == 1 {
-					log.Debug().Type("reader", reader).Msg("unwrap reader")
-					reader = unwrapper.UnwrapReader()
-				} else if unwrapper.OkayToUnwrapReader() == -1 {
+			var r any = reader
+			for {
+				if unwrapper, ok := r.(buf.UnwrapReader); ok {
+					if unwrapper.OkayToUnwrapReader() == 1 {
+						log.Debug().Type("reader", r).Msg("unwrap reader")
+						r = unwrapper.UnwrapReader()
+					} else if unwrapper.OkayToUnwrapReader() == -1 {
+						unwrapReader = false
+						innerMostReader = r
+						break
+					} else if unwrapper.OkayToUnwrapReader() == 0 {
+						break
+					}
+				} else {
 					unwrapReader = false
+					innerMostReader = r
+					break
 				}
-			} else {
-				unwrapReader = false
 			}
 		}
 		mb, err := readFromReader(reader)
 		if mb.Len() > 0 {
+			// try find the innermost writer
 			if unwrapWriter {
+				var w any = writer
 				for {
-					if unwrapper, ok := writer.(buf.UnwrapWriter); ok {
+					if unwrapper, ok := w.(buf.UnwrapWriter); ok {
 						if unwrapper.OkayToUnwrapWriter() == 1 {
-							log.Debug().Type("writer", writer).Msg("unwrap writer")
-							writer = unwrapper.UnwrapWriter()
-							log.Debug().Type("writer", writer).Msg("unwraped writer")
+							log.Debug().Type("writer", w).Msg("unwrap writer")
+							w = unwrapper.UnwrapWriter()
+							log.Debug().Type("writer", w).Msg("unwraped writer")
 						} else if unwrapper.OkayToUnwrapWriter() == -1 {
 							unwrapWriter = false
+							innerMostWriter = w
+							break
+						} else if unwrapper.OkayToUnwrapWriter() == 0 {
 							break
 						}
-						break
 					} else {
 						unwrapWriter = false
+						innerMostWriter = w
 						break
 					}
 				}
@@ -91,8 +109,8 @@ func copyReaderToWriter(ctx context.Context, info *session.Info, reader, writer 
 		}
 	}
 
-	if readFromer, ok := writer.(io.ReaderFrom); ok {
-		if ioReader, ok := reader.(io.Reader); ok {
+	if readFromer, ok := innerMostWriter.(io.ReaderFrom); ok {
+		if ioReader, ok := innerMostReader.(io.Reader); ok {
 			if info.ActivityChecker != nil {
 				info.ActivityChecker.Cancel()
 			}
