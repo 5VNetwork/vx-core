@@ -12,13 +12,13 @@ import (
 )
 
 func TestNewIPToDomain(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 	require.NotNil(t, ipToDomain)
 	require.NotNil(t, ipToDomain.cache)
 }
 
 func TestIPToDomain_SetDomain_A_Record(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Create a DNS message with A record
 	msg := &dns.Msg{
@@ -56,7 +56,7 @@ func TestIPToDomain_SetDomain_A_Record(t *testing.T) {
 }
 
 func TestIPToDomain_SetDomain_AAAA_Record(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Create a DNS message with AAAA record
 	msg := &dns.Msg{
@@ -94,7 +94,7 @@ func TestIPToDomain_SetDomain_AAAA_Record(t *testing.T) {
 }
 
 func TestIPToDomain_SetDomain_MultipleRecords(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Create a DNS message with multiple A records for the same domain
 	msg := &dns.Msg{
@@ -143,7 +143,7 @@ func TestIPToDomain_SetDomain_MultipleRecords(t *testing.T) {
 }
 
 func TestIPToDomain_SetDomain_IgnoreNonARecords(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Create a DNS message with CNAME record (should be ignored)
 	msg := &dns.Msg{
@@ -177,7 +177,7 @@ func TestIPToDomain_SetDomain_IgnoreNonARecords(t *testing.T) {
 }
 
 func TestIPToDomain_SetDomain_EmptyQuestion(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Create a DNS message with no questions
 	msg := &dns.Msg{
@@ -205,7 +205,7 @@ func TestIPToDomain_SetDomain_EmptyQuestion(t *testing.T) {
 }
 
 func TestIPToDomain_GetDomain_NotFound(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Try to get domain for IP that doesn't exist in cache
 	ip := net.ParseIP("192.168.1.1")
@@ -214,7 +214,7 @@ func TestIPToDomain_GetDomain_NotFound(t *testing.T) {
 }
 
 func TestIPToDomain_GetDomain_SingleDomain(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Add a single domain-resolver pair
 	msg := createDNSMessage("example.com.", "192.168.1.1")
@@ -226,7 +226,7 @@ func TestIPToDomain_GetDomain_SingleDomain(t *testing.T) {
 }
 
 func TestIPToDomain_GetDomain_MultipleDifferentDomains(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Add different domains for the same IP
 	msg1 := createDNSMessage("example.com.", "192.168.1.1")
@@ -244,7 +244,7 @@ func TestIPToDomain_GetDomain_MultipleDifferentDomains(t *testing.T) {
 }
 
 func TestIPToDomain_GetResolvers_NotFound(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Try to get resolvers for IP that doesn't exist
 	ip := net.ParseIP("192.168.1.1")
@@ -253,7 +253,7 @@ func TestIPToDomain_GetResolvers_NotFound(t *testing.T) {
 }
 
 func TestIPToDomain_GetResolvers_SingleResolver(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	msg := createDNSMessage("example.com.", "192.168.1.1")
 	resolver := net.ParseAddress("8.8.8.8")
@@ -265,7 +265,7 @@ func TestIPToDomain_GetResolvers_SingleResolver(t *testing.T) {
 }
 
 func TestIPToDomain_GetResolvers_MultipleResolvers(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	msg := createDNSMessage("example.com.", "192.168.1.1")
 	resolver1 := net.ParseAddress("8.8.8.8")
@@ -284,7 +284,7 @@ func TestIPToDomain_GetResolvers_MultipleResolvers(t *testing.T) {
 }
 
 func TestIPToDomain_GetResolvers_DifferentDomains(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Add two different domains for the same IP
 	msg1 := createDNSMessage("example.com.", "192.168.1.1")
@@ -308,20 +308,20 @@ func TestIPToDomainEntry_AddDomain_Duplicate(t *testing.T) {
 		domainAndResolvers: make([]DomainAndResolver, 0, 4),
 	}
 
-	expireTime := time.Now().Add(5 * time.Minute)
+	expireAt := time.Now().Add(5 * time.Minute).Unix()
 
 	// Add the same domain and resolver twice
-	entry.addDomain("example.com", net.ParseAddress("8.8.8.8"), expireTime)
-	entry.addDomain("example.com", net.ParseAddress("8.8.8.8"), expireTime)
+	entry.addDomain("example.com", net.ParseAddress("8.8.8.8"), expireAt)
+	entry.addDomain("example.com", net.ParseAddress("8.8.8.8"), expireAt)
 
-	// Should only have one entry (duplicate updates expireTime)
+	// Should only have one entry (duplicate updates expireAt)
 	assert.Len(t, entry.domainAndResolvers, 1)
 	assert.Equal(t, "example.com", entry.domainAndResolvers[0].Domain)
 	assert.Equal(t, net.ParseAddress("8.8.8.8"), entry.domainAndResolvers[0].Resolver)
 }
 
 func TestIPToDomain_UnFqdnHandling(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Create DNS message with FQDN (trailing dot)
 	msg := &dns.Msg{
@@ -354,7 +354,7 @@ func TestIPToDomain_UnFqdnHandling(t *testing.T) {
 }
 
 func TestIPToDomain_ConcurrentAccess(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Test concurrent read/write access
 	done := make(chan bool, 2)
@@ -389,7 +389,7 @@ func TestIPToDomain_ConcurrentAccess(t *testing.T) {
 }
 
 func TestIPToDomain_CacheLimit(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Add more entries than the cache limit (100)
 	// This test verifies the LRU cache behavior
@@ -424,7 +424,7 @@ func TestIPToDomain_CacheLimit(t *testing.T) {
 }
 
 func BenchmarkIPToDomain_SetDomain(b *testing.B) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 	msg := createDNSMessage("example.com.", "192.168.1.1")
 
 	b.ResetTimer()
@@ -434,7 +434,7 @@ func BenchmarkIPToDomain_SetDomain(b *testing.B) {
 }
 
 func BenchmarkIPToDomain_GetDomain(b *testing.B) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 	msg := createDNSMessage("example.com.", "192.168.1.1")
 	ipToDomain.SetDomain(msg, net.ParseAddress("8.8.8.8"))
 
@@ -447,7 +447,7 @@ func BenchmarkIPToDomain_GetDomain(b *testing.B) {
 }
 
 func BenchmarkIPToDomain_GetResolvers(b *testing.B) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 	msg := createDNSMessage("example.com.", "192.168.1.1")
 	ipToDomain.SetDomain(msg, net.ParseAddress("8.8.8.8"))
 
@@ -462,7 +462,7 @@ func BenchmarkIPToDomain_GetResolvers(b *testing.B) {
 // TTL Expiration Tests
 
 func TestIPToDomain_TTL_SetAndGet(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Create DNS message with 300 second TTL
 	msg := &dns.Msg{
@@ -496,17 +496,17 @@ func TestIPToDomain_TTL_SetAndGet(t *testing.T) {
 
 	entry.lock.RLock()
 	require.Len(t, entry.domainAndResolvers, 1)
-	expireTime := entry.domainAndResolvers[0].ExpireTime
+	expireTime := entry.domainAndResolvers[0].ExpireAt
 	entry.lock.RUnlock()
 
 	// Verify expire time is approximately 300 seconds in the future
 	expectedExpire := time.Now().Add(300 * time.Second)
-	timeDiff := expireTime.Sub(expectedExpire)
+	timeDiff := time.Duration(expireTime - expectedExpire.Unix())
 	assert.Less(t, timeDiff.Abs().Seconds(), 2.0, "ExpireTime should be ~300 seconds from now")
 }
 
 func TestIPToDomain_TTL_UpdateExpireTime(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Add entry with short TTL
 	msg1 := &dns.Msg{
@@ -576,7 +576,7 @@ func TestIPToDomain_TTL_UpdateExpireTime(t *testing.T) {
 }
 
 func TestIPToDomain_TTL_ConcurrentAccessWithExpiration(t *testing.T) {
-	ipToDomain := NewIPToDomain(100)
+	ipToDomain := NewIPToDomain(100, 4)
 
 	// Add entry with 2 second TTL
 	msg := &dns.Msg{

@@ -40,10 +40,12 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 
 	// ip to domain
 	size := 500
+	maxDomainAndResolversPerIp := 4
 	if runtime.GOOS == "ios" {
 		size = 100
+		maxDomainAndResolversPerIp = 2
 	}
-	ipToDomain := idns.NewIPToDomain(size)
+	ipToDomain := idns.NewIPToDomain(size, maxDomainAndResolversPerIp)
 	client.IPToDomain = ipToDomain
 	common.Must(fc.addComponent(ipToDomain))
 

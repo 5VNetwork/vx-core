@@ -13,12 +13,14 @@ import (
 )
 
 type IPToDomain struct {
-	cache cache.Lru //key is net.Address, value is *ipToDomainEntry
+	cache                      cache.Lru //key is net.Address, value is *ipToDomainEntry
+	maxDomainAndResolversPerIp int
 }
 
-func NewIPToDomain(size int) *IPToDomain {
+func NewIPToDomain(size int, maxDomainAndResolversPerIp int) *IPToDomain {
 	return &IPToDomain{
-		cache: cache.NewLru(size),
+		cache:                      cache.NewLru1(size),
+		maxDomainAndResolversPerIp: maxDomainAndResolversPerIp,
 	}
 }
 
@@ -27,15 +29,15 @@ type ipToDomainEntry struct {
 	domainAndResolvers []DomainAndResolver
 }
 
-func (e *ipToDomainEntry) addDomain(d string, resolver net.Address, expireTime time.Time) {
+func (e *ipToDomainEntry) addDomain(d string, resolver net.Address, expireAt int64) {
 	e.lock.Lock()
 	defer e.lock.Unlock()
 
 	// Remove expired entries
-	now := time.Now()
+	now := time.Now().Unix()
 	valid := e.domainAndResolvers[:0]
 	for _, dr := range e.domainAndResolvers {
-		if !dr.ExpireTime.Before(now) {
+		if dr.ExpireAt >= now {
 			valid = append(valid, dr)
 		}
 	}
@@ -43,16 +45,16 @@ func (e *ipToDomainEntry) addDomain(d string, resolver net.Address, expireTime t
 
 	// add new entry
 	for i, dr := range e.domainAndResolvers {
-		// if the domain and resolver already exist, update expireTime
+		// if the domain and resolver already exist, update expireAt
 		if dr.Domain == d && dr.Resolver == resolver {
-			e.domainAndResolvers[i].ExpireTime = expireTime
+			e.domainAndResolvers[i].ExpireAt = expireAt
 			return
 		}
 	}
 	entry := DomainAndResolver{
-		Domain:     d,
-		Resolver:   resolver,
-		ExpireTime: expireTime,
+		Domain:   d,
+		Resolver: resolver,
+		ExpireAt: expireAt,
 	}
 	if len(e.domainAndResolvers) == 0 {
 		e.domainAndResolvers = append(e.domainAndResolvers, entry)
@@ -66,9 +68,9 @@ func (e *ipToDomainEntry) addDomain(d string, resolver net.Address, expireTime t
 }
 
 type DomainAndResolver struct {
-	Domain     string
-	Resolver   net.Address
-	ExpireTime time.Time
+	Domain   string
+	Resolver net.Address
+	ExpireAt int64 // Unix timestamp (saves 16 bytes vs time.Time)
 }
 
 func (i *IPToDomain) GetDomain(ip net.IP) []string {
@@ -116,31 +118,30 @@ func (i *IPToDomain) SetDomain(reply *dns.Msg, src net.Address) {
 	}
 
 	for _, rr := range reply.Answer {
-		// Calculate expiration time based on TTL
-		ttl := time.Duration(rr.Header().Ttl) * time.Second
-		expireTime := time.Now().Add(ttl)
+		// Calculate expiration time based on TTL (unix timestamp)
+		expireAt := time.Now().Unix() + int64(rr.Header().Ttl)
 
 		if a, ok := rr.(*dns.A); ok {
-			entryI, ok := i.cache.Get(net.IPAddress(a.A))
+			addr := net.IPAddress(a.A)
+			entry, ok := i.cache.Get(addr)
 			if !ok {
-				entryI = &ipToDomainEntry{
-					domainAndResolvers: make([]DomainAndResolver, 0, 4),
+				entry = &ipToDomainEntry{
+					domainAndResolvers: make([]DomainAndResolver, 0, i.maxDomainAndResolversPerIp),
 				}
-				i.cache.Put(net.IPAddress(a.A), entryI)
+				i.cache.Put(addr, entry)
 			}
-			entry := entryI.(*ipToDomainEntry)
-			entry.addDomain(UnFqdn(rr.Header().Name), src, expireTime)
+			entry.(*ipToDomainEntry).addDomain(UnFqdn(rr.Header().Name), src, expireAt)
 		}
 		if aaaa, ok := rr.(*dns.AAAA); ok {
-			entryI, ok := i.cache.Get(net.IPAddress(aaaa.AAAA))
+			addr := net.IPAddress(aaaa.AAAA)
+			entry, ok := i.cache.Get(addr)
 			if !ok {
-				entryI = &ipToDomainEntry{
-					domainAndResolvers: make([]DomainAndResolver, 0, 4),
+				entry = &ipToDomainEntry{
+					domainAndResolvers: make([]DomainAndResolver, 0, i.maxDomainAndResolversPerIp),
 				}
-				i.cache.Put(net.IPAddress(aaaa.AAAA), entryI)
+				i.cache.Put(addr, entry)
 			}
-			entry := entryI.(*ipToDomainEntry)
-			entry.addDomain(UnFqdn(rr.Header().Name), src, expireTime)
+			entry.(*ipToDomainEntry).addDomain(UnFqdn(rr.Header().Name), src, expireAt)
 		}
 	}
 }
