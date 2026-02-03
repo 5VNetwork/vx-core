@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/netip"
 
+	"github.com/rs/zerolog/log"
 	"go4.org/netipx"
 )
 
@@ -79,6 +80,11 @@ func (m *IPMatcher) init(cidrs []*CIDR) error {
 		}
 		netaddrIP = netaddrIP.Unmap()
 		ipPrefix := netip.PrefixFrom(netaddrIP, int(cidr.GetPrefix()))
+
+		if !ipPrefix.IsValid() {
+			log.Warn().Str("cidr", cidr.String()).Msg("invalid IP prefix")
+			continue
+		}
 
 		switch {
 		case netaddrIP.Is4():

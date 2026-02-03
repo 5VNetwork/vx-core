@@ -118,48 +118,48 @@ func parsePlainTextDomainFormat(content []byte) ([]*geo.Domain, error) {
 	return domains, scanner.Err()
 }
 
-// parseCidrRule parses a single CIDR rule string and returns a geo.CIDR if valid
-func parseCidrRule(rule string) *geo.CIDR {
+// parseCidrRule parses a single CIDR rule string
+func parseCidrRule(rule string) (*geo.CIDR, error) {
 	rule = strings.TrimSpace(rule)
 
 	// Skip comments and empty lines
 	if rule == "" || strings.HasPrefix(rule, "#") {
-		return nil
+		return nil, nil
 	}
 
 	if !strings.Contains(rule, "/") {
-		return nil
+		return nil, nil
 	}
 
 	if strings.Contains(rule, ",") {
 		parts := strings.Split(rule, ",")
 		if len(parts) < 2 {
-			return nil
+			return nil, nil
 		}
 
 		if parts[0] == "IP-CIDR" || parts[0] == "IP-CIDR6" {
 			cidr := parts[1]
 			prefix, err := netip.ParsePrefix(cidr)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			return &geo.CIDR{
 				Ip:     prefix.Addr().AsSlice(),
 				Prefix: uint32(prefix.Bits()),
-			}
+			}, nil
 		}
 	} else {
 		prefix, err := netip.ParsePrefix(rule)
 		if err != nil {
-			return nil
+			return nil, err
 		}
 		return &geo.CIDR{
 			Ip:     prefix.Addr().AsSlice(),
 			Prefix: uint32(prefix.Bits()),
-		}
+		}, nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 // parseYAMLCidrFormat parses YAML content with payload array
@@ -171,7 +171,11 @@ func parseYAMLCidrFormat(content []byte) ([]*geo.CIDR, error) {
 
 	var cidrs []*geo.CIDR
 	for _, rule := range config.Payload {
-		if cidr := parseCidrRule(rule); cidr != nil {
+		cidr, err := parseCidrRule(rule)
+		if err != nil {
+			return nil, err
+		}
+		if cidr != nil {
 			cidrs = append(cidrs, cidr)
 		}
 	}
@@ -185,7 +189,11 @@ func parsePlainTextCidrFormat(content []byte) ([]*geo.CIDR, error) {
 	scanner := bufio.NewScanner(bytes.NewReader(content))
 
 	for scanner.Scan() {
-		if cidr := parseCidrRule(scanner.Text()); cidr != nil {
+		cidr, err := parseCidrRule(scanner.Text())
+		if err != nil {
+			return nil, err
+		}
+		if cidr != nil {
 			cidrs = append(cidrs, cidr)
 		}
 	}

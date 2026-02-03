@@ -69,14 +69,14 @@ func NewGeo(config *configs.GeoConfig) (*Geo, error) {
 	for _, atomicSet := range config.GetAtomicIpSets() {
 		ipMatcher, err := AtomicIpSetToIPMatcher(atomicSet, l)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create ip matcher: %w", err)
+			return nil, fmt.Errorf("failed to create ip set %s: %w", atomicSet.Name, err)
 		}
 		ipSets[atomicSet.Name] = ipMatcher
 	}
 	for _, greatIpSet := range config.GetGreatIpSets() {
 		m, err := getGreatIPSet(greatIpSet, ipSets)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create ip matcher: %w", err)
+			return nil, fmt.Errorf("failed to create ip set %s: %w", greatIpSet.Name, err)
 		}
 		ipSets[greatIpSet.Name] = m
 	}
@@ -264,7 +264,7 @@ func AtomicIpSetToIPMatcher(c *configs.AtomicIPSetConfig, l loader) (*cgeo.IPMat
 	}
 	m, err := cgeo.NewIPMatcherFromGeoCidrs(cidrs, c.Inverse)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create ip matcher: %w", err)
+		return nil, err
 	}
 	return m, nil
 }
