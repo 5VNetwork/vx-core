@@ -171,7 +171,7 @@ func SplitFirst(mb MultiBuffer) (MultiBuffer, *Buffer) {
 }
 
 // SplitSize splits the beginning of the MultiBuffer into another one, for at most size bytes.
-// The latter MultiBuffer is the one with size bytes.
+// The latter MultiBuffer is the one with at most size bytes.
 func SplitSize(mb MultiBuffer, size int32) (MultiBuffer, MultiBuffer) {
 	if len(mb) == 0 {
 		return mb, nil

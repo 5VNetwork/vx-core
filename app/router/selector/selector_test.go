@@ -608,8 +608,8 @@ func TestAllOkStrategy_Select(t *testing.T) {
 	// Act
 	selected := strategy.Select(handlers)
 
-	// Assert - should only return handlers with ok >= 0
-	assert.Len(t, selected, 2)
+	// Assert - should only return handlers with ok > 0
+	assert.Len(t, selected, 1)
 }
 
 func TestSelector_TestSpeedAll(t *testing.T) {
@@ -1058,11 +1058,11 @@ func TestSelector_SetHandlers_NoValidHandlers_EntersRecovery(t *testing.T) {
 	sel.taskLock.RUnlock()
 	assert.True(t, isRecovery)
 
-	// Should still have one randomly selected handler (fallback)
+	// Should use all selected handlers (fallback)
 	sel.handlersLock.RLock()
 	handlerCount := len(sel.handlersBeingUsed)
 	sel.handlersLock.RUnlock()
-	assert.Equal(t, 1, handlerCount)
+	assert.Equal(t, 2, handlerCount)
 
 	// Cleanup
 	sel.Close()

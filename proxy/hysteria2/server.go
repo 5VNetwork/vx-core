@@ -365,6 +365,7 @@ type statsPacketConn struct {
 	inbound *Inbound
 }
 
+// TODO: more efficient
 func (c *statsPacketConn) WriteTo(b []byte, addr net.Addr) (int, error) {
 	n, err := c.PacketConn.WriteTo(b, addr)
 	if err != nil {

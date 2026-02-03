@@ -85,7 +85,9 @@ func (m *ClientManager) HandleReaderWriter(ctx context.Context, dst net.Destinat
 	}
 	client.AddSession(sm)
 	defer client.RemoveSession(sm)
-	log.Ctx(ctx).Debug().Uint16("mux_sid", sm.ID).Msg("new mux session")
+
+	log.Ctx(client.ctx).Debug().Uint16("mux_sid", sm.ID).Msg("new mux session")
+	log.Ctx(ctx).Debug().Uint16("mux_sid", sm.ID).Msg("mux session")
 
 	defer m.tryRetire(client)
 
@@ -139,11 +141,11 @@ func (p *ClientManager) tryRetire(client *client) {
 func (p *ClientManager) Create() (*client, error) {
 	iLink, oLink := pipe.NewLinks(64*1024, false)
 
-	logger := log.With().Uint32("sid", rand.Uint32()).Logger()
+	logger := log.With().Uint32("client_id", rand.Uint32()).Logger()
 	ctx, cancelCause := context.WithCancelCause(logger.WithContext(context.Background()))
-	log.Ctx(ctx).Debug().Msg("new mux client")
-
 	c, _ := NewClient(ctx, iLink, p.Strategy)
+
+	log.Ctx(ctx).Debug().Msg("new mux client")
 
 	go func() {
 		err := p.handler.HandleFlow(ctx, net.TCPDestination(MuxCoolAddressDst, MuxCoolPortDst), oLink)

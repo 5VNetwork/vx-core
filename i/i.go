@@ -135,7 +135,6 @@ type UserValidator interface {
 
 type User interface {
 	Uid() string
-	Level() uint32
 	Secret() string
 	Counter() *atomic.Uint64
 }

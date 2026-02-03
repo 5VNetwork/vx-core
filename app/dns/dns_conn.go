@@ -222,7 +222,7 @@ func (w *dnsConnImpl) handlerReply(msg *dns.Msg) {
 	if ok {
 		log.Debug().Uint16("id", msg.Id).
 			// Str("domain", msg.Question[0].Name).
-			Interface("reply", msg).
+			Any("reply", msg).
 			Str("name", w.tag).
 			Dur("duration", time.Since(info.firstAddedAt)).
 			Msg("dns conn reply")

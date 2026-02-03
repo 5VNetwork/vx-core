@@ -54,6 +54,8 @@ func (m *client) Close() {
 }
 
 func (m *client) interrupt() {
+	log.Ctx(m.ctx).Debug().Msg("interrupt client")
+
 	m.Lock()
 	defer m.Unlock()
 	for _, s := range m.sessions {
