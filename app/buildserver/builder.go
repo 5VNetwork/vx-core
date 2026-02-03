@@ -111,7 +111,7 @@ type UserManagerResult struct {
 func NewUserManager(lc fx.Lifecycle, params UserManagerParams) (UserManagerResult, error) {
 	um := user.NewManager()
 	for _, userConfig := range params.Configs {
-		u := user.NewUser(userConfig.Id, 0, userConfig.Secret, userConfig.ServiceName)
+		u := user.NewUser(userConfig.Id, userConfig.Secret)
 		um.AddUser(u)
 	}
 	return UserManagerResult{UserManager: um}, nil

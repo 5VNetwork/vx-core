@@ -6,8 +6,6 @@ package user
 import (
 	"sync"
 	"sync/atomic"
-
-	"github.com/5vnetwork/vx-core/common/set"
 )
 
 type Manager struct {
@@ -16,21 +14,15 @@ type Manager struct {
 }
 
 type User struct {
-	uuid     string
-	level    uint32
-	secret   string
-	service  string
-	counter  atomic.Uint64
-	prefexes set.Set[string]
+	uuid    string
+	secret  string
+	counter atomic.Uint64
 }
 
-func NewUser(uid string, level uint32, secret string, service string) *User {
+func NewUser(uid string, secret string) *User {
 	return &User{
-		uuid:     uid,
-		level:    level,
-		secret:   secret,
-		service:  service,
-		prefexes: set.NewSet[string](),
+		uuid:   uid,
+		secret: secret,
 	}
 }
 
@@ -38,30 +30,12 @@ func (u *User) Uid() string {
 	return u.uuid
 }
 
-func (u *User) Level() uint32 {
-	return u.level
-}
-
 func (u *User) Secret() string {
 	return u.secret
 }
 
-func (u *User) Service() string {
-	return u.service
-}
-
 func (u *User) Counter() *atomic.Uint64 {
 	return &u.counter
-}
-
-func (u *User) GetPrefixesNum() int {
-	slice := u.prefexes.ToSlice()
-	u.prefexes.Clear()
-	return len(slice)
-}
-
-func (u *User) AddPrefix(prefix string) {
-	u.prefexes.Add(prefix)
 }
 
 func NewManager() *Manager {
@@ -74,9 +48,7 @@ func (m *Manager) AddUser(u *User) {
 	m.Lock()
 	defer m.Unlock()
 	if exsiting, ok := m.Users[u.uuid]; ok {
-		exsiting.level = u.level
 		exsiting.secret = u.secret
-		exsiting.service = u.service
 		return
 	}
 	m.Users[u.uuid] = u

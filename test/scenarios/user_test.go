@@ -37,7 +37,7 @@ func TestUserManager(t *testing.T) {
 	}
 
 	// Test AddUser
-	user1 := user.NewUser("user1", 1, "secret1", "")
+	user1 := user.NewUser("user1", "secret1")
 	manager.AddUser(user1)
 	if manager.Number() != 1 {
 		t.Errorf("Expected 1 user, got %d", manager.Number())
@@ -56,22 +56,19 @@ func TestUserManager(t *testing.T) {
 	}
 
 	// Test AddUser with existing uid (should update)
-	user1Updated := user.NewUser("user1", 2, "secret2", "")
+	user1Updated := user.NewUser("user1", "secret2")
 	manager.AddUser(user1Updated)
 	if manager.Number() != 1 {
 		t.Errorf("Expected 1 user after update, got %d", manager.Number())
 	}
 	retrieved = manager.GetUser("user1")
-	if retrieved.Level() != 2 {
-		t.Errorf("Expected level 2, got %d", retrieved.Level())
-	}
 	if retrieved.Secret() != "secret2" {
 		t.Errorf("Expected secret 'secret2', got '%s'", retrieved.Secret())
 	}
 
 	// Test multiple users
-	user2 := user.NewUser("user2", 1, "secret2", "")
-	user3 := user.NewUser("user3", 1, "secret3", "")
+	user2 := user.NewUser("user2", "secret2")
+	user3 := user.NewUser("user3", "secret3")
 	manager.AddUser(user2)
 	manager.AddUser(user3)
 	if manager.Number() != 3 {
@@ -105,19 +102,6 @@ func TestUserManager(t *testing.T) {
 		t.Errorf("Expected counter 100, got %d", counter.Load())
 	}
 
-	// Test Prefix operations
-	user1.AddPrefix("prefix1")
-	user1.AddPrefix("prefix2")
-	user1.AddPrefix("prefix3")
-	prefixCount := user1.GetPrefixesNum()
-	if prefixCount != 3 {
-		t.Errorf("Expected 3 prefixes, got %d", prefixCount)
-	}
-	// After GetPrefixesNum, prefixes should be cleared
-	prefixCount = user1.GetPrefixesNum()
-	if prefixCount != 0 {
-		t.Errorf("Expected 0 prefixes after clear, got %d", prefixCount)
-	}
 }
 
 // TestVMessUserManagement tests dynamic user add/remove for VMess protocol
@@ -777,7 +761,7 @@ func TestUserManagerConcurrency(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		i := i
 		errg.Go(func() error {
-			user := user.NewUser(fmt.Sprintf("user%d", i), uint32(i), fmt.Sprintf("secret%d", i), "")
+			user := user.NewUser(fmt.Sprintf("user%d", i), fmt.Sprintf("secret%d", i))
 			manager.AddUser(user)
 			return nil
 		})
@@ -799,7 +783,7 @@ func TestUserManagerConcurrency(t *testing.T) {
 	for i := 0; i < 50; i++ {
 		i := i
 		errg.Go(func() error {
-			user := user.NewUser(fmt.Sprintf("user%d", i), uint32(i+100), fmt.Sprintf("newsecret%d", i), "")
+			user := user.NewUser(fmt.Sprintf("user%d", i), fmt.Sprintf("newsecret%d", i))
 			manager.AddUser(user)
 			return nil
 		})
@@ -839,7 +823,7 @@ func TestUserManagerConcurrency(t *testing.T) {
 
 // TestUserCounterOperations tests user counter increments
 func TestUserCounterOperations(t *testing.T) {
-	user := user.NewUser("testuser", 1, "secret", "")
+	user := user.NewUser("testuser", "secret")
 
 	counter := user.Counter()
 	if counter.Load() != 0 {
@@ -981,7 +965,7 @@ func TestUserManagerEdgeCases(t *testing.T) {
 	manager.RemoveUser("nonexistent") // Should not panic
 
 	// Test with empty user ID
-	emptyUser := user.NewUser("", 1, "secret", "")
+	emptyUser := user.NewUser("", "secret")
 	manager.AddUser(emptyUser)
 	retrieved := manager.GetUser("")
 	if retrieved == nil {
@@ -989,7 +973,7 @@ func TestUserManagerEdgeCases(t *testing.T) {
 	}
 
 	// Test with empty secret
-	userEmptySecret := user.NewUser("user1", 1, "", "")
+	userEmptySecret := user.NewUser("user1", "")
 	manager.AddUser(userEmptySecret)
 	retrieved = manager.GetUser("user1")
 	if retrieved == nil || retrieved.Secret() != "" {
@@ -997,11 +981,11 @@ func TestUserManagerEdgeCases(t *testing.T) {
 	}
 
 	// Test update with same uid
-	original := user.NewUser("updatetest", 1, "secret1", "")
+	original := user.NewUser("updatetest", "secret1")
 	manager.AddUser(original)
 	countBefore := manager.Number()
 
-	updated := user.NewUser("updatetest", 2, "secret2", "")
+	updated := user.NewUser("updatetest", "secret2")
 	manager.AddUser(updated)
 	countAfter := manager.Number()
 
@@ -1010,35 +994,18 @@ func TestUserManagerEdgeCases(t *testing.T) {
 	}
 
 	retrieved = manager.GetUser("updatetest")
-	if retrieved.Level() != 2 || retrieved.Secret() != "secret2" {
+	if retrieved.Secret() != "secret2" {
 		t.Error("User should be updated with new values")
 	}
 
 	// Test counter edge cases
-	testUser := user.NewUser("countertest", 1, "secret", "")
+	testUser := user.NewUser("countertest", "secret")
 	counter := testUser.Counter()
 
 	// Test large increment
 	counter.Add(^uint64(0) - 100) // Near max uint64
 	if counter.Load() < 1000 {
 		t.Error("Counter should handle large values")
-	}
-
-	// Test prefix edge cases
-	prefixUser := user.NewUser("prefixtest", 1, "secret", "")
-
-	// Add same prefix multiple times
-	prefixUser.AddPrefix("prefix1")
-	prefixUser.AddPrefix("prefix1")
-	prefixUser.AddPrefix("prefix1")
-	count := prefixUser.GetPrefixesNum()
-	// Set behavior: should only count unique prefixes
-	t.Logf("Prefix count after adding duplicates: %d", count)
-
-	// GetPrefixesNum should clear
-	count = prefixUser.GetPrefixesNum()
-	if count != 0 {
-		t.Errorf("Second GetPrefixesNum should return 0, got %d", count)
 	}
 }
 
