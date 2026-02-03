@@ -116,29 +116,15 @@ func (a *Api) ProcessGeoFiles(ctx context.Context, req *ProcessGeoFilesRequest) 
 			return nil, err
 		}
 		// log.Debug().Int("len", len(site.Domain)).Str("code", code).Msg("geosite cidr")
-		// if code == "cn" {
-		// 	numFull := 0
-		// 	numDomain := 0
-		// 	for _, domain := range site.Domain {
-		// 		if domain.Type == geo.Domain_Full {
-		// 			numFull++
-		// 		}
-		// 		if domain.Type == geo.Domain_RootDomain {
-		// 			numDomain++
-		// 		}
-		// 		log.Debug().Str("domain", domain.Value).Int("type", int(domain.Type)).Msg("geosite domain")
-		// 	}
-		// 	log.Debug().Int("numFull", numFull).Int("numDomain", numDomain).Msg("geosite domain")
-		// }
 		geositeList.Entry = append(geositeList.Entry, site)
 	}
 	for _, code := range req.GeoipCodes {
-		cidr, err := l.LoadIP(req.GeoipPath, code)
+		geoIp, err := l.LoadIP(req.GeoipPath, code)
 		if err != nil {
 			return nil, err
 		}
 		// log.Debug().Int("len", len(cidr.Cidr)).Str("code", code).Msg("geoip cidr")
-		geoIpList.Entry = append(geoIpList.Entry, cidr)
+		geoIpList.Entry = append(geoIpList.Entry, geoIp)
 	}
 
 	// write into files

@@ -62,8 +62,8 @@ type Api struct {
 	dialFactory transport.DialerFactory
 	mon         i.DefaultInterfaceInfo
 	// used to resolve ip address of out handlers when vpn is on
-	ipResolver i.IPResolver
-	dnsServer  i.ECHResolver
+	ipResolver  i.IPResolver
+	echResolver i.ECHResolver
 
 	dbLock sync.Mutex
 	db     *gorm.DB
@@ -190,7 +190,7 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 			Dispatcher:      dispatcher.NewPacketDispatcher(context.Background(), freedomHandler),
 		})
 		resolver := idns.NewDnsServerToResolver(dnsServer1)
-		api.dnsServer = resolver
+		api.echResolver = resolver
 		api.ipResolver = resolver
 		api.dialFactory = transport.NewDialerFactoryImp(transport.DialerFactoryOption{
 			BindToDefaultNIC:        true,
@@ -207,8 +207,8 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 			Dispatcher:      dispatcher.NewPacketDispatcher(context.Background(), freedomHandler),
 		})
 		resolver := idns.NewDnsServerToResolver(dnsServer1)
-		api.dnsServer = resolver
-		api.ipResolver = resolver
+		api.echResolver = resolver
+		api.ipResolver = &idns.DnsResolver{}
 		api.dialFactory = transport.DefaultDialerFactory()
 		dnsServer1.Start()
 	}
@@ -226,8 +226,8 @@ func (a *Api) Stop() {
 	if a.mon != nil {
 		common.Close(a.mon)
 	}
-	if a.dnsServer != nil {
-		common.Close(a.dnsServer)
+	if a.echResolver != nil {
+		common.Close(a.echResolver)
 	}
 	if a.sysProxy != nil {
 		a.sysProxy.Close()
@@ -306,7 +306,7 @@ func (a *Api) SpeedTest(req *SpeedTestRequest, in Api_SpeedTestServer) error {
 				DialerFactory: a.getDialerFactory(),
 				Policy:        policy.New(),
 				IPResolver:    a.getIPResolver(),
-				EchResolver:   a.dnsServer,
+				EchResolver:   a.echResolver,
 			})
 			if err != nil {
 				log.Debug().Err(err).Str("tag", t.GetTag()).Msg("failed to create outbound handler")
@@ -359,7 +359,7 @@ func (a *Api) UpdateSubscription(ctx context.Context, req *UpdateSubscriptionReq
 			DialerFactory: a.getDialerFactory(),
 			Policy:        policy.New(),
 			IPResolver:    a.getIPResolver(),
-			EchResolver:   a.dnsServer,
+			EchResolver:   a.echResolver,
 		})
 		if err != nil {
 			log.Error().Err(err).Msg("failed to create outbound handler")
