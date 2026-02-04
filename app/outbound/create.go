@@ -252,16 +252,16 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 		maxStreamReceiveWindow := uint64(m.Quic.GetMaxStreamReceiveWindow() * 1024 * 1024)
 		if maxStreamReceiveWindow == 0 {
 			maxStreamReceiveWindow = m.Quic.GetMaxStreamReceiveWindowBytes()
-			if maxStreamReceiveWindow == 0 && runtime.GOOS == "ios" {
-				maxStreamReceiveWindow = 800 * 1024
-			}
+			// if maxStreamReceiveWindow == 0 && runtime.GOOS == "ios" {
+			// 	maxStreamReceiveWindow = 800 * 1024
+			// }
 		}
 		maxConnectionReceiveWindow := uint64(m.Quic.GetMaxConnectionReceiveWindow() * 1024 * 1024)
 		if maxConnectionReceiveWindow == 0 {
 			maxConnectionReceiveWindow = m.Quic.GetMaxConnectionReceiveWindowBytes()
-			if maxConnectionReceiveWindow == 0 && runtime.GOOS == "ios" {
-				maxConnectionReceiveWindow = 2000 * 1024
-			}
+			// if maxConnectionReceiveWindow == 0 && runtime.GOOS == "ios" {
+			// 	maxConnectionReceiveWindow = 2000 * 1024
+			// }
 		}
 		keepAlive := m.Quic.GetKeepAlivePeriod()
 		if keepAlive == 0 {
