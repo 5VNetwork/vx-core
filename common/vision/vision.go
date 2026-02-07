@@ -62,7 +62,6 @@ type vConn struct {
 
 }
 
-// header is a protocol header and will be written to the [Conn] together with the first payload
 func NewVisionConn(ctx context.Context, conn net.Conn, isClient bool, headerLen int) net.Conn {
 	c := &vConn{
 		Conn:           conn,

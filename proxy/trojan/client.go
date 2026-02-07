@@ -113,9 +113,10 @@ func (c Client) HandlePacketConn(ctx context.Context, dst net.Destination, pc ud
 	defer conn.Close()
 	// bufferWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
 	connWriter := &ConnWriter{
-		Writer:  conn,
-		Account: account,
-		Target:  dst,
+		Writer:    conn,
+		Account:   account,
+		Target:    dst,
+		UseVision: c.Vision,
 	}
 	return helper.RelayUDPPacketConn(ctx, pc, &udp.PacketRW{
 		PacketWriter: &PacketWriter{writer: connWriter, client: true},
