@@ -9,6 +9,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/client"
 	"github.com/5vnetwork/vx-core/app/configs"
 	proxyconfigs "github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
@@ -55,7 +56,7 @@ func buildOutbound(config *configs.TmConfig, builder *Builder, client *client.Cl
 		}
 		handlers := make([]i.Outbound, 0, len(singleHandlers)+len(chainHandlers))
 		for _, handlerConfig := range singleHandlers {
-			handler, err := outbound.NewOutHandler(&outbound.Config{
+			handler, err := create.NewOutHandler(&create.Config{
 				OutboundHandlerConfig:       handlerConfig.GetOutbound(),
 				DialerFactory:               df,
 				Policy:                      policy,
@@ -92,7 +93,7 @@ func buildOutbound(config *configs.TmConfig, builder *Builder, client *client.Cl
 			handlers = append(handlers, handler)
 		}
 		for _, chainHandlerConfig := range chainHandlers {
-			chainHandler, err := outbound.NewChainHandler(&outbound.ChainHandlerConfig{
+			chainHandler, err := create.NewChainHandler(&create.ChainHandlerConfig{
 				ChainHandlerConfig:          chainHandlerConfig.GetChain(),
 				Policy:                      policy,
 				IPResolver:                  client.IPResolver,

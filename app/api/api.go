@@ -13,6 +13,7 @@ import (
 	sync "sync"
 	"time"
 
+	"github.com/5vnetwork/vx-core/app/create"
 	idns "github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/sysproxy"
 	"github.com/5vnetwork/vx-core/app/util"
@@ -21,7 +22,6 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/logger"
-	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/subscription"
 	"github.com/5vnetwork/vx-core/app/util/downloader"
@@ -301,7 +301,7 @@ func (a *Api) SpeedTest(req *SpeedTestRequest, in Api_SpeedTestServer) error {
 			rsp := &SpeedTestResponse{
 				Tag: t.GetTag(),
 			}
-			h, err := outbound.NewHandler(&outbound.HandlerConfig{
+			h, err := create.NewHandler(&create.HandlerConfig{
 				HandlerConfig: t,
 				DialerFactory: a.getDialerFactory(),
 				Policy:        policy.New(),
@@ -354,7 +354,7 @@ func (a *Api) UpdateSubscription(ctx context.Context, req *UpdateSubscriptionReq
 	// 	handlers = append(handlers, freedomHandler)
 	// }
 	for _, h := range req.Handlers {
-		handler, err := outbound.NewHandler(&outbound.HandlerConfig{
+		handler, err := create.NewHandler(&create.HandlerConfig{
 			HandlerConfig: h,
 			DialerFactory: a.getDialerFactory(),
 			Policy:        policy.New(),

@@ -14,7 +14,7 @@ import (
 	configs "github.com/5vnetwork/vx-core/app/configs"
 	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/configs/server"
-	"github.com/5vnetwork/vx-core/app/outbound"
+	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/buf"
@@ -123,7 +123,7 @@ func TestSocksBridageUDPMulti(t *testing.T) {
 	common.Must(server.Start(context.Background()))
 	defer server.Stop(context.Background())
 
-	h, err := outbound.NewHandler(&outbound.HandlerConfig{
+	h, err := create.NewHandler(&create.HandlerConfig{
 		Policy:        policy.DefaultPolicy,
 		DialerFactory: transport.DefaultDialerFactory(),
 		HandlerConfig: &configs.HandlerConfig{

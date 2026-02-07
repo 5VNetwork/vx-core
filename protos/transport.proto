@@ -15,6 +15,7 @@ import "transport/protocols/httpupgrade/config.proto";
 import "transport/protocols/splithttp/config.proto";
 
 import "protos/dlhelper.proto";
+import "google/protobuf/any.proto";
 
 message TransportConfig {
   x.SocketConfig socket = 3;
@@ -32,4 +33,6 @@ message TransportConfig {
     x.tls.TlsConfig tls = 20;
     x.transport.security.reality.RealityConfig reality = 21;
   }
+
+  google.protobuf.Any transport_protocol = 30;
 }

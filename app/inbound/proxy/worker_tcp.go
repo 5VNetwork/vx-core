@@ -9,7 +9,6 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/inbound"
 	"github.com/5vnetwork/vx-core/common"
-	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/errors"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/i"
@@ -17,16 +16,33 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type connHandler interface {
+type ConnHandler interface {
 	Process(ctx context.Context, conn net.Conn) error
 }
 
 type tcpWorker struct {
 	addr        net.Addr
-	connHandler connHandler
+	connHandler ConnHandler
 	tag         string
 	listener    i.Listener
 	netListener net.Listener
+}
+
+type TcpWorkerConfig struct {
+	Addr        net.Addr
+	Listener    i.Listener
+	Tag         string
+	ConnHandler ConnHandler
+}
+
+func NewTcpWorker(config TcpWorkerConfig) *tcpWorker {
+	return &tcpWorker{
+		addr:        config.Addr,
+		listener:    config.Listener,
+		tag:         config.Tag,
+		connHandler: config.ConnHandler,
+	}
+
 }
 
 func (w *tcpWorker) Start() error {
@@ -80,39 +96,4 @@ func (w *tcpWorker) Close() error {
 		return errors.Join(errorList...)
 	}
 	return nil
-}
-
-type proxyServers struct {
-	fallbackProxyServers []FallbackProxyServer
-	proxyServer          ProxyServer
-}
-
-func (w *proxyServers) Close() error {
-	var errs []error
-	for _, server := range w.fallbackProxyServers {
-		errs = append(errs, common.Close(server))
-	}
-	if w.proxyServer != nil {
-		errs = append(errs, common.Close(w.proxyServer))
-	}
-	return errors.Join(errs...)
-}
-
-func (w *proxyServers) Process(ctx context.Context, conn net.Conn) error {
-	cachConn := net.NewMbConn(conn, nil)
-	defer buf.ReleaseMulti(cachConn.Mb)
-	for _, fallbackProxyServer := range w.fallbackProxyServers {
-		okToFallback, cached, err := fallbackProxyServer.FallbackProcess(ctx, cachConn)
-		if okToFallback {
-			log.Ctx(ctx).Debug().Err(err).Msg("fallback")
-			cachConn.Mb, _ = buf.MergeMulti(cached, cachConn.Mb)
-			continue
-		}
-		return err
-	}
-	if w.proxyServer != nil {
-		return w.proxyServer.Process(ctx, cachConn)
-	}
-
-	return errors.New("no proxy server to handle the conn")
 }

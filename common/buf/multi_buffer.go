@@ -299,3 +299,47 @@ func (c *MultiBufferContainer) Close() error {
 	c.MultiBuffer = ReleaseMulti(c.MultiBuffer)
 	return nil
 }
+
+// MultiBuffer is not released when reading from it.
+type MultiBufferToReader struct {
+	MultiBuffer
+}
+
+func (m MultiBufferToReader) Read(b []byte) (int, error) {
+	if m.MultiBuffer.IsEmpty() {
+		return 0, io.EOF
+	}
+
+	mb, nBytes := SplitBytesNoRelease(m.MultiBuffer, b)
+	m.MultiBuffer = mb
+
+	return nBytes, nil
+}
+
+// SplitBytes splits the given amount of bytes from the beginning of the MultiBuffer.
+// It returns the new address of MultiBuffer leftover, and number of bytes written into the input byte slice.
+// bytes in mb are written into b
+func SplitBytesNoRelease(mb MultiBuffer, b []byte) (MultiBuffer, int) {
+	totalBytes := 0
+	endIndex := -1
+	for i := range mb {
+		pBuffer := mb[i]
+		nBytes, _ := pBuffer.Read(b)
+		totalBytes += nBytes
+		b = b[nBytes:]
+		if !pBuffer.IsEmpty() {
+			endIndex = i
+			break
+		}
+		// pBuffer.Release()
+		mb[i] = nil
+	}
+
+	if endIndex == -1 {
+		mb = mb[:0]
+	} else {
+		mb = mb[endIndex:]
+	}
+
+	return mb, totalBytes
+}

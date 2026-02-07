@@ -3,12 +3,15 @@ package transport
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
+	"reflect"
 
 	gotls "crypto/tls"
 
 	net1 "github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/signal/done"
+	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/transport/dlhelper"
 	"github.com/5vnetwork/vx-core/transport/protocols/grpc"
 	"github.com/5vnetwork/vx-core/transport/protocols/http"
@@ -19,6 +22,7 @@ import (
 	"github.com/5vnetwork/vx-core/transport/protocols/websocket"
 	"github.com/5vnetwork/vx-core/transport/security/reality"
 	"github.com/5vnetwork/vx-core/transport/security/tls"
+	"github.com/rs/zerolog/log"
 	goreality "github.com/xtls/reality"
 )
 
@@ -45,6 +49,7 @@ func (l *ListenerAdapter) handleConn(conn net.Conn) {
 	select {
 	case l.channel <- conn:
 	default:
+		log.Warn().Msg("listener channel is full")
 		conn.Close()
 	}
 }
@@ -153,8 +158,32 @@ func Listen(addr net1.Destination, config *Config) (net.Listener, error) {
 			return nil, err
 		}
 		return listenerAdapter, nil
+	default:
+		creator, ok := listenerCreators[reflect.TypeOf(Protocol)]
+		if !ok {
+			return nil, errors.New("invalid transport config")
+		}
+		listenerAdapter.Listener, err = creator(context.Background(), addr, Protocol, &ListenerImpl{
+			Socket:         config.Socket,
+			SecurityConfig: config.Security,
+		}, listenerAdapter.handleConn)
+		if err != nil {
+			return nil, err
+		}
+		return listenerAdapter, nil
 	}
-	return nil, errors.New("invalid transport config")
+}
+
+type ListenerCreator func(ctx context.Context, addr net1.Destination, protocolConfig interface{},
+	dl i.Listener, handleConn func(net1.Conn)) (Listener, error)
+
+var listenerCreators = make(map[reflect.Type]ListenerCreator)
+
+func RegisterListenerCreator(name reflect.Type, creator ListenerCreator) {
+	if _, ok := listenerCreators[name]; ok {
+		panic(fmt.Sprintf("listener creator for %s already registered", name))
+	}
+	listenerCreators[name] = creator
 }
 
 type ListenerImpl struct {

@@ -1,7 +1,7 @@
 // Copyright 2025 5V Network LLC
 // SPDX-License-Identifier: AGPL-3.0
 
-package outbound
+package create
 
 import (
 	"crypto/x509"
@@ -13,8 +13,8 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/configs"
 	proxyconfigs "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/dns"
+	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/common/domain"
 	"github.com/5vnetwork/vx-core/common/mux"
@@ -108,12 +108,12 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 
 	if _, ok := m.(*proxyconfigs.FreedomConfig); ok {
 		dialer, err := df.GetDialer(
-			create.TransportConfigToMemoryConfig(config.Transport, nil, nil, config.ECHResolver))
+			TransportConfigToMemoryConfig(config.Transport, nil, nil, config.ECHResolver))
 		if err != nil {
 			return nil, err
 		}
 		pl, err := df.GetPacketListener(
-			create.TransportConfigToMemoryConfig(config.Transport, nil, nil, config.ECHResolver))
+			TransportConfigToMemoryConfig(config.Transport, nil, nil, config.ECHResolver))
 		if err != nil {
 			return nil, err
 		}
@@ -130,7 +130,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 	}
 
 	// dialer
-	transportConfig := create.TransportConfigToMemoryConfig(config.Transport,
+	transportConfig := TransportConfigToMemoryConfig(config.Transport,
 		readCounter, writeCounter, config.ECHResolver)
 	transportConfig.Address = address
 	transportConfig.PortSelector = sp
@@ -226,7 +226,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 				return nil, err
 			}
 		}
-		lis, _ := df.GetPacketListener(create.TransportConfigToMemoryConfig(config.Transport,
+		lis, _ := df.GetPacketListener(TransportConfigToMemoryConfig(config.Transport,
 			readCounter, writeCounter, config.ECHResolver))
 		if ipr == nil {
 			ipr = &dns.DnsResolver{}
@@ -325,7 +325,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 		return nil, fmt.Errorf("unknown proxy client config: %v", reflect.TypeOf(m))
 	}
 
-	settings := ProxyHandlerSettings{
+	settings := outbound.ProxyHandlerSettings{
 		Tag:       config.Tag,
 		Handler:   pc,
 		Uot:       config.Uot,
@@ -338,7 +338,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 			MaxConcurrency: config.MuxConfig.MaxConcurrency,
 		}
 	}
-	h := NewProxyHandler(
+	h := outbound.NewProxyHandler(
 		settings,
 	)
 	return h, nil
@@ -355,9 +355,9 @@ func getSinglePort(config *configs.OutboundHandlerConfig) uint16 {
 // TODO: support udp
 func getPortSelector(address string, port uint32, ports []*net.PortRange) (i.PortSelector, error) {
 	if len(ports) > 0 {
-		return NewRandomPortSelector(ports), nil
+		return outbound.NewRandomPortSelector(ports), nil
 	} else if port != 0 {
-		return NewRandomPortSelector([]*net.PortRange{
+		return outbound.NewRandomPortSelector([]*net.PortRange{
 			{From: port, To: port},
 		}), nil
 	} else {

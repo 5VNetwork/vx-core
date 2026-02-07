@@ -7,13 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/5vnetwork/vx-core/app/inbound/proxy"
+	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/rs/zerolog/log"
 )
 
 func (s *ClientGrpc) AddInbound(ctx context.Context, req *AddInboundRequest) (*AddInboundResponse, error) {
 	log.Info().Str("tag", req.HandlerConfig.Tag).Msg("AddInbound")
-	in, err := proxy.NewInbound(req.HandlerConfig, s.Client.Dispatcher, s.Client.Policy)
+	in, err := create.NewInbound(req.HandlerConfig, s.Client.Dispatcher, s.Client.Policy)
 	if err != nil {
 		return nil, err
 	}

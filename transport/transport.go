@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"reflect"
 	"sync/atomic"
 
 	"github.com/5vnetwork/vx-core/app/util"
@@ -47,12 +48,19 @@ type Config struct {
 	PortSelector   i.PortSelector
 }
 
-func NewDialer(protocolConfig, securityConfig interface{},
-	dl i.DialerListener, echResolver i.ECHResolver) (i.Dialer, error) {
-	if protocolConfig == nil {
-		protocolConfig = &tcp.TcpConfig{}
-	}
+type DialerCreator func(protocolConfig, securityConfig interface{},
+	dl i.DialerListener, echResolver i.ECHResolver) (i.Dialer, error)
 
+var AnyCreator = make(map[reflect.Type]DialerCreator)
+
+func RegisterDialerCreator(name reflect.Type, creator DialerCreator) {
+	if _, ok := AnyCreator[name]; ok {
+		panic(fmt.Sprintf("dialer creator for %s already registered", name))
+	}
+	AnyCreator[name] = creator
+}
+
+func GetSecurityEngine(securityConfig interface{}, echResolver i.ECHResolver) (security.Engine, error) {
 	var securityEngine security.Engine
 	var err error
 	switch sc := securityConfig.(type) {
@@ -67,6 +75,20 @@ func NewDialer(protocolConfig, securityConfig interface{},
 			return nil, fmt.Errorf("failed to create reality engine: %w", err)
 		}
 	}
+	return securityEngine, nil
+}
+
+func NewDialer(protocolConfig, securityConfig interface{},
+	dl i.DialerListener, echResolver i.ECHResolver) (i.Dialer, error) {
+	if protocolConfig == nil {
+		protocolConfig = &tcp.TcpConfig{}
+	}
+
+	securityEngine, err := GetSecurityEngine(securityConfig, echResolver)
+	if err != nil {
+		return nil, err
+	}
+
 	var d i.Dialer
 	switch transportConfig := protocolConfig.(type) {
 	//TODO: currently, udp dial also uses this
@@ -85,8 +107,6 @@ func NewDialer(protocolConfig, securityConfig interface{},
 			}
 		}
 		d = websocket.NewWebsocketDialer(transportConfig, securityEngine, dl)
-	// case *quic.QuicConfig:
-	// 	return quic.NewQuicDialer(transportConfig, securityEngine, dl), nil
 	case *grpc.GrpcConfig:
 		d = grpc.NewGrpcDialer(transportConfig, securityEngine, dl)
 	case *splithttp.SplitHttpConfig:
@@ -97,7 +117,14 @@ func NewDialer(protocolConfig, securityConfig interface{},
 	case *httpupgrade.HttpUpgradeConfig:
 		d = httpupgrade.NewHttpUpgradeDialer(transportConfig, securityEngine, dl)
 	default:
-		return nil, errors.New("invalid transport config")
+		creator, ok := AnyCreator[reflect.TypeOf(protocolConfig)]
+		if !ok {
+			return nil, errors.New("invalid transport config")
+		}
+		d, err = creator(protocolConfig, securityConfig, dl, echResolver)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &UdpDialer{
 		tcpDialer: d,

@@ -18,6 +18,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/geo"
 	"github.com/5vnetwork/vx-core/app/inbound/monitor"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
+	"github.com/5vnetwork/vx-core/app/inbound/proxy/multi"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/router"
 	"github.com/5vnetwork/vx-core/app/user"
@@ -140,7 +141,7 @@ func NewOutboundManager(lc fx.Lifecycle, params OutboundManagerParams) (Outbound
 		},
 	})
 	for _, handlerConfig := range params.Configs {
-		h, err := outbound.NewOutHandler(&outbound.Config{
+		h, err := create.NewOutHandler(&create.Config{
 			OutboundHandlerConfig: handlerConfig,
 			DialerFactory:         params.DialerFactory,
 			Policy:                params.Policy,
@@ -251,7 +252,7 @@ func NewInboundManager(lc fx.Lifecycle, params InboundManagerParams) (InboundMan
 		},
 	})
 	for _, config := range params.Configs {
-		h, err := proxy.NewInboundServer(config, params.Handler, params.Router, params.Policy,
+		h, err := create.NewInboundServer(config, params.Handler, params.Router, params.Policy,
 			params.Stats.Get(config.Tag), params.OnUnauth)
 		if err != nil {
 			return InboundManagerResult{}, fmt.Errorf("failed to create inbound proxy handler: %w", err)
@@ -259,7 +260,7 @@ func NewInboundManager(lc fx.Lifecycle, params InboundManagerParams) (InboundMan
 		im.AddInbound(h)
 	}
 	for _, config := range params.MultiConfigs {
-		h, err := proxy.NewMultiInboundServer(config, params.Handler, params.Router, params.Policy,
+		h, err := multi.NewMultiInboundServer(config, params.Handler, params.Router, params.Policy,
 			params.Stats.Get(config.Tag), params.OnUnauth)
 		if err != nil {
 			return InboundManagerResult{}, fmt.Errorf("failed to create inbound proxy handler: %w", err)

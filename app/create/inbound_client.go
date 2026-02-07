@@ -1,7 +1,7 @@
 // Copyright 2025 5V Network LLC
 // SPDX-License-Identifier: AGPL-3.0
 
-package proxy
+package create
 
 import (
 	"math/rand"
@@ -9,11 +9,11 @@ import (
 
 	"fmt"
 
-	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/rs/zerolog/log"
 
 	configs "github.com/5vnetwork/vx-core/app/configs"
 	proxyconfigs "github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/i"
@@ -22,14 +22,14 @@ import (
 	"github.com/5vnetwork/vx-core/proxy/socks"
 )
 
-func NewInbound(config *configs.ProxyInboundConfig, ha i.Handler, tp i.TimeoutSetting) (Inbound, error) {
+func NewInbound(config *configs.ProxyInboundConfig, ha i.Handler, tp i.TimeoutSetting) (proxy.Inbound, error) {
 	if len(config.Protocols) == 0 {
 		config.Protocols = append(config.Protocols, config.Protocol)
 	}
 
-	var servers []ProxyServer
+	var servers []proxy.ProxyServer
 	for _, protocol := range config.Protocols {
-		var server ProxyServer
+		var server proxy.ProxyServer
 		serverConfig, err := serial.GetInstanceOf(protocol)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get instance of ProxyServerConfig: %w", err)
@@ -57,7 +57,7 @@ func NewInbound(config *configs.ProxyInboundConfig, ha i.Handler, tp i.TimeoutSe
 			}
 			server = socks.NewServer(config)
 			for _, u := range c.Accounts {
-				user, err := create.UserConfigToUser(u)
+				user, err := UserConfigToUser(u)
 				if err != nil {
 					return nil, err
 				}
@@ -80,11 +80,9 @@ func NewInbound(config *configs.ProxyInboundConfig, ha i.Handler, tp i.TimeoutSe
 	}
 
 	// proxy inbound
-	h := &ProxyInbound{
-		tag: config.Tag,
-	}
+	h := proxy.NewProxyInbound(config.Tag)
 	address := net.ParseAddress(config.Address)
-	transport := create.TransportConfigToMemoryConfig(config.GetTransport(), nil, nil, nil)
+	transport := TransportConfigToMemoryConfig(config.GetTransport(), nil, nil, nil)
 	ports := make([]uint16, 0, 10)
 	if config.Port != 0 {
 		ports = append(ports, uint16(config.Port))
@@ -99,8 +97,8 @@ func NewInbound(config *configs.ProxyInboundConfig, ha i.Handler, tp i.TimeoutSe
 	}
 
 	for _, port := range ports {
-		var tcpServers []ProxyServer
-		var udpServers []ProxyServer
+		var tcpServers []proxy.ProxyServer
+		var udpServers []proxy.ProxyServer
 		for _, server := range servers {
 			if slices.Contains(server.Network(), net.Network_TCP) {
 				tcpServers = append(tcpServers, server)
@@ -110,45 +108,46 @@ func NewInbound(config *configs.ProxyInboundConfig, ha i.Handler, tp i.TimeoutSe
 			}
 		}
 		if len(tcpServers) > 0 {
-			tcpWorker := &tcpWorker{
-				addr:     &net.TCPAddr{IP: address.IP(), Port: int(port)},
-				listener: transport,
-				tag:      h.tag,
-			}
+			var connHandler proxy.ConnHandler
 			if len(tcpServers) == 1 {
-				tcpWorker.connHandler = tcpServers[0]
+				connHandler = tcpServers[0]
 			} else {
-				proxyServers := &proxyServers{}
+				proxyServers := &proxy.ProxyServers{}
 				for _, server := range tcpServers {
-					if fp, ok := server.(FallbackProxyServer); ok {
-						proxyServers.fallbackProxyServers = append(proxyServers.fallbackProxyServers, fp)
+					if fp, ok := server.(proxy.FallbackProxyServer); ok {
+						proxyServers.FallbackProxyServers = append(proxyServers.FallbackProxyServers, fp)
 					} else {
-						if proxyServers.proxyServer != nil {
+						if proxyServers.ProxyServer != nil {
 							log.Warn().Msg("there are two non-fallback proxy servers for the same port")
 						}
-						proxyServers.proxyServer = server
+						proxyServers.ProxyServer = server
 					}
 				}
 				// if there is no non-fallback proxy server, make the last fallback server as it
-				if proxyServers.proxyServer == nil && len(proxyServers.fallbackProxyServers) > 0 {
-					proxyServers.proxyServer = proxyServers.fallbackProxyServers[len(proxyServers.fallbackProxyServers)-1]
-					proxyServers.fallbackProxyServers[len(proxyServers.fallbackProxyServers)-1] = nil
-					proxyServers.fallbackProxyServers = proxyServers.fallbackProxyServers[:len(proxyServers.fallbackProxyServers)-1]
+				if proxyServers.ProxyServer == nil && len(proxyServers.FallbackProxyServers) > 0 {
+					proxyServers.ProxyServer = proxyServers.FallbackProxyServers[len(proxyServers.FallbackProxyServers)-1]
+					proxyServers.FallbackProxyServers[len(proxyServers.FallbackProxyServers)-1] = nil
+					proxyServers.FallbackProxyServers = proxyServers.FallbackProxyServers[:len(proxyServers.FallbackProxyServers)-1]
 				}
-				tcpWorker.connHandler = proxyServers
+				connHandler = proxyServers
 			}
-			h.workers = append(h.workers, tcpWorker)
+			tcpWorker := proxy.NewTcpWorker(proxy.TcpWorkerConfig{
+				Addr:        &net.TCPAddr{IP: address.IP(), Port: int(port)},
+				Listener:    transport,
+				Tag:         h.Tag(),
+				ConnHandler: connHandler,
+			})
+			h.AddWorker(tcpWorker)
 		}
 		if len(udpServers) > 0 {
-			udpWorker := &udpWorker{
-				tag:         h.tag,
-				addr:        &net.UDPAddr{IP: address.IP(), Port: int(port)},
-				address:     address.IP(),
-				port:        port,
-				connHandler: udpServers[0],
-				listener:    transport.Socket,
-			}
-			h.workers = append(h.workers, udpWorker)
+			udpWorker := proxy.NewUdpWorker(proxy.UdpWorkerConfig{
+				Addr:        &net.UDPAddr{IP: address.IP(), Port: int(port)},
+				Listener:    transport.Socket,
+				Tag:         h.Tag(),
+				ConnHandler: udpServers[0],
+			})
+			h.AddWorker(udpWorker)
+
 		}
 	}
 	return h, nil

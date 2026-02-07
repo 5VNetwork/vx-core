@@ -35,6 +35,9 @@ type ConnWriter struct {
 }
 
 func (c *ConnWriter) CloseWrite() error {
+	if closeWriter, ok := c.Writer.(buf.CloseWriter); ok {
+		return closeWriter.CloseWrite()
+	}
 	return nil
 }
 

@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 
 	"github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/geo"
@@ -117,7 +118,7 @@ func (c *Client) CreateHandler(h *configs.HandlerConfig, landHandlerIds []*xsqli
 			tag = tag + "-" + strconv.Itoa(id.ID)
 		}
 
-		ch, err := outbound.NewChainHandler(&outbound.ChainHandlerConfig{
+		ch, err := create.NewChainHandler(&create.ChainHandlerConfig{
 			ChainHandlerConfig: &configs.ChainHandlerConfig{
 				Tag:      tag,
 				Handlers: handlers,
@@ -135,7 +136,7 @@ func (c *Client) CreateHandler(h *configs.HandlerConfig, landHandlerIds []*xsqli
 		return ch, nil
 	}
 
-	return outbound.NewHandler(&outbound.HandlerConfig{
+	return create.NewHandler(&create.HandlerConfig{
 		HandlerConfig:               h,
 		DialerFactory:               df,
 		Policy:                      c.Policy,

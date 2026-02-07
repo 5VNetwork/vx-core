@@ -3,7 +3,7 @@
 
 //go:build server
 
-package proxy
+package multi
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/inbound/monitor"
+	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/app/sniff"
 	"github.com/5vnetwork/vx-core/transport"
 	"github.com/5vnetwork/vx-core/transport/dlhelper"
@@ -40,13 +41,13 @@ import (
 )
 
 func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler, router i.Router,
-	tp i.TimeoutSetting, inStats *monitor.Stats, onUnauth i.UnauthorizedReport) (Inbound, error) {
+	tp i.TimeoutSetting, inStats *monitor.Stats, onUnauth i.UnauthorizedReport) (proxy.Inbound, error) {
 	ports := make([]uint16, 0, 10)
 	for _, port := range config.Ports {
 		ports = append(ports, uint16(port))
 	}
 
-	servers, hysteriaConfig, err := getServers(config.Users, config.Protocols,
+	servers, hysteriaConfig, err := create.GetServers(config.Users, config.Protocols,
 		ha, tp, onUnauth)
 	if err != nil {
 		return nil, err
@@ -57,42 +58,41 @@ func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler
 	}
 
 	// proxy inbound
-	h := &ProxyInbound{
-		tag: config.Tag,
-	}
-	address := net.ParseAddress(config.Address)
+	h := proxy.NewProxyInbound(config.Tag)
 	for _, server := range servers {
-		if i, ok := server.(UserManage); ok {
-			h.userManages = append(h.userManages, i)
+		if i, ok := server.(proxy.UserManage); ok {
+			h.AddUserManage(i)
 		}
 	}
 
-	for _, port := range ports {
-		if hysteriaConfig != nil {
-			in, err := hysteria2.NewInbound(&hysteria2.InboundConfig{
-				Ports:                 []uint16{port},
-				Hysteria2ServerConfig: hysteriaConfig,
-				InStats:               inStats,
-				Tag:                   config.Tag,
-				Router:                router,
-				OnUnauthorizedRequest: onUnauth,
-				Dialer:                &net.NetDialer{Dialer: net.Dialer{}},
-				Listener:              &net.NetPacketListener{ListenConfig: net.ListenConfig{}},
-			})
+	if hysteriaConfig != nil {
+		in, err := hysteria2.NewInbound(&hysteria2.InboundConfig{
+			Ports:                 ports,
+			Hysteria2ServerConfig: hysteriaConfig,
+			InStats:               inStats,
+			Tag:                   config.Tag,
+			Router:                router,
+			OnUnauthorizedRequest: onUnauth,
+			Dialer:                &net.NetDialer{Dialer: net.Dialer{}},
+			Listener:              &net.NetPacketListener{ListenConfig: net.ListenConfig{}},
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, u := range append(hysteriaConfig.Users, config.Users...) {
+			user, err := create.UserConfigToUser(u)
 			if err != nil {
 				return nil, err
 			}
-			for _, u := range append(hysteriaConfig.Users, config.Users...) {
-				user, err := create.UserConfigToUser(u)
-				if err != nil {
-					return nil, err
-				}
-				in.AddUser(user)
-			}
-			h.workers = append(h.workers, in)
-			h.userManages = append(h.userManages, in)
+			in.AddUser(user)
 		}
+		h.AddWorker(in)
+		h.AddUserManage(in)
+	}
 
+	address := net.ParseAddress(config.Address)
+
+	for _, port := range ports {
 		multi := &Multi{
 			addr:     &net.TCPAddr{IP: address.IP(), Port: int(port)},
 			connChan: make(chan net.Conn, 128),
@@ -192,8 +192,8 @@ func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler
 
 		// proxy protocols
 		hasHys := hysteriaConfig != nil
-		var tcpServers []ProxyServer
-		var udpServers []ProxyServer
+		var tcpServers []proxy.ProxyServer
+		var udpServers []proxy.ProxyServer
 		for _, server := range servers {
 			if slices.Contains(server.Network(), net.Network_TCP) {
 				tcpServers = append(tcpServers, server)
@@ -203,45 +203,45 @@ func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler
 			}
 		}
 		if len(tcpServers) > 0 {
-			tcpWorker := &tcpWorker{
-				addr:     &net.TCPAddr{IP: address.IP(), Port: int(port)},
-				listener: multi,
-				tag:      h.tag,
-			}
+			var connHandler proxy.ConnHandler
 			if len(tcpServers) == 1 {
-				tcpWorker.connHandler = tcpServers[0]
+				connHandler = tcpServers[0]
 			} else {
-				proxyServers := &proxyServers{}
+				proxyServers := &proxy.ProxyServers{}
 				for _, server := range tcpServers {
-					if fp, ok := server.(FallbackProxyServer); ok {
-						proxyServers.fallbackProxyServers = append(proxyServers.fallbackProxyServers, fp)
+					if fp, ok := server.(proxy.FallbackProxyServer); ok {
+						proxyServers.FallbackProxyServers = append(proxyServers.FallbackProxyServers, fp)
 					} else {
-						if proxyServers.proxyServer != nil {
+						if proxyServers.ProxyServer != nil {
 							log.Warn().Msg("there are two non-fallback proxy servers for the same port")
 						}
-						proxyServers.proxyServer = server
+						proxyServers.ProxyServer = server
 					}
 				}
 				// if there is no non-fallback proxy server, make the last fallback server as it
-				if proxyServers.proxyServer == nil && len(proxyServers.fallbackProxyServers) > 0 {
-					proxyServers.proxyServer = proxyServers.fallbackProxyServers[len(proxyServers.fallbackProxyServers)-1]
-					proxyServers.fallbackProxyServers[len(proxyServers.fallbackProxyServers)-1] = nil
-					proxyServers.fallbackProxyServers = proxyServers.fallbackProxyServers[:len(proxyServers.fallbackProxyServers)-1]
+				if proxyServers.ProxyServer == nil && len(proxyServers.FallbackProxyServers) > 0 {
+					proxyServers.ProxyServer = proxyServers.FallbackProxyServers[len(proxyServers.FallbackProxyServers)-1]
+					proxyServers.FallbackProxyServers[len(proxyServers.FallbackProxyServers)-1] = nil
+					proxyServers.FallbackProxyServers = proxyServers.FallbackProxyServers[:len(proxyServers.FallbackProxyServers)-1]
 				}
-				tcpWorker.connHandler = proxyServers
+				connHandler = proxyServers
 			}
-			h.workers = append(h.workers, tcpWorker)
+			tcpWorker := proxy.NewTcpWorker(proxy.TcpWorkerConfig{
+				Addr:        &net.TCPAddr{IP: address.IP(), Port: int(port)},
+				Listener:    multi,
+				Tag:         h.Tag(),
+				ConnHandler: connHandler,
+			})
+			h.AddWorker(tcpWorker)
 		}
 		if !hasHys && len(udpServers) > 0 {
-			udpWorker := &udpWorker{
-				tag:         h.tag,
-				addr:        &net.UDPAddr{IP: address.IP(), Port: int(port)},
-				address:     address.IP(),
-				port:        port,
-				connHandler: udpServers[0],
-				listener:    create.SocketConfigToMemoryConfig(config.GetSocket(), nil, nil),
-			}
-			h.workers = append(h.workers, udpWorker)
+			udpWorker := proxy.NewUdpWorker(proxy.UdpWorkerConfig{
+				Addr:        &net.UDPAddr{IP: address.IP(), Port: int(port)},
+				Tag:         h.Tag(),
+				ConnHandler: udpServers[0],
+				Listener:    create.SocketConfigToMemoryConfig(config.GetSocket(), nil, nil),
+			})
+			h.AddWorker(udpWorker)
 		}
 	}
 	return h, nil

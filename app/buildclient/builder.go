@@ -147,7 +147,7 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 	x.InboundManager = im
 	for _, handlerConfig := range config.GetInboundManager().GetHandlers() {
 		err := builder.requireFeature(func(ha *dispatcher.Dispatcher, policy *policy.Policy) error {
-			h, err := proxy.NewInbound(handlerConfig, ha, policy)
+			h, err := create.NewInbound(handlerConfig, ha, policy)
 			if err != nil {
 				return fmt.Errorf("failed to create inbound proxy handler: %w", err)
 			}

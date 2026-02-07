@@ -7,9 +7,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/i"
+	"github.com/rs/zerolog/log"
 )
 
 type ProxyServer interface {
@@ -27,12 +29,61 @@ type FallbackProxyServer interface {
 	FallbackProcess(context.Context, net.Conn) (okToFallback bool, cached buf.MultiBuffer, err error)
 }
 
+type ProxyServers struct {
+	FallbackProxyServers []FallbackProxyServer
+	ProxyServer          ProxyServer
+}
+
+func (w *ProxyServers) Close() error {
+	var errs []error
+	for _, server := range w.FallbackProxyServers {
+		errs = append(errs, common.Close(server))
+	}
+	if w.ProxyServer != nil {
+		errs = append(errs, common.Close(w.ProxyServer))
+	}
+	return errors.Join(errs...)
+}
+
+func (w *ProxyServers) Process(ctx context.Context, conn net.Conn) error {
+	cachConn := net.NewMbConn(conn, nil)
+	defer buf.ReleaseMulti(cachConn.Mb)
+	for _, fallbackProxyServer := range w.FallbackProxyServers {
+		okToFallback, cached, err := fallbackProxyServer.FallbackProcess(ctx, cachConn)
+		if okToFallback {
+			log.Ctx(ctx).Debug().Err(err).Msg("fallback")
+			cachConn.Mb, _ = buf.MergeMulti(cached, cachConn.Mb)
+			continue
+		}
+		return err
+	}
+	if w.ProxyServer != nil {
+		return w.ProxyServer.Process(ctx, cachConn)
+	}
+
+	return errors.New("no proxy server to handle the conn")
+}
+
 // implements i.InboundHandler
 type ProxyInbound struct {
 	tag string
 	// workers contain tcpWorker, udpWorker, hysteira inbound
-	workers     []worker
+	workers     []common.Runnable
 	userManages []UserManage
+}
+
+func NewProxyInbound(tag string) *ProxyInbound {
+	return &ProxyInbound{
+		tag: tag,
+	}
+}
+
+func (h *ProxyInbound) AddWorker(worker common.Runnable) {
+	h.workers = append(h.workers, worker)
+}
+
+func (h *ProxyInbound) AddUserManage(userManage UserManage) {
+	h.userManages = append(h.userManages, userManage)
 }
 
 // Start implements common.Runnable.

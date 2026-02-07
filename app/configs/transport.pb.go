@@ -13,6 +13,7 @@ import (
 	tls "github.com/5vnetwork/vx-core/transport/security/tls"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -43,9 +44,10 @@ type TransportConfig struct {
 	//
 	//	*TransportConfig_Tls
 	//	*TransportConfig_Reality
-	Security      isTransportConfig_Security `protobuf_oneof:"security"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Security          isTransportConfig_Security `protobuf_oneof:"security"`
+	TransportProtocol *anypb.Any                 `protobuf:"bytes,30,opt,name=transport_protocol,json=transportProtocol,proto3" json:"transport_protocol,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *TransportConfig) Reset() {
@@ -189,6 +191,13 @@ func (x *TransportConfig) GetReality() *reality.RealityConfig {
 	return nil
 }
 
+func (x *TransportConfig) GetTransportProtocol() *anypb.Any {
+	if x != nil {
+		return x.TransportProtocol
+	}
+	return nil
+}
+
 type isTransportConfig_Protocol interface {
 	isTransportConfig_Protocol()
 }
@@ -261,7 +270,7 @@ var File_protos_transport_proto protoreflect.FileDescriptor
 
 const file_protos_transport_proto_rawDesc = "" +
 	"\n" +
-	"\x16protos/transport.proto\x12\x01x\x1a\x14protos/tls/tls.proto\x1a'transport/security/reality/config.proto\x1a$transport/protocols/tcp/config.proto\x1a$transport/protocols/kcp/config.proto\x1a*transport/protocols/websocket/config.proto\x1a%transport/protocols/http/config.proto\x1a%transport/protocols/quic/config.proto\x1a%transport/protocols/grpc/config.proto\x1a,transport/protocols/httpupgrade/config.proto\x1a*transport/protocols/splithttp/config.proto\x1a\x15protos/dlhelper.proto\"\xed\x05\n" +
+	"\x16protos/transport.proto\x12\x01x\x1a\x14protos/tls/tls.proto\x1a'transport/security/reality/config.proto\x1a$transport/protocols/tcp/config.proto\x1a$transport/protocols/kcp/config.proto\x1a*transport/protocols/websocket/config.proto\x1a%transport/protocols/http/config.proto\x1a%transport/protocols/quic/config.proto\x1a%transport/protocols/grpc/config.proto\x1a,transport/protocols/httpupgrade/config.proto\x1a*transport/protocols/splithttp/config.proto\x1a\x15protos/dlhelper.proto\x1a\x19google/protobuf/any.proto\"\xb2\x06\n" +
 	"\x0fTransportConfig\x12'\n" +
 	"\x06socket\x18\x03 \x01(\v2\x0f.x.SocketConfigR\x06socket\x128\n" +
 	"\x03tcp\x18\x05 \x01(\v2$.x.transport.protocols.tcp.TcpConfigH\x00R\x03tcp\x128\n" +
@@ -274,7 +283,8 @@ const file_protos_transport_proto_rawDesc = "" +
 	"\vhttpupgrade\x18\v \x01(\v24.x.transport.protocols.httpupgrade.HttpUpgradeConfigH\x00R\vhttpupgrade\x12P\n" +
 	"\tsplithttp\x18\f \x01(\v20.x.transport.protocols.splithttp.SplitHttpConfigH\x00R\tsplithttp\x12$\n" +
 	"\x03tls\x18\x14 \x01(\v2\x10.x.tls.TlsConfigH\x01R\x03tls\x12G\n" +
-	"\areality\x18\x15 \x01(\v2+.x.transport.security.reality.RealityConfigH\x01R\arealityB\n" +
+	"\areality\x18\x15 \x01(\v2+.x.transport.security.reality.RealityConfigH\x01R\areality\x12C\n" +
+	"\x12transport_protocol\x18\x1e \x01(\v2\x14.google.protobuf.AnyR\x11transportProtocolB\n" +
 	"\n" +
 	"\bprotocolB\n" +
 	"\n" +
@@ -306,6 +316,7 @@ var file_protos_transport_proto_goTypes = []any{
 	(*splithttp.SplitHttpConfig)(nil),     // 9: x.transport.protocols.splithttp.SplitHttpConfig
 	(*tls.TlsConfig)(nil),                 // 10: x.tls.TlsConfig
 	(*reality.RealityConfig)(nil),         // 11: x.transport.security.reality.RealityConfig
+	(*anypb.Any)(nil),                     // 12: google.protobuf.Any
 }
 var file_protos_transport_proto_depIdxs = []int32{
 	1,  // 0: x.TransportConfig.socket:type_name -> x.SocketConfig
@@ -319,11 +330,12 @@ var file_protos_transport_proto_depIdxs = []int32{
 	9,  // 8: x.TransportConfig.splithttp:type_name -> x.transport.protocols.splithttp.SplitHttpConfig
 	10, // 9: x.TransportConfig.tls:type_name -> x.tls.TlsConfig
 	11, // 10: x.TransportConfig.reality:type_name -> x.transport.security.reality.RealityConfig
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	12, // 11: x.TransportConfig.transport_protocol:type_name -> google.protobuf.Any
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_protos_transport_proto_init() }

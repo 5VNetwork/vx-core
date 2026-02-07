@@ -148,7 +148,7 @@ func (d *Dispatcher) HandleFlow(ctx context.Context, dst net.Destination,
 			err = d.Fallback.Fallback(ctx, info, rw, handler, err)
 		}
 	}
-	if err != nil {
+	if err != nil && d.SessinoErrorLogger != nil {
 		d.SessinoErrorLogger.LogSessionError(info, err)
 	}
 

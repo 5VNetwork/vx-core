@@ -6,7 +6,7 @@ package api
 import (
 	context "context"
 
-	"github.com/5vnetwork/vx-core/app/subscription/uri"
+	"github.com/5vnetwork/vx-core/app/util/uri"
 )
 
 func (a *Api) ToUrl(ctx context.Context, req *ToUrlRequest) (*ToUrlResponse, error) {

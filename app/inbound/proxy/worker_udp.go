@@ -27,7 +27,7 @@ import (
 
 type udpWorker struct {
 	sync.RWMutex
-	connHandler        connHandler
+	connHandler        ConnHandler
 	udpConn            *net.UDPConn
 	addr               *net.UDPAddr
 	address            net.IP
@@ -37,6 +37,24 @@ type udpWorker struct {
 	periodicCleaner    *task.Periodic
 	activeMyUdpConnMap map[nethelper.Destination]*myUdpConn
 	closed             bool
+}
+
+type UdpWorkerConfig struct {
+	Addr        *net.UDPAddr
+	Listener    i.PacketListener
+	Tag         string
+	ConnHandler ConnHandler
+}
+
+func NewUdpWorker(config UdpWorkerConfig) *udpWorker {
+	return &udpWorker{
+		addr:        config.Addr,
+		listener:    config.Listener,
+		tag:         config.Tag,
+		connHandler: config.ConnHandler,
+		address:     config.Addr.IP,
+		port:        uint16(config.Addr.Port),
+	}
 }
 
 func (w *udpWorker) Start() error {

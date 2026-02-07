@@ -6,7 +6,7 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/outbound"
+	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/app/util/downloader"
@@ -43,7 +43,7 @@ func TestDns(t *testing.T) {
 
 func TestUsable(t *testing.T) {
 	t.Skip()
-	h, err := outbound.NewOutHandler(&outbound.Config{
+	h, err := create.NewOutHandler(&create.Config{
 		OutboundHandlerConfig: &configs.OutboundHandlerConfig{
 			Address: "",
 			Port:    0,

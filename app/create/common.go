@@ -7,15 +7,18 @@ import (
 	"sync/atomic"
 
 	configs "github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/transport"
 	"github.com/5vnetwork/vx-core/transport/dlhelper"
 	"github.com/5vnetwork/vx-core/transport/protocols/tcp"
+	"github.com/sagernet/sing/common"
 )
 
-func TransportProtocolConfig(config interface{}) interface{} {
+func TransportProtocolConfig(tc *configs.TransportConfig) interface{} {
+
 	var protocolConfig interface{}
-	switch c := config.(type) {
+	switch c := tc.GetProtocol().(type) {
 	case *configs.TransportConfig_Grpc:
 		protocolConfig = c.Grpc
 	case *configs.TransportConfig_Tcp:
@@ -33,6 +36,12 @@ func TransportProtocolConfig(config interface{}) interface{} {
 	case *configs.TransportConfig_Httpupgrade:
 		protocolConfig = c.Httpupgrade
 	}
+	if protocolConfig == nil && tc.TransportProtocol != nil {
+		msg, err := serial.GetInstanceOf(tc.TransportProtocol)
+		common.Must(err)
+		protocolConfig = msg
+	}
+
 	return protocolConfig
 }
 
@@ -58,7 +67,7 @@ func TransportConfigToMemoryConfig(config *configs.TransportConfig,
 	}
 	return &transport.Config{
 		Socket:    SocketConfigToMemoryConfig(config.GetSocket(), readCounter, writeCounter),
-		Protocol:  TransportProtocolConfig(config.GetProtocol()),
+		Protocol:  TransportProtocolConfig(config),
 		Security:  TransportSecurityConfig(config.GetSecurity()),
 		DnsServer: dnsServer,
 	}

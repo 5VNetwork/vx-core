@@ -40,13 +40,6 @@ const (
 	errord
 )
 
-/*
-1. 	if state is errord, no read/write happens
-2. 	interrupt() marks state as errord"stm went wrong", close() mark it as closed,
-	both will call done.Close(). Close() will cause any write return io.ErrClosedPipe, have no impacts on
-	reads while there is still remaining data, and cause other reads return io.EOF
-*/
-
 type Pipe struct {
 	sync.Mutex
 	limit           int32

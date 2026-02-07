@@ -9,7 +9,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/5vnetwork/vx-core/app/outbound"
+	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/transport"
@@ -22,7 +22,7 @@ func (a *Api) ApiDownload(req *DownloadRequest, dialerFactory transport.DialerFa
 	response := &DownloadResponse{}
 	success := false
 	for _, hConfig := range req.Handlers {
-		h, err := outbound.NewHandler(&outbound.HandlerConfig{
+		h, err := create.NewHandler(&create.HandlerConfig{
 			HandlerConfig: hConfig,
 			DialerFactory: dialerFactory,
 			Policy:        policy.New(),
