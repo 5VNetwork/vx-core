@@ -99,7 +99,7 @@ func (s *ClientGrpc) OnSubscriptionUpdated() {
 	} else {
 		s.Client.Selectors.OnHandlerChanged()
 	}
-	// replace node set
+	// TODO: replace node set
 	// handlers, err := s.Client.DB.GetAllHandlers()
 	// if err != nil {
 	// 	log.Error().Err(err).Msg("get all handlers")

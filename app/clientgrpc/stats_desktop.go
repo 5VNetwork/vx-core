@@ -29,7 +29,7 @@ func (s *ClientGrpc) GetStatsStream(in *GetStatsRequest,
 	}
 
 	sendStats := func() error {
-		st := s.Client.Dispatcher.OutStats
+		st := s.Client.OutStats
 		st.CleanOldStats()
 
 		statsList := make([]*OutboundStats, 0, len(st.Map))

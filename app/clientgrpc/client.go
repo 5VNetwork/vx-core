@@ -23,10 +23,6 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	// "github.com/shirou/gopsutil/v4/cpu"
-	// "github.com/shirou/gopsutil/v4/disk"
-	// "github.com/shirou/gopsutil/v4/host"
-	// "github.com/shirou/gopsutil/v4/mem"
 )
 
 type ClientGrpc struct {
