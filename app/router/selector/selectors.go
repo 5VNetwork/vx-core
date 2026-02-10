@@ -4,6 +4,7 @@
 package selector
 
 import (
+	"slices"
 	"sync"
 
 	"github.com/5vnetwork/vx-core/app/configs"
@@ -20,6 +21,7 @@ type Selectors struct {
 	selectors map[string]*Selector
 	// notify listeners when any selector's ipv6 support changed or any selector is added or removed
 	i.IPv6SupportChangeSubject
+	SelectedHandlersChangeNotifier
 }
 
 func NewSelectors() *Selectors {
@@ -38,6 +40,9 @@ func (s *Selectors) AddSelector(selector *Selector) {
 	}
 	s.selectors[selector.tag] = selector
 	selector.Register(s)
+	selector.onUpdate = func(handlers []string) {
+		s.NotifySelectedHandlersChanged(selector.tag, handlers)
+	}
 	if s.started {
 		selector.Start()
 	}
@@ -170,4 +175,44 @@ func NewSelector(config SelectorConfig) *Selector {
 		Dispatcher:               config.HandlerErrorChangeSubject,
 	})
 	return selector0
+}
+
+type SelectedHandlersChangeNotifier struct {
+	lock      sync.RWMutex
+	observers []SelectedHandlersChangeObserver
+}
+
+type SelectedHandlersChangeObserver interface {
+	OnSelectedHandlersChanged(tag string, handlers []string)
+}
+
+type OnSelectedHandlersChangedFunc func()
+
+func (f OnSelectedHandlersChangedFunc) OnSelectedHandlersChanged() {
+	f()
+}
+
+func (n *SelectedHandlersChangeNotifier) RegisterSelectedHandlersChangeObserver(observer SelectedHandlersChangeObserver) {
+	n.lock.Lock()
+	n.observers = append(n.observers, observer)
+	n.lock.Unlock()
+}
+
+func (n *SelectedHandlersChangeNotifier) UnregisterSelectedHandlersChangeObserver(observer SelectedHandlersChangeObserver) {
+	n.lock.Lock()
+	defer n.lock.Unlock()
+	for i, o := range n.observers {
+		if o == observer {
+			n.observers = slices.Delete(n.observers, i, i+1)
+			break
+		}
+	}
+}
+
+func (n *SelectedHandlersChangeNotifier) NotifySelectedHandlersChanged(tag string, handlers []string) {
+	n.lock.RLock()
+	defer n.lock.RUnlock()
+	for _, o := range n.observers {
+		go o.OnSelectedHandlersChanged(tag, handlers)
+	}
 }

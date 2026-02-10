@@ -14,7 +14,7 @@ import "protos/geo.proto";
 import "protos/dispatcher.proto";
 import "protos/tun.proto";
 import "protos/sysproxy.proto";
-
+import "protos/grpc_service.proto";
 
 message TmConfig {
   x.InboundManagerConfig inbound_manager = 1;
@@ -45,9 +45,9 @@ message TmConfig {
   // matched handler does not support ipv6, reject the request
   bool reject_ipv6 = 32;
   x.WfpConfig wfp = 33;
-  bool use_real_latency = 34;
-
+  reserved 34;
   x.UserLoggerConfig user_log = 35;
+  x.GrpcServiceConfig grpc_service = 36;
 }
 
 message GrpcConfig { 

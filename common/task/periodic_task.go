@@ -109,3 +109,17 @@ func (pt *PeriodicTask) Close() error {
 	pt.wg.Wait()
 	return nil
 }
+
+// Close stops the periodic task and does not wait for any goroutine to finish
+func (pt *PeriodicTask) CloseNoWait() error {
+	pt.mu.Lock()
+	if !pt.isRunning {
+		pt.mu.Unlock()
+		return nil // Not running
+	}
+	pt.isRunning = false
+	pt.cancel()
+	pt.mu.Unlock()
+
+	return nil
+}

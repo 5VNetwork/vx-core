@@ -1,7 +1,7 @@
 // Copyright 2025 5V Network LLC
 // SPDX-License-Identifier: AGPL-3.0
 
-package clientgrpc
+package grpcservice
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/net"
 )
 
-func (s *ClientGrpc) RttTest(ctx context.Context, req *RttTestRequest) (*RttTestResponse, error) {
+func (s *GrpcService) RttTest(ctx context.Context, req *RttTestRequest) (*RttTestResponse, error) {
 	dest := net.AddressPort{
 		Address: net.ParseAddress(req.Addr),
 		Port:    net.Port(req.Port),

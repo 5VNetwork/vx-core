@@ -12,6 +12,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/geo"
+	"github.com/5vnetwork/vx-core/app/grpcserver"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/app/logger"
 	"github.com/5vnetwork/vx-core/app/outbound"
@@ -43,11 +44,12 @@ type Client struct {
 	OutboundManager *outbound.Manager
 	OutStats        *outbound.OutStats
 	// might be nil
-	DB        Db
-	Tetser    *tester.Tester
-	Router    *router.RouterWrapper
-	Selectors *selector.Selectors
-	Logger    *logger.Logger
+	DB         Db
+	Tetser     *tester.Tester
+	Router     *router.RouterWrapper
+	Selectors  *selector.Selectors
+	Logger     *logger.Logger
+	GrpcServer *grpcserver.GrpcServer
 	// used to handle dns requests
 	Dns *dns.Dns
 	// used to resolve domains when dial, typically node address and domains of direct connection
@@ -94,7 +96,21 @@ func (c *Client) Close() error {
 	return err
 }
 
-func (c *Client) CreateHandler(h *configs.HandlerConfig, landHandlerIds []*xsqlite.OutboundHandler) (i.Outbound, error) {
+func (c *Client) CreateHandler(h *configs.HandlerConfig) (i.Outbound, error) {
+	df := c.DialerFactory
+
+	return create.NewHandler(&create.HandlerConfig{
+		HandlerConfig:               h,
+		DialerFactory:               df,
+		Policy:                      c.Policy,
+		IPResolver:                  c.IPResolver,
+		EchResolver:                 c.EchResolver,
+		IPResolverForRequestAddress: c.IPResolverForRequestAddress,
+		RejectQuic:                  c.Hysteria2RejectQuic,
+	})
+}
+
+func (c *Client) CreateHandlerWithLandHandlers(h *configs.HandlerConfig, landHandlerIds []*xsqlite.OutboundHandler) (i.Outbound, error) {
 	df := c.DialerFactory
 	if len(landHandlerIds) > 0 {
 		handlers := make([]*configs.OutboundHandlerConfig, 0)

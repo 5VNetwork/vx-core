@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package x.clientgrpc;
+package x.grpcservice;
 
-option go_package = "github.com/5vnetwork/vx-core/app/clientgrpc";
+option go_package = "github.com/5vnetwork/vx-core/app/grpcservice";
 
 import "protos/inbound.proto";
 
@@ -12,7 +12,7 @@ import "protos/geo.proto";
 import "app/userlogger/config.proto";
 import "common/geo/geo.proto";
 
-service ClientService {
+service GrpcService {
   // server to client
   rpc Communicate(CommunicateRequest) returns (stream CommunicateMessage);
   // inbound

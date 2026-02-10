@@ -1,14 +1,13 @@
 // Copyright 2025 5V Network LLC
 // SPDX-License-Identifier: AGPL-3.0
 
-package clientgrpc
+package grpcservice
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/router"
 	"github.com/5vnetwork/vx-core/app/router/selector"
 	"github.com/5vnetwork/vx-core/app/xsqlite"
@@ -17,7 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (s *ClientGrpc) UpdateRouter(ctx context.Context, in *UpdateRouterRequest) (*UpdateRouterResponse, error) {
+func (s *GrpcService) UpdateRouter(ctx context.Context, in *UpdateRouterRequest) (*UpdateRouterResponse, error) {
 	log.Info().Msg("update router")
 
 	err := s.updateRouter(in.RouterConfig)
@@ -28,7 +27,7 @@ func (s *ClientGrpc) UpdateRouter(ctx context.Context, in *UpdateRouterRequest) 
 	return &UpdateRouterResponse{}, nil
 }
 
-func (s *ClientGrpc) ChangeRoutingMode(ctx context.Context, in *ChangeRoutingModeRequest) (*ChangeRoutingModeResponse, error) {
+func (s *GrpcService) ChangeRoutingMode(ctx context.Context, in *ChangeRoutingModeRequest) (*ChangeRoutingModeResponse, error) {
 	log.Debug().Msg("ChangeRoutingMode")
 	err := s.Client.Geo.UpdateGeo(in.GeoConfig)
 	if err != nil {
@@ -42,7 +41,7 @@ func (s *ClientGrpc) ChangeRoutingMode(ctx context.Context, in *ChangeRoutingMod
 	log.Debug().Msg("routing mode changed")
 	return &ChangeRoutingModeResponse{}, nil
 }
-func (s *ClientGrpc) updateRouter(config *configs.RouterConfig) error {
+func (s *GrpcService) updateRouter(config *configs.RouterConfig) error {
 	newRouter, err := router.NewRouter(&router.RouterConfig{
 		RouterConfig:    config,
 		OutboundManager: s.Client.OutboundManager,
@@ -57,21 +56,21 @@ func (s *ClientGrpc) updateRouter(config *configs.RouterConfig) error {
 	return nil
 }
 
-func (s *ClientGrpc) ChangeOutbound(ctx context.Context, in *ChangeOutboundRequest) (*ChangeOutboundResponse, error) {
+func (s *GrpcService) ChangeOutbound(ctx context.Context, in *ChangeOutboundRequest) (*ChangeOutboundResponse, error) {
 	log.Debug().Msg("ChangeOutbound")
 	// s.AutoOutbound = in.GetAutoOutbound()
 	// s.Policy.SetOutboundStats(s.AutoOutbound)
 	om := s.Client.OutboundManager
 	handlers := make([]i.Outbound, 0, len(in.GetHandlers()))
 	for _, handler := range in.GetHandlers() {
-		h, err := s.Client.CreateHandler(handler, nil)
+		h, err := s.Client.CreateHandlerWithLandHandlers(handler, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create outbound handler: %w", err)
 		}
 		handlers = append(handlers, h)
 	}
 	if in.GetDeleteAll() {
-		om.ReplaceHandlers(handlers...)
+		om.ReplaceHandlers(handlers)
 	} else {
 		om.RemoveHandlers(in.GetTags())
 		om.AddHandlers(handlers...)
@@ -79,10 +78,11 @@ func (s *ClientGrpc) ChangeOutbound(ctx context.Context, in *ChangeOutboundReque
 	return &ChangeOutboundResponse{}, nil
 }
 
-func (s *ClientGrpc) CurrentOutbound(ctx context.Context, in *CurrentOutboundRequest) (*CurrentOutboundResponse, error) {
+func (s *GrpcService) CurrentOutbound(ctx context.Context, in *CurrentOutboundRequest) (*CurrentOutboundResponse, error) {
 	om := s.Client.OutboundManager
-	tags := make([]string, 0, len(outbound.GetAllProxyhandlers(om)))
-	for _, h := range outbound.GetAllProxyhandlers(om) {
+	handlers := GetAllProxyhandlers(om)
+	tags := make([]string, 0, len(handlers))
+	for _, h := range handlers {
 		tags = append(tags, h.Tag())
 	}
 	return &CurrentOutboundResponse{
@@ -90,13 +90,13 @@ func (s *ClientGrpc) CurrentOutbound(ctx context.Context, in *CurrentOutboundReq
 	}, nil
 }
 
-func (s *ClientGrpc) NotifyHandlerChange(context.Context, *HandlerChangeNotify) (*HandlerChangeNotifyResponse, error) {
+func (s *GrpcService) NotifyHandlerChange(context.Context, *HandlerChangeNotify) (*HandlerChangeNotifyResponse, error) {
 	log.Info().Msg("NotifyHandlerChange")
 	s.Client.Selectors.OnHandlerChanged()
 	return &HandlerChangeNotifyResponse{}, nil
 }
 
-func (s *ClientGrpc) ChangeSelector(ctx context.Context, in *ChangeSelectorRequest) (*ChangeSelectorResponse, error) {
+func (s *GrpcService) ChangeSelector(ctx context.Context, in *ChangeSelectorRequest) (*ChangeSelectorResponse, error) {
 	log.Info().Msg("ChangeSelector")
 	if in.SelectorToRemove != "" {
 		s.Client.Selectors.RemoveSelector(in.SelectorToRemove)
@@ -115,21 +115,18 @@ func (s *ClientGrpc) ChangeSelector(ctx context.Context, in *ChangeSelectorReque
 		}
 		s.Client.Selectors.AddSelector(selector.NewSelector(selector.SelectorConfig{
 			SelectorConfig:            selectorConfig,
-			CreateHandler:             s.Client.CreateHandler,
+			CreateHandler:             s.Client.CreateHandlerWithLandHandlers,
 			HandlerErrorChangeSubject: s.Client.Dispatcher,
 			Tester:                    s.Client.Tetser,
 			Database:                  s.Client.DB,
 			OutboundManager:           s.Client.OutboundManager,
-			OnHandlerBeingUsedChange: func(v []string) {
-				s.OnHandlerBeingUsedUpdated(selectorConfig.Tag, v)
-			},
-			LandHandlers: landHandlers,
+			LandHandlers:              landHandlers,
 		}))
 	}
 	return &ChangeSelectorResponse{}, nil
 }
 
-func (s *ClientGrpc) UpdateSelectorBalancer(ctx context.Context, in *UpdateSelectorBalancerRequest) (*Receipt, error) {
+func (s *GrpcService) UpdateSelectorBalancer(ctx context.Context, in *UpdateSelectorBalancerRequest) (*Receipt, error) {
 	log.Info().Msg("UpdateSelectorBalancer")
 
 	var balancer selector.Balancer
@@ -147,25 +144,45 @@ func (s *ClientGrpc) UpdateSelectorBalancer(ctx context.Context, in *UpdateSelec
 	return &Receipt{}, nil
 }
 
-func (s *ClientGrpc) UpdateSelectorFilter(ctx context.Context, in *UpdateSelectorFilterRequest) (*Receipt, error) {
+func (s *GrpcService) UpdateSelectorFilter(ctx context.Context, in *UpdateSelectorFilterRequest) (*Receipt, error) {
 	log.Info().Msg("UpdateSelectorFilter")
 	se := s.Client.Selectors.GetSelector(in.Tag)
 	if se == nil {
 		return nil, fmt.Errorf("selector not found: %s", in.Tag)
 	}
-	var filter selector.Filter
-	if in.SelectFromOm {
-		filter = selector.NewOmFilter(in.GetFilter(), s.Client.OutboundManager)
-	} else {
-		filter = selector.NewDbFilter(s.Client.DB, in.GetFilter(),
-			se.LandHandlers, s.Client.CreateHandler)
-	}
+
+	filter := se.GetFilter()
+	filter.(selector.FilterUpdate).UpdateFilterConfig(in.Filter)
 	se.UpdateFilter(filter)
+
 	return &Receipt{}, nil
 }
 
-func (s *ClientGrpc) SetOutboundHandlerSpeed(ctx context.Context, in *SetOutboundHandlerSpeedRequest) (*SetOutboundHandlerSpeedResponse, error) {
+func (s *GrpcService) SetOutboundHandlerSpeed(ctx context.Context, in *SetOutboundHandlerSpeedRequest) (*SetOutboundHandlerSpeedResponse, error) {
 	log.Debug().Str("tag", in.GetTag()).Int32("speed", in.GetSpeed()).Msg("SetOutboundHandlerSpeed")
 	s.Client.Selectors.OnHandlerSpeedChanged(in.GetTag(), in.GetSpeed())
 	return &SetOutboundHandlerSpeedResponse{}, nil
+}
+
+const DirectHandlerTag = "direct"
+const DnsHandlerTag = "dns"
+
+// replace all proxy handlers with new ones
+func ReplaceHandlers(om i.OutboundManager, handlers ...i.Outbound) {
+	directHandler := om.GetHandler(DirectHandlerTag)
+	dnsHandler := om.GetHandler(DnsHandlerTag)
+	om.ReplaceHandlers(append([]i.Outbound{directHandler, dnsHandler}, handlers...))
+}
+
+// return all handlers except direct and dns
+func GetAllProxyhandlers(om i.OutboundManager) []i.Outbound {
+	all := om.GetAllHandlers()
+	proxyHandlers := make([]i.Outbound, 0, len(all))
+	for _, handler := range all {
+		if handler.Tag() == DirectHandlerTag || handler.Tag() == DnsHandlerTag {
+			continue
+		}
+		proxyHandlers = append(proxyHandlers, handler)
+	}
+	return proxyHandlers
 }

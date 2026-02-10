@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/buf"
 	mynet "github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/net/udp"
@@ -34,6 +35,9 @@ func (f *MockFilter) GetHandlers() ([]outHandler, error) {
 		return nil, f.err
 	}
 	return f.handlers, nil
+}
+
+func (f *MockFilter) UpdateFilterConfig(filterConfig *configs.SelectorConfig_Filter) {
 }
 
 func (f *MockFilter) AddMockHandler(name string, speed, ping, support6, ok int) {

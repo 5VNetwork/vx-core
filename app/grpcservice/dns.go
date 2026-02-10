@@ -1,7 +1,7 @@
 // Copyright 2025 5V Network LLC
 // SPDX-License-Identifier: AGPL-3.0
 
-package clientgrpc
+package grpcservice
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (d *ClientGrpc) EnableFakeDns() error {
+func (d *GrpcService) EnableFakeDns() error {
 	if d.Client.AllFakeDns != nil {
 		log.Info().Msg("fake dns enabled")
 		d.Client.SetFakeDnsEnabled(true)
@@ -18,7 +18,7 @@ func (d *ClientGrpc) EnableFakeDns() error {
 	return nil
 }
 
-func (d *ClientGrpc) DisableFakeDns() error {
+func (d *GrpcService) DisableFakeDns() error {
 	if d.Client.AllFakeDns != nil {
 		log.Info().Msg("fake dns disabled")
 		d.Client.SetFakeDnsEnabled(false)
@@ -27,7 +27,7 @@ func (d *ClientGrpc) DisableFakeDns() error {
 }
 
 // should not be called concurrently
-func (s *ClientGrpc) SwitchFakeDns(ctx context.Context, in *SwitchFakeDnsRequest) (*SwitchFakeDnsResponse, error) {
+func (s *GrpcService) SwitchFakeDns(ctx context.Context, in *SwitchFakeDnsRequest) (*SwitchFakeDnsResponse, error) {
 	if in.Enable {
 		if err := s.EnableFakeDns(); err != nil {
 			return nil, fmt.Errorf("failed to enable fake dns: %w", err)

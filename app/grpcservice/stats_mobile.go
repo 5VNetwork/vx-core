@@ -1,32 +1,25 @@
 // Copyright 2025 5V Network LLC
 // SPDX-License-Identifier: AGPL-3.0
 
-//go:build !ios && !android && !darwin
+//go:build ios || android || darwin
+// +build ios android darwin
 
-package clientgrpc
+package grpcservice
 
 import (
-	"math"
-	"os"
 	"runtime"
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/process"
 )
 
-func (s *ClientGrpc) GetStatsStream(in *GetStatsRequest,
+func (s *GrpcService) GetStatsStream(in *GetStatsRequest,
 	stream ClientService_GetStatsStreamServer) error {
 	log.Debug().Msg("get outbound stats stream request received")
 	s.Client.Policy.StatsPolicy.SetOutboundStats(true)
 	var m runtime.MemStats
 	timer := time.NewTicker(time.Duration(in.Interval) * time.Second)
 	defer timer.Stop()
-
-	prcs, err := process.NewProcess(int32(os.Getpid()))
-	if err != nil {
-		panic(err)
-	}
 
 	sendStats := func() error {
 		st := s.Client.OutStats
@@ -46,19 +39,8 @@ func (s *ClientGrpc) GetStatsStream(in *GetStatsRequest,
 		}
 		st.Unlock()
 
-		memory1 := uint64(math.MaxUint64)
-		mi, err := prcs.MemoryInfo()
-		if err != nil {
-			log.Debug().Err(err).Msg("failed to get memory info")
-		} else {
-			memory1 = mi.RSS
-		}
 		runtime.ReadMemStats(&m)
-		memory2 := m.Sys
-		memory := memory1
-		if memory2 < memory {
-			memory = memory2
-		}
+		memory := m.Sys
 
 		return stream.Send(&StatsResponse{
 			Connections: s.Client.Dispatcher.Flows.Load() +
@@ -68,7 +50,7 @@ func (s *ClientGrpc) GetStatsStream(in *GetStatsRequest,
 		})
 	}
 
-	err = sendStats()
+	err := sendStats()
 	if err != nil {
 		log.Error().Err(err).Msg("failed to send outbound stats response")
 		return err

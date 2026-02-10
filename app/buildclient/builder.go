@@ -13,12 +13,13 @@ import (
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/client"
-	"github.com/5vnetwork/vx-core/app/clientgrpc"
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/geo"
+	"github.com/5vnetwork/vx-core/app/grpcserver"
+	"github.com/5vnetwork/vx-core/app/grpcservice"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/app/logger"
 	"github.com/5vnetwork/vx-core/app/memmon"
@@ -31,7 +32,6 @@ import (
 	"github.com/5vnetwork/vx-core/app/util/downloader"
 	"github.com/5vnetwork/vx-core/app/xsqlite"
 	"github.com/5vnetwork/vx-core/common"
-	"github.com/5vnetwork/vx-core/common/signal/done"
 	"github.com/5vnetwork/vx-core/i"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -60,7 +60,6 @@ func WithComponents(components ...interface{}) Option {
 }
 
 func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
-
 	builder := New()
 	for _, opt := range opts {
 		if err := opt(builder); err != nil {
@@ -243,7 +242,7 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 	}
 
 	// tester
-	tester := &tester.Tester{
+	t := &tester.Tester{
 		SpeedTestFunc: func(ctx context.Context, h i.Outbound) (int64, error) {
 			return util.Speedtest(ctx, util.SpeedtestURL1, h), nil
 		},
@@ -254,21 +253,46 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 			return util.ApiHandlerPing(ctx, h, util.TraceList[0])
 		},
 	}
-	x.Tetser = tester
-	builder.addComponent(tester)
+	x.Tetser = t
+	if err := builder.addComponent(t); err != nil {
+		return nil, fmt.Errorf("failed to add tester: %w", err)
+	}
+	if err := builder.requireOptionalFeatures(func(reporter tester.ResultReporter) {
+		t.ResultReporter = reporter
+	}); err != nil {
+		return nil, fmt.Errorf("failed to set result reporter: %w", err)
+	}
 
 	if config.Grpc != nil {
-		grpc := &clientgrpc.ClientGrpc{
-			Done:           done.New(),
-			GrpcConfig:     config.Grpc,
-			Client:         x,
-			UpdateLantency: config.UseRealLatency,
+		grpc, err := grpcserver.NewGrpcServer(config.Grpc)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create grpc server: %w", err)
 		}
-		builder.addComponent(grpc)
-		if x.Subscription != nil {
-			subscription.WithOnUpdatedCallback(grpc.OnSubscriptionUpdated)(x.Subscription)
+		if err := builder.addComponent(grpc); err != nil {
+			return nil, fmt.Errorf("failed to add grpc server: %w", err)
 		}
-		x.Tetser.ResultReporter = grpc
+	}
+
+	if config.Grpc != nil {
+		err := builder.requireFeature(func(grpcServer *grpcserver.GrpcServer) error {
+			clientGrpc, _ := grpcservice.NewGrpcService(&grpcservice.GrpcServiceConfig{
+				Client:         x,
+				GrpcServer:     grpcServer.Server,
+				UpdateLantency: config.GrpcService.UpdateLatency,
+			})
+			x.GrpcServer = grpcServer
+			err := builder.addComponent(clientGrpc)
+			if err != nil {
+				return fmt.Errorf("failed to add grpc service: %w", err)
+			}
+			if x.Subscription != nil {
+				subscription.WithOnUpdatedCallback(clientGrpc.OnSubscriptionUpdated)(x.Subscription)
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to add grpc service: %w", err)
+		}
 	}
 
 	if !builder.resolved() {

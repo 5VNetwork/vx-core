@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/configs"
@@ -22,16 +23,25 @@ type Filter interface {
 	GetHandlers() ([]outHandler, error)
 }
 
+type FilterUpdate interface {
+	UpdateFilterConfig(filterConfig *configs.SelectorConfig_Filter)
+}
+
 type omFilter struct {
 	om           *outbound.Manager
-	filterConfig *configs.SelectorConfig_Filter
+	filterConfig atomic.Value
 }
 
 func NewOmFilter(filterConfig *configs.SelectorConfig_Filter, om *outbound.Manager) *omFilter {
-	return &omFilter{
-		filterConfig: filterConfig,
-		om:           om,
+	o := &omFilter{
+		om: om,
 	}
+	o.filterConfig.Store(filterConfig)
+	return o
+}
+
+func (f *omFilter) UpdateFilterConfig(filterConfig *configs.SelectorConfig_Filter) {
+	f.filterConfig.Store(filterConfig)
 }
 
 type handlerWithStats struct {
@@ -50,8 +60,9 @@ func (h *handlerWithStats) Name() string {
 func (f *omFilter) GetHandlers() ([]outHandler, error) {
 	handlers := f.om.GetAllHandlers()
 	var ret []outHandler
+	filterConfig := f.filterConfig.Load().(*configs.SelectorConfig_Filter)
 	for _, h := range handlers {
-		if !inSubset(h, f.filterConfig) {
+		if !inSubset(h, filterConfig) {
 			continue
 		}
 
@@ -87,19 +98,24 @@ func inSubset(h i.Outbound, filterConfig *configs.SelectorConfig_Filter) bool {
 
 type dbFilter struct {
 	db            Db
-	filterConfig  *configs.SelectorConfig_Filter
+	filterConfig  atomic.Value
 	landHandlers  []*xsqlite.OutboundHandler
 	createHandler CreateHandlerFunc
 }
 
 func NewDbFilter(db Db, filterConfig *configs.SelectorConfig_Filter,
 	landHandlers []*xsqlite.OutboundHandler, createHandler CreateHandlerFunc) *dbFilter {
-	return &dbFilter{
+	f := &dbFilter{
 		db:            db,
-		filterConfig:  filterConfig,
 		landHandlers:  landHandlers,
 		createHandler: createHandler,
 	}
+	f.filterConfig.Store(filterConfig)
+	return f
+}
+
+func (f *dbFilter) UpdateFilterConfig(filterConfig *configs.SelectorConfig_Filter) {
+	f.filterConfig.Store(filterConfig)
 }
 
 func (f *dbFilter) GetHandlers() ([]outHandler, error) {
@@ -178,7 +194,9 @@ func (f *dbFilter) getHandlersRetry() ([]*xsqlite.OutboundHandler, error) {
 func (f *dbFilter) getHandlers() ([]*xsqlite.OutboundHandler, error) {
 	handlers := make(map[int]*xsqlite.OutboundHandler)
 
-	if f.filterConfig.All {
+	filterConfig := f.filterConfig.Load().(*configs.SelectorConfig_Filter)
+
+	if filterConfig.All {
 		// var handlers []*xsqlite.OutboundHandler
 		// if err := f.db.Find(&handlers).Error; err != nil {
 		// 	return nil, fmt.Errorf("get all handlers: %w", err)
@@ -188,7 +206,7 @@ func (f *dbFilter) getHandlers() ([]*xsqlite.OutboundHandler, error) {
 	}
 
 	// group
-	for _, group := range f.filterConfig.GroupTags {
+	for _, group := range filterConfig.GroupTags {
 		// var hs []*xsqlite.OutboundHandler
 		// err := f.db.Joins("JOIN outbound_handler_group_relations ON outbound_handlers.id = outbound_handler_group_relations.handler_id").
 		// 	Where("outbound_handler_group_relations.group_name = ?", group).
@@ -223,43 +241,43 @@ func (f *dbFilter) getHandlers() ([]*xsqlite.OutboundHandler, error) {
 	F:
 		for _, h := range hs {
 			tag := h.GetTag()
-			for _, prefix := range f.filterConfig.GetPrefixes() {
+			for _, prefix := range filterConfig.GetPrefixes() {
 				if strings.HasPrefix(tag, prefix) {
 					handlers[h.ID] = h
 					continue F
 				}
 			}
-			for _, subString := range f.filterConfig.GetSubStrings() {
+			for _, subString := range filterConfig.GetSubStrings() {
 				if strings.Contains(tag, subString) {
 					handlers[h.ID] = h
 					continue F
 				}
 			}
-			for _, countryCode := range f.filterConfig.GetCountryCodes() {
+			for _, countryCode := range filterConfig.GetCountryCodes() {
 				if h.CountryCode == countryCode {
 					handlers[h.ID] = h
 					continue F
 				}
 			}
-			for _, filterTag := range f.filterConfig.GetTags() {
+			for _, filterTag := range filterConfig.GetTags() {
 				if tag == filterTag {
 					handlers[h.ID] = h
 					continue F
 				}
 			}
-			for _, handlerId := range f.filterConfig.GetHandlerIds() {
+			for _, handlerId := range filterConfig.GetHandlerIds() {
 				if h.ID == int(handlerId) {
 					handlers[h.ID] = h
 					continue F
 				}
 			}
-			for _, subId := range f.filterConfig.GetSubIds() {
+			for _, subId := range filterConfig.GetSubIds() {
 				if h.SubId != nil && *h.SubId == int(subId) {
 					handlers[h.ID] = h
 					continue F
 				}
 			}
-			if f.filterConfig.Selected && h.Selected {
+			if filterConfig.Selected && h.Selected {
 				handlers[h.ID] = h
 				continue
 			}

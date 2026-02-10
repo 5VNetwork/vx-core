@@ -1,7 +1,7 @@
 // Copyright 2025 5V Network LLC
 // SPDX-License-Identifier: AGPL-3.0
 
-package clientgrpc
+package grpcservice
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 )
 
 // TODO: more efficient
-func (s *ClientGrpc) UpdateGeo(ctx context.Context, in *UpdateGeoRequest) (*UpdateGeoResponse, error) {
+func (s *GrpcService) UpdateGeo(ctx context.Context, in *UpdateGeoRequest) (*UpdateGeoResponse, error) {
 	log.Info().Msg("update geo")
 	err := s.Client.Geo.UpdateGeo(in.Geo)
 	if err != nil {
@@ -23,7 +23,7 @@ func (s *ClientGrpc) UpdateGeo(ctx context.Context, in *UpdateGeoRequest) (*Upda
 	return &UpdateGeoResponse{}, nil
 }
 
-func (s *ClientGrpc) AddGeoDomain(ctx context.Context, in *AddGeoDomainRequest) (*Receipt, error) {
+func (s *GrpcService) AddGeoDomain(ctx context.Context, in *AddGeoDomainRequest) (*Receipt, error) {
 	log.Info().Msg("add geo domain")
 	g := s.Client.Geo.GetGeo()
 	if g == nil {
@@ -36,7 +36,7 @@ func (s *ClientGrpc) AddGeoDomain(ctx context.Context, in *AddGeoDomainRequest) 
 	return &Receipt{}, nil
 }
 
-func (s *ClientGrpc) RemoveGeoDomain(ctx context.Context, in *RemoveGeoDomainRequest) (*Receipt, error) {
+func (s *GrpcService) RemoveGeoDomain(ctx context.Context, in *RemoveGeoDomainRequest) (*Receipt, error) {
 	log.Info().Msg("remove geo domain")
 	g := s.Client.Geo.GetGeo()
 	if g == nil {
@@ -49,7 +49,7 @@ func (s *ClientGrpc) RemoveGeoDomain(ctx context.Context, in *RemoveGeoDomainReq
 	return &Receipt{}, nil
 }
 
-func (s *ClientGrpc) ReplaceGeoDomains(ctx context.Context, in *ReplaceDomainSetRequest) (*Receipt, error) {
+func (s *GrpcService) ReplaceGeoDomains(ctx context.Context, in *ReplaceDomainSetRequest) (*Receipt, error) {
 	log.Info().Msg("replace geo domains")
 	m, err := geo.AtomicDomainSetToIndexMatcher(in.Set, memloader.New())
 	if err != nil {
@@ -61,7 +61,7 @@ func (s *ClientGrpc) ReplaceGeoDomains(ctx context.Context, in *ReplaceDomainSet
 	return &Receipt{}, nil
 }
 
-func (s *ClientGrpc) ReplaceGeoIPs(ctx context.Context, in *ReplaceIPSetRequest) (*Receipt, error) {
+func (s *GrpcService) ReplaceGeoIPs(ctx context.Context, in *ReplaceIPSetRequest) (*Receipt, error) {
 	log.Info().Msg("replace geo ips")
 	m, err := geo.AtomicIpSetToIPMatcher(in.Set, memloader.New())
 	if err != nil {

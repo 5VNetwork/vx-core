@@ -42,12 +42,12 @@ type TmConfig struct {
 	RedirectStdErr string          `protobuf:"bytes,31,opt,name=redirect_std_err,json=redirectStdErr,proto3" json:"redirect_std_err,omitempty"`
 	// based on dst, src, network, if there is no handler matched or the
 	// matched handler does not support ipv6, reject the request
-	RejectIpv6     bool              `protobuf:"varint,32,opt,name=reject_ipv6,json=rejectIpv6,proto3" json:"reject_ipv6,omitempty"`
-	Wfp            *WfpConfig        `protobuf:"bytes,33,opt,name=wfp,proto3" json:"wfp,omitempty"`
-	UseRealLatency bool              `protobuf:"varint,34,opt,name=use_real_latency,json=useRealLatency,proto3" json:"use_real_latency,omitempty"`
-	UserLog        *UserLoggerConfig `protobuf:"bytes,35,opt,name=user_log,json=userLog,proto3" json:"user_log,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	RejectIpv6    bool               `protobuf:"varint,32,opt,name=reject_ipv6,json=rejectIpv6,proto3" json:"reject_ipv6,omitempty"`
+	Wfp           *WfpConfig         `protobuf:"bytes,33,opt,name=wfp,proto3" json:"wfp,omitempty"`
+	UserLog       *UserLoggerConfig  `protobuf:"bytes,35,opt,name=user_log,json=userLog,proto3" json:"user_log,omitempty"`
+	GrpcService   *GrpcServiceConfig `protobuf:"bytes,36,opt,name=grpc_service,json=grpcService,proto3" json:"grpc_service,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *TmConfig) Reset() {
@@ -227,16 +227,16 @@ func (x *TmConfig) GetWfp() *WfpConfig {
 	return nil
 }
 
-func (x *TmConfig) GetUseRealLatency() bool {
-	if x != nil {
-		return x.UseRealLatency
-	}
-	return false
-}
-
 func (x *TmConfig) GetUserLog() *UserLoggerConfig {
 	if x != nil {
 		return x.UserLog
+	}
+	return nil
+}
+
+func (x *TmConfig) GetGrpcService() *GrpcServiceConfig {
+	if x != nil {
+		return x.GrpcService
 	}
 	return nil
 }
@@ -382,7 +382,7 @@ var File_protos_client_proto protoreflect.FileDescriptor
 
 const file_protos_client_proto_rawDesc = "" +
 	"\n" +
-	"\x13protos/client.proto\x12\x01x\x1a\x14protos/inbound.proto\x1a\x15protos/outbound.proto\x1a\x10protos/dns.proto\x1a\x13protos/router.proto\x1a\x13protos/policy.proto\x1a\x13protos/logger.proto\x1a\x10protos/geo.proto\x1a\x17protos/dispatcher.proto\x1a\x10protos/tun.proto\x1a\x15protos/sysproxy.proto\"\xd1\a\n" +
+	"\x13protos/client.proto\x12\x01x\x1a\x14protos/inbound.proto\x1a\x15protos/outbound.proto\x1a\x10protos/dns.proto\x1a\x13protos/router.proto\x1a\x13protos/policy.proto\x1a\x13protos/logger.proto\x1a\x10protos/geo.proto\x1a\x17protos/dispatcher.proto\x1a\x10protos/tun.proto\x1a\x15protos/sysproxy.proto\x1a\x19protos/grpc_service.proto\"\xe6\a\n" +
 	"\bTmConfig\x12@\n" +
 	"\x0finbound_manager\x18\x01 \x01(\v2\x17.x.InboundManagerConfigR\x0einboundManager\x12\x1e\n" +
 	"\x03dns\x18\x03 \x01(\v2\f.x.DnsConfigR\x03dns\x12'\n" +
@@ -407,9 +407,9 @@ const file_protos_client_proto_rawDesc = "" +
 	"\x10redirect_std_err\x18\x1f \x01(\tR\x0eredirectStdErr\x12\x1f\n" +
 	"\vreject_ipv6\x18  \x01(\bR\n" +
 	"rejectIpv6\x12\x1e\n" +
-	"\x03wfp\x18! \x01(\v2\f.x.WfpConfigR\x03wfp\x12(\n" +
-	"\x10use_real_latency\x18\" \x01(\bR\x0euseRealLatency\x12.\n" +
-	"\buser_log\x18# \x01(\v2\x13.x.UserLoggerConfigR\auserLog\"\x7f\n" +
+	"\x03wfp\x18! \x01(\v2\f.x.WfpConfigR\x03wfp\x12.\n" +
+	"\buser_log\x18# \x01(\v2\x13.x.UserLoggerConfigR\auserLog\x127\n" +
+	"\fgrpc_service\x18$ \x01(\v2\x14.x.GrpcServiceConfigR\vgrpcServiceJ\x04\b\"\x10#\"\x7f\n" +
 	"\n" +
 	"GrpcConfig\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x12\n" +
@@ -453,6 +453,7 @@ var file_protos_client_proto_goTypes = []any{
 	(*OutboundConfig)(nil),       // 13: x.OutboundConfig
 	(*WfpConfig)(nil),            // 14: x.WfpConfig
 	(*UserLoggerConfig)(nil),     // 15: x.UserLoggerConfig
+	(*GrpcServiceConfig)(nil),    // 16: x.GrpcServiceConfig
 }
 var file_protos_client_proto_depIdxs = []int32{
 	3,  // 0: x.TmConfig.inbound_manager:type_name -> x.InboundManagerConfig
@@ -470,11 +471,12 @@ var file_protos_client_proto_depIdxs = []int32{
 	13, // 12: x.TmConfig.outbound:type_name -> x.OutboundConfig
 	14, // 13: x.TmConfig.wfp:type_name -> x.WfpConfig
 	15, // 14: x.TmConfig.user_log:type_name -> x.UserLoggerConfig
-	15, // [15:15] is the sub-list for method output_type
-	15, // [15:15] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	16, // 15: x.TmConfig.grpc_service:type_name -> x.GrpcServiceConfig
+	16, // [16:16] is the sub-list for method output_type
+	16, // [16:16] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_protos_client_proto_init() }
@@ -492,6 +494,7 @@ func file_protos_client_proto_init() {
 	file_protos_dispatcher_proto_init()
 	file_protos_tun_proto_init()
 	file_protos_sysproxy_proto_init()
+	file_protos_grpc_service_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

@@ -15,8 +15,8 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/client"
-	"github.com/5vnetwork/vx-core/app/clientgrpc"
 	"github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/grpcservice"
 	"github.com/5vnetwork/vx-core/common/redirect"
 	"github.com/5vnetwork/vx-core/win_service/wfp"
 	"github.com/golang/protobuf/proto"
@@ -83,7 +83,7 @@ func (m *exampleService) Execute(args []string, r <-chan svc.ChangeRequest, chan
 	}
 	m.instance = instance
 
-	clientGrpc := m.instance.Components.GetComponent(reflect.TypeOf(&clientgrpc.ClientGrpc{})).(*clientgrpc.ClientGrpc)
+	clientGrpc := m.instance.Components.GetComponent(reflect.TypeOf(&grpcservice.GrpcService{})).(*grpcservice.GrpcService)
 	clientGrpc.RunningInService = true
 	exitChan := make(chan struct{})
 	clientGrpc.OnExit = func() {

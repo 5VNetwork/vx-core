@@ -1,33 +1,32 @@
 // Copyright 2025 5V Network LLC
 // SPDX-License-Identifier: AGPL-3.0
 
-package clientgrpc
+package grpcservice
 
 import (
 	"strconv"
 	"sync/atomic"
 	"time"
 
-	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/common/units"
 
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/rs/zerolog/log"
 )
 
-func (s *ClientGrpc) setCommunicateStream(stream ClientService_CommunicateServer) {
+func (s *GrpcService) setCommunicateStream(stream ClientService_CommunicateServer) {
 	s.streamLock.Lock()
 	defer s.streamLock.Unlock()
 	s.communicateStream = stream
 }
 
-func (s *ClientGrpc) getCommunicateStream() ClientService_CommunicateServer {
+func (s *GrpcService) getCommunicateStream() ClientService_CommunicateServer {
 	s.streamLock.RLock()
 	defer s.streamLock.RUnlock()
 	return s.communicateStream
 }
 
-func (s *ClientGrpc) Communicate(in *CommunicateRequest, stream ClientService_CommunicateServer) error {
+func (s *GrpcService) Communicate(in *CommunicateRequest, stream ClientService_CommunicateServer) error {
 	s.setCommunicateStream(stream)
 	defer s.setCommunicateStream(nil)
 
@@ -74,8 +73,8 @@ func (s *ClientGrpc) Communicate(in *CommunicateRequest, stream ClientService_Co
 // }
 
 // TODO: Lock?
-func (s *ClientGrpc) OnSubscriptionUpdated() {
-	if proxyHandlers := outbound.GetAllProxyhandlers(s.Client.OutboundManager); len(proxyHandlers) > 0 {
+func (s *GrpcService) OnSubscriptionUpdated() {
+	if proxyHandlers := GetAllProxyhandlers(s.Client.OutboundManager); len(proxyHandlers) > 0 {
 		var handlers []i.Outbound
 		for _, ph := range proxyHandlers {
 			id, err := strconv.Atoi(ph.Tag())
@@ -88,14 +87,14 @@ func (s *ClientGrpc) OnSubscriptionUpdated() {
 				log.Error().Err(err).Msg("failed to get outbound handler")
 				continue
 			}
-			h, err := s.Client.CreateHandler(handler.ToConfig(), nil)
+			h, err := s.Client.CreateHandlerWithLandHandlers(handler.ToConfig(), nil)
 			if err != nil {
 				log.Error().Err(err).Msg("create outbound handler")
 				continue
 			}
 			handlers = append(handlers, h)
 		}
-		s.Client.OutboundManager.ReplaceHandlers(handlers...)
+		ReplaceHandlers(s.Client.OutboundManager, handlers...)
 	} else {
 		s.Client.Selectors.OnHandlerChanged()
 	}
@@ -143,7 +142,7 @@ func init() {
 	handler4BeingUsed.Store("")
 }
 
-func (s *ClientGrpc) OnHandlerBeingUsedUpdated(selector string, handlers []string) {
+func (s *GrpcService) OnSelectedHandlersChanged(selector string, handlers []string) {
 	if selector == "代理" {
 		log.Debug().Msg("handler being used updated")
 		if len(handlers) == 1 {
@@ -156,7 +155,7 @@ func (s *ClientGrpc) OnHandlerBeingUsedUpdated(selector string, handlers []strin
 	}
 }
 
-func (s *ClientGrpc) notifyHandlerBeingUsed() {
+func (s *GrpcService) notifyHandlerBeingUsed() {
 	stream := s.getCommunicateStream()
 	if stream == nil {
 		return
@@ -173,7 +172,7 @@ func (s *ClientGrpc) notifyHandlerBeingUsed() {
 	}
 }
 
-func (s *ClientGrpc) PingResult(tag string, ping int) {
+func (s *GrpcService) PingResult(tag string, ping int) {
 	if !s.UpdateLantency {
 		return
 	}
@@ -193,7 +192,7 @@ func (s *ClientGrpc) PingResult(tag string, ping int) {
 	}
 }
 
-func (s *ClientGrpc) UsableResult(tag string, ok bool) {
+func (s *GrpcService) UsableResult(tag string, ok bool) {
 	// Store result into DB
 	id, err := strconv.Atoi(tag)
 	if err == nil {
@@ -218,7 +217,7 @@ func (s *ClientGrpc) UsableResult(tag string, ok bool) {
 	}
 }
 
-func (s *ClientGrpc) SpeedResult(tag string, speed int64) {
+func (s *GrpcService) SpeedResult(tag string, speed int64) {
 	// store result into DB
 	id, err := strconv.Atoi(tag)
 	if err == nil {
@@ -234,7 +233,7 @@ func (s *ClientGrpc) SpeedResult(tag string, speed int64) {
 	}
 }
 
-func (s *ClientGrpc) IPv6Result(tag string, ok bool) {
+func (s *GrpcService) IPv6Result(tag string, ok bool) {
 	if ok {
 		// store result into DB
 		id, err := strconv.Atoi(tag)
@@ -258,7 +257,7 @@ func (s *ClientGrpc) IPv6Result(tag string, ok bool) {
 }
 
 // notify ui about handler change
-func (s *ClientGrpc) notifyHandlerChange(id int) {
+func (s *GrpcService) notifyHandlerChange(id int) {
 	stream := s.getCommunicateStream()
 	if stream == nil {
 		return

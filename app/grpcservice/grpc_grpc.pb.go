@@ -1,7 +1,8 @@
-package clientgrpc
+package grpcservice
 
 import (
 	context "context"
+
 	userlogger "github.com/5vnetwork/vx-core/app/userlogger"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"

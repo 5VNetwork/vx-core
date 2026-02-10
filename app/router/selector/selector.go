@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/util"
-	"github.com/5vnetwork/vx-core/app/xsqlite"
 	"github.com/5vnetwork/vx-core/common/session"
 	"github.com/5vnetwork/vx-core/common/task"
 	"github.com/5vnetwork/vx-core/i"
@@ -37,6 +36,7 @@ type Selector struct {
 	isRecovery                                 bool
 	taskLock                                   sync.RWMutex
 	periodicTestUnusableHandlersInFastRevovery *task.PeriodicTask
+	FastRecoveryChangeNotifier
 
 	tester Tester
 	util.IPv6SupportChangeNotifier
@@ -47,8 +47,7 @@ type Selector struct {
 
 	onUpdate HandlersBeingUsedUpdate
 
-	dispatcher   HandlerErrorChangeSubject
-	LandHandlers []*xsqlite.OutboundHandler
+	dispatcher HandlerErrorChangeSubject
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -63,21 +62,19 @@ type selectorConfig struct {
 	Tester                   Tester
 	OnHandlerBeingUsedChange HandlersBeingUsedUpdate
 	Dispatcher               HandlerErrorChangeSubject
-	LandHandlers             []*xsqlite.OutboundHandler
 }
 
 func newSelector(config selectorConfig) *Selector {
 	ctx, cancel := context.WithCancel(context.Background())
 	s := &Selector{
-		tag:          config.Tag,
-		strategy:     config.Strategy,
-		balancer:     config.Balancer,
-		tester:       config.Tester,
-		onUpdate:     config.OnHandlerBeingUsedChange,
-		dispatcher:   config.Dispatcher,
-		ctx:          ctx,
-		cancel:       cancel,
-		LandHandlers: config.LandHandlers,
+		tag:        config.Tag,
+		strategy:   config.Strategy,
+		balancer:   config.Balancer,
+		tester:     config.Tester,
+		onUpdate:   config.OnHandlerBeingUsedChange,
+		dispatcher: config.Dispatcher,
+		ctx:        ctx,
+		cancel:     cancel,
 	}
 	s.filter.Store(config.Filter)
 	return s
@@ -260,6 +257,10 @@ func (s *Selector) setHandlers() {
 	}
 }
 
+func (s *Selector) GetFilter() Filter {
+	return s.filter.Load().(Filter)
+}
+
 func (s *Selector) UpdateFilter(filter Filter) {
 	s.filter.Store(filter)
 	s.Load()
@@ -367,6 +368,7 @@ func (s *Selector) enterRecoveryIfNot() {
 			}, task.WithStartImmediately())
 		s.periodicTestUnusableHandlersInFastRevovery.Start()
 	}
+	s.FastRecoveryChangeNotifier.Notify(true)
 }
 func (s *Selector) exitRecovery() {
 	log.Info().Msg("exit recovery")
@@ -377,6 +379,7 @@ func (s *Selector) exitRecovery() {
 		s.periodicTestUnusableHandlersInFastRevovery = nil
 	}
 	s.taskLock.Unlock()
+	s.FastRecoveryChangeNotifier.Notify(false)
 }
 
 func (s *Selector) TestSpeedAll() error {

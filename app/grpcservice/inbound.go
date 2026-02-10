@@ -1,7 +1,7 @@
 // Copyright 2025 5V Network LLC
 // SPDX-License-Identifier: AGPL-3.0
 
-package clientgrpc
+package grpcservice
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (s *ClientGrpc) AddInbound(ctx context.Context, req *AddInboundRequest) (*AddInboundResponse, error) {
+func (s *GrpcService) AddInbound(ctx context.Context, req *AddInboundRequest) (*AddInboundResponse, error) {
 	log.Info().Str("tag", req.HandlerConfig.Tag).Msg("AddInbound")
 	in, err := create.NewInbound(req.HandlerConfig, s.Client.Dispatcher, s.Client.Policy)
 	if err != nil {
@@ -24,7 +24,7 @@ func (s *ClientGrpc) AddInbound(ctx context.Context, req *AddInboundRequest) (*A
 	return &AddInboundResponse{}, nil
 }
 
-func (s *ClientGrpc) RemoveInbound(ctx context.Context, in *RemoveInboundRequest) (*RemoveInboundResponse, error) {
+func (s *GrpcService) RemoveInbound(ctx context.Context, in *RemoveInboundRequest) (*RemoveInboundResponse, error) {
 	log.Info().Str("tag", in.Tag).Msg("RemoveInbound")
 	if err := s.Client.InboundManager.RemoveInbound(in.Tag); err != nil {
 		return nil, fmt.Errorf("failed to remove inbound handler: %w", err)

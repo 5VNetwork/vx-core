@@ -2,15 +2,19 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/create"
+	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/app/util/downloader"
 	"github.com/5vnetwork/vx-core/common"
+	"github.com/5vnetwork/vx-core/common/dispatcher"
+	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/proxy/freedom"
 	"github.com/5vnetwork/vx-core/transport"
@@ -36,9 +40,22 @@ func TestSub(t *testing.T) {
 
 func TestDns(t *testing.T) {
 	t.Skip()
-	result, err := util.Decode("")
-	common.Must(err)
-	log.Print(result)
+	freedom := freedom.New(transport.DefaultDialer, transport.DefaultPacketListener, "freedom", nil)
+	dnsServer := dns.NewDnsServerConcurrent(
+		dns.DnsServerConcurrentOption{
+			Name: "test",
+			NameserverAddrs: []net.AddressPort{
+				{
+					Address: net.AliyunDns4,
+					Port:    53,
+				},
+			},
+			Handler:    freedom,
+			Dispatcher: dispatcher.NewPacketDispatcher(context.Background(), freedom),
+		},
+	)
+	resolver := dns.NewDnsServerToResolver(dnsServer)
+	fmt.Printf("resolver: %v\n", resolver)
 }
 
 func TestUsable(t *testing.T) {
