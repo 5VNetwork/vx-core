@@ -210,6 +210,7 @@ type FakeDnsPool interface {
 type OutboundManager interface {
 	GetHandler(tag string) Outbound
 	GetAllHandlers() []Outbound
+	ReplaceHandlers(handlers []Outbound)
 }
 
 type Router interface {

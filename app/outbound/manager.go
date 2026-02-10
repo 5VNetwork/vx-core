@@ -18,9 +18,6 @@ func NewManager() *Manager {
 	}
 }
 
-const DirectHandlerTag = "direct"
-const DnsHandlerTag = "dns"
-
 // holds all outbound handlers. notify its listeners when a change happens.
 type Manager struct {
 	sync.RWMutex
@@ -95,26 +92,6 @@ func (m *Manager) log() {
 	log.Info().Strs("handlers", all).Msg("all outbound handlers")
 }
 
-// replace all proxy handlers with new ones
-func (m *Manager) ReplaceHandlers(handlers ...i.Outbound) error {
-	m.Lock()
-	defer m.Unlock()
-
-	handlersMap := make(map[string]i.Outbound)
-	dnsHandler, ok := m.handlers[DnsHandlerTag]
-	if ok {
-		handlersMap[DnsHandlerTag] = dnsHandler
-	}
-	handlersMap[DirectHandlerTag] = m.handlers[DirectHandlerTag]
-	for _, handler := range handlers {
-		handlersMap[handler.Tag()] = handler
-	}
-	m.handlers = handlersMap
-	m.log()
-	m.notifyHandlerObservers()
-	return nil
-}
-
 func (m *Manager) RemoveHandlers(tags []string) error {
 	m.Lock()
 	defer m.Unlock()
@@ -127,6 +104,20 @@ func (m *Manager) RemoveHandlers(tags []string) error {
 	m.log()
 	m.notifyHandlerObservers()
 	return nil
+}
+
+// replace all handlers with new ones
+func (m *Manager) ReplaceHandlers(handlers []i.Outbound) {
+	m.Lock()
+	defer m.Unlock()
+
+	m.handlers = make(map[string]i.Outbound)
+	for _, handler := range handlers {
+		m.handlers[handler.Tag()] = handler
+	}
+
+	m.log()
+	m.notifyHandlerObservers()
 }
 
 func (m *Manager) AddHandlerObserver(o HandlerObserver) {
@@ -150,17 +141,4 @@ func (m *Manager) notifyHandlerObservers() {
 	for _, o := range m.handlerObservers {
 		go o.OnHandlerChanged()
 	}
-}
-
-// return all handlers except direct and dns
-func GetAllProxyhandlers(om i.OutboundManager) []i.Outbound {
-	all := om.GetAllHandlers()
-	proxyHandlers := make([]i.Outbound, 0, len(all))
-	for _, handler := range all {
-		if handler.Tag() == DirectHandlerTag || handler.Tag() == DnsHandlerTag {
-			continue
-		}
-		proxyHandlers = append(proxyHandlers, handler)
-	}
-	return proxyHandlers
 }
