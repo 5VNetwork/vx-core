@@ -32,7 +32,7 @@ type Inbound struct {
 	server []server.Server
 
 	usersLock sync.RWMutex
-	users     map[string]*User // secret to User
+	users     map[string]i.User // secret to User
 
 	cLock      sync.RWMutex
 	srcAddrMap map[netip.AddrPort]*srcAddrInfo
@@ -46,16 +46,10 @@ type srcAddrInfo struct {
 	counter *atomic.Uint64
 }
 
-type User struct {
-	Uid     string
-	Secret  string
-	Counter *atomic.Uint64
-}
-
 func NewInbound(config *InboundConfig) (*Inbound, error) {
 	in := &Inbound{
 		config:                config,
-		users:                 make(map[string]*User),
+		users:                 make(map[string]i.User),
 		srcAddrMap:            make(map[netip.AddrPort]*srcAddrInfo),
 		onUnauthorizedRequest: config.OnUnauthorizedRequest,
 		dialer:                config.Dialer,
@@ -82,26 +76,13 @@ func (in *Inbound) Tag() string {
 func (in *Inbound) AddUser(user i.User) {
 	in.usersLock.Lock()
 	defer in.usersLock.Unlock()
-	in.users[user.Secret()] = &User{
-		Uid:     user.Uid(),
-		Secret:  user.Secret(),
-		Counter: user.Counter(),
-	}
+	in.users[user.Secret()] = user
 }
 
-func (in *Inbound) RemoveUser(uid, secret string) {
+func (in *Inbound) RemoveUser(user i.User) {
 	in.usersLock.Lock()
 	defer in.usersLock.Unlock()
-	if secret == "" {
-		for _, user := range in.users {
-			if user.Uid == uid {
-				delete(in.users, user.Secret)
-				return
-			}
-		}
-	} else {
-		delete(in.users, secret)
-	}
+	delete(in.users, user.Secret())
 }
 
 func (in *Inbound) WithOnUnauthorizedRequest(f i.UnauthorizedReport) {
@@ -221,7 +202,7 @@ func (in *Inbound) LogTraffic(id string, tx, rx uint64) (ok bool) {
 		if !ok {
 			return false
 		}
-		user.Counter.Add(tx + rx)
+		user.Counter().Add(tx + rx)
 
 		if in.config.InStats != nil {
 			in.config.InStats.Traffic.Add(tx + rx)
@@ -282,7 +263,7 @@ func (in *Inbound) Connect(addr net.Addr, id string, tx uint64) {
 	in.cLock.Lock()
 	defer in.cLock.Unlock()
 	in.srcAddrMap[addr.(*net.UDPAddr).AddrPort()] = &srcAddrInfo{
-		counter: user.Counter,
+		counter: user.Counter(),
 	}
 }
 

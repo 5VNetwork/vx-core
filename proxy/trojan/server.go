@@ -43,8 +43,8 @@ func (h *Server) AddUser(user i.User) {
 	h.validator.Add(NewMemoryAccount(user.Uid(), user.Secret()))
 }
 
-func (h *Server) RemoveUser(uid, secret string) {
-	h.validator.Del(uid)
+func (h *Server) RemoveUser(user i.User) {
+	h.validator.Del(NewMemoryAccount(user.Uid(), user.Secret()))
 }
 
 func (h *Server) WithOnUnauthorizedRequest(f i.UnauthorizedReport) {

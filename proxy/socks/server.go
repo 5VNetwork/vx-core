@@ -28,7 +28,7 @@ type Server struct {
 	policy     i.TimeoutSetting
 
 	usersLock sync.RWMutex
-	users     map[string]string // username to password. username is uuid in string format, password is uuid in string format
+	users     map[string]string // username to password.
 	handler   i.Handler
 }
 
@@ -59,10 +59,10 @@ func (s *Server) AddUser(user i.User) {
 	s.users[user.Uid()] = user.Secret()
 }
 
-func (s *Server) RemoveUser(uid, secret string) {
+func (s *Server) RemoveUser(user i.User) {
 	s.usersLock.Lock()
 	defer s.usersLock.Unlock()
-	delete(s.users, uid)
+	delete(s.users, user.Uid())
 }
 
 func (s *Server) Network() []nethelper.Network {

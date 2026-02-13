@@ -116,9 +116,9 @@ func (h *ProxyInbound) AddUser(user i.User) {
 
 }
 
-func (h *ProxyInbound) RemoveUser(uid, secret string) {
+func (h *ProxyInbound) RemoveUser(user i.User) {
 	for _, s := range h.userManages {
-		s.RemoveUser(uid, secret)
+		s.RemoveUser(user)
 	}
 }
 

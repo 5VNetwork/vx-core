@@ -77,8 +77,8 @@ func (h *Handler) AddUser(user i.User) {
 	h.users.Store(account.ID.UUID(), account)
 }
 
-func (h *Handler) RemoveUser(uid, secret string) {
-	h.users.Delete(uuid.StringToUUID(uid))
+func (h *Handler) RemoveUser(user i.User) {
+	h.users.Delete(uuid.StringToUUID(user.Secret()))
 }
 
 // Network implements proxy.Inbound.Network().

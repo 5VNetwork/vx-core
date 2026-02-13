@@ -57,10 +57,10 @@ func (s *Server) AddUser(user i.User) {
 	s.memoryAccount = memoryAccount
 }
 
-func (s *Server) RemoveUser(uid, secret string) {
+func (s *Server) RemoveUser(user i.User) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	if s.memoryAccount.Uid == uid {
+	if s.memoryAccount.Uid == user.Uid() {
 		s.memoryAccount = nil
 	}
 }

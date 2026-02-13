@@ -35,48 +35,45 @@ func TestValidator_Add(t *testing.T) {
 	if retrievedByHash.Uid != account.Uid {
 		t.Errorf("Expected UUID %v, got %v", account.Uid, retrievedByHash.Uid)
 	}
-
-	retrievedByUUID, exists := validator.uuidToAccount.Load(account.Uid)
-	if !exists {
-		t.Fatal("Account not found by UUID after adding")
+	if string(retrievedByHash.Key) != string(account.Key) {
+		t.Error("Expected retrieved key to match original key")
 	}
-	if retrievedByUUID.(*MemoryAccount).Uid != account.Uid {
-		t.Errorf("Expected UUID %v, got %v", account.Uid, retrievedByUUID.(*MemoryAccount).Uid)
+	if string(retrievedByHash.Password) != string(account.Password) {
+		t.Error("Expected retrieved password to match original password")
 	}
 }
 
-func TestValidator_Del_ValidUUID(t *testing.T) {
+func TestValidator_Del_ValidAccount(t *testing.T) {
 	validator := &Validator{}
 	account := createTestAccount()
 
 	validator.Add(account)
 
-	err := validator.Del(account.Uid)
+	err := validator.Del(account)
 	if err != nil {
-		t.Fatalf("Expected no error when deleting valid UUID, got: %v", err)
+		t.Fatalf("Expected no error when deleting valid account, got: %v", err)
 	}
 
 	retrievedByHash := validator.Get(hexString(account.Key))
 	if retrievedByHash != nil {
 		t.Error("Account should not be found by hash after deletion")
 	}
-
-	_, exists := validator.uuidToAccount.Load(account.Uid)
-	if exists {
-		t.Error("Account should not be found by UUID after deletion")
-	}
 }
 
-func TestValidator_Del_InvalidUUID(t *testing.T) {
+func TestValidator_Del_NonExistentAccount(t *testing.T) {
 	validator := &Validator{}
-	nonExistentUUID := uuid.New().String()
+	nonExistentAccount := createTestAccount()
 
-	err := validator.Del(nonExistentUUID)
-	if err == nil {
-		t.Error("Expected error when deleting non-existent UUID")
+	// Del doesn't return an error for non-existent accounts, it just does nothing
+	err := validator.Del(nonExistentAccount)
+	if err != nil {
+		t.Errorf("Expected no error when deleting non-existent account, got: %v", err)
 	}
-	if err.Error() != " not found." {
-		t.Errorf("Expected error message ' not found.', got: %v", err.Error())
+
+	// Verify the account is still not in the validator
+	retrievedByHash := validator.Get(hexString(nonExistentAccount.Key))
+	if retrievedByHash != nil {
+		t.Error("Non-existent account should not be found")
 	}
 }
 
@@ -145,7 +142,7 @@ func TestValidator_ConcurrentOperations(t *testing.T) {
 	for i := 0; i < numGoroutines/2; i++ {
 		go func(account *MemoryAccount) {
 			defer wg.Done()
-			validator.Del(account.Uid)
+			validator.Del(account)
 		}(accounts[i])
 	}
 	wg.Wait()

@@ -69,12 +69,8 @@ func (h *Server) AddUser(user i.User) {
 		0, protocol.SecurityType_AUTO, false, false))
 }
 
-func (h *Server) RemoveUser(uid, secret string) {
-	if secret == "" {
-		h.users.RemoveByUid(uid)
-	} else {
-		h.users.Remove(secret)
-	}
+func (h *Server) RemoveUser(user i.User) {
+	h.users.Remove(user.Secret())
 }
 
 func (h *Server) WithOnUnauthorizedRequest(f i.UnauthorizedReport) {
