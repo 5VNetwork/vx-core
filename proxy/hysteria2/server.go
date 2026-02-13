@@ -6,8 +6,6 @@
 package hysteria2
 
 import (
-	"context"
-	"errors"
 	"fmt"
 	"net"
 	"net/netip"
@@ -15,14 +13,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+	proxyConfig "github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/inbound/monitor"
 	"github.com/5vnetwork/vx-core/common"
-	mynet "github.com/5vnetwork/vx-core/common/net"
-	"github.com/5vnetwork/vx-core/common/session"
 	"github.com/5vnetwork/vx-core/i"
+	"github.com/5vnetwork/vx-core/proxy/hysteria2/internal/server"
 
-	"github.com/apernet/hysteria/core/v2/server"
 	"github.com/apernet/hysteria/extras/v2/obfs"
 	"github.com/rs/zerolog/log"
 )
@@ -38,8 +34,7 @@ type Inbound struct {
 	srcAddrMap map[netip.AddrPort]*srcAddrInfo
 
 	onUnauthorizedRequest i.UnauthorizedReport
-	dialer                i.Dialer
-	listener              i.PacketListener
+	handler               i.Handler
 }
 
 type srcAddrInfo struct {
@@ -52,21 +47,18 @@ func NewInbound(config *InboundConfig) (*Inbound, error) {
 		users:                 make(map[string]i.User),
 		srcAddrMap:            make(map[netip.AddrPort]*srcAddrInfo),
 		onUnauthorizedRequest: config.OnUnauthorizedRequest,
-		dialer:                config.Dialer,
-		listener:              config.Listener,
+		handler:               config.Handler,
 	}
 	return in, nil
 }
 
 type InboundConfig struct {
-	*proxy.Hysteria2ServerConfig
+	*proxyConfig.Hysteria2ServerConfig
 	Ports                 []uint16
 	Tag                   string
 	InStats               *monitor.Stats
-	Router                i.Router
 	OnUnauthorizedRequest i.UnauthorizedReport
-	Dialer                i.Dialer
-	Listener              i.PacketListener
+	Handler               i.Handler
 }
 
 func (in *Inbound) Tag() string {
@@ -119,9 +111,7 @@ func (in *Inbound) Start() error {
 		}
 		log.Info().Msgf("hysteria2 listen on %d", p)
 		hysConfig := &server.Config{
-			RequestHook: &RouterToRequestHook{
-				Router: in.config.Router,
-			},
+			Tag: in.config.Tag,
 			TLSConfig: server.TLSConfig{
 				Certificates:             tlsConfig.Certificates,
 				EncryptedClientHelloKeys: tlsConfig.EncryptedClientHelloKeys,
@@ -135,11 +125,8 @@ func (in *Inbound) Start() error {
 				DisablePathMTUDiscovery:        config.GetQuic().GetDisablePathMtuDiscovery(),
 				MaxIncomingStreams:             int64(config.GetQuic().GetMaxIncomingStreams()),
 			},
-			Conn: pc,
-			Outbound: &outboundAdapter{
-				Dialer:         in.dialer,
-				PacketListener: in.listener,
-			},
+			Conn:     pc,
+			Outbound: in.handler,
 			BandwidthConfig: server.BandwidthConfig{
 				MaxTx: uint64(config.GetBandwidth().GetMaxTx()),
 				MaxRx: uint64(config.GetBandwidth().GetMaxRx()),
@@ -168,7 +155,7 @@ func (in *Inbound) Close() error {
 	return common.CloseAll(in.server)
 }
 
-func (in *Inbound) Authenticate(addr net.Addr, auth string, tx uint64) (ok bool, id string) {
+func (in *Inbound) Authenticate(addr net.Addr, auth string, tx uint64) (ok bool, user i.User) {
 	// segments := strings.Split(auth, ":")
 	// if len(segments) != 2 {
 	// 	return false, ""
@@ -177,28 +164,28 @@ func (in *Inbound) Authenticate(addr net.Addr, auth string, tx uint64) (ok bool,
 	// secret := segments[1]
 	in.usersLock.RLock()
 	defer in.usersLock.RUnlock()
-	_, ok = in.users[auth]
+	user, ok = in.users[auth]
 	if !ok {
 		if in.onUnauthorizedRequest != nil {
 			in.onUnauthorizedRequest.ReportUnauthorized(addr.String(), auth)
 		}
-		return false, ""
+		return false, nil
 	}
 
-	return true, auth
+	return true, user
 }
 
-func (in *Inbound) LogOnlineState(id string, online bool) {}
+func (in *Inbound) LogOnlineState(user i.User, online bool) {}
 
 // rx is what received from final dest, and the data will be sent back to client.
 // tx is the data sent to the final dest, in other words, the data received from the client
 // data sent back to client is rx, data received from client is tx
 // send(to client) traffic meter happens at the transport layer, so we don't need to count it here
-func (in *Inbound) LogTraffic(id string, tx, rx uint64) (ok bool) {
+func (in *Inbound) LogTraffic(user i.User, tx, rx uint64) (ok bool) {
 	if tx != 0 {
 		in.usersLock.RLock()
 		defer in.usersLock.RUnlock()
-		user, ok := in.users[id]
+		user, ok := in.users[user.Secret()]
 		if !ok {
 			return false
 		}
@@ -211,48 +198,14 @@ func (in *Inbound) LogTraffic(id string, tx, rx uint64) (ok bool) {
 	return true
 }
 
-type RouterToRequestHook struct {
-	i.Router
+func (in *Inbound) TraceStream(stream server.HyStream, stats *server.StreamStats) {
 }
-
-func (r *RouterToRequestHook) Check(isUDP bool, reqAddr string) bool {
-	return true
+func (in *Inbound) UntraceStream(stream server.HyStream) {
 }
-func (r *RouterToRequestHook) TCP(stream server.HyStream, reqAddr *string) ([]byte, error) {
-	dest, err := mynet.ParseDestination(*reqAddr)
-	if err != nil {
-		return nil, err
-	}
-	dest.Network = mynet.Network_TCP
-	info := session.Info{
-		Target: dest,
-	}
-	if h, _ := r.Router.PickHandler(context.Background(), &info); h == nil {
-		return nil, errors.New("destination not allowed")
-	}
-	return nil, nil
-}
-func (r *RouterToRequestHook) UDP(data []byte, reqAddr *string) error {
-	dest, err := mynet.ParseDestination(*reqAddr)
-	if err != nil {
-		return err
-	}
-	dest.Network = mynet.Network_UDP
-	info := session.Info{
-		Target: dest,
-	}
-	if h, _ := r.Router.PickHandler(context.Background(), &info); h == nil {
-		return errors.New("destination not allowed")
-	}
-	return nil
-}
-
-func (in *Inbound) TraceStream(stream server.HyStream, stats *server.StreamStats) {}
-func (in *Inbound) UntraceStream(stream server.HyStream)                          {}
 
 // Implements server.EventLogger
 func (in *Inbound) Connect(addr net.Addr, id string, tx uint64) {
-	log.Debug().Str("src_addr", addr.String()).Str("user_id", id).Uint64("tx", tx).Msgf("hysteria2 connect")
+	log.Debug().Any("src_addr", addr).Str("user_id", id).Uint64("tx", tx).Msgf("hysteria2 connect")
 	in.usersLock.RLock()
 	defer in.usersLock.RUnlock()
 	user, ok := in.users[id]
@@ -261,18 +214,20 @@ func (in *Inbound) Connect(addr net.Addr, id string, tx uint64) {
 	}
 
 	in.cLock.Lock()
-	defer in.cLock.Unlock()
 	in.srcAddrMap[addr.(*net.UDPAddr).AddrPort()] = &srcAddrInfo{
 		counter: user.Counter(),
 	}
+	in.cLock.Unlock()
 }
 
 func (in *Inbound) Disconnect(addr net.Addr, id string, err error) {
 	in.cLock.Lock()
-	defer in.cLock.Unlock()
 	delete(in.srcAddrMap, addr.(*net.UDPAddr).AddrPort())
+	in.cLock.Unlock()
+
 	log.Debug().Err(err).Any("src_addr", addr).Str("user_id", id).Msgf("hysteria2 disconnect")
 }
+
 func (in *Inbound) TCPRequest(addr net.Addr, id, reqAddr string) {
 	log.Debug().Any("src_addr", addr).Str("user_id", id).Str("req_addr", reqAddr).Msgf("hysteria2 tcp request")
 }
@@ -280,64 +235,11 @@ func (in *Inbound) TCPError(addr net.Addr, id, reqAddr string, err error) {
 	log.Debug().Err(err).Any("src_addr", addr).Str("user_id", id).Str("req_addr", reqAddr).Msgf("hysteria2 tcp error")
 }
 func (in *Inbound) UDPRequest(addr net.Addr, id string, sessionID uint32, reqAddr string) {
-	log.Debug().Any("src_addr", addr).Str("user_id", id).Uint32("session_id", sessionID).Str("req_addr", reqAddr).Msgf("hysteria2 udp request")
+	log.Debug().Any("src_addr", addr).Str("user_id", id).Uint32("session_id", sessionID).
+		Str("req_addr", reqAddr).Msgf("hysteria2 udp request")
 }
 func (in *Inbound) UDPError(addr net.Addr, id string, sessionID uint32, err error) {
 	log.Debug().Err(err).Any("src_addr", addr).Str("user_id", id).Uint32("session_id", sessionID).Msgf("hysteria2 udp error")
-}
-
-// Implements server.Outbound
-type outboundAdapter struct {
-	i.Dialer
-	i.PacketListener
-}
-
-func (o *outboundAdapter) TCP(reqAddr string) (net.Conn, error) {
-	ctx := session.GetCtx(context.Background())
-	log.Ctx(ctx).Debug().Str("target", reqAddr).Msgf("hysteria2 tcp session")
-
-	dest, err := mynet.ParseDestination(reqAddr)
-	if err != nil {
-		return nil, err
-	}
-	dest.Network = mynet.Network_TCP
-
-	conn, err := o.Dialer.Dial(ctx, dest)
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-}
-
-func (o *outboundAdapter) UDP(reqAddr string) (server.UDPConn, error) {
-	ctx := session.GetCtx(context.Background())
-	log.Ctx(ctx).Debug().Str("target", reqAddr).Msgf("hysteria2 udp session")
-
-	pc, err := o.PacketListener.ListenPacket(ctx, "udp", "")
-	if err != nil {
-		return nil, err
-	}
-	return &netUdpConnToServerUDPConn{pc}, nil
-}
-
-type netUdpConnToServerUDPConn struct {
-	net.PacketConn
-}
-
-func (c *netUdpConnToServerUDPConn) ReadFrom(b []byte) (int, string, error) {
-	n, addr, err := c.PacketConn.ReadFrom(b)
-	if err != nil {
-		return 0, "", err
-	}
-	return n, addr.String(), nil
-}
-
-func (c *netUdpConnToServerUDPConn) WriteTo(b []byte, addr string) (int, error) {
-	netAddr, err := net.ResolveUDPAddr("udp", addr)
-	if err != nil {
-		return 0, err
-	}
-	return c.PacketConn.WriteTo(b, netAddr)
 }
 
 type statsPacketConn struct {

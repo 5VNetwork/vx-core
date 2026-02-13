@@ -231,7 +231,6 @@ type InboundManagerParams struct {
 	Configs      []*configs.ProxyInboundConfig
 	MultiConfigs []*configs.MultiProxyInboundConfig
 	Handler      i.Handler
-	Router       i.Router
 	Policy       i.TimeoutSetting
 	Stats        *monitor.InboundStats
 	OnUnauth     i.UnauthorizedReport `optional:"true"`
@@ -252,7 +251,7 @@ func NewInboundManager(lc fx.Lifecycle, params InboundManagerParams) (InboundMan
 		},
 	})
 	for _, config := range params.Configs {
-		h, err := create.NewInboundServer(config, params.Handler, params.Router, params.Policy,
+		h, err := create.NewInboundServer(config, params.Handler, params.Policy,
 			params.Stats.Get(config.Tag), params.OnUnauth)
 		if err != nil {
 			return InboundManagerResult{}, fmt.Errorf("failed to create inbound proxy handler: %w", err)
@@ -260,7 +259,7 @@ func NewInboundManager(lc fx.Lifecycle, params InboundManagerParams) (InboundMan
 		im.AddInbound(h)
 	}
 	for _, config := range params.MultiConfigs {
-		h, err := multi.NewMultiInboundServer(config, params.Handler, params.Router, params.Policy,
+		h, err := multi.NewMultiInboundServer(config, params.Handler, params.Policy,
 			params.Stats.Get(config.Tag), params.OnUnauth)
 		if err != nil {
 			return InboundManagerResult{}, fmt.Errorf("failed to create inbound proxy handler: %w", err)

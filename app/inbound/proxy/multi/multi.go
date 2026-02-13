@@ -40,7 +40,7 @@ import (
 	securitytls "github.com/5vnetwork/vx-core/transport/security/tls"
 )
 
-func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler, router i.Router,
+func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler,
 	tp i.TimeoutSetting, inStats *monitor.Stats, onUnauth i.UnauthorizedReport) (proxy.Inbound, error) {
 	ports := make([]uint16, 0, 10)
 	for _, port := range config.Ports {
@@ -71,10 +71,8 @@ func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler
 			Hysteria2ServerConfig: hysteriaConfig,
 			InStats:               inStats,
 			Tag:                   config.Tag,
-			Router:                router,
 			OnUnauthorizedRequest: onUnauth,
-			Dialer:                &net.NetDialer{Dialer: net.Dialer{}},
-			Listener:              &net.NetPacketListener{ListenConfig: net.ListenConfig{}},
+			Handler:               ha,
 		})
 		if err != nil {
 			return nil, err
