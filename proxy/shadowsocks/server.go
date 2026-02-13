@@ -52,7 +52,7 @@ func NewServer(settings ServerSettings) *Server {
 func (s *Server) AddUser(user i.User) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	memoryAccount, _ := NewMemoryAccount(user.Uid(), s.cipher, user.Secret(),
+	memoryAccount, _ := NewMemoryAccount(user, s.cipher,
 		s.reducedIVEntropy, s.ivCheck)
 	s.memoryAccount = memoryAccount
 }
@@ -60,7 +60,7 @@ func (s *Server) AddUser(user i.User) {
 func (s *Server) RemoveUser(user i.User) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	if s.memoryAccount.Uid == user.Uid() {
+	if s.memoryAccount.User == user {
 		s.memoryAccount = nil
 	}
 }
@@ -185,7 +185,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn, account *M
 func (s *Server) handleConnectionCommon(ctx context.Context, conn net.Conn,
 	request *protocol.RequestHeader, bodyReader buf.Reader, account *MemoryAccount) error {
 	var err error
-	ctx = proxy.ContextWithUser(ctx, account.Uid)
+	ctx = proxy.ContextWithUser(ctx, account.User)
 
 	bufferedWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
 	responseWriter, err := WriteTCPResponse(request, bufferedWriter)
@@ -263,7 +263,7 @@ func (c *UDPConn) WritePacket(p *udp.Packet) error {
 	request := &protocol.RequestHeader{
 		Port:    p.Source.Port,
 		Address: p.Source.Address,
-		User:    c.account.Uid,
+		User:    c.account.User,
 		Account: c.account,
 	}
 	data, err := EncodeUDPPacket(request, p.Payload.Bytes())
@@ -292,7 +292,7 @@ func (s *Server) handlerUDPPayload(ctx context.Context, conn net.Conn, account *
 		account: account,
 		reader:  buf.NewReader(conn),
 	}
-	ctx = proxy.ContextWithUser(ctx, account.Uid)
+	ctx = proxy.ContextWithUser(ctx, account.User)
 	err := s.Handler.HandlePacketConn(ctx, net.AnyUdpDest, udpConn)
 	if err != nil {
 		return fmt.Errorf("failed to dispatch UDP, %w", err)

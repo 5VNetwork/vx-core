@@ -16,6 +16,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
+	"github.com/5vnetwork/vx-core/app/user"
 	"github.com/5vnetwork/vx-core/common/domain"
 	"github.com/5vnetwork/vx-core/common/mux"
 	"github.com/5vnetwork/vx-core/common/net"
@@ -159,9 +160,8 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 		})
 	case *proxyconfigs.ShadowsocksClientConfig:
 		account, err := shadowsocks.NewMemoryAccount(
-			"",
+			user.NewUser("", m.Password),
 			shadowsocks.CipherType(m.CipherType),
-			m.Password,
 			false,
 			false,
 		)
@@ -186,7 +186,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 			Dialer:         dialer,
 		})
 	case *proxyconfigs.TrojanClientConfig:
-		account := trojan.NewMemoryAccount("", m.Password)
+		account := trojan.NewMemoryAccount(user.NewUser("", m.Password))
 		pc = trojan.NewClient(
 			trojan.ClientSettings{
 				Address:    address,
@@ -196,7 +196,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 				Vision:     m.Vision,
 			})
 	case *proxyconfigs.VmessClientConfig:
-		account := vmess.NewMemoryAccount("", uuid.StringToUUID(m.Id).String(),
+		account := vmess.NewMemoryAccount(user.NewUser("", uuid.StringToUUID(m.Id).String()),
 			uint16(m.AlterId), protocol.SecurityType(m.Security), false, false)
 		sp, err := getServerPicker(account, config.Address, config.Port, config.Ports)
 		if err != nil {

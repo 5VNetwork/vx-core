@@ -228,7 +228,7 @@ func (v *TimedUserValidator) RemoveByUid(uid string) bool {
 
 	idx := -1
 	for i, u := range v.users {
-		if u.user.UserId == uid {
+		if u.user.User.Uid() == uid {
 			idx = i
 			var cmdkeyfl [16]byte
 			copy(cmdkeyfl[:], u.user.ID.CmdKey())

@@ -13,6 +13,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/net/udp"
 	"github.com/5vnetwork/vx-core/common/protocol"
 	"github.com/5vnetwork/vx-core/common/serial/address_parser"
+	"github.com/5vnetwork/vx-core/i"
 )
 
 const (
@@ -96,12 +97,12 @@ func (s *ServerSession) handshake4(cmd byte, reader io.Reader, writer io.Writer)
 }
 
 // returns username if auth is successful, otherwise returns empty string
-func (s *ServerSession) auth5(nMethod byte, reader io.Reader, writer io.Writer) (string, error) {
+func (s *ServerSession) auth5(nMethod byte, reader io.Reader, writer io.Writer) (i.User, error) {
 	buffer := buf.StackNew()
 	defer buffer.Release()
 
 	if _, err := buffer.ReadFullFrom(reader, int32(nMethod)); err != nil {
-		return "", errors.New("failed to read auth methods").Base(err)
+		return nil, errors.New("failed to read auth methods").Base(err)
 	}
 
 	var expectedAuth byte = authNotRequired
@@ -111,31 +112,31 @@ func (s *ServerSession) auth5(nMethod byte, reader io.Reader, writer io.Writer) 
 
 	if !hasAuthMethod(expectedAuth, buffer.BytesRange(0, int32(nMethod))) {
 		writeSocks5AuthenticationResponse(writer, socks5Version, authNoMatchingMethod)
-		return "", errors.New("no matching auth method")
+		return nil, errors.New("no matching auth method")
 	}
 
 	if err := writeSocks5AuthenticationResponse(writer, socks5Version, expectedAuth); err != nil {
-		return "", errors.New("failed to write auth response").Base(err)
+		return nil, errors.New("failed to write auth response").Base(err)
 	}
 
 	if expectedAuth == authPassword {
 		username, password, err := ReadUsernamePassword(reader)
 		if err != nil {
-			return "", errors.New("failed to read username and password for authentication").Base(err)
+			return nil, errors.New("failed to read username and password for authentication").Base(err)
 		}
-
-		if !s.serverConfig.HasAccount(username, password) {
+		user := s.serverConfig.GetUser(username, password)
+		if user == nil {
 			writeSocks5AuthenticationResponse(writer, 0x01, 0xFF)
-			return "", errors.New("invalid username or password")
+			return nil, errors.New("invalid username or password")
 		}
 
 		if err := writeSocks5AuthenticationResponse(writer, 0x01, 0x00); err != nil {
-			return "", errors.New("failed to write auth response").Base(err)
+			return nil, errors.New("failed to write auth response").Base(err)
 		}
-		return username, nil
+		return user, nil
 	}
 
-	return "", nil
+	return nil, nil
 }
 
 func (s *ServerSession) handshake5(nMethod byte, reader io.Reader, writer io.Writer) (*protocol.RequestHeader, error) {

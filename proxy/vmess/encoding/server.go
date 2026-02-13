@@ -230,7 +230,7 @@ func (s *ServerSession) DecodeRequestHeader(reader io.Reader, drainOnError bool)
 	}
 
 	request := &protocol.RequestHeader{
-		User:    user.UserId,
+		User:    user.User,
 		Account: user,
 		Version: buffer.Byte(0),
 	}

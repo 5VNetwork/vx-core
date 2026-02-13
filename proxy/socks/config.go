@@ -1,12 +1,17 @@
 package socks
 
-func (c *Server) HasAccount(username, password string) bool {
+import "github.com/5vnetwork/vx-core/i"
+
+func (c *Server) GetUser(username, password string) i.User {
 	if len(c.users) == 0 {
-		return false
+		return nil
 	}
 	pass, found := c.users[username]
 	if !found {
-		return false
+		return nil
 	}
-	return pass == password
+	if pass.Secret() == password {
+		return pass
+	}
+	return nil
 }

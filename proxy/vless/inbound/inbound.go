@@ -69,7 +69,7 @@ func isMuxAndNotXUDP(request *protocol.RequestHeader, first *buf.Buffer) bool {
 
 func (h *Handler) AddUser(user i.User) {
 	account := &vless.MemoryAccount{
-		Uid:        user.Uid(),
+		User:       user,
 		ID:         protocol.NewID(uuid.StringToUUID(user.Secret())),
 		Encryption: "none",
 		Flow:       "xtls-rprx-vision",

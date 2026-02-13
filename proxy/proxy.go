@@ -18,14 +18,14 @@ const (
 	userKey ProxyCtxKey = iota
 )
 
-func ContextWithUser(ctx context.Context, user string) context.Context {
+func ContextWithUser(ctx context.Context, user i.User) context.Context {
 	return context.WithValue(ctx, userKey, user)
 }
-func UserFromContext(ctx context.Context) (string, bool) {
+func UserFromContext(ctx context.Context) (i.User, bool) {
 	if ctx.Value(userKey) == nil {
-		return "", false
+		return nil, false
 	}
-	return ctx.Value(userKey).(string), true
+	return ctx.Value(userKey).(i.User), true
 }
 
 const FirstPayloadTimeout = 10 * time.Millisecond

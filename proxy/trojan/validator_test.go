@@ -5,6 +5,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/5vnetwork/vx-core/app/user"
 	"github.com/5vnetwork/vx-core/common/uuid"
 )
 
@@ -16,7 +17,7 @@ func createTestAccount() *MemoryAccount {
 	rand.Read(password)
 
 	return &MemoryAccount{
-		Uid:      uid,
+		User:     user.NewUser(uid, string(key)),
 		Key:      key,
 		Password: password,
 	}
@@ -32,8 +33,8 @@ func TestValidator_Add(t *testing.T) {
 	if retrievedByHash == nil {
 		t.Fatal("Account not found by hash after adding")
 	}
-	if retrievedByHash.Uid != account.Uid {
-		t.Errorf("Expected UUID %v, got %v", account.Uid, retrievedByHash.Uid)
+	if retrievedByHash.User.Uid() != account.User.Uid() {
+		t.Errorf("Expected UUID %v, got %v", account.User.Uid(), retrievedByHash.User.Uid())
 	}
 	if string(retrievedByHash.Key) != string(account.Key) {
 		t.Error("Expected retrieved key to match original key")
@@ -87,8 +88,8 @@ func TestValidator_Get_ValidHash(t *testing.T) {
 	if retrieved == nil {
 		t.Fatal("Expected account to be found by valid hash")
 	}
-	if retrieved.Uid != account.Uid {
-		t.Errorf("Expected UUID %v, got %v", account.Uid, retrieved.Uid)
+	if retrieved.User.Uid() != account.User.Uid() {
+		t.Errorf("Expected UUID %v, got %v", account.User.Uid(), retrieved.User.Uid())
 	}
 	if string(retrieved.Key) != string(account.Key) {
 		t.Error("Expected retrieved key to match original key")
@@ -133,7 +134,7 @@ func TestValidator_ConcurrentOperations(t *testing.T) {
 		retrieved := validator.Get(hexString(accounts[i].Key))
 		if retrieved == nil {
 			t.Errorf("Account %d not found after concurrent add", i)
-		} else if retrieved.Uid != accounts[i].Uid {
+		} else if retrieved.User.Uid() != accounts[i].User.Uid() {
 			t.Errorf("Account %d UUID mismatch", i)
 		}
 	}

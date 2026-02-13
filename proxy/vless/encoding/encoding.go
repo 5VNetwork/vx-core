@@ -90,7 +90,7 @@ func DecodeRequestHeader(isfb bool, first *buf.Buffer, reader io.Reader, validat
 		if !ok {
 			return nil, nil, isfb, errors.New("invalid request user id")
 		}
-		request.User = account.(*vless.MemoryAccount).Uid
+		request.User = account.(*vless.MemoryAccount).User
 		request.Account = account
 
 		if isfb {

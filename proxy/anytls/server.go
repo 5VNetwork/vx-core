@@ -21,7 +21,7 @@ import (
 
 type Server struct {
 	ServerSettings
-	secrets sync.Map // key: [32]byte sha256(password), value: string uid
+	secrets sync.Map // key: [32]byte sha256(password), value: i.User
 }
 
 type ServerSettings struct {
@@ -37,7 +37,7 @@ func NewServer(settings ServerSettings) *Server {
 
 func (h *Server) AddUser(user i.User) {
 	var sum = sha256.Sum256([]byte(user.Secret()))
-	h.secrets.Store(sum, user.Uid())
+	h.secrets.Store(sum, user)
 }
 
 func (h *Server) RemoveUser(user i.User) {
@@ -53,12 +53,12 @@ func (d *Server) Network() []net.Network {
 	return []net.Network{net.Network_TCP, net.Network_UNIX}
 }
 
-func (h *Server) GetUser(sha256 [32]byte) (string, error) {
+func (h *Server) GetUser(sha256 [32]byte) (i.User, error) {
 	uid, ok := h.secrets.Load(sha256)
 	if !ok {
-		return "", errors.New("user not found")
+		return nil, errors.New("user not found")
 	}
-	return uid.(string), nil
+	return uid.(i.User), nil
 }
 
 func (s *Server) FallbackProcess(ctx context.Context, conn net.Conn) (bool, buf.MultiBuffer, error) {
@@ -88,21 +88,21 @@ func (d *Server) Process(ctx context.Context, conn net.Conn) error {
 	return d.processCommon(ctx, conn, bufferedReader)
 }
 
-func (d *Server) auth(ctx context.Context, reader io.Reader, conn net.Conn) (string, error) {
+func (d *Server) auth(ctx context.Context, reader io.Reader, conn net.Conn) (i.User, error) {
 	var sha256 [32]byte
 	n, err := reader.Read(sha256[:])
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if n < 32 {
-		return "", errors.New("not anytls protocol")
+		return nil, errors.New("not anytls protocol")
 	}
 	user, err := d.GetUser(sha256)
 	if err != nil {
 		if d.OnUnauthorizedRequest != nil {
 			d.OnUnauthorizedRequest.ReportUnauthorized(conn.RemoteAddr().String(), "")
 		}
-		return "", err
+		return nil, err
 	}
 	return user, nil
 }

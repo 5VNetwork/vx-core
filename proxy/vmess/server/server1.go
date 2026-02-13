@@ -66,7 +66,7 @@ func (*ServerIO) Network() []net.Network {
 }
 
 func (h *ServerIO) AddUser(user i.User) {
-	h.users.Add(vmess.NewMemoryAccount(user.Uid(), user.Secret(), 0, protocol.SecurityType_AUTO, false, false))
+	h.users.Add(vmess.NewMemoryAccount(user, 0, protocol.SecurityType_AUTO, false, false))
 }
 
 func (h *ServerIO) RemoveUser(uid, secret string) {

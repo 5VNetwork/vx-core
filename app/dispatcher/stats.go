@@ -67,7 +67,7 @@ func (p *StatsHook) AfterHandlerSelection(ctx context.Context, info *session.Inf
 		})
 	}
 	if p.StatsPolicy.CalculateUserStats() && p.Um != nil {
-		us := p.Um.GetUser(info.User)
+		us := p.Um.GetUser(info.User.Uid())
 		if us != nil {
 			ups = append(ups, session.AtomicCounter{
 				Counter: us.Counter(),
@@ -76,7 +76,7 @@ func (p *StatsHook) AfterHandlerSelection(ctx context.Context, info *session.Inf
 				Counter: us.Counter(),
 			})
 		} else {
-			log.Warn().Str("uid", info.User).Msg("no user stats found")
+			log.Warn().Str("uid", info.User.Uid()).Msg("no user stats found")
 		}
 	}
 	if p.StatsPolicy.CalculateSessionStats() {

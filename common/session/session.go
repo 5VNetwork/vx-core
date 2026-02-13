@@ -65,6 +65,11 @@ type Sockopt struct {
 	// InterfaceIP6   net.IP
 }
 
+type User interface {
+	Uid() string
+	Secret() string
+}
+
 type Info struct {
 	ID        ID
 	Source    net.Destination
@@ -77,7 +82,7 @@ type Info struct {
 	InboundProtocol string
 	UdpUuid         uuid.UUID
 	Sockopt         *Sockopt
-	User            string
+	User            User
 
 	Sniffed       bool
 	Protocol      string
@@ -218,7 +223,7 @@ func WithUdpUuid(uuid uuid.UUID) Option {
 	}
 }
 
-func WithUser(user string) Option {
+func WithUser(user User) Option {
 	return func(info *Info) {
 		info.User = user
 	}
@@ -306,7 +311,7 @@ func (c *Info) GetNetwork() net.Network {
 	return c.Target.Network
 }
 
-func (c *Info) GetUser() string {
+func (c *Info) GetUser() User {
 	return c.User
 }
 

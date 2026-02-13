@@ -16,9 +16,8 @@ func UserConfigToUser(config *configs.UserConfig) (*user.User, error) {
 
 func ShadowsocksAccountToMemoryAccount(account *proxyconfigs.ShadowsocksAccount) (*shadowsocks.MemoryAccount, error) {
 	return shadowsocks.NewMemoryAccount(
-		account.User.Id,
+		user.NewUser(account.User.Id, account.User.Secret),
 		shadowsocks.CipherType(account.CipherType),
-		account.User.Secret,
 		account.ExperimentReducedIvHeadEntropy,
 		account.IvCheck,
 	)

@@ -77,7 +77,7 @@ func ReadTCPSession(account *MemoryAccount, reader io.Reader, drainOnError bool)
 
 	request := &protocol.RequestHeader{
 		Version: Version,
-		User:    account.Uid,
+		User:    account.User,
 		Account: account,
 		Command: protocol.RequestCommandTCP,
 	}
@@ -294,7 +294,7 @@ func DecodeUDPPacket(account *MemoryAccount, payload *buf.Buffer) (*protocol.Req
 
 	request := &protocol.RequestHeader{
 		Version: Version,
-		User:    account.Uid,
+		User:    account.User,
 		Account: account,
 		Command: protocol.RequestCommandUDP,
 	}

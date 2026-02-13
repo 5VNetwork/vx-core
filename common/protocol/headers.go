@@ -5,6 +5,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/os"
 	"github.com/5vnetwork/vx-core/common/uuid"
+	"github.com/5vnetwork/vx-core/i"
 )
 
 // RequestCommand is a custom command in a proxy request.
@@ -48,7 +49,7 @@ type RequestHeader struct {
 	Address  net.Address
 	Option   bitmask.Byte
 	Security SecurityType
-	User     string      // used in server
+	User     i.User      // used in server
 	Account  interface{} // used in client
 }
 

@@ -7,11 +7,12 @@ import (
 	"github.com/5vnetwork/vx-core/common/dice"
 	"github.com/5vnetwork/vx-core/common/protocol"
 	"github.com/5vnetwork/vx-core/common/uuid"
+	"github.com/5vnetwork/vx-core/i"
 )
 
 // MemoryAccount is an in-memory form of VMess account.
 type MemoryAccount struct {
-	UserId string
+	User i.User
 	// ID is the main ID of the account.
 	ID *protocol.ID
 	// AlterIDs are the alternative IDs of the account.
@@ -22,12 +23,12 @@ type MemoryAccount struct {
 	NoTerminationSignal           bool
 }
 
-func NewMemoryAccount(uid string, secret string, alterId uint16, security protocol.SecurityType,
+func NewMemoryAccount(user i.User, alterId uint16, security protocol.SecurityType,
 	authLenExp, noTermi bool) *MemoryAccount {
-	protoID := protocol.NewID(uuid.StringToUUID(secret))
+	protoID := protocol.NewID(uuid.StringToUUID(user.Secret()))
 	var AuthenticatedLength, NoTerminationSignal bool
 	return &MemoryAccount{
-		UserId:                        uid,
+		User:                          user,
 		Security:                      security.GetSecurityType(),
 		AlterIDs:                      protocol.NewAlterIDs(protoID, alterId),
 		ID:                            protoID,

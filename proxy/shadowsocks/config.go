@@ -11,6 +11,7 @@ import (
 	"io"
 
 	"github.com/5vnetwork/vx-core/common/antireplay"
+	"github.com/5vnetwork/vx-core/i"
 
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
@@ -33,23 +34,23 @@ const (
 
 // MemoryAccount is an account type converted from Account.
 type MemoryAccount struct {
+	User             i.User
 	Cipher           Cipher
 	Key              []byte
-	Uid              string
 	ReplayFilter     antireplay.GeneralizedReplayFilter
 	ReducedIVEntropy bool
 }
 
-func NewMemoryAccount(uid string, cipher CipherType, password string,
+func NewMemoryAccount(user i.User, cipher CipherType,
 	reducedIVEntropy, ivCheck bool) (*MemoryAccount, error) {
 	Cipher, err := getCipher(cipher)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cipher: %w", err)
 	}
 	m := &MemoryAccount{
-		Uid:    uid,
+		User:   user,
 		Cipher: Cipher,
-		Key:    passwordToCipherKey(password, Cipher.KeySize()),
+		Key:    passwordToCipherKey(user.Secret(), Cipher.KeySize()),
 		ReplayFilter: func() antireplay.GeneralizedReplayFilter {
 			if ivCheck {
 				return antireplay.NewBloomRing()
@@ -61,8 +62,8 @@ func NewMemoryAccount(uid string, cipher CipherType, password string,
 	return m, nil
 }
 
-func (a *MemoryAccount) resetUser(uid, password string) {
-	a.Uid = uid
+func (a *MemoryAccount) resetUser(user i.User, password string) {
+	a.User = user
 	a.Key = passwordToCipherKey(password, a.Cipher.KeySize())
 }
 

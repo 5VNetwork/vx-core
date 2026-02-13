@@ -40,11 +40,11 @@ func NewServer(settings ServerSettings) *Server {
 }
 
 func (h *Server) AddUser(user i.User) {
-	h.validator.Add(NewMemoryAccount(user.Uid(), user.Secret()))
+	h.validator.Add(NewMemoryAccount(user))
 }
 
 func (h *Server) RemoveUser(user i.User) {
-	h.validator.Del(NewMemoryAccount(user.Uid(), user.Secret()))
+	h.validator.Del(NewMemoryAccount(user))
 }
 
 func (h *Server) WithOnUnauthorizedRequest(f i.UnauthorizedReport) {
@@ -126,7 +126,7 @@ func (s *Server) processCommon(ctx context.Context, conn net.Conn,
 		conn = vision.NewVisionConn(ctx, conn, false, 0)
 	}
 
-	ctx = proxy.ContextWithUser(ctx, user.Uid)
+	ctx = proxy.ContextWithUser(ctx, user.User)
 	if destination.Network == net.Network_UDP { // handle udp request
 		return s.handleUDPPayload(ctx,
 			&PacketReader{

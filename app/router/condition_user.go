@@ -29,7 +29,7 @@ func NewUserMatcher(users []string) *userMatcher {
 func (v *userMatcher) Apply(c context.Context, info *session.Info, rw interface{}) (interface{}, bool) {
 	user := info.GetUser()
 	for _, u := range v.user {
-		if u == user {
+		if u == user.Uid() {
 			return rw, true
 		}
 	}

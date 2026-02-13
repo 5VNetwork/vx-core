@@ -2,11 +2,12 @@ package vless
 
 import (
 	"github.com/5vnetwork/vx-core/common/protocol"
+	"github.com/5vnetwork/vx-core/i"
 )
 
 // MemoryAccount is an in-memory form of VLess account.
 type MemoryAccount struct {
-	Uid string
+	User i.User
 	// ID of the account.
 	ID *protocol.ID
 	// Flow of the account. May be "xtls-rprx-vision".

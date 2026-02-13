@@ -28,7 +28,7 @@ type Server struct {
 	policy     i.TimeoutSetting
 
 	usersLock sync.RWMutex
-	users     map[string]string // username to password.
+	users     map[string]i.User // username to password.
 	handler   i.Handler
 }
 
@@ -40,7 +40,7 @@ func NewServer(config *SocksServerConfig) *Server {
 		policy:     config.Policy,
 		handler:    config.Handler,
 		address:    config.Address,
-		users:      make(map[string]string),
+		users:      make(map[string]i.User),
 	}
 	return s
 }
@@ -56,7 +56,7 @@ type SocksServerConfig struct {
 func (s *Server) AddUser(user i.User) {
 	s.usersLock.Lock()
 	defer s.usersLock.Unlock()
-	s.users[user.Uid()] = user.Secret()
+	s.users[user.Uid()] = user
 }
 
 func (s *Server) RemoveUser(user i.User) {
@@ -135,7 +135,7 @@ func (s *Server) processTcp(ctx context.Context, conn net.Conn) (bool, buf.Multi
 
 	if request.Command == protocol.RequestCommandTCP {
 		log.Ctx(ctx).Debug().Str("dest", request.Destination().String()).Msg("socks tcp")
-		if request.User != "" {
+		if request.User != nil {
 			ctx = proxy.ContextWithUser(ctx, request.User)
 		}
 		if err = s.handler.HandleFlow(ctx, request.Destination(), buf.NewRWD(reader, buf.NewWriter(conn), conn)); err != nil {

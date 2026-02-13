@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	"github.com/5vnetwork/vx-core/app/user"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/net"
@@ -13,7 +14,7 @@ import (
 )
 
 func TestTCPRequest(t *testing.T) {
-	ma := NewMemoryAccount(uuid.New().String(), "password")
+	ma := NewMemoryAccount(user.NewUser(uuid.New().String(), "password"))
 
 	payload := []byte("test string")
 	data := buf.New()
@@ -41,7 +42,7 @@ func TestTCPRequest(t *testing.T) {
 }
 
 func TestUDPRequest(t *testing.T) {
-	ma := NewMemoryAccount(uuid.New().String(), "password")
+	ma := NewMemoryAccount(user.NewUser(uuid.New().String(), "password"))
 	payload := []byte("test string")
 	data := buf.New()
 	common.Must2(data.Write(payload))
@@ -75,7 +76,7 @@ func TestUDPRequest(t *testing.T) {
 }
 
 func TestLargeUDPRequest(t *testing.T) {
-	ma := NewMemoryAccount(uuid.New().String(), "password")
+	ma := NewMemoryAccount(user.NewUser(uuid.New().String(), "password"))
 
 	payload := make([]byte, 4096)
 	common.Must2(rand.Read(payload))

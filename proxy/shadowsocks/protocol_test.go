@@ -7,10 +7,12 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/create"
+	"github.com/5vnetwork/vx-core/app/user"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/protocol"
+	"github.com/5vnetwork/vx-core/common/uuid"
 	. "github.com/5vnetwork/vx-core/proxy/shadowsocks"
 )
 
@@ -26,15 +28,23 @@ func equalRequestHeader(x, y *protocol.RequestHeader) bool {
 	}))
 }
 
+func createTestAccount(cipher CipherType, password string, reducedIVEntropy, ivCheck bool) *MemoryAccount {
+	uid := uuid.New().String()
+	u := user.NewUser(uid, password)
+	account, err := NewMemoryAccount(u, cipher, reducedIVEntropy, ivCheck)
+	common.Must(err)
+	return account
+}
+
 func TestUDPEncoding(t *testing.T) {
+	account := createTestAccount(CipherType_AES_128_GCM, "password", false, false)
 	request := &protocol.RequestHeader{
 		Version: Version,
 		Command: protocol.RequestCommandUDP,
 		Address: net.LocalHostIP,
 		Port:    1234,
-		Account: common.Must2(NewMemoryAccount(
-			"", CipherType_AES_128_GCM, "password", false, false,
-		)).(*MemoryAccount),
+		User:    account.User,
+		Account: account,
 	}
 
 	data := buf.New()
@@ -60,39 +70,45 @@ func TestTCPRequest(t *testing.T) {
 		payload []byte
 	}{
 		{
-			request: &protocol.RequestHeader{
-				Version: Version,
-				Command: protocol.RequestCommandTCP,
-				Address: net.LocalHostIP,
-				Port:    1234,
-				Account: common.Must2(NewMemoryAccount(
-					"", CipherType_AES_128_GCM, "tcp-password", false, false,
-				)).(*MemoryAccount),
-			},
+			request: func() *protocol.RequestHeader {
+				account := createTestAccount(CipherType_AES_128_GCM, "tcp-password", false, false)
+				return &protocol.RequestHeader{
+					Version: Version,
+					Command: protocol.RequestCommandTCP,
+					Address: net.LocalHostIP,
+					Port:    1234,
+					User:    account.User,
+					Account: account,
+				}
+			}(),
 			payload: []byte("test string"),
 		},
 		{
-			request: &protocol.RequestHeader{
-				Version: Version,
-				Command: protocol.RequestCommandTCP,
-				Address: net.LocalHostIPv6,
-				Port:    1234,
-				Account: common.Must2(NewMemoryAccount(
-					"", CipherType_AES_256_GCM, "password", false, false,
-				)).(*MemoryAccount),
-			},
+			request: func() *protocol.RequestHeader {
+				account := createTestAccount(CipherType_AES_256_GCM, "password", false, false)
+				return &protocol.RequestHeader{
+					Version: Version,
+					Command: protocol.RequestCommandTCP,
+					Address: net.LocalHostIPv6,
+					Port:    1234,
+					User:    account.User,
+					Account: account,
+				}
+			}(),
 			payload: []byte("test string"),
 		},
 		{
-			request: &protocol.RequestHeader{
-				Version: Version,
-				Command: protocol.RequestCommandTCP,
-				Address: net.DomainAddress("v2fly.org"),
-				Port:    1234,
-				Account: common.Must2(NewMemoryAccount(
-					"", CipherType_CHACHA20_POLY1305, "password", false, false,
-				)).(*MemoryAccount),
-			},
+			request: func() *protocol.RequestHeader {
+				account := createTestAccount(CipherType_CHACHA20_POLY1305, "password", false, false)
+				return &protocol.RequestHeader{
+					Version: Version,
+					Command: protocol.RequestCommandTCP,
+					Address: net.DomainAddress("v2fly.org"),
+					Port:    1234,
+					User:    account.User,
+					Account: account,
+				}
+			}(),
 			payload: []byte("test string"),
 		},
 	}
@@ -128,9 +144,7 @@ func TestTCPRequest(t *testing.T) {
 }
 
 func TestUDPReaderWriter(t *testing.T) {
-	user := common.Must2(NewMemoryAccount(
-		"", CipherType_CHACHA20_POLY1305, "test-password", false, false,
-	)).(*MemoryAccount)
+	user := createTestAccount(CipherType_CHACHA20_POLY1305, "test-password", false, false)
 	cache := buf.New()
 	defer cache.Release()
 
@@ -140,6 +154,7 @@ func TestUDPReaderWriter(t *testing.T) {
 			Version: Version,
 			Address: net.DomainAddress("v2fly.org"),
 			Port:    123,
+			User:    user.User,
 			Account: user,
 		},
 	}}

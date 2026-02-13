@@ -6,20 +6,21 @@ import (
 	"fmt"
 
 	"github.com/5vnetwork/vx-core/common"
+	"github.com/5vnetwork/vx-core/i"
 )
 
 // MemoryAccount is an account type converted from Account.
 type MemoryAccount struct {
-	Uid      string
+	User     i.User
 	Password []byte
 	Key      []byte
 }
 
-func NewMemoryAccount(u string, password string) *MemoryAccount {
+func NewMemoryAccount(user i.User) *MemoryAccount {
 	return &MemoryAccount{
-		Uid:      u,
-		Password: []byte(password),
-		Key:      hexSha224([]byte(password)),
+		User:     user,
+		Password: []byte(user.Secret()),
+		Key:      hexSha224([]byte(user.Secret())),
 	}
 }
 
