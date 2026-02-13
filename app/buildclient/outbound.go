@@ -13,7 +13,6 @@ import (
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
-	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/i"
@@ -72,11 +71,8 @@ func buildOutbound(config *configs.TmConfig, builder *Builder, client *client.Cl
 				nicMonIntf := builder.getFeature(reflect.TypeOf((*i.DefaultInterfaceInfo)(nil)).Elem())
 				if nicMonIntf != nil {
 					nicMon := nicMonIntf.(i.DefaultInterfaceInfo)
-					freedomHandlerWithSupport6Info := &outbound.HandlerWithSupport6Info{
-						Outbound:                  handler,
-						IPv6SupportChangeNotifier: util.IPv6SupportChangeNotifier{},
-					}
-					freedomHandlerWithSupport6Info.SetSupport6(nicMon.SupportIPv6() > 0)
+					freedomHandlerWithSupport6Info := outbound.NewHandlerWithSupport6Info(handler,
+						nicMon.SupportIPv6() > 0)
 					nicMon.Register(i.OnDefaultInterfaceChanged(func() {
 						freedomHandlerWithSupport6Info.SetSupport6(nicMon.SupportIPv6() > 0)
 						log.Info().Bool("support6", freedomHandlerWithSupport6Info.Support6()).Msg("freedom handler support6 changed")
@@ -85,10 +81,7 @@ func buildOutbound(config *configs.TmConfig, builder *Builder, client *client.Cl
 				}
 			}
 			if handlerConfig.SupportIpv6 != nil {
-				handler = &outbound.HandlerWithSupport6Info{
-					Outbound: handler,
-				}
-				handler.(*outbound.HandlerWithSupport6Info).SetSupport6(*handlerConfig.SupportIpv6)
+				handler = outbound.NewHandlerWithSupport6Info(handler, *handlerConfig.SupportIpv6)
 			}
 			handlers = append(handlers, handler)
 		}

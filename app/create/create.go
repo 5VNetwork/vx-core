@@ -53,8 +53,10 @@ type HandlerConfig struct {
 }
 
 func NewHandler(config *HandlerConfig) (i.Outbound, error) {
+	var out i.Outbound
+	var err error
 	if config.GetOutbound() != nil {
-		return NewOutHandler(&Config{
+		out, err = NewOutHandler(&Config{
 			OutboundHandlerConfig:       config.GetOutbound(),
 			DialerFactory:               config.DialerFactory,
 			Policy:                      config.Policy,
@@ -64,7 +66,7 @@ func NewHandler(config *HandlerConfig) (i.Outbound, error) {
 			RejectQuic:                  config.RejectQuic,
 		})
 	} else {
-		return NewChainHandler(&ChainHandlerConfig{
+		out, err = NewChainHandler(&ChainHandlerConfig{
 			ChainHandlerConfig:          config.GetChain(),
 			Policy:                      config.Policy,
 			IPResolver:                  config.IPResolver,
@@ -74,6 +76,13 @@ func NewHandler(config *HandlerConfig) (i.Outbound, error) {
 			RejectQuic:                  config.RejectQuic,
 		})
 	}
+	if err != nil {
+		return nil, err
+	}
+	if config.SupportIpv6 != nil {
+		return outbound.NewHandlerWithSupport6Info(out, *config.SupportIpv6), nil
+	}
+	return out, nil
 }
 
 type Config struct {
@@ -132,8 +141,6 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 	// dialer
 	transportConfig := TransportConfigToMemoryConfig(config.Transport,
 		readCounter, writeCounter, config.ECHResolver)
-	transportConfig.Address = address
-	transportConfig.PortSelector = sp
 	transportConfig.DomainStrategy = domain.DomainStrategy(config.DomainStrategy)
 	dialer, err := df.GetDialer(transportConfig)
 	if err != nil {

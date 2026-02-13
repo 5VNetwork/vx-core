@@ -111,7 +111,7 @@ func TestHandlerPing(ctx context.Context, s Tester, item outHandler) {
 }
 
 func TestHandler6(ctx context.Context, s Tester, item outHandler) {
-	log.Debug().Str("tag", item.Name()).Msg("test handler ping")
+	log.Debug().Str("tag", item.Name()).Msg("test handler ipv6")
 	h, err := item.GetHandler()
 	if err != nil {
 		log.Error().Str("tag", item.Name()).Err(err).Msg("failed to get handler")

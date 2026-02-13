@@ -27,6 +27,13 @@ type HandlerWithSupport6Info struct {
 	support6 bool
 }
 
+func NewHandlerWithSupport6Info(outbound i.Outbound, support6 bool) *HandlerWithSupport6Info {
+	return &HandlerWithSupport6Info{
+		Outbound: outbound,
+		support6: support6,
+	}
+}
+
 func (h *HandlerWithSupport6Info) Support6() bool {
 	return h.support6
 }

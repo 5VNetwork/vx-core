@@ -251,12 +251,12 @@ func TestXhttpSplitTls(t *testing.T) {
 	clientPort := tcp.PickPort()
 	t.Log("client port", clientPort)
 	clientConfig := &configs.TmConfig{
-		Log: &configs.LoggerConfig{
-			LogLevel:      configs.Level_DEBUG,
-			ConsoleWriter: true,
-			ShowColor:     true,
-			ShowCaller:    true,
-		},
+		// Log: &configs.LoggerConfig{
+		// 	LogLevel:      configs.Level_DEBUG,
+		// 	ConsoleWriter: true,
+		// 	ShowColor:     true,
+		// 	ShowCaller:    true,
+		// },
 		InboundManager: &configs.InboundManagerConfig{
 			Handlers: []*configs.ProxyInboundConfig{
 				{
@@ -347,7 +347,7 @@ func TestXhttpSplitTls(t *testing.T) {
 	defer client.Close()
 
 	var errg errgroup.Group
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 16; i++ {
 		errg.Go(scenarios.TestTCPConn(clientPort, 10240*1024, scenarios.Timeout))
 	}
 

@@ -44,8 +44,6 @@ type Config struct {
 	DnsServer i.ECHResolver
 	// dialer
 	DomainStrategy domain.DomainStrategy
-	Address        net1.Address
-	PortSelector   i.PortSelector
 }
 
 type DialerCreator func(protocolConfig, securityConfig interface{},
@@ -91,7 +89,6 @@ func NewDialer(protocolConfig, securityConfig interface{},
 
 	var d i.Dialer
 	switch transportConfig := protocolConfig.(type) {
-	//TODO: currently, udp dial also uses this
 	case *tcp.TcpConfig:
 		d = tcp.NewTcpDialer(transportConfig, securityEngine, dl)
 	case *kcp.KcpConfig:

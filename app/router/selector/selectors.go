@@ -8,9 +8,7 @@ import (
 	"sync"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/util"
-	"github.com/5vnetwork/vx-core/app/xsqlite"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/rs/zerolog/log"
 )
@@ -124,10 +122,8 @@ type SelectorConfig struct {
 	CreateHandler             CreateHandlerFunc
 	HandlerErrorChangeSubject HandlerErrorChangeSubject
 	Tester                    Tester
-	Database                  Db
-	OutboundManager           *outbound.Manager
+	Filter                    Filter
 	OnHandlerBeingUsedChange  HandlersBeingUsedUpdate
-	LandHandlers              []*xsqlite.OutboundHandler
 }
 
 func NewSelector(config SelectorConfig) *Selector {
@@ -146,14 +142,6 @@ func NewSelector(config SelectorConfig) *Selector {
 		balancer = NewMemoryBalancer()
 	}
 
-	var filter Filter
-	if sc.SelectFromOm {
-		filter = NewOmFilter(sc.GetFilter(), config.OutboundManager)
-	} else {
-		filter = NewDbFilter(config.Database, sc.GetFilter(),
-			config.LandHandlers, config.CreateHandler)
-	}
-
 	var se selectStrategy
 	switch sc.Strategy {
 	case configs.SelectorConfig_ALL:
@@ -168,7 +156,7 @@ func NewSelector(config SelectorConfig) *Selector {
 	selector0 := newSelector(selectorConfig{
 		Tag:                      sc.Tag,
 		Strategy:                 se,
-		Filter:                   filter,
+		Filter:                   config.Filter,
 		Balancer:                 balancer,
 		Tester:                   config.Tester,
 		OnHandlerBeingUsedChange: config.OnHandlerBeingUsedChange,

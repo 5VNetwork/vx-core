@@ -86,31 +86,49 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 	})
 
 	if len(config.GetSelectors().GetSelectors()) > 0 {
-		err := fc.requireFeature(func(dispatcher *dispatcher.Dispatcher, tester *tester.Tester,
-			db client.Db, om *outbound.Manager) error {
-			for _, selectorConfig := range config.Selectors.Selectors {
-				landHandlers := make([]*xsqlite.OutboundHandler, 0, len(selectorConfig.LandHandlers))
-				for _, landHandlerId := range selectorConfig.LandHandlers {
-					handler := db.GetHandler(int(landHandlerId))
-					if handler == nil {
-						return fmt.Errorf("land handler %d not found", landHandlerId)
-					}
-					landHandlers = append(landHandlers, handler)
+		for _, selectorConfig := range config.Selectors.Selectors {
+			if selectorConfig.SelectFromOm {
+				err := fc.requireFeature(func(dispatcher *dispatcher.Dispatcher, tester *tester.Tester,
+					om *outbound.Manager) error {
+					filter := selector.NewOmFilter(selectorConfig.GetFilter(), om)
+					selectors.AddSelector(selector.NewSelector(selector.SelectorConfig{
+						SelectorConfig:            selectorConfig,
+						CreateHandler:             cc.CreateHandlerWithLandHandlers,
+						Tester:                    tester,
+						HandlerErrorChangeSubject: d,
+						Filter:                    filter,
+					}))
+					return nil
+				})
+				if err != nil {
+					return err
 				}
-				selectors.AddSelector(selector.NewSelector(selector.SelectorConfig{
-					SelectorConfig:            selectorConfig,
-					CreateHandler:             cc.CreateHandlerWithLandHandlers,
-					Tester:                    tester,
-					Database:                  db,
-					HandlerErrorChangeSubject: d,
-					LandHandlers:              landHandlers,
-					OutboundManager:           om,
-				}))
+			} else {
+				err := fc.requireFeature(func(dispatcher *dispatcher.Dispatcher, tester *tester.Tester,
+					db client.Db) error {
+					landHandlers := make([]*xsqlite.OutboundHandler, 0, len(selectorConfig.LandHandlers))
+					for _, landHandlerId := range selectorConfig.LandHandlers {
+						handler := db.GetHandler(int(landHandlerId))
+						if handler == nil {
+							return fmt.Errorf("land handler %d not found", landHandlerId)
+						}
+						landHandlers = append(landHandlers, handler)
+					}
+					filter := selector.NewDbFilter(db, selectorConfig.GetFilter(),
+						landHandlers, cc.CreateHandlerWithLandHandlers)
+					selectors.AddSelector(selector.NewSelector(selector.SelectorConfig{
+						SelectorConfig:            selectorConfig,
+						CreateHandler:             cc.CreateHandlerWithLandHandlers,
+						Tester:                    tester,
+						HandlerErrorChangeSubject: d,
+						Filter:                    filter,
+					}))
+					return nil
+				})
+				if err != nil {
+					return err
+				}
 			}
-			return nil
-		})
-		if err != nil {
-			return err
 		}
 	}
 

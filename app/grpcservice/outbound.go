@@ -113,14 +113,19 @@ func (s *GrpcService) ChangeSelector(ctx context.Context, in *ChangeSelectorRequ
 			}
 			landHandlers = append(landHandlers, handler)
 		}
+		var filter selector.Filter
+		if selectorConfig.SelectFromOm {
+			filter = selector.NewOmFilter(selectorConfig.GetFilter(), s.Client.OutboundManager)
+		} else {
+			filter = selector.NewDbFilter(s.Client.DB, selectorConfig.GetFilter(),
+				landHandlers, s.Client.CreateHandlerWithLandHandlers)
+		}
 		s.Client.Selectors.AddSelector(selector.NewSelector(selector.SelectorConfig{
 			SelectorConfig:            selectorConfig,
 			CreateHandler:             s.Client.CreateHandlerWithLandHandlers,
 			HandlerErrorChangeSubject: s.Client.Dispatcher,
 			Tester:                    s.Client.Tetser,
-			Database:                  s.Client.DB,
-			OutboundManager:           s.Client.OutboundManager,
-			LandHandlers:              landHandlers,
+			Filter:                    filter,
 		}))
 	}
 	return &ChangeSelectorResponse{}, nil
