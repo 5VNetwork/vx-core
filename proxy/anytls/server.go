@@ -109,6 +109,8 @@ func (d *Server) auth(ctx context.Context, reader io.Reader, conn net.Conn) (i.U
 
 func (d *Server) processCommon(ctx context.Context, conn net.Conn,
 	bufferedReader *buf.BufferedReader) error {
+	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "anytls")
+
 	paddingLen, err := serial.ReadUint16(bufferedReader)
 	if err != nil {
 		return err

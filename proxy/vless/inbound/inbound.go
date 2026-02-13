@@ -88,6 +88,8 @@ func (*Handler) Network() []net.Network {
 
 // Process implements proxy.Inbound.Process().
 func (h *Handler) Process(ctx context.Context, conn net.Conn) error {
+	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "vless")
+
 	if err := conn.SetReadDeadline(time.Now().Add(h.policyManager.HandshakeTimeout())); err != nil {
 		return errors.New("unable to set read deadline").Base(err)
 	}

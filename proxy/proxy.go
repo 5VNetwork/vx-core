@@ -16,6 +16,7 @@ type ProxyCtxKey int
 
 const (
 	userKey ProxyCtxKey = iota
+	protocolKey
 )
 
 func ContextWithUser(ctx context.Context, user i.User) context.Context {
@@ -26,6 +27,15 @@ func UserFromContext(ctx context.Context) (i.User, bool) {
 		return nil, false
 	}
 	return ctx.Value(userKey).(i.User), true
+}
+
+func ContextWithInboundProxyProtocol(ctx context.Context, name string) context.Context {
+	return context.WithValue(ctx, protocolKey, name)
+}
+
+func InboundProxyProtocolFromContext(ctx context.Context) (string, bool) {
+	name, ok := ctx.Value(protocolKey).(string)
+	return name, ok
 }
 
 const FirstPayloadTimeout = 10 * time.Millisecond

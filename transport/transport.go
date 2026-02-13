@@ -116,7 +116,7 @@ func NewDialer(protocolConfig, securityConfig interface{},
 	default:
 		creator, ok := AnyCreator[reflect.TypeOf(protocolConfig)]
 		if !ok {
-			return nil, errors.New("invalid transport config")
+			return nil, fmt.Errorf("invalid transport config: %v", protocolConfig)
 		}
 		d, err = creator(protocolConfig, securityConfig, dl, echResolver)
 		if err != nil {

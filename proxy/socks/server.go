@@ -74,6 +74,8 @@ func (s *Server) Network() []nethelper.Network {
 }
 
 func (s *Server) FallbackProcess(ctx context.Context, conn net.Conn) (bool, buf.MultiBuffer, error) {
+	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "socks")
+
 	switch nethelper.NetworkFromAddr(conn.LocalAddr()) {
 	case nethelper.Network_TCP:
 		return s.processTcp(ctx, conn)
@@ -85,6 +87,8 @@ func (s *Server) FallbackProcess(ctx context.Context, conn net.Conn) (bool, buf.
 }
 
 func (s *Server) Process(ctx context.Context, conn net.Conn) error {
+	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "socks")
+
 	switch nethelper.NetworkFromAddr(conn.LocalAddr()) {
 	case nethelper.Network_TCP:
 		_, b, err := s.processTcp(ctx, conn)

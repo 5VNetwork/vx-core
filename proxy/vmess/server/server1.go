@@ -74,6 +74,8 @@ func (h *ServerIO) RemoveUser(uid, secret string) {
 }
 
 func (s *ServerIO) FallbackProcess(ctx context.Context, conn net.Conn) (bool, buf.MultiBuffer, error) {
+	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "vmess")
+
 	if err := conn.SetReadDeadline(time.Now().Add(time.Duration(s.policyManager.HandshakeTimeout()))); err != nil {
 		return false, nil, fmt.Errorf("unable to set read deadline, %w", err)
 	}
@@ -101,6 +103,8 @@ func (s *ServerIO) FallbackProcess(ctx context.Context, conn net.Conn) (bool, bu
 
 // Process implements proxy.Inbound.Process().
 func (h *ServerIO) Process(ctx context.Context, conn net.Conn) error {
+	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "vmess")
+
 	if err := conn.SetReadDeadline(time.Now().Add(time.Duration(h.policyManager.HandshakeTimeout()))); err != nil {
 		return fmt.Errorf("unable to set read deadline, %w", err)
 	}

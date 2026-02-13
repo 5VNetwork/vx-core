@@ -82,6 +82,8 @@ func isInsecureEncryption(s protocol.SecurityType) bool {
 }
 
 func (s *Server) FallbackProcess(ctx context.Context, conn net.Conn) (bool, buf.MultiBuffer, error) {
+	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "vmess")
+
 	if err := conn.SetReadDeadline(time.Now().Add(time.Duration(s.PolicyManager.HandshakeTimeout()))); err != nil {
 		return false, nil, fmt.Errorf("unable to set read deadline, %w", err)
 	}
@@ -109,6 +111,8 @@ func (s *Server) FallbackProcess(ctx context.Context, conn net.Conn) (bool, buf.
 
 // Process implements proxy.Inbound.Process().
 func (h *Server) Process(ctx context.Context, conn net.Conn) error {
+	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "vmess")
+
 	if err := conn.SetReadDeadline(time.Now().Add(time.Duration(h.PolicyManager.HandshakeTimeout()))); err != nil {
 		return fmt.Errorf("unable to set read deadline, %w", err)
 	}

@@ -57,6 +57,8 @@ func (s *Server) Network() []net.Network {
 }
 
 func (s *Server) FallbackProcess(ctx context.Context, conn net.Conn) (bool, buf.MultiBuffer, error) {
+	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "trojan")
+
 	if err := conn.SetReadDeadline(time.Now().Add(s.PolicyManager.HandshakeTimeout())); err != nil {
 		return false, nil, errors.New("unable to set read deadline").Base(err)
 	}
@@ -76,6 +78,8 @@ func (s *Server) FallbackProcess(ctx context.Context, conn net.Conn) (bool, buf.
 
 // Process implements proxy.Inbound.Process().
 func (s *Server) Process(ctx context.Context, conn net.Conn) error {
+	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "trojan")
+
 	if err := conn.SetReadDeadline(time.Now().Add(s.PolicyManager.HandshakeTimeout())); err != nil {
 		return errors.New("unable to set read deadline").Base(err)
 	}

@@ -83,7 +83,7 @@ func spliceCopy(ctx context.Context, reader buf.Reader, writer buf.Writer, up bo
 			for {
 				if unwrapper, ok := r.(buf.UnwrapReader); ok {
 					if unwrapper.OkayToUnwrapReader() == 1 {
-						log.Debug().Type("reader", r).Msg("unwrap reader")
+						// log.Debug().Type("reader", r).Msg("unwrap reader")
 						r = unwrapper.UnwrapReader()
 					} else if unwrapper.OkayToUnwrapReader() == -1 {
 						unwrapReader = false
@@ -107,9 +107,9 @@ func spliceCopy(ctx context.Context, reader buf.Reader, writer buf.Writer, up bo
 				for {
 					if unwrapper, ok := w.(buf.UnwrapWriter); ok {
 						if unwrapper.OkayToUnwrapWriter() == 1 {
-							log.Debug().Type("writer", w).Msg("unwrap writer")
+							// log.Debug().Type("writer", w).Msg("unwrap writer")
 							w = unwrapper.UnwrapWriter()
-							log.Debug().Type("writer", w).Msg("unwraped writer")
+							// log.Debug().Type("writer", w).Msg("unwraped writer")
 						} else if unwrapper.OkayToUnwrapWriter() == -1 {
 							unwrapWriter = false
 							innerMostWriter = w
