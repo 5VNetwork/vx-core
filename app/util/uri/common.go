@@ -5,6 +5,7 @@ package uri
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"net/url"
 	"strings"
 
@@ -27,7 +28,7 @@ func addQueryParameters(queryParameters url.Values, outboundConfig *configs.Outb
 			queryParameters.Add("allowInsecure", "1")
 		}
 		if len(t.PinnedPeerCertificateChainSha256) > 0 {
-			queryParameters.Add("pinSHA256", string(t.PinnedPeerCertificateChainSha256[0]))
+			queryParameters.Add("pinSHA256", hex.EncodeToString(t.PinnedPeerCertificateChainSha256[0]))
 		}
 		if len(t.EchConfig) > 0 {
 			queryParameters.Add("echConfig", base64.StdEncoding.EncodeToString(t.EchConfig))
