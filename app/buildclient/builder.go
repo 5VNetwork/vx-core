@@ -271,16 +271,16 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 		if err := builder.addComponent(grpc); err != nil {
 			return nil, fmt.Errorf("failed to add grpc server: %w", err)
 		}
+		x.GrpcServer = grpc
 	}
 
-	if config.Grpc != nil {
+	if config.GrpcService != nil {
 		err := builder.requireFeature(func(grpcServer *grpcserver.GrpcServer) error {
 			clientGrpc, _ := grpcservice.NewGrpcService(&grpcservice.GrpcServiceConfig{
 				Client:         x,
 				GrpcServer:     grpcServer.Server,
 				UpdateLantency: config.GrpcService.UpdateLatency,
 			})
-			x.GrpcServer = grpcServer
 			err := builder.addComponent(clientGrpc)
 			if err != nil {
 				return fmt.Errorf("failed to add grpc service: %w", err)
