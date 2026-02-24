@@ -79,6 +79,12 @@ type Api struct {
 
 type ApiOption func(*Api)
 
+func WithDefaultInterfaceMonitor(mon i.DefaultInterfaceInfo) ApiOption {
+	return func(a *Api) {
+		a.mon = mon
+	}
+}
+
 func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error) {
 	// set log
 	logger.SetLog(&configs.LoggerConfig{

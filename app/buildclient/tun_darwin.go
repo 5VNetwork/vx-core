@@ -89,7 +89,7 @@ func NewTunGvisorInbound(config *configs.TunConfig, f *Builder,
 }
 
 func NewInterfaceMonotor(name string, f *Builder) (i.DefaultInterfaceInfo, error) {
-	return tun.NewInterfaceMonitor(name)
+	panic("not implemented")
 }
 
 func getTun(config *configs.TunConfig, fc *Builder) (tun.TunDeviceWithInfo, error) {

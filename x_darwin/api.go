@@ -26,7 +26,7 @@ func StartApiServer(configBytes []byte) error {
 	if err != nil {
 		return err
 	}
-	as, err := api.StartApiServer(&config)
+	as, err := api.StartApiServer(&config, api.WithDefaultInterfaceMonitor(&nicMon))
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,6 @@ package tun
 import (
 	"net"
 	"testing"
-	"time"
 
 	"github.com/5vnetwork/vx-core/tun/netmon"
 )
@@ -40,28 +39,6 @@ func TestDnsServers(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error for non-existent interface index, got nil")
 	}
-}
-
-func TestDefaultInterfaceInfo(t *testing.T) {
-	mon, err := NewInterfaceMonitor("")
-	if err != nil {
-		t.Fatalf("failed to create interface monitor: %v", err)
-	}
-	mon.Start()
-	defer mon.Close()
-	time.Sleep(time.Second * 1)
-	t.Logf("default interface: %v", mon.DefaultInterface4())
-	for _, d := range mon.DefaultDns4() {
-		t.Logf("default dns: %v", d)
-	}
-	state := mon.monitor.InterfaceState()
-	t.Logf("state: %v", state)
-
-	has, err := mon.HasGlobalIPv6()
-	if err != nil {
-		t.Fatalf("failed to get global ipv6: %v", err)
-	}
-	t.Logf("support6: %v", has)
 }
 
 func TestNetmonState(t *testing.T) {

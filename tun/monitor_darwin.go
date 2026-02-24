@@ -64,28 +64,24 @@ func NewInterfaceMonitor(tunName string) (*DefaultInterfaceInfo, error) {
 }
 
 func (m *DefaultInterfaceInfo) log() {
-	if zerolog.GlobalLevel() <= zerolog.InfoLevel {
+	m.RLock()
+	l := log.Info().Str("name", m.defaultInterfaceName).
+		Uint32("index", m.defaultInterface).
+		Int("supportIPv6", m.supportIPv6).
+		Any("defaultDns", m.defaultDns).Func(func(e *zerolog.Event) {
 		iff, err := net.InterfaceByIndex(int(m.defaultInterface))
 		if err == nil {
 			addrs, err := iff.Addrs()
 			if err == nil {
-				l := log.Info()
 				for i, addr := range addrs {
-					l.Str(fmt.Sprintf("addr%d", i), addr.String())
+					e.Str(fmt.Sprintf("addr%d", i), addr.String())
 				}
-				l.Msg("default interface addresses")
 			}
 		}
-		m.RLock()
-		defer m.RUnlock()
-		log.Info().Str("tunName", m.tunName).
-			Str("name", m.defaultInterfaceName).
-			Uint32("index", m.defaultInterface).
-			Int("supportIPv6", m.supportIPv6).
-			Any("defaultDns", m.defaultDns).Send()
-	}
+	})
+	m.RUnlock()
+	l.Msg("default interface info")
 }
-
 func (t *DefaultInterfaceInfo) DefaultInterface4() uint32 {
 	t.RLock()
 	defer t.RUnlock()
@@ -154,8 +150,7 @@ func (t *DefaultInterfaceInfo) Start() error {
 				iffName = iffInfo.Name
 			}
 		}
-		// TODO: When default interfaces for v4 and v6 are different, there will be a problem:
-		// the returned defaultInterface might be for v4, but it might be set to v6
+
 		t.Lock()
 		t.state = change.New
 
@@ -310,10 +305,10 @@ func GetPrimaryPhysicalInterface() (info *InterfaceInfo, err error) {
 		if !strings.Contains(route.InterfaceName, "utun") {
 			return &InterfaceInfo{Index: route.InterfaceIndex, Name: route.InterfaceName}, nil
 		} else {
-			log.Debug().Str("route.InterfaceName", route.InterfaceName).Msg("netmon.DefaultRoute return utun")
+			// log.Debug().Str("route.InterfaceName", route.InterfaceName).Msg("netmon.DefaultRoute return utun")
 		}
 	} else {
-		// log.Debug().Err(err).Msg("netmon.DefaultRoute failed")
+		log.Debug().Err(err).Msg("netmon.DefaultRoute failed")
 	}
 	// route -n get 169.254.0.1
 	info, err = GetPrimaryPhysicalInterface1()
@@ -321,10 +316,10 @@ func GetPrimaryPhysicalInterface() (info *InterfaceInfo, err error) {
 		if !strings.Contains(info.Name, "utun") {
 			return info, nil
 		} else {
-			log.Debug().Str("info.Name", info.Name).Msg("GetPrimaryPhysicalInterface1 return utun")
+			// log.Debug().Str("info.Name", info.Name).Msg("GetPrimaryPhysicalInterface1 return utun")
 		}
 	} else {
-		// log.Debug().Err(err).Msg("GetPrimaryPhysicalInterface1 failed")
+		log.Debug().Err(err).Msg("GetPrimaryPhysicalInterface1 failed")
 	}
 	//  netstat -nr
 	idx, err := DefaultRouteInterfaceIndex()
@@ -336,7 +331,7 @@ func GetPrimaryPhysicalInterface() (info *InterfaceInfo, err error) {
 			// log.Debug().Int("idx", idx).Str("name", iface.Name).Msg("DefaultRouteInterfaceIndex return utun")
 		}
 	} else {
-		// log.Err(err).Msg("DefaultRouteInterfaceIndex failed")
+		log.Debug().Err(err).Msg("DefaultRouteInterfaceIndex failed")
 	}
 	// fallback to networksetup
 	n, err := GetPrimaryPhysicalInterface0()
@@ -346,7 +341,7 @@ func GetPrimaryPhysicalInterface() (info *InterfaceInfo, err error) {
 			return &InterfaceInfo{Index: iface.Index, Name: n}, nil
 		}
 	} else {
-		// log.Err(err).Msg("GetPrimaryPhysicalInterface0 failed")
+		// log.Debug().Err(err).Msg("GetPrimaryPhysicalInterface0 failed")
 	}
 	return nil, errors.New("no primary physical interface found")
 }

@@ -21,7 +21,6 @@ import (
 	"github.com/5vnetwork/vx-core/common/redirect"
 	"github.com/5vnetwork/vx-core/transport/security/tls"
 	"github.com/5vnetwork/vx-core/tun"
-	"github.com/5vnetwork/vx-core/tun/netmon"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 )
@@ -71,18 +70,14 @@ func New(configBytes []byte, in Interface,
 		return dnsServers, nil
 	}
 
-	nicMon, err := tun.NewInterfaceMonitor(in.GetTunName())
-	if err != nil {
-		return nil, fmt.Errorf("failed to create interface monitor: %w", err)
-	}
-	opts = append(opts, buildclient.WithComponents(nicMon))
+	opts = append(opts, buildclient.WithComponents(&nicMon))
 
 	// tun
 	tunConfig := config.GetTun()
 	if tunConfig != nil {
 		// tun setter
 		if tunConfig.Tun46Setting == configs.TunConfig_DYNAMIC {
-			tunFollowDefaultNic := tunset.NewTun6FollowsDefaultNIC(nicMon, tunSupport6, in)
+			tunFollowDefaultNic := tunset.NewTun6FollowsDefaultNIC(&nicMon, tunSupport6, in)
 			opts = append(opts, buildclient.WithComponents(tunFollowDefaultNic))
 		}
 
@@ -141,9 +136,9 @@ func HasNICHavingGlobalIPv6Address() (bool, error) {
 	return util.NICHasGlobalIPv6Address(uint32(info.Index))
 }
 
-func UpdateDefaultRouteInterface(ifName string) {
-	log.Info().Str("default route nic", ifName).Msg("UpdateDefaultRouteInterface")
-	netmon.UpdateLastKnownDefaultRouteInterface(ifName)
+func UpdateDefaultRouteInterface(ifName string, ifIndex int) {
+	log.Info().Str("default route nic", ifName).Int("index", ifIndex).Msg("UpdateDefaultRouteInterface")
+	nicMon.SetDefaultInterface(ifIndex, ifName)
 }
 
 type X struct {
@@ -151,6 +146,9 @@ type X struct {
 }
 
 func (x *X) Start() error {
+	if nicMon.DefaultInterface4() == 0 {
+		setDefaultInterfaceInfo()
+	}
 	return x.instance.Start()
 }
 
