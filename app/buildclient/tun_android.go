@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"syscall"
 
 	"github.com/5vnetwork/vx-core/app/client"
 	"github.com/5vnetwork/vx-core/app/configs"
@@ -46,14 +45,14 @@ func NewInterfaceMonotor(name string, f *Builder) (i.DefaultInterfaceInfo, error
 func NewTunGvisorInbound(config *configs.TunConfig, f *Builder,
 	rejector *reject.TCPReject, udpReject *reject.UdpReject, client *client.Client) error {
 	log.Info().Int("fd", int(config.Device.Fd)).Send()
-	newFd, err := syscall.Dup(int(config.Device.Fd))
-	if err != nil {
-		return err
-	}
-	log.Info().Int("oldFd", int(config.Device.Fd)).Int("newFd", newFd).Send()
+	// newFd, err := syscall.Dup(int(config.Device.Fd))
+	// if err != nil {
+	// 	return err
+	// }
+	// log.Info().Int("oldFd", int(config.Device.Fd)).Int("newFd", newFd).Send()
 	ep, err := fdbased.New(&fdbased.Options{
-		FDs: []int{newFd},
-		MTU: 1500,
+		FDs: []int{int(config.Device.Fd)},
+		MTU: config.Device.Mtu,
 		//TODO offload
 	})
 	if err != nil {
@@ -88,7 +87,7 @@ func NewTunGvisorInbound(config *configs.TunConfig, f *Builder,
 			LinkEndpoint: ep,
 			Handler:      h,
 			OnClose: func() {
-				unix.Close(newFd)
+				unix.Close(int(config.Device.Fd))
 			},
 		})
 		if err != nil {
