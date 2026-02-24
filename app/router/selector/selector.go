@@ -106,6 +106,12 @@ func (s *Selector) Close() error {
 	if s.periodicTestPing != nil {
 		go s.periodicTestPing.Close()
 	}
+	if s.periodicTestUnusableHandlers != nil {
+		go s.periodicTestUnusableHandlers.Close()
+	}
+	if s.periodicTestUnusableHandlersInFastRevovery != nil {
+		go s.periodicTestUnusableHandlersInFastRevovery.Close()
+	}
 	if s.dispatcher != nil {
 		s.dispatcher.RemoveHandlerErrorObserver(s)
 	}

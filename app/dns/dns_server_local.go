@@ -105,7 +105,6 @@ func NewStaticDnsServer(records []*configs.Record, recordStrings ...string) *Sta
 var ErrNotFound = errors.New("not found")
 
 func (s *StaticDnsServer) ReplyFor(msg *dns.Msg) (*dns.Msg, bool) {
-	log.Debug().Any("msg", msg).Msg("ReplyFor")
 	entry, ok := s.cache[msg.Question[0]]
 	if !ok {
 		return nil, false

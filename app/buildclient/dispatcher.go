@@ -36,6 +36,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 		debugHook := &dispatcher.DebugHook{}
 		d.AddBeforeHandlerSelectionHook(debugHook)
 		d.AddAfterHandlerSelectionHook(debugHook)
+		d.AddSessionEndHook(debugHook)
 	}
 
 	rewriteDestination := &dispatcher.RewriteDestinationHook{

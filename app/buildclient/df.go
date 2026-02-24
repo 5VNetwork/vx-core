@@ -19,8 +19,7 @@ func DialerFactory(config *configs.TmConfig, fc *Builder, client *client.Client)
 	if config.Tun.GetShouldBindDevice() {
 		err := fc.requireFeature(func(bdl i.DefaultInterfaceInfo, ipResolver i.IPResolver) error {
 			opt := transport.DialerFactoryOption{
-				BindToDefaultNIC: runtime.GOOS != "android",
-				// PreventRouteLoop: !config.Tun.GetShouldBindDevice(),
+				BindToDefaultNIC:        runtime.GOOS != "android",
 				IpResolver:              ipResolver,
 				DefaultInterfaceMonitor: bdl,
 			}

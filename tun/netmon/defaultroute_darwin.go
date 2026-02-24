@@ -54,13 +54,13 @@ func defaultRoute() (d DefaultRouteDetails, err error) {
 			}
 
 			if !ifc.IsUp() {
-				// log.Printf("defaultroute_darwin: %s is down", name)
+				// log.Debug().Str("name", name).Msg("defaultroute_darwin: interface is down")
 				return nil
 			}
 
 			addrs, _ := ifc.Addrs()
 			if len(addrs) == 0 {
-				// log.Printf("defaultroute_darwin: %s has no addresses", name)
+				// log.Debug().Str("name", name).Msg("defaultroute_darwin: interface has no addresses")
 				return nil
 			}
 			return &ifc

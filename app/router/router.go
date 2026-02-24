@@ -309,34 +309,3 @@ func (r *Router) PickHandlerWithData(ctx context.Context, si *session.Info, rw i
 
 	return rw, nil, ErrNoRule
 }
-
-// func ipv6Process(si *session.Info, handler i.Outbound) i.Outbound {
-// 	// Only for global unicast IPv6?
-// 	if si.Target.IsValid() && si.Target.Address.Family().IsIP() &&
-// 		si.Target.Address.Family().IsIPv6() && si.Target.Address.IP().IsGlobalUnicast() {
-// 		if h, ok := handler.(*outbound.Handler); ok && h.NotSupport6() {
-// 			return nil
-// 		}
-// 	}
-// 	return handler
-// }
-
-// func (r *Router) AddRule(v *rule) {
-// 	r.Lock()
-// 	defer r.Unlock()
-// 	newRules := make([]*rule, 0, len(r.rules)+1)
-// 	newRules = append(newRules, v)
-// 	newRules = append(newRules, r.rules...)
-// 	r.rules = newRules
-// }
-// func (r *Router) RemoveRule(v *rule) {
-// 	r.Lock()
-// 	defer r.Unlock()
-// 	newRules := make([]*rule, 0, len(r.rules))
-// 	for _, rule := range r.rules {
-// 		if rule != v {
-// 			newRules = append(newRules, rule)
-// 		}
-// 	}
-// 	r.rules = newRules
-// }

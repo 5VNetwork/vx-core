@@ -25,7 +25,7 @@ func (p *DebugHook) BeforeHandlerSelection(ctx context.Context, info *session.In
 			(!strings.Contains(info.InboundTag, "dns")) &&
 			!strings.Contains(info.InboundTag, "DNS") {
 			appId, err := appid.GetAppId(ctx, info.Source, &info.Target)
-			if err != nil {
+			if err != nil || appId == "" {
 				log.Ctx(ctx).Debug().Err(err).Msg("failed to get appId")
 			}
 			info.AppId = appId

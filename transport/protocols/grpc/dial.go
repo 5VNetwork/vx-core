@@ -36,11 +36,6 @@ type Dialer struct {
 	engine       security.Engine
 	socketConfig i.Dialer
 
-	// tmp fix for when interface change, ClientConn become unusable
-	// interfaceMonitor  i.DefaultInterfaceInfo
-	// currentInterface4 string
-	// currentInterface6 string
-
 	lock sync.Mutex
 	// when default interface changed, this destToConn will be replaced.
 	destToConn map[net.Destination]*clientConnWrapper
@@ -81,19 +76,10 @@ func (d *Dialer) closeClientConn(c *clientConnWrapper) {
 }
 
 func NewGrpcDialer(config *GrpcConfig, engine security.Engine, socketConfig i.Dialer) *Dialer {
-	// currentInterface4 := ""
-	// currentInterface6 := ""
-	// if interfaceMonitor != nil {
-	// 	currentInterface4 = interfaceMonitor.DefaultInterfaceName4()
-	// 	currentInterface6 = interfaceMonitor.DefaultInterfaceName6()
-	// }
 	return &Dialer{
 		config:       config,
 		engine:       engine,
 		socketConfig: socketConfig,
-		// interfaceMonitor:  interfaceMonitor,
-		// currentInterface4: currentInterface4,
-		// currentInterface6: currentInterface6,
 	}
 }
 
@@ -125,7 +111,8 @@ func (d *Dialer) dialgRPC(ctx context.Context, dest net.Destination) (net.Conn, 
 		}, nil
 	}
 
-	grpcService, err := client.(encoding.GRPCServiceClientX).TunCustomName(ctx, d.config.getServiceName(), d.config.getTunStreamName())
+	grpcService, err := client.(encoding.GRPCServiceClientX).TunCustomName(ctx,
+		d.config.getServiceName(), d.config.getTunStreamName())
 	if err != nil {
 		d.decrementConnCount(conn)
 		return nil, errors.New("Cannot dial gRPC").Base(err)
@@ -154,30 +141,15 @@ func (d *Dialer) getGrpcClient(ctx context.Context, dest net.Destination) (*clie
 		d.destToConn = make(map[net.Destination]*clientConnWrapper)
 	}
 
-	// if d.interfaceMonitor == nil ||
-	// 	(d.interfaceMonitor.DefaultInterfaceName4() == d.currentInterface4 &&
-	// 		d.interfaceMonitor.DefaultInterfaceName6() == d.currentInterface6) {
 	if client, found := d.destToConn[dest]; found {
 		if client.GetState() != connectivity.Shutdown {
 			d.incrementConnCount(client)
 			return client, nil
 		} else {
-			// log.Debug().Msg("grpc close client conn")
 			client.ClientConn.Close()
 			delete(d.destToConn, dest)
 		}
 	}
-	// }
-
-	// in this case, default interface changed, so replace the destToConn
-	// if d.interfaceMonitor != nil &&
-	// 	(d.interfaceMonitor.DefaultInterfaceName4() != d.currentInterface4 ||
-	// 		d.interfaceMonitor.DefaultInterfaceName6() != d.currentInterface6) {
-	// 	log.Debug().Msg("grpc replace all ClientConn")
-	// 	d.currentInterface4 = d.interfaceMonitor.DefaultInterfaceName4()
-	// 	d.currentInterface6 = d.interfaceMonitor.DefaultInterfaceName6()
-	// 	d.destToConn = make(map[net.Destination]*clientConnWrapper)
-	// }
 
 	connWrapper := &clientConnWrapper{
 		dest: dest,
@@ -218,28 +190,6 @@ func (d *Dialer) getGrpcClient(ctx context.Context, dest net.Destination) (*clie
 				return nil, err
 			}
 			log.Debug().Str("laddr", c.LocalAddr().String()).Msg("grpc dial success")
-			// c = &connWithErrorCb{
-			// 	Conn: c,
-			// 	errorCb: func(err error) {
-			// 		log.Debug().Err(err).Msg("conn error, close client conn")
-			// 		d.closeClientConn(connWrapper)
-			// 	},
-			// }
-
-			// if tlsConfig != nil {
-			// 	config := tlsConfig.GetTLSConfig()
-			// 	if config.ServerName == "" && address.Family().IsDomain() {
-			// 		config.ServerName = address.Domain()
-			// 	}
-			// 	if fingerprint := tls.GetFingerprint(tlsConfig.Fingerprint); fingerprint != nil {
-			// 		return tls.UClient(c, config, fingerprint), nil
-			// 	} else { // Fallback to normal gRPC TLS
-			// 		return tls.Client(c, config), nil
-			// 	}
-			// }
-			// if realityConfig != nil {
-			// 	return reality.UClient(c, realityConfig, gctx, dest)
-			// }
 			if d.engine == nil {
 				return c, nil
 			}
@@ -254,11 +204,6 @@ func (d *Dialer) getGrpcClient(ctx context.Context, dest net.Destination) (*clie
 	if d.config.Authority != "" {
 		authority = d.config.Authority
 	}
-	//  else if tlsConfig != nil && tlsConfig.ServerName != "" {
-	// 	authority = tlsConfig.ServerName
-	// } else if realityConfig == nil && dest.Address.Family().IsDomain() {
-	// 	authority = dest.Address.Domain()
-	// }
 	dialOptions = append(dialOptions, grpc.WithAuthority(authority))
 
 	if d.config.IdleTimeout > 0 || d.config.HealthCheckTimeout > 0 || d.config.PermitWithoutStream {
@@ -301,28 +246,3 @@ func (d *Dialer) getGrpcClient(ctx context.Context, dest net.Destination) (*clie
 
 	return connWrapper, nil
 }
-
-// type connWithErrorCb struct {
-// 	net.Conn
-// 	errorCb func(error)
-// }
-
-// func (c *connWithErrorCb) Write(b []byte) (int, error) {
-// 	n, err := c.Conn.Write(b)
-// 	if err != nil {
-// 		go c.errorCb(err)
-// 	}
-// 	return n, err
-// }
-
-// func (c *connWithErrorCb) Read(b []byte) (int, error) {
-// 	n, err := c.Conn.Read(b)
-// 	if err != nil {
-// 		go c.errorCb(err)
-// 	}
-// 	return n, err
-// }
-
-// func (c *connWithErrorCb) Close() error {
-// 	return c.Conn.Close()
-// }
