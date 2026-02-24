@@ -10,12 +10,6 @@ import (
 	"github.com/5vnetwork/vx-core/common/buf"
 )
 
-// TODO: Write a real Tls inspector
-// type tlsRequestInspector interface {
-// 		inspectRequest(b *buf.Buffer)
-// 		isTls() int
-// }
-
 var (
 	Tls13SupportedVersions  = []byte{0x00, 0x2b, 0x00, 0x02, 0x03, 0x04}
 	TlsClientHandShakeStart = []byte{0x16, 0x03}
@@ -107,28 +101,38 @@ func (f *tlsResponseInspector) serverHelloVersionInspect(b *buf.Buffer) int {
 	return f.tls13
 }
 
-// type tlsRequestInspector struct {
-// 	IsTls int
-// 	// request
-// 	clientHelloDone bool
-// 	clientHelloBuf  [6]byte
-// 	clientHelloBufSlice []byte
-// 	// tls12AppDataRecordFound bool
-// }
-
 // the start of the tls app data record header should be at buffer[0].
 // todo how to make sure record header start at buffer[0]
 // if found, tlsRecord is a complete tls record containing app data. remaining buffer is the rest of the buffer
-func extractCompleteAppDataRecord(buffer *buf.Buffer) (found bool, tlsRecord *buf.Buffer, remaningBuffer *buf.Buffer) {
-	if buffer.Len() >= 6 && bytes.Equal(buffer.BytesRange(0, 3), TlsApplicationDataStart) {
-		recordLen := int32(buffer.Byte(3))<<8 + int32(buffer.Byte(4)) + 5
-		if buffer.Len() >= recordLen {
-			found = true
-			tlsRecord = buffer
-			tlsRecord = buf.FromBytes(buffer.BytesRange(0, recordLen))
-			remaningBuffer = buf.FromBytes(buffer.BytesRange(recordLen, buffer.Len()))
+func (c *vConn) extractCompleteAppDataRecord(b []byte) (found bool, index int) {
+	index = 0
+	// it means last b contains a incomplete record header
+	if c.incompleteRecordHeaderLen > 0 {
+		// copy b to halfRecordHeader
+		n := copy(c.incompleteRecordHeader[c.incompleteRecordHeaderLen:], b)
+		index += n
+		// a full record header
+		if c.incompleteRecordHeaderLen+n == 5 {
+			length := int32(c.incompleteRecordHeader[3])<<8 + int32(c.incompleteRecordHeader[4])
+			if len(b) < int(length) {
+				return false, 0
+			} else {
+				index += int(length)
+			}
+		}
+	} else if c.remainingRecordLengh > 0 {
+		if len(b) < c.remainingRecordLengh {
+			return false, 0
 		} else {
-			return
+			index += int(c.remainingRecordLengh)
+		}
+	}
+
+	b = b[index:]
+	if len(b) >= 6 && bytes.Equal(b[0:3], TlsApplicationDataStart) {
+		recordLen := int32(b[3])<<8 + int32(b[4]) + 5
+		if len(b) >= int(recordLen) {
+			index += int(recordLen)
 		}
 	}
 	return
@@ -143,32 +147,3 @@ func peekClientHello(b []byte) (isTls bool) {
 	}
 	return
 }
-
-// func readVlessHeader(b *buf.Buffer) bool {
-// 	if b.Len() < 26 {
-// 		return false
-// 	}
-// 	b.Advance(17)
-// 	addOnLen := int32(b.Byte(0))
-// 	if b.Len() < addOnLen+4 {
-// 		return false
-// 	}
-// 	b.Advance(addOnLen + 4)
-// 	// now b is at the beginning of a address type
-// 	addrType := b.Byte(0)
-// 	if addrType == 0x01 {
-// 		b.Advance(4 + 1)
-// 	} else if addrType == 0x03 {
-// 		b.Advance(int32(b.Byte(1)) + 2)
-// 	} else if addrType == 0x04 {
-// 		b.Advance(16 + 1)
-// 	} else {
-// 		return false
-// 	}
-// 	return true
-// 	// f.vlessHeaderDone = true
-// 	// f.requestProgress++
-// 	// if !b.IsEmpty() && !f.hasFinished() {
-// 	// 	f.inspectRequest(b)
-// 	// }
-// }

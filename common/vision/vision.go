@@ -38,18 +38,17 @@ type vConn struct {
 	isTls       int
 	isTls12Or13 int
 	isTls13     int
-	// enableDirectCopy    bool
+
+	remainingRecordLengh      int
+	incompleteRecordHeader    [5]byte
+	incompleteRecordHeaderLen int
 
 	// visionWrite
 	foundAppDataRecord bool
 	remainingTimes     int
 	hasSentLast        bool
-	// protocolHeader                            *buf.Buffer //client only
-	headerLen                                 int
-	headerWritten                             bool
-	visionWriteTimesAfterConfirmingTlsAbove12 int
-	// hasReadHeader      bool                    //client only
-	// headerReaderFunc   func(*buf.Buffer) error //client only
+	headerLen          int
+	headerWritten      bool
 
 	// visionRead
 	rawInput                                           buf.MultiBuffer
@@ -68,7 +67,6 @@ func NewVisionConn(ctx context.Context, conn net.Conn, isClient bool, headerLen 
 		readerConn:     conn,
 		writerConn:     conn,
 		remainingTimes: 10,
-		visionWriteTimesAfterConfirmingTlsAbove12: 3,
 		paddingGarbage: buf.DiscardReader,
 		ctx:            ctx,
 		isClient:       isClient,
@@ -106,13 +104,6 @@ func (c *vConn) OkayToUnwrapReader() int {
 		return 1
 	}
 	return -1
-	// if c.directCopyRead == 1 && c.rawInput == nil {
-	// 	return 1
-	// }
-	// if c.directCopyRead == -1 {
-	// 	return -1
-	// }
-	// return 0
 }
 
 func (c *vConn) UnwrapReader() any {
@@ -257,7 +248,9 @@ func (c *vConn) clientVisionWrite(b []byte) (int, error) {
 		if len(b) < c.headerLen {
 			return 0, errors.New("unexpected length of initial traffic")
 		}
-		// TODO: handler the case that len is exactly equal to the header length
+		if len(b) == c.headerLen {
+			return c.encodeHeaderAndWrite(false, b)
+		}
 		isTls := peekClientHello(b[c.headerLen:])
 		log.Ctx(c.ctx).Debug().Bool("isTls", isTls).Msg("peekClientHello")
 		if isTls {
@@ -271,24 +264,27 @@ func (c *vConn) clientVisionWrite(b []byte) (int, error) {
 	// at this point, c.isTls == 1
 	if c.isTls12Or13 == 0 {
 		return c.encodeHeaderAndWrite(false, b)
-	} else if c.isTls12Or13 == -1 {
+	} else if c.isTls12Or13 == -1 { //1.1
+		return c.encodeHeaderAndWrite(true, b)
+	} else if c.isTls13 == -1 { //1.2
 		return c.encodeHeaderAndWrite(true, b)
 	}
 
-	buffer := buf.FromBytes(b)
-	// at this point, c.isTls12Or13 == 1
+	// at this point, 1.2 or 1.3
 	var numBytesWritten int
-	found, rcrdBuf, remainigBuf := extractCompleteAppDataRecord(buffer)
+	found, index := c.extractCompleteAppDataRecord(b)
 	c.foundAppDataRecord = found
 
 	// if found, this app data record will be the last record that is visioned, records following it will
 	// be either direct copy(tls13) or normal write(tls12)
 	if found {
 		// all of the record is in rcrdBuf, this call is the last call of visionWrite
-		n, err := c.encodeHeaderAndWrite(true, rcrdBuf.Bytes())
+		n, err := c.encodeHeaderAndWrite(true, b[:index])
 		if err != nil {
 			return n, err
 		}
+		b = b[index:]
+
 		numBytesWritten += n
 		// start direct copy
 		if c.enableWritingDirectCopy {
@@ -297,8 +293,8 @@ func (c *vConn) clientVisionWrite(b []byte) (int, error) {
 				return numBytesWritten, err
 			}
 		}
-		if !remainigBuf.IsEmpty() {
-			n, err = c.writerConn.Write(remainigBuf.Bytes())
+		if len(b) > 0 {
+			n, err = c.writerConn.Write(b)
 			numBytesWritten += n
 		}
 		return numBytesWritten, err
@@ -307,9 +303,57 @@ func (c *vConn) clientVisionWrite(b []byte) (int, error) {
 	}
 }
 
+func (c *vConn) setHalfRecord(b []byte) {
+	if len(b) == 0 {
+		return
+	}
+	// it means last b contains a incomplete record header
+	if c.incompleteRecordHeaderLen > 0 {
+		// copy b to halfRecordHeader
+		n := copy(c.incompleteRecordHeader[c.incompleteRecordHeaderLen:], b)
+		b = b[n:]
+		// a full record header
+		if c.incompleteRecordHeaderLen+n == 5 {
+			c.incompleteRecordHeaderLen = 0
+			length := int32(c.incompleteRecordHeader[3])<<8 + int32(c.incompleteRecordHeader[4])
+			if len(b) < int(length) {
+				c.remainingRecordLengh = int(length) - len(b)
+				return
+			} else {
+				b = b[length:]
+				c.remainingRecordLengh = 0
+			}
+		}
+	} else if c.remainingRecordLengh > 0 {
+		if len(b) < c.remainingRecordLengh {
+			c.remainingRecordLengh = c.remainingRecordLengh - len(b)
+			return
+		} else {
+			b = b[c.remainingRecordLengh:]
+			c.remainingRecordLengh = 0
+		}
+	}
+
+	// iterate over all complete records in b
+	for len(b) > 0 {
+		if len(b) >= 5 {
+			length := int32(b[3])<<8 + int32(b[4])
+			b = b[5:]
+			if len(b) < int(length) {
+				c.remainingRecordLengh = int(length) - len(b)
+				return
+			} else {
+				b = b[length:]
+			}
+		} else {
+			c.incompleteRecordHeaderLen = copy(c.incompleteRecordHeader[:], b)
+			return
+		}
+	}
+}
+
 func (c *vConn) serverVisionWrite(b []byte) (int, error) {
 	if len(b) == 0 {
-		// return c.encodeHeaderAndWrite(false, b)
 		return 0, common.Error2(c.encodeHeaderAndWrite(false, b))
 	}
 
@@ -336,19 +380,16 @@ func (c *vConn) serverVisionWrite(b []byte) (int, error) {
 		return c.encodeHeaderAndWrite(false, b)
 	}
 
-	// at this point, tls13 is 1 or -1. We need to find application data after two vision writes
-	if c.visionWriteTimesAfterConfirmingTlsAbove12 > 0 {
-		c.visionWriteTimesAfterConfirmingTlsAbove12--
-		return c.encodeHeaderAndWrite(false, b)
-	}
+	// at this point, tls13 is 1 or -1.
 
-	found, rcrdBuf, remainigBuf := extractCompleteAppDataRecord(buffer)
+	found, index := c.extractCompleteAppDataRecord(b)
 	c.foundAppDataRecord = found
 	if found {
-		n, err := c.encodeHeaderAndWrite(true, rcrdBuf.Bytes())
+		n, err := c.encodeHeaderAndWrite(true, b[:index])
 		if err != nil {
 			return n, err
 		}
+		b = b[index:]
 		numBytesWritten := n
 		if c.enableWritingDirectCopy {
 			err = c.startDirectCopy(false)
@@ -356,16 +397,11 @@ func (c *vConn) serverVisionWrite(b []byte) (int, error) {
 				return numBytesWritten, err
 			}
 		}
-		if !remainigBuf.IsEmpty() {
-			n, err = c.writerConn.Write(remainigBuf.Bytes())
+		if len(b) > 0 {
+			n, err = c.writerConn.Write(b)
 			numBytesWritten += n
 		}
-		// // downstream splice copy
-		// if c.isTls13 == 1 {
-		// 	// info := session.InfoFromContext(c.ctx)
-		// 	// info.SpliceCopy.Down = true
-		// } else {
-		// }
+
 		return numBytesWritten, err
 	} else {
 		return c.encodeHeaderAndWrite(false, b)
@@ -509,6 +545,8 @@ func (c *vConn) setHasSentLast() {
 }
 
 func (c *vConn) encodeHeaderAndWrite(isLast bool, contentBuffer []byte) (int, error) {
+	c.setHalfRecord(contentBuffer)
+
 	if isLast {
 		c.setHasSentLast()
 	}
