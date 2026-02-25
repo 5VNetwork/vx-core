@@ -473,10 +473,6 @@ func (t *NativeTun) ReadPackets() (buf.MultiBuffer, error) {
 	return buf.MultiBuffer{b}, nil
 }
 
-type ChangeCallbackUnregister interface {
-	Unregister() error
-}
-
 type TunManager struct {
 	tun    *NativeTun
 	option *TunOption

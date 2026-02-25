@@ -19,8 +19,8 @@ import (
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
 	"github.com/5vnetwork/vx-core/common/redirect"
+	"github.com/5vnetwork/vx-core/nic"
 	"github.com/5vnetwork/vx-core/transport/security/tls"
-	"github.com/5vnetwork/vx-core/tun"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 )
@@ -52,7 +52,7 @@ func New(configBytes []byte, in Interface,
 		}
 	}
 
-	tun.IosInterfaceGetter = func(s string) ([]netip.Addr, error) {
+	IosInterfaceGetter = func(s string) ([]netip.Addr, error) {
 		servers := in.GetDnsServersForInterface(s)
 		if servers == nil {
 			return nil, nil
@@ -129,7 +129,7 @@ func GenerateTls() ([]byte, error) {
 }
 
 func HasNICHavingGlobalIPv6Address() (bool, error) {
-	info, err := tun.GetPrimaryPhysicalInterface()
+	info, err := nic.GetPrimaryPhysicalInterface()
 	if err != nil {
 		return false, err
 	}

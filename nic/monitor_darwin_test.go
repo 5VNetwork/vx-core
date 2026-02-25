@@ -1,10 +1,10 @@
-package tun
+package nic
 
 import (
 	"net"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/tun/netmon"
+	"github.com/5vnetwork/vx-core/nic/netmon"
 )
 
 func TestDnsServers(t *testing.T) {

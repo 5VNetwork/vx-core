@@ -1,7 +1,9 @@
 // Copyright 2025 5V Network LLC
 // SPDX-License-Identifier: AGPL-3.0
 
-package tun
+//go:build linux && !android
+
+package nic
 
 import (
 	"bufio"
@@ -16,7 +18,7 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/common/slices"
-	"github.com/5vnetwork/vx-core/tun/netmon"
+	"github.com/5vnetwork/vx-core/nic/netmon"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"tailscale.com/types/logger"

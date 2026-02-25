@@ -3,7 +3,7 @@
 
 //go:build windows
 
-package tun
+package nic
 
 import (
 	"errors"
@@ -38,6 +38,10 @@ type DefaultInterfaceMonitor struct {
 	// idx6 actually support ipv6
 	supportIPv6 int
 	DefaultInterfaceChangeNotifier
+}
+
+type ChangeCallbackUnregister interface {
+	Unregister() error
 }
 
 func NewInterfaceMonitor(tunName string) (*DefaultInterfaceMonitor, error) {

@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"github.com/5vnetwork/vx-core/app/util"
-	"github.com/5vnetwork/vx-core/tun"
+	"github.com/5vnetwork/vx-core/nic"
 )
 
 func TestNICSupportIPv6(t *testing.T) {
-	device, err := tun.GetPrimaryPhysicalInterface()
+	device, err := nic.GetPrimaryPhysicalInterface()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -20,7 +20,7 @@ func TestNICSupportIPv6(t *testing.T) {
 }
 
 func TestNICHasGlobalIPv6Address(t *testing.T) {
-	device, err := tun.GetPrimaryPhysicalInterface()
+	device, err := nic.GetPrimaryPhysicalInterface()
 	if err != nil {
 		t.Fatal(err)
 	}

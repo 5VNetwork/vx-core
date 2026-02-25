@@ -11,7 +11,7 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/common/slices"
-	"github.com/5vnetwork/vx-core/tun"
+	"github.com/5vnetwork/vx-core/nic"
 	"github.com/rs/zerolog/log"
 )
 
@@ -25,7 +25,7 @@ type nicMonitor struct {
 	addresses  []netip.Addr
 	// whether actually support ipv6
 	supportIpv6 int
-	tun.DefaultInterfaceChangeNotifier
+	nic.DefaultInterfaceChangeNotifier
 }
 
 func (n *nicMonitor) Start() error {
@@ -36,7 +36,7 @@ func (n *nicMonitor) Close() error {
 	n.Lock()
 	defer n.Unlock()
 	n.defaultDns = nil
-	n.DefaultInterfaceChangeNotifier = tun.DefaultInterfaceChangeNotifier{}
+	n.DefaultInterfaceChangeNotifier = nic.DefaultInterfaceChangeNotifier{}
 	return nil
 }
 

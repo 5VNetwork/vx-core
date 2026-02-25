@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/5vnetwork/vx-core/tun"
+	"github.com/5vnetwork/vx-core/nic"
 )
 
 func TestSysProxy(t *testing.T) {
 	t.Skip("skipping test")
-	mon, _ := tun.NewInterfaceMonitor("")
+	mon, _ := nic.NewInterfaceMonitor("")
 	mon.Start()
 	defer mon.Close()
 

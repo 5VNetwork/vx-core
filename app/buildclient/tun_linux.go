@@ -20,6 +20,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/tunset"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/i"
+	"github.com/5vnetwork/vx-core/nic"
 	"github.com/5vnetwork/vx-core/tun"
 	"github.com/rs/zerolog/log"
 )
@@ -51,7 +52,7 @@ func NewTunGvisorInbound(config *configs.TunConfig, f *Builder,
 }
 
 func NewInterfaceMonotor(name string, f *Builder) (i.DefaultInterfaceInfo, error) {
-	return tun.NewInterfaceMonitor(name)
+	return nic.NewInterfaceMonitor(name)
 }
 
 func getTun(config *configs.TunConfig, fc *Builder) (

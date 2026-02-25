@@ -17,6 +17,7 @@ import (
 	idns "github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/sysproxy"
 	"github.com/5vnetwork/vx-core/app/util"
+	"github.com/5vnetwork/vx-core/nic"
 	"github.com/5vnetwork/vx-core/proxy/freedom"
 	"github.com/5vnetwork/vx-core/transport/dlhelper"
 
@@ -33,7 +34,6 @@ import (
 	"github.com/5vnetwork/vx-core/common/signal"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/transport"
-	"github.com/5vnetwork/vx-core/tun"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -176,7 +176,7 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 	}
 	if config.BindToDefaultNic {
 		if api.mon == nil {
-			mon, err := tun.NewInterfaceMonitor(config.TunName)
+			mon, err := nic.NewInterfaceMonitor(config.TunName)
 			if err != nil {
 				return nil, err
 			}
