@@ -130,27 +130,6 @@ func (c *Client) StdOutAndStdErr(command string, sudo bool) (string, string, err
 	return stdoutBuf.String(), stderrBuf.String(), nil
 }
 
-// download file from url to output using curl
-// if path existed, it will be replaced by the new file
-func (c *Client) Download(output, url string, sudo bool) error {
-	session, err := c.NewSession()
-	if err != nil {
-		return fmt.Errorf("failed to create session: %w", err)
-	}
-	defer session.Close()
-
-	command := fmt.Sprintf("curl -o %s %s", output, url)
-	if sudo {
-		command = c.getSudoCmd(command)
-	}
-
-	if err = session.Run(command); err != nil {
-		return fmt.Errorf("failed to start bin/bash: %w", err)
-	}
-
-	return nil
-}
-
 func (c *Client) PackageManager() (string, error) {
 	output, err := c.Output("type -P apt-get", false)
 	if err == nil && output != "" {

@@ -325,3 +325,20 @@ func (c *Client) DownloadRemoteFileToMemory(remotePath string) ([]byte, error) {
 
 	return buffer.Bytes(), nil
 }
+
+// DownloadUrl downloads a file from the given URL to the given path on the remote machine.
+func (c *Client) DownloadUrl(url, path string) error {
+	dir := GetParentDir(path)
+	if dir != "" {
+		if err := c.CreateDir(dir, false); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", dir, err)
+		}
+	}
+
+	command := fmt.Sprintf("curl -fsSL -o %q %q", path, url)
+	output, err := c.CombinedOutput(command, false)
+	if err != nil {
+		return fmt.Errorf("failed to download %s: %w. Output: %s", url, err, output)
+	}
+	return nil
+}
