@@ -17,7 +17,6 @@ import (
 	idns "github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/sysproxy"
 	"github.com/5vnetwork/vx-core/app/util"
-	"github.com/5vnetwork/vx-core/nic"
 	"github.com/5vnetwork/vx-core/proxy/freedom"
 	"github.com/5vnetwork/vx-core/transport/dlhelper"
 
@@ -176,11 +175,11 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 	}
 	if config.BindToDefaultNic {
 		if api.mon == nil {
-			mon, err := nic.NewInterfaceMonitor(config.TunName)
+			mon, err := getNicMonitor(config.TunName)
 			if err != nil {
 				return nil, err
 			}
-			err = mon.Start()
+			err = mon.(common.Startable).Start()
 			if err != nil {
 				return nil, err
 			}
