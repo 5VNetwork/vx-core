@@ -98,6 +98,8 @@ func (b *Buffer) Release() {
 
 	p := b.v
 	b.v = nil
+	b.end = 0
+	b.start = 0
 	b.Clear()
 	switch b.ownership {
 	case defaultPool:
