@@ -63,6 +63,7 @@ type DnsServerConcurrent struct {
 }
 
 type packetDispatcher interface {
+	// does not block. payload's ownership is transferred to the dispatcher
 	DispatchPacket(destination net.Destination, payload *buf.Buffer) error
 	SetResponseCallback(callback func(packet *udp.Packet))
 }
@@ -312,11 +313,10 @@ func (w *DnsServerConcurrent) send(msg *dns.Msg) error {
 		}
 		b.Resize(0, int32(len(by)))
 		if err = w.dispatcher.DispatchPacket(dest, b); err != nil {
-			b.Release()
 			return err
 		}
 	}
-	log.Debug().Uint16("id", msg.Id).Msg("dns msg sent")
+	log.Debug().Str("tag", w.tag).Uint16("id", msg.Id).Msg("dns msg sent")
 	return nil
 }
 
@@ -386,7 +386,8 @@ func (w *DnsServerConcurrent) sendTcp(msg *dns.Msg) error {
 		t2.lock.Unlock()
 	}
 
-	log.Debug().Msg("dns msg sent by tcp")
+	log.Debug().Str("tag", w.tag).Uint16("id", msg.Id).
+		Msg("dns msg sent by tcp")
 
 	return nil
 }

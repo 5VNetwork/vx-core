@@ -180,7 +180,7 @@ func (ns *dnsConnImpl) handleRequest(p *udp.Packet) {
 }
 
 // msg should be standard dns query message: has only one question,
-// opcode is QUERY, no other fancy stuff.
+// opcode is QUERY
 func (ns *dnsConnImpl) WritePacket(p *udp.Packet) error {
 	select {
 	case <-ns.done.Wait():
@@ -189,6 +189,7 @@ func (ns *dnsConnImpl) WritePacket(p *udp.Packet) error {
 	case ns.requests <- p:
 		return nil
 	default:
+		p.Release()
 		return errors.New("requests channel is blocked")
 	}
 }

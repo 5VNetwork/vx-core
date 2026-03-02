@@ -9,11 +9,13 @@ import (
 	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/dns"
+	"github.com/5vnetwork/vx-core/app/geo"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/app/util/downloader"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/dispatcher"
+	"github.com/5vnetwork/vx-core/common/geo/stdloader"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/proxy/freedom"
@@ -93,4 +95,15 @@ func TestUsable(t *testing.T) {
 
 func TestA(t *testing.T) {
 	// t.Skip()
+}
+
+func TestGeo(t *testing.T) {
+	t.Skip()
+	loader := stdloader.NewStandartLoader()
+	domains, err := geo.GeositeConfigToGeoDomains(&configs.GeositeConfig{
+		Filepath: "assets/geosite.dat",
+		Codes:    []string{"google"},
+	}, loader)
+	common.Must(err)
+	fmt.Printf("domains: %v\n", domains)
 }

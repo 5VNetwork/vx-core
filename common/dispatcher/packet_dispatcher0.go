@@ -48,10 +48,11 @@ func (p *PacketDispatcher0) SetResponseCallback(callback func(packet *udp.Packet
 	p.callback.Store(callback)
 }
 
-// payload's ownership is transferred to the dispatcher. PacketDispatcher0 releases it even if DispatchPacket fails.
+// payload's ownership is transferred to the dispatcher
 func (s *PacketDispatcher0) DispatchPacket(destination net.Destination, payload *buf.Buffer) error {
 	tLink, err := s.getTimeoutLink(destination)
 	if err != nil {
+		payload.Release()
 		return fmt.Errorf("failed to get timeout link for %v: %w", destination, err)
 	}
 	var success bool
@@ -89,12 +90,11 @@ func (s *PacketDispatcher0) Close() error {
 
 func (s *PacketDispatcher0) getTimeoutLink(dest net.Destination) ([]*tLink0, error) {
 	s.Lock()
-	defer s.Unlock()
-
 	tlinks, found := s.tLinks[dest]
 	if found {
 		for i, l := range tlinks {
 			if !l.IsOld() && l.isActive() {
+				s.Unlock()
 				return tlinks[i : i+1], nil
 			}
 			if l.IsOld() {
@@ -104,6 +104,7 @@ func (s *PacketDispatcher0) getTimeoutLink(dest net.Destination) ([]*tLink0, err
 	}
 
 	if len(s.tLinks) > 1000 {
+		s.Unlock()
 		return nil, errors.New("too many links")
 	}
 
@@ -150,6 +151,8 @@ func (s *PacketDispatcher0) getTimeoutLink(dest net.Destination) ([]*tLink0, err
 		tLink.Interrupt(nil)
 	}()
 	go s.handleResponsePakcets(ctx, tLink, dest)
+
+	s.Unlock()
 	return s.tLinks[dest], nil
 }
 

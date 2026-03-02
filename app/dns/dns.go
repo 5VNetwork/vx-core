@@ -116,11 +116,11 @@ func (dsp *Dns) WritePacket(p *udp.Packet) error {
 	}
 	select {
 	case dsp.requests <- p:
+		return nil
 	default:
 		p.Release()
 		return errors.New("requests channel is blocked")
 	}
-	return nil
 }
 
 func (dsp *Dns) ReadPacket() (*udp.Packet, error) {

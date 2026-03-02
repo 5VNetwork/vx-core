@@ -20,7 +20,7 @@ func NewPipe(limit int32, discardOverflow bool) *Pipe {
 		readSignal:  signal.NewNotifier(),
 		writeSignal: signal.NewNotifier(),
 		done:        done.New(),
-		//when limit is 0, and there is a write, if pipe.data is nil or empty,
+		// when limit is 0, and there is a write, if pipe.data is nil or empty,
 		// write will succeed without error. The second write will block until that
 		// data is removed
 		limit:           limit,
@@ -172,6 +172,7 @@ func (p *Pipe) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	}
 
 	if mb.IsEmpty() {
+		buf.ReleaseMulti(mb)
 		return nil
 	}
 
