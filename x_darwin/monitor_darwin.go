@@ -8,9 +8,6 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
-	"os/exec"
-	"runtime"
-	"strings"
 
 	sync "sync"
 
@@ -123,7 +120,7 @@ func (t *DefaultInterfaceInfo) SetDefaultInterface(iffIndex int, iffName string)
 	var servers []netip.Addr
 	var err error
 	if iffIndex != 0 {
-		servers, err = DnsServers(int(iffIndex))
+		servers, err = nic.DnsServers(int(iffIndex))
 		if err != nil {
 			log.Err(err).Msg("failed to get dns servers")
 		}
@@ -183,57 +180,4 @@ func (t *DefaultInterfaceInfo) HasGlobalIPv6() (bool, error) {
 		return false, err
 	}
 	return has, nil
-}
-
-type IOSInterfaceDnsServersGetter func(string) ([]netip.Addr, error)
-
-var IosInterfaceGetter IOSInterfaceDnsServersGetter
-
-// returns dns servers of an interface of [index]
-func DnsServers(index int) ([]netip.Addr, error) {
-	// Get interface by index
-	iface, err := net.InterfaceByIndex(index)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get interface by index %d: %v", index, err)
-	}
-	if runtime.GOOS == "ios" {
-		if IosInterfaceGetter != nil {
-			return IosInterfaceGetter(iface.Name)
-		}
-		return nil, errors.New("IosInterfaceGetter not set")
-	}
-
-	// Get DNS servers using scutil
-	cmd := exec.Command("scutil", "--dns")
-	output, err := cmd.Output()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get DNS configuration: %v", err)
-	}
-
-	var servers []netip.Addr
-	blocks := strings.Split(string(output), "\n\n")
-
-	for _, block := range blocks {
-		if !strings.Contains(block, fmt.Sprintf("if_index : %d (%s)", index, iface.Name)) {
-			continue
-		}
-		lines := strings.Split(block, "\n")
-		for _, line := range lines {
-			if strings.Contains(line, "nameserver[") {
-				parts := strings.Split(line, "] : ")
-				if len(parts) != 2 {
-					continue
-				}
-				serverStr := strings.TrimSpace(parts[1])
-				addr, err := netip.ParseAddr(serverStr)
-				if err != nil {
-					continue
-				}
-				servers = append(servers, addr)
-			}
-		}
-		break
-	}
-
-	return servers, nil
 }

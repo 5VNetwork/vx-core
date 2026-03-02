@@ -20,6 +20,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
 	"github.com/5vnetwork/vx-core/common/redirect"
 	"github.com/5vnetwork/vx-core/nic"
+	"github.com/5vnetwork/vx-core/nic/netmon"
 	"github.com/5vnetwork/vx-core/transport/security/tls"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
@@ -52,7 +53,7 @@ func New(configBytes []byte, in Interface,
 		}
 	}
 
-	IosInterfaceGetter = func(s string) ([]netip.Addr, error) {
+	nic.IosInterfaceGetter = func(s string) ([]netip.Addr, error) {
 		servers := in.GetDnsServersForInterface(s)
 		if servers == nil {
 			return nil, nil
@@ -138,6 +139,7 @@ func HasNICHavingGlobalIPv6Address() (bool, error) {
 
 func UpdateDefaultRouteInterface(ifName string, ifIndex int) {
 	log.Info().Str("default route nic", ifName).Int("index", ifIndex).Msg("UpdateDefaultRouteInterface")
+	netmon.UpdateLastKnownDefaultRouteInterface(ifName)
 	nicMon.SetDefaultInterface(ifIndex, ifName)
 }
 
