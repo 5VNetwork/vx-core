@@ -9,22 +9,6 @@ import (
 	"go4.org/netipx"
 )
 
-// func (c *GeoIPConfig) ToIPMatcher(l loader) (*IPMatcher, error) {
-// 	var cidrs []*CIDR
-// 	for _, code := range c.GetCodes() {
-// 		l, err := l.LoadIP(c.Filepath, code)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("failed to load geoip: %s", code)
-// 		}
-// 		cidrs = append(cidrs, l...)
-// 	}
-// 	ipMatcher, err := NewIPMatcherFromGeoCidrs(cidrs, c.GetInverse())
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to create ip matcher: %w", err)
-// 	}
-// 	return ipMatcher, nil
-// }
-
 // a geoIPMathcer corr to one country's IP
 type IPMatcher struct {
 	ReverseMatch bool //return the opposite result

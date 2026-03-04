@@ -267,7 +267,12 @@ func (w *SequentialWriter) UnwrapWriter() any {
 	return w.Writer
 }
 
-func (w *SequentialWriter) CloseWrite() error { return nil }
+func (w *SequentialWriter) CloseWrite() error {
+	if conn, ok := w.Writer.(CloseWriter); ok {
+		return conn.CloseWrite()
+	}
+	return nil
+}
 
 // WriteMultiBuffer implements Writer.
 func (w *SequentialWriter) WriteMultiBuffer(mb MultiBuffer) error {

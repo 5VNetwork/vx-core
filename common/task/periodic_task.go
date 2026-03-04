@@ -54,7 +54,7 @@ func (pt *PeriodicTask) ResetInterval(interval time.Duration) {
 	}
 }
 
-// Start begins running the task periodically
+// Start begins running the task periodically.
 // does not block
 func (pt *PeriodicTask) Start() error {
 	pt.mu.Lock()
