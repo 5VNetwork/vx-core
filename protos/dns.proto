@@ -79,31 +79,6 @@ message Record {
   string proxied_domain = 4;
 }
 
-
-message DnsHijackConfig {
-  // dns handler name
-  string name = 1;
-  // dns servers to use for direct dns queries
-  repeated string direct_addresses = 2;
-  bool use_default_dns = 3;
-
-  repeated string proxy_addresses = 4;
-
-  // used as inbound tag for proxy dns server
-  string dns_conn_proxy = 5;
-  string dns_conn_direct = 6;
-  string dns_server_proxy = 7;
-
-  // domain sets that contains all proxy domains
-  // all domains in the sets will be resolved by proxy dns server
-  repeated string proxy_tags = 8;
-
-
-  bool direct_return_nil_aaaa_if_not_support = 9;
-  bool proxy_return_nil_aaaa_if_not_support = 10;
-}
-
-
 message FakeDnsServer {
   message PoolConfig {
     string cidr = 1;

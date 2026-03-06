@@ -256,66 +256,6 @@ func (x *ShadowsocksClientConfig) GetPassword() string {
 	return ""
 }
 
-type Shadowsocks2022ClientConfig struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Method        string                 `protobuf:"bytes,1,opt,name=method,proto3" json:"method,omitempty"`
-	Psk           []byte                 `protobuf:"bytes,2,opt,name=psk,proto3" json:"psk,omitempty"`
-	Ipsk          [][]byte               `protobuf:"bytes,4,rep,name=ipsk,proto3" json:"ipsk,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Shadowsocks2022ClientConfig) Reset() {
-	*x = Shadowsocks2022ClientConfig{}
-	mi := &file_protos_proxy_shadowsocks_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Shadowsocks2022ClientConfig) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Shadowsocks2022ClientConfig) ProtoMessage() {}
-
-func (x *Shadowsocks2022ClientConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_protos_proxy_shadowsocks_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Shadowsocks2022ClientConfig.ProtoReflect.Descriptor instead.
-func (*Shadowsocks2022ClientConfig) Descriptor() ([]byte, []int) {
-	return file_protos_proxy_shadowsocks_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *Shadowsocks2022ClientConfig) GetMethod() string {
-	if x != nil {
-		return x.Method
-	}
-	return ""
-}
-
-func (x *Shadowsocks2022ClientConfig) GetPsk() []byte {
-	if x != nil {
-		return x.Psk
-	}
-	return nil
-}
-
-func (x *Shadowsocks2022ClientConfig) GetIpsk() [][]byte {
-	if x != nil {
-		return x.Ipsk
-	}
-	return nil
-}
-
 var File_protos_proxy_shadowsocks_proto protoreflect.FileDescriptor
 
 const file_protos_proxy_shadowsocks_proto_rawDesc = "" +
@@ -336,11 +276,7 @@ const file_protos_proxy_shadowsocks_proto_rawDesc = "" +
 	"\x17ShadowsocksClientConfig\x12?\n" +
 	"\vcipher_type\x18\x01 \x01(\x0e2\x1e.x.proxy.ShadowsocksCipherTypeR\n" +
 	"cipherType\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\"[\n" +
-	"\x1bShadowsocks2022ClientConfig\x12\x16\n" +
-	"\x06method\x18\x01 \x01(\tR\x06method\x12\x10\n" +
-	"\x03psk\x18\x02 \x01(\fR\x03psk\x12\x12\n" +
-	"\x04ipsk\x18\x04 \x03(\fR\x04ipsk*Z\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword*Z\n" +
 	"\x15ShadowsocksCipherType\x12\x0f\n" +
 	"\vAES_128_GCM\x10\x00\x12\x0f\n" +
 	"\vAES_256_GCM\x10\x01\x12\x15\n" +
@@ -360,20 +296,19 @@ func file_protos_proxy_shadowsocks_proto_rawDescGZIP() []byte {
 }
 
 var file_protos_proxy_shadowsocks_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_protos_proxy_shadowsocks_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_protos_proxy_shadowsocks_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_protos_proxy_shadowsocks_proto_goTypes = []any{
-	(ShadowsocksCipherType)(0),          // 0: x.proxy.ShadowsocksCipherType
-	(*ShadowsocksAccount)(nil),          // 1: x.proxy.ShadowsocksAccount
-	(*ShadowsocksServerConfig)(nil),     // 2: x.proxy.ShadowsocksServerConfig
-	(*ShadowsocksClientConfig)(nil),     // 3: x.proxy.ShadowsocksClientConfig
-	(*Shadowsocks2022ClientConfig)(nil), // 4: x.proxy.Shadowsocks2022ClientConfig
-	(*configs.UserConfig)(nil),          // 5: x.UserConfig
+	(ShadowsocksCipherType)(0),      // 0: x.proxy.ShadowsocksCipherType
+	(*ShadowsocksAccount)(nil),      // 1: x.proxy.ShadowsocksAccount
+	(*ShadowsocksServerConfig)(nil), // 2: x.proxy.ShadowsocksServerConfig
+	(*ShadowsocksClientConfig)(nil), // 3: x.proxy.ShadowsocksClientConfig
+	(*configs.UserConfig)(nil),      // 4: x.UserConfig
 }
 var file_protos_proxy_shadowsocks_proto_depIdxs = []int32{
 	0, // 0: x.proxy.ShadowsocksAccount.cipher_type:type_name -> x.proxy.ShadowsocksCipherType
-	5, // 1: x.proxy.ShadowsocksAccount.user:type_name -> x.UserConfig
+	4, // 1: x.proxy.ShadowsocksAccount.user:type_name -> x.UserConfig
 	0, // 2: x.proxy.ShadowsocksServerConfig.cipher_type:type_name -> x.proxy.ShadowsocksCipherType
-	5, // 3: x.proxy.ShadowsocksServerConfig.user:type_name -> x.UserConfig
+	4, // 3: x.proxy.ShadowsocksServerConfig.user:type_name -> x.UserConfig
 	0, // 4: x.proxy.ShadowsocksClientConfig.cipher_type:type_name -> x.proxy.ShadowsocksCipherType
 	5, // [5:5] is the sub-list for method output_type
 	5, // [5:5] is the sub-list for method input_type
@@ -393,7 +328,7 @@ func file_protos_proxy_shadowsocks_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_protos_proxy_shadowsocks_proto_rawDesc), len(file_protos_proxy_shadowsocks_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   4,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

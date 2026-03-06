@@ -77,6 +77,11 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 	x.FakeDnsEnabled.Store(config.Dns.GetEnableFakeDns())
 
 	// logger
+	if config.GetLog() == nil {
+		config.Log = &configs.LoggerConfig{
+			LogLevel: configs.Level_DISABLED,
+		}
+	}
 	l, err := logger.SetLog(config.Log)
 	if err != nil {
 		return nil, fmt.Errorf("failed to set log: %w", err)
@@ -92,7 +97,7 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 	}
 
 	// monitor
-	if config.Log.LogLevel == configs.Level_DEBUG {
+	if config.GetLog().GetLogLevel() == configs.Level_DEBUG {
 		interval := time.Second * 1
 		dir := path.Dir(config.RedirectStdErr)
 		monitor := memmon.NewMonitor(interval, dir)

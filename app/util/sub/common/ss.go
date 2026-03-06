@@ -85,14 +85,36 @@ func ParseSsFromLink(link string) (*configs.OutboundHandlerConfig, error) {
 	case "none":
 		ssConfig.CipherType = proxy.ShadowsocksCipherType_NONE
 	default:
-		return nil, fmt.Errorf("unsupported cipher type: %s", cipher)
+		ss2022Config := &proxy.Shadowsocks2022ClientConfig{
+			Key: password,
+		}
+		switch cipher {
+		case "2022-blake3-aes-128-gcm":
+			ss2022Config.Method = "2022-blake3-aes-128-gcm"
+		case "2022-blake3-aes-256-gcm":
+			ss2022Config.Method = "2022-blake3-aes-256-gcm"
+		case "2022-blake3-chacha20-poly1305":
+			ss2022Config.Method = "2022-blake3-chacha20-poly1305"
+		default:
+			return nil, fmt.Errorf("unsupported cipher type: %s", cipher)
+		}
+		ssAny, err := serial.ToTypedMessage0(ss2022Config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal ss2022 config: %v", err)
+		}
+		outboundConfig := &configs.OutboundHandlerConfig{
+			Address:  u.Hostname(),
+			Tag:      u.Fragment,
+			Ports:    ports,
+			Protocol: ssAny,
+		}
+		return outboundConfig, nil
 	}
 
 	ssAny, err := serial.ToTypedMessage0(ssConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal ss config: %v", err)
 	}
-
 	outboundConfig := &configs.OutboundHandlerConfig{
 		Address:  u.Hostname(),
 		Tag:      u.Fragment,
@@ -101,65 +123,4 @@ func ParseSsFromLink(link string) (*configs.OutboundHandlerConfig, error) {
 	}
 
 	return outboundConfig, nil
-}
-
-// ParseSsFromLink parses a Shadowsocks configuration from a URI link
-func ParseSsFromLink0(link string) (*SsConfig, error) {
-	if !strings.HasPrefix(link, "ss://") {
-		return nil, fmt.Errorf("not a valid shadowsocks link")
-	}
-
-	content := strings.Split(link, "://")[1]
-
-	atIndex := strings.Index(content, "@")
-	if atIndex == -1 {
-		return nil, fmt.Errorf("invalid shadowsocks link format")
-	}
-
-	cipherPasswordBase64 := content[:atIndex]
-	cipherPasswordBytes, err := sub.DecodeBase64(cipherPasswordBase64)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode cipher:password: %v", err)
-	}
-
-	cipherPassword := string(cipherPasswordBytes)
-	parts := strings.Split(cipherPassword, ":")
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid cipher:password format")
-	}
-
-	cipher := parts[0]
-	password := parts[1]
-
-	rest := content[atIndex+1:]
-	colonIndex := strings.Index(rest, ":")
-	if colonIndex == -1 {
-		return nil, fmt.Errorf("invalid address:port format")
-	}
-
-	address := rest[:colonIndex]
-
-	sharpIndex := strings.Index(rest, "#")
-	if sharpIndex == -1 {
-		sharpIndex = len(rest)
-	}
-
-	portStr := rest[colonIndex+1 : sharpIndex]
-
-	var remark string
-	if sharpIndex < len(rest) {
-		remarkRawUrlEncoded := rest[sharpIndex+1:]
-		remark, err = url.QueryUnescape(remarkRawUrlEncoded)
-		if err != nil {
-			return nil, fmt.Errorf("failed to decode remark: %v", err)
-		}
-	}
-
-	return &SsConfig{
-		Cipher:   cipher,
-		Password: password,
-		Address:  address,
-		Port:     portStr,
-		Remark:   remark,
-	}, nil
 }

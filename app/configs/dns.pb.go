@@ -690,127 +690,6 @@ func (x *Record) GetProxiedDomain() string {
 	return ""
 }
 
-type DnsHijackConfig struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// dns handler name
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// dns servers to use for direct dns queries
-	DirectAddresses []string `protobuf:"bytes,2,rep,name=direct_addresses,json=directAddresses,proto3" json:"direct_addresses,omitempty"`
-	UseDefaultDns   bool     `protobuf:"varint,3,opt,name=use_default_dns,json=useDefaultDns,proto3" json:"use_default_dns,omitempty"`
-	ProxyAddresses  []string `protobuf:"bytes,4,rep,name=proxy_addresses,json=proxyAddresses,proto3" json:"proxy_addresses,omitempty"`
-	// used as inbound tag for proxy dns server
-	DnsConnProxy   string `protobuf:"bytes,5,opt,name=dns_conn_proxy,json=dnsConnProxy,proto3" json:"dns_conn_proxy,omitempty"`
-	DnsConnDirect  string `protobuf:"bytes,6,opt,name=dns_conn_direct,json=dnsConnDirect,proto3" json:"dns_conn_direct,omitempty"`
-	DnsServerProxy string `protobuf:"bytes,7,opt,name=dns_server_proxy,json=dnsServerProxy,proto3" json:"dns_server_proxy,omitempty"`
-	// domain sets that contains all proxy domains
-	// all domains in the sets will be resolved by proxy dns server
-	ProxyTags                       []string `protobuf:"bytes,8,rep,name=proxy_tags,json=proxyTags,proto3" json:"proxy_tags,omitempty"`
-	DirectReturnNilAaaaIfNotSupport bool     `protobuf:"varint,9,opt,name=direct_return_nil_aaaa_if_not_support,json=directReturnNilAaaaIfNotSupport,proto3" json:"direct_return_nil_aaaa_if_not_support,omitempty"`
-	ProxyReturnNilAaaaIfNotSupport  bool     `protobuf:"varint,10,opt,name=proxy_return_nil_aaaa_if_not_support,json=proxyReturnNilAaaaIfNotSupport,proto3" json:"proxy_return_nil_aaaa_if_not_support,omitempty"`
-	unknownFields                   protoimpl.UnknownFields
-	sizeCache                       protoimpl.SizeCache
-}
-
-func (x *DnsHijackConfig) Reset() {
-	*x = DnsHijackConfig{}
-	mi := &file_protos_dns_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DnsHijackConfig) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DnsHijackConfig) ProtoMessage() {}
-
-func (x *DnsHijackConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_protos_dns_proto_msgTypes[9]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DnsHijackConfig.ProtoReflect.Descriptor instead.
-func (*DnsHijackConfig) Descriptor() ([]byte, []int) {
-	return file_protos_dns_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *DnsHijackConfig) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *DnsHijackConfig) GetDirectAddresses() []string {
-	if x != nil {
-		return x.DirectAddresses
-	}
-	return nil
-}
-
-func (x *DnsHijackConfig) GetUseDefaultDns() bool {
-	if x != nil {
-		return x.UseDefaultDns
-	}
-	return false
-}
-
-func (x *DnsHijackConfig) GetProxyAddresses() []string {
-	if x != nil {
-		return x.ProxyAddresses
-	}
-	return nil
-}
-
-func (x *DnsHijackConfig) GetDnsConnProxy() string {
-	if x != nil {
-		return x.DnsConnProxy
-	}
-	return ""
-}
-
-func (x *DnsHijackConfig) GetDnsConnDirect() string {
-	if x != nil {
-		return x.DnsConnDirect
-	}
-	return ""
-}
-
-func (x *DnsHijackConfig) GetDnsServerProxy() string {
-	if x != nil {
-		return x.DnsServerProxy
-	}
-	return ""
-}
-
-func (x *DnsHijackConfig) GetProxyTags() []string {
-	if x != nil {
-		return x.ProxyTags
-	}
-	return nil
-}
-
-func (x *DnsHijackConfig) GetDirectReturnNilAaaaIfNotSupport() bool {
-	if x != nil {
-		return x.DirectReturnNilAaaaIfNotSupport
-	}
-	return false
-}
-
-func (x *DnsHijackConfig) GetProxyReturnNilAaaaIfNotSupport() bool {
-	if x != nil {
-		return x.ProxyReturnNilAaaaIfNotSupport
-	}
-	return false
-}
-
 type FakeDnsServer struct {
 	state         protoimpl.MessageState      `protogen:"open.v1"`
 	PoolConfigs   []*FakeDnsServer_PoolConfig `protobuf:"bytes,1,rep,name=pool_configs,json=poolConfigs,proto3" json:"pool_configs,omitempty"`
@@ -820,7 +699,7 @@ type FakeDnsServer struct {
 
 func (x *FakeDnsServer) Reset() {
 	*x = FakeDnsServer{}
-	mi := &file_protos_dns_proto_msgTypes[10]
+	mi := &file_protos_dns_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -832,7 +711,7 @@ func (x *FakeDnsServer) String() string {
 func (*FakeDnsServer) ProtoMessage() {}
 
 func (x *FakeDnsServer) ProtoReflect() protoreflect.Message {
-	mi := &file_protos_dns_proto_msgTypes[10]
+	mi := &file_protos_dns_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -845,7 +724,7 @@ func (x *FakeDnsServer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FakeDnsServer.ProtoReflect.Descriptor instead.
 func (*FakeDnsServer) Descriptor() ([]byte, []int) {
-	return file_protos_dns_proto_rawDescGZIP(), []int{10}
+	return file_protos_dns_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *FakeDnsServer) GetPoolConfigs() []*FakeDnsServer_PoolConfig {
@@ -867,7 +746,7 @@ type FakeDnsServer_PoolConfig struct {
 
 func (x *FakeDnsServer_PoolConfig) Reset() {
 	*x = FakeDnsServer_PoolConfig{}
-	mi := &file_protos_dns_proto_msgTypes[11]
+	mi := &file_protos_dns_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -879,7 +758,7 @@ func (x *FakeDnsServer_PoolConfig) String() string {
 func (*FakeDnsServer_PoolConfig) ProtoMessage() {}
 
 func (x *FakeDnsServer_PoolConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_protos_dns_proto_msgTypes[11]
+	mi := &file_protos_dns_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -892,7 +771,7 @@ func (x *FakeDnsServer_PoolConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FakeDnsServer_PoolConfig.ProtoReflect.Descriptor instead.
 func (*FakeDnsServer_PoolConfig) Descriptor() ([]byte, []int) {
-	return file_protos_dns_proto_rawDescGZIP(), []int{10, 0}
+	return file_protos_dns_proto_rawDescGZIP(), []int{9, 0}
 }
 
 func (x *FakeDnsServer_PoolConfig) GetCidr() string {
@@ -960,20 +839,7 @@ const file_protos_dns_proto_rawDesc = "" +
 	"\x06Record\x12\x16\n" +
 	"\x06domain\x18\x02 \x01(\tR\x06domain\x12\x0e\n" +
 	"\x02ip\x18\x03 \x03(\tR\x02ip\x12%\n" +
-	"\x0eproxied_domain\x18\x04 \x01(\tR\rproxiedDomain\"\xd6\x03\n" +
-	"\x0fDnsHijackConfig\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12)\n" +
-	"\x10direct_addresses\x18\x02 \x03(\tR\x0fdirectAddresses\x12&\n" +
-	"\x0fuse_default_dns\x18\x03 \x01(\bR\ruseDefaultDns\x12'\n" +
-	"\x0fproxy_addresses\x18\x04 \x03(\tR\x0eproxyAddresses\x12$\n" +
-	"\x0edns_conn_proxy\x18\x05 \x01(\tR\fdnsConnProxy\x12&\n" +
-	"\x0fdns_conn_direct\x18\x06 \x01(\tR\rdnsConnDirect\x12(\n" +
-	"\x10dns_server_proxy\x18\a \x01(\tR\x0ednsServerProxy\x12\x1d\n" +
-	"\n" +
-	"proxy_tags\x18\b \x03(\tR\tproxyTags\x12N\n" +
-	"%direct_return_nil_aaaa_if_not_support\x18\t \x01(\bR\x1fdirectReturnNilAaaaIfNotSupport\x12L\n" +
-	"$proxy_return_nil_aaaa_if_not_support\x18\n" +
-	" \x01(\bR\x1eproxyReturnNilAaaaIfNotSupport\"\x8c\x01\n" +
+	"\x0eproxied_domain\x18\x04 \x01(\tR\rproxiedDomain\"\x8c\x01\n" +
 	"\rFakeDnsServer\x12>\n" +
 	"\fpool_configs\x18\x01 \x03(\v2\x1b.x.FakeDnsServer.PoolConfigR\vpoolConfigs\x1a;\n" +
 	"\n" +
@@ -997,7 +863,7 @@ func file_protos_dns_proto_rawDescGZIP() []byte {
 }
 
 var file_protos_dns_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_protos_dns_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_protos_dns_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_protos_dns_proto_goTypes = []any{
 	(DnsType)(0),                     // 0: x.DnsType
 	(*DnsConfig)(nil),                // 1: x.DnsConfig
@@ -1009,10 +875,9 @@ var file_protos_dns_proto_goTypes = []any{
 	(*DohDnsServer)(nil),             // 7: x.DohDnsServer
 	(*QuicDnsServer)(nil),            // 8: x.QuicDnsServer
 	(*Record)(nil),                   // 9: x.Record
-	(*DnsHijackConfig)(nil),          // 10: x.DnsHijackConfig
-	(*FakeDnsServer)(nil),            // 11: x.FakeDnsServer
-	(*FakeDnsServer_PoolConfig)(nil), // 12: x.FakeDnsServer.PoolConfig
-	(*geo.Domain)(nil),               // 13: x.common.geo.Domain
+	(*FakeDnsServer)(nil),            // 10: x.FakeDnsServer
+	(*FakeDnsServer_PoolConfig)(nil), // 11: x.FakeDnsServer.PoolConfig
+	(*geo.Domain)(nil),               // 12: x.common.geo.Domain
 }
 var file_protos_dns_proto_depIdxs = []int32{
 	9,  // 0: x.DnsConfig.records:type_name -> x.Record
@@ -1020,14 +885,14 @@ var file_protos_dns_proto_depIdxs = []int32{
 	3,  // 2: x.DnsConfig.dns_rules:type_name -> x.DnsRuleConfig
 	4,  // 3: x.DnsConfig.internal_dns_servers:type_name -> x.DnsServerConfig
 	3,  // 4: x.DnsRules.rules:type_name -> x.DnsRuleConfig
-	13, // 5: x.DnsRuleConfig.domains:type_name -> x.common.geo.Domain
+	12, // 5: x.DnsRuleConfig.domains:type_name -> x.common.geo.Domain
 	0,  // 6: x.DnsRuleConfig.included_types:type_name -> x.DnsType
 	5,  // 7: x.DnsServerConfig.plain_dns_server:type_name -> x.PlainDnsServer
 	7,  // 8: x.DnsServerConfig.doh_dns_server:type_name -> x.DohDnsServer
 	8,  // 9: x.DnsServerConfig.quic_dns_server:type_name -> x.QuicDnsServer
-	11, // 10: x.DnsServerConfig.fake_dns_server:type_name -> x.FakeDnsServer
+	10, // 10: x.DnsServerConfig.fake_dns_server:type_name -> x.FakeDnsServer
 	6,  // 11: x.DnsServerConfig.tls_dns_server:type_name -> x.TlsDnsServer
-	12, // 12: x.FakeDnsServer.pool_configs:type_name -> x.FakeDnsServer.PoolConfig
+	11, // 12: x.FakeDnsServer.pool_configs:type_name -> x.FakeDnsServer.PoolConfig
 	13, // [13:13] is the sub-list for method output_type
 	13, // [13:13] is the sub-list for method input_type
 	13, // [13:13] is the sub-list for extension type_name
@@ -1053,7 +918,7 @@ func file_protos_dns_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_protos_dns_proto_rawDesc), len(file_protos_dns_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   12,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

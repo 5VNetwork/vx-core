@@ -30,9 +30,3 @@ message ShadowsocksClientConfig {
   ShadowsocksCipherType cipher_type = 1;
   string password = 2;
 }
-
-message Shadowsocks2022ClientConfig {
-  string method = 1;
-  bytes psk = 2;
-  repeated bytes ipsk = 4;
-}

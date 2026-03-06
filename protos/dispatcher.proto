@@ -12,11 +12,3 @@ message DispatcherConfig {
   reserved 6;
   bool ipv6_use_domain = 7;
 }
-
-// message SniffingConfig {
-//   bool always = 1;
-//   // bool only_when_no_domain = 3;
-//   // Override target destination if sniff'ed protocol is in the given list.
-//   // Supported values are "http", "tls", "quic".
-//   // repeated string destination_override = 2;
-// }

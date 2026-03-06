@@ -29,6 +29,7 @@ import (
 	"github.com/5vnetwork/vx-core/proxy/http"
 	"github.com/5vnetwork/vx-core/proxy/hysteria2"
 	"github.com/5vnetwork/vx-core/proxy/shadowsocks"
+	"github.com/5vnetwork/vx-core/proxy/shadowsocks_2022"
 	"github.com/5vnetwork/vx-core/proxy/socks"
 	"github.com/5vnetwork/vx-core/proxy/trojan"
 
@@ -328,6 +329,18 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 				IdleSessionTimeout:       time.Duration(m.IdleSessionTimeout) * time.Second,
 				MinIdleSession:           int(m.MinIdleSession),
 			})
+	case *proxyconfigs.Shadowsocks2022ClientConfig:
+		pc, err = shadowsocks_2022.NewClient(
+			&shadowsocks_2022.ClientSettings{
+				Address:    address,
+				PortPicker: sp,
+				Method:     m.Method,
+				Key:        m.GetKey(),
+				Dialer:     dialer,
+			})
+		if err != nil {
+			return nil, err
+		}
 	default:
 		return nil, fmt.Errorf("unknown proxy client config: %v", reflect.TypeOf(m))
 	}

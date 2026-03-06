@@ -23,7 +23,8 @@ require (
 	github.com/quic-go/quic-go v0.59.0
 	github.com/refraction-networking/utls v1.8.2
 	github.com/rs/zerolog v1.33.0
-	github.com/sagernet/sing v0.5.1
+	github.com/sagernet/sing v0.7.6
+	github.com/sagernet/sing-shadowsocks v0.2.9
 	github.com/seiflotfy/cuckoofilter v0.0.0-20240715131351-a2f2c23f1771
 	github.com/shirou/gopsutil v2.21.11+incompatible
 	github.com/showwin/speedtest-go v1.7.8
@@ -85,7 +86,6 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20240314144324-c7f7c6466f7f // indirect
-	golang.org/x/mobile v0.0.0-20260211191516-dcd2a3258864 // indirect
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.42.0 // indirect

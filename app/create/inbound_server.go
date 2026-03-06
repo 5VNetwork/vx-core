@@ -26,6 +26,7 @@ import (
 	"github.com/5vnetwork/vx-core/proxy/http"
 	"github.com/5vnetwork/vx-core/proxy/hysteria2"
 	"github.com/5vnetwork/vx-core/proxy/shadowsocks"
+	"github.com/5vnetwork/vx-core/proxy/shadowsocks_2022"
 	"github.com/5vnetwork/vx-core/proxy/socks"
 	"github.com/5vnetwork/vx-core/proxy/trojan"
 	vless_server "github.com/5vnetwork/vx-core/proxy/vless/inbound"
@@ -278,6 +279,22 @@ func GetServers(users []*configs.UserConfig, protocols []*anypb.Any, ha i.Handle
 					return nil, nil, err
 				}
 				server.(*anytls.Server).AddUser(user)
+			}
+		case *proxyconfigs.Shadowsocks2022ServerConfig:
+			user, err := UserConfigToUser(c.User)
+			if err != nil {
+				return nil, nil, err
+			}
+			server, err = shadowsocks_2022.NewServer(
+				&shadowsocks_2022.ServerConfig{
+					Method:  c.Method,
+					Network: c.Networks,
+					Handler: ha,
+					User:    user,
+				},
+			)
+			if err != nil {
+				return nil, nil, err
 			}
 		default:
 			return nil, nil, fmt.Errorf("unknown proxy server config: %T", c)

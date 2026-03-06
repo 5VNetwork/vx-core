@@ -120,7 +120,7 @@ func (p *BufReaderWriterToPacketReaderWriter) ReadPacket() (*Packet, error) {
 }
 
 func (p *BufReaderWriterToPacketReaderWriter) WritePacket(packet *Packet) error {
-	return p.ReaderWriter.WriteMultiBuffer(p.cache)
+	return p.ReaderWriter.WriteMultiBuffer(buf.MultiBuffer{packet.Payload})
 }
 
 func (p *BufReaderWriterToPacketReaderWriter) ClearCache() error {
