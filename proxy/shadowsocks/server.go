@@ -68,7 +68,7 @@ func (s *Server) RemoveUser(user i.User) {
 func (h *Server) WithOnUnauthorizedRequest(f i.UnauthorizedReport) {
 }
 
-func (s *Server) GetMemoryAccount() *MemoryAccount {
+func (s *Server) getMemoryAccount() *MemoryAccount {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 	return s.memoryAccount
@@ -77,7 +77,7 @@ func (s *Server) GetMemoryAccount() *MemoryAccount {
 func (s *Server) Process(ctx context.Context, conn net.Conn) error {
 	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "shadowsocks")
 
-	account := s.GetMemoryAccount()
+	account := s.getMemoryAccount()
 	if account == nil {
 		return errors.New("user not set")
 	}
@@ -95,7 +95,7 @@ func (s *Server) Process(ctx context.Context, conn net.Conn) error {
 func (s *Server) FallbackProcess(ctx context.Context, conn net.Conn) (bool, buf.MultiBuffer, error) {
 	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "shadowsocks")
 
-	account := s.GetMemoryAccount()
+	account := s.getMemoryAccount()
 	if account == nil {
 		return true, nil, errors.New("user not set")
 	}

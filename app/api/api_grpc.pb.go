@@ -9,8 +9,8 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-// Requires gRPC-Go v1.32.0 or later.
-const _ = grpc.SupportPackageIsVersion7
+// Requires gRPC-Go v1.64.0 or later.
+const _ = grpc.SupportPackageIsVersion9
 
 const (
 	Api_UpdateTmStatus_FullMethodName                = "/x.api.Api/UpdateTmStatus"
@@ -39,7 +39,6 @@ const (
 	Api_ParseClashRuleFile_FullMethodName            = "/x.api.Api/ParseClashRuleFile"
 	Api_ParseGeositeConfig_FullMethodName            = "/x.api.Api/ParseGeositeConfig"
 	Api_ParseGeoIPConfig_FullMethodName              = "/x.api.Api/ParseGeoIPConfig"
-	Api_RunRealiScanner_FullMethodName               = "/x.api.Api/RunRealiScanner"
 	Api_GenerateX25519KeyPair_FullMethodName         = "/x.api.Api/GenerateX25519KeyPair"
 	Api_StartMacSystemProxy_FullMethodName           = "/x.api.Api/StartMacSystemProxy"
 	Api_StopMacSystemProxy_FullMethodName            = "/x.api.Api/StopMacSystemProxy"
@@ -58,11 +57,11 @@ type ApiClient interface {
 	Download(ctx context.Context, in *DownloadRequest, opts ...grpc.CallOption) (*DownloadResponse, error)
 	// rpc HandlerIp(HandlerIpRequest) returns (HandlerIpResponse);
 	HandlerUsable(ctx context.Context, in *HandlerUsableRequest, opts ...grpc.CallOption) (*HandlerUsableResponse, error)
-	SpeedTest(ctx context.Context, in *SpeedTestRequest, opts ...grpc.CallOption) (Api_SpeedTestClient, error)
+	SpeedTest(ctx context.Context, in *SpeedTestRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SpeedTestResponse], error)
 	RttTest(ctx context.Context, in *RttTestRequest, opts ...grpc.CallOption) (*RttTestResponse, error)
 	GeoIP(ctx context.Context, in *GeoIPRequest, opts ...grpc.CallOption) (*GeoIPResponse, error)
 	GetServerPublicKey(ctx context.Context, in *GetServerPublicKeyRequest, opts ...grpc.CallOption) (*GetServerPublicKeyResponse, error)
-	MonitorServer(ctx context.Context, in *MonitorServerRequest, opts ...grpc.CallOption) (Api_MonitorServerClient, error)
+	MonitorServer(ctx context.Context, in *MonitorServerRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MonitorServerResponse], error)
 	ServerAction(ctx context.Context, in *ServerActionRequest, opts ...grpc.CallOption) (*ServerActionResponse, error)
 	VproxyStatus(ctx context.Context, in *VproxyStatusRequest, opts ...grpc.CallOption) (*VproxyStatusResponse, error)
 	VX(ctx context.Context, in *VXRequest, opts ...grpc.CallOption) (*Receipt, error)
@@ -83,7 +82,6 @@ type ApiClient interface {
 	ParseClashRuleFile(ctx context.Context, in *ParseClashRuleFileRequest, opts ...grpc.CallOption) (*ParseClashRuleFileResponse, error)
 	ParseGeositeConfig(ctx context.Context, in *ParseGeositeConfigRequest, opts ...grpc.CallOption) (*ParseGeositeConfigResponse, error)
 	ParseGeoIPConfig(ctx context.Context, in *ParseGeoIPConfigRequest, opts ...grpc.CallOption) (*ParseGeoIPConfigResponse, error)
-	RunRealiScanner(ctx context.Context, in *RunRealiScannerRequest, opts ...grpc.CallOption) (*RunRealiScannerResponse, error)
 	GenerateX25519KeyPair(ctx context.Context, in *GenerateX25519KeyPairRequest, opts ...grpc.CallOption) (*GenerateX25519KeyPairResponse, error)
 	StartMacSystemProxy(ctx context.Context, in *StartMacSystemProxyRequest, opts ...grpc.CallOption) (*Receipt, error)
 	StopMacSystemProxy(ctx context.Context, in *StopMacSystemProxyRequest, opts ...grpc.CallOption) (*Receipt, error)
@@ -102,8 +100,9 @@ func NewApiClient(cc grpc.ClientConnInterface) ApiClient {
 }
 
 func (c *apiClient) UpdateTmStatus(ctx context.Context, in *UpdateTmStatusRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, Api_UpdateTmStatus_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_UpdateTmStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -111,8 +110,9 @@ func (c *apiClient) UpdateTmStatus(ctx context.Context, in *UpdateTmStatusReques
 }
 
 func (c *apiClient) Download(ctx context.Context, in *DownloadRequest, opts ...grpc.CallOption) (*DownloadResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DownloadResponse)
-	err := c.cc.Invoke(ctx, Api_Download_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_Download_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -120,20 +120,22 @@ func (c *apiClient) Download(ctx context.Context, in *DownloadRequest, opts ...g
 }
 
 func (c *apiClient) HandlerUsable(ctx context.Context, in *HandlerUsableRequest, opts ...grpc.CallOption) (*HandlerUsableResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(HandlerUsableResponse)
-	err := c.cc.Invoke(ctx, Api_HandlerUsable_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_HandlerUsable_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *apiClient) SpeedTest(ctx context.Context, in *SpeedTestRequest, opts ...grpc.CallOption) (Api_SpeedTestClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Api_ServiceDesc.Streams[0], Api_SpeedTest_FullMethodName, opts...)
+func (c *apiClient) SpeedTest(ctx context.Context, in *SpeedTestRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SpeedTestResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Api_ServiceDesc.Streams[0], Api_SpeedTest_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &apiSpeedTestClient{stream}
+	x := &grpc.GenericClientStream[SpeedTestRequest, SpeedTestResponse]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -143,26 +145,13 @@ func (c *apiClient) SpeedTest(ctx context.Context, in *SpeedTestRequest, opts ..
 	return x, nil
 }
 
-type Api_SpeedTestClient interface {
-	Recv() (*SpeedTestResponse, error)
-	grpc.ClientStream
-}
-
-type apiSpeedTestClient struct {
-	grpc.ClientStream
-}
-
-func (x *apiSpeedTestClient) Recv() (*SpeedTestResponse, error) {
-	m := new(SpeedTestResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Api_SpeedTestClient = grpc.ServerStreamingClient[SpeedTestResponse]
 
 func (c *apiClient) RttTest(ctx context.Context, in *RttTestRequest, opts ...grpc.CallOption) (*RttTestResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(RttTestResponse)
-	err := c.cc.Invoke(ctx, Api_RttTest_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_RttTest_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +159,9 @@ func (c *apiClient) RttTest(ctx context.Context, in *RttTestRequest, opts ...grp
 }
 
 func (c *apiClient) GeoIP(ctx context.Context, in *GeoIPRequest, opts ...grpc.CallOption) (*GeoIPResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GeoIPResponse)
-	err := c.cc.Invoke(ctx, Api_GeoIP_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_GeoIP_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -179,20 +169,22 @@ func (c *apiClient) GeoIP(ctx context.Context, in *GeoIPRequest, opts ...grpc.Ca
 }
 
 func (c *apiClient) GetServerPublicKey(ctx context.Context, in *GetServerPublicKeyRequest, opts ...grpc.CallOption) (*GetServerPublicKeyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetServerPublicKeyResponse)
-	err := c.cc.Invoke(ctx, Api_GetServerPublicKey_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_GetServerPublicKey_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *apiClient) MonitorServer(ctx context.Context, in *MonitorServerRequest, opts ...grpc.CallOption) (Api_MonitorServerClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Api_ServiceDesc.Streams[1], Api_MonitorServer_FullMethodName, opts...)
+func (c *apiClient) MonitorServer(ctx context.Context, in *MonitorServerRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MonitorServerResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Api_ServiceDesc.Streams[1], Api_MonitorServer_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &apiMonitorServerClient{stream}
+	x := &grpc.GenericClientStream[MonitorServerRequest, MonitorServerResponse]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -202,26 +194,13 @@ func (c *apiClient) MonitorServer(ctx context.Context, in *MonitorServerRequest,
 	return x, nil
 }
 
-type Api_MonitorServerClient interface {
-	Recv() (*MonitorServerResponse, error)
-	grpc.ClientStream
-}
-
-type apiMonitorServerClient struct {
-	grpc.ClientStream
-}
-
-func (x *apiMonitorServerClient) Recv() (*MonitorServerResponse, error) {
-	m := new(MonitorServerResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Api_MonitorServerClient = grpc.ServerStreamingClient[MonitorServerResponse]
 
 func (c *apiClient) ServerAction(ctx context.Context, in *ServerActionRequest, opts ...grpc.CallOption) (*ServerActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ServerActionResponse)
-	err := c.cc.Invoke(ctx, Api_ServerAction_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_ServerAction_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -229,8 +208,9 @@ func (c *apiClient) ServerAction(ctx context.Context, in *ServerActionRequest, o
 }
 
 func (c *apiClient) VproxyStatus(ctx context.Context, in *VproxyStatusRequest, opts ...grpc.CallOption) (*VproxyStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(VproxyStatusResponse)
-	err := c.cc.Invoke(ctx, Api_VproxyStatus_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_VproxyStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -238,8 +218,9 @@ func (c *apiClient) VproxyStatus(ctx context.Context, in *VproxyStatusRequest, o
 }
 
 func (c *apiClient) VX(ctx context.Context, in *VXRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, Api_VX_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_VX_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -247,8 +228,9 @@ func (c *apiClient) VX(ctx context.Context, in *VXRequest, opts ...grpc.CallOpti
 }
 
 func (c *apiClient) ServerConfig(ctx context.Context, in *ServerConfigRequest, opts ...grpc.CallOption) (*ServerConfigResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ServerConfigResponse)
-	err := c.cc.Invoke(ctx, Api_ServerConfig_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_ServerConfig_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -256,8 +238,9 @@ func (c *apiClient) ServerConfig(ctx context.Context, in *ServerConfigRequest, o
 }
 
 func (c *apiClient) UpdateServerConfig(ctx context.Context, in *UpdateServerConfigRequest, opts ...grpc.CallOption) (*UpdateServerConfigResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateServerConfigResponse)
-	err := c.cc.Invoke(ctx, Api_UpdateServerConfig_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_UpdateServerConfig_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -265,8 +248,9 @@ func (c *apiClient) UpdateServerConfig(ctx context.Context, in *UpdateServerConf
 }
 
 func (c *apiClient) UpdateSubscription(ctx context.Context, in *UpdateSubscriptionRequest, opts ...grpc.CallOption) (*UpdateSubscriptionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateSubscriptionResponse)
-	err := c.cc.Invoke(ctx, Api_UpdateSubscription_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_UpdateSubscription_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -274,8 +258,9 @@ func (c *apiClient) UpdateSubscription(ctx context.Context, in *UpdateSubscripti
 }
 
 func (c *apiClient) ProcessGeoFiles(ctx context.Context, in *ProcessGeoFilesRequest, opts ...grpc.CallOption) (*ProcessGeoFilesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ProcessGeoFilesResponse)
-	err := c.cc.Invoke(ctx, Api_ProcessGeoFiles_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_ProcessGeoFiles_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -283,8 +268,9 @@ func (c *apiClient) ProcessGeoFiles(ctx context.Context, in *ProcessGeoFilesRequ
 }
 
 func (c *apiClient) Decode(ctx context.Context, in *DecodeRequest, opts ...grpc.CallOption) (*DecodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DecodeResponse)
-	err := c.cc.Invoke(ctx, Api_Decode_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_Decode_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -292,8 +278,9 @@ func (c *apiClient) Decode(ctx context.Context, in *DecodeRequest, opts ...grpc.
 }
 
 func (c *apiClient) Deploy(ctx context.Context, in *DeployRequest, opts ...grpc.CallOption) (*DeployResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeployResponse)
-	err := c.cc.Invoke(ctx, Api_Deploy_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_Deploy_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -301,8 +288,9 @@ func (c *apiClient) Deploy(ctx context.Context, in *DeployRequest, opts ...grpc.
 }
 
 func (c *apiClient) GenerateCert(ctx context.Context, in *GenerateCertRequest, opts ...grpc.CallOption) (*GenerateCertResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GenerateCertResponse)
-	err := c.cc.Invoke(ctx, Api_GenerateCert_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_GenerateCert_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -310,8 +298,9 @@ func (c *apiClient) GenerateCert(ctx context.Context, in *GenerateCertRequest, o
 }
 
 func (c *apiClient) GenerateECH(ctx context.Context, in *GenerateECHRequest, opts ...grpc.CallOption) (*GenerateECHResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GenerateECHResponse)
-	err := c.cc.Invoke(ctx, Api_GenerateECH_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_GenerateECH_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -319,8 +308,9 @@ func (c *apiClient) GenerateECH(ctx context.Context, in *GenerateECHRequest, opt
 }
 
 func (c *apiClient) GetCertDomain(ctx context.Context, in *GetCertDomainRequest, opts ...grpc.CallOption) (*GetCertDomainResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetCertDomainResponse)
-	err := c.cc.Invoke(ctx, Api_GetCertDomain_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_GetCertDomain_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -328,8 +318,9 @@ func (c *apiClient) GetCertDomain(ctx context.Context, in *GetCertDomainRequest,
 }
 
 func (c *apiClient) AddInbound(ctx context.Context, in *AddInboundRequest, opts ...grpc.CallOption) (*AddInboundResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AddInboundResponse)
-	err := c.cc.Invoke(ctx, Api_AddInbound_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_AddInbound_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -337,8 +328,9 @@ func (c *apiClient) AddInbound(ctx context.Context, in *AddInboundRequest, opts 
 }
 
 func (c *apiClient) UploadLog(ctx context.Context, in *UploadLogRequest, opts ...grpc.CallOption) (*UploadLogResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UploadLogResponse)
-	err := c.cc.Invoke(ctx, Api_UploadLog_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_UploadLog_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -346,8 +338,9 @@ func (c *apiClient) UploadLog(ctx context.Context, in *UploadLogRequest, opts ..
 }
 
 func (c *apiClient) DefaultNICHasGlobalV6(ctx context.Context, in *DefaultNICHasGlobalV6Request, opts ...grpc.CallOption) (*DefaultNICHasGlobalV6Response, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DefaultNICHasGlobalV6Response)
-	err := c.cc.Invoke(ctx, Api_DefaultNICHasGlobalV6_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_DefaultNICHasGlobalV6_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -355,8 +348,9 @@ func (c *apiClient) DefaultNICHasGlobalV6(ctx context.Context, in *DefaultNICHas
 }
 
 func (c *apiClient) ParseClashRuleFile(ctx context.Context, in *ParseClashRuleFileRequest, opts ...grpc.CallOption) (*ParseClashRuleFileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ParseClashRuleFileResponse)
-	err := c.cc.Invoke(ctx, Api_ParseClashRuleFile_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_ParseClashRuleFile_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -364,8 +358,9 @@ func (c *apiClient) ParseClashRuleFile(ctx context.Context, in *ParseClashRuleFi
 }
 
 func (c *apiClient) ParseGeositeConfig(ctx context.Context, in *ParseGeositeConfigRequest, opts ...grpc.CallOption) (*ParseGeositeConfigResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ParseGeositeConfigResponse)
-	err := c.cc.Invoke(ctx, Api_ParseGeositeConfig_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_ParseGeositeConfig_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -373,17 +368,9 @@ func (c *apiClient) ParseGeositeConfig(ctx context.Context, in *ParseGeositeConf
 }
 
 func (c *apiClient) ParseGeoIPConfig(ctx context.Context, in *ParseGeoIPConfigRequest, opts ...grpc.CallOption) (*ParseGeoIPConfigResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ParseGeoIPConfigResponse)
-	err := c.cc.Invoke(ctx, Api_ParseGeoIPConfig_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *apiClient) RunRealiScanner(ctx context.Context, in *RunRealiScannerRequest, opts ...grpc.CallOption) (*RunRealiScannerResponse, error) {
-	out := new(RunRealiScannerResponse)
-	err := c.cc.Invoke(ctx, Api_RunRealiScanner_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_ParseGeoIPConfig_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -391,8 +378,9 @@ func (c *apiClient) RunRealiScanner(ctx context.Context, in *RunRealiScannerRequ
 }
 
 func (c *apiClient) GenerateX25519KeyPair(ctx context.Context, in *GenerateX25519KeyPairRequest, opts ...grpc.CallOption) (*GenerateX25519KeyPairResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GenerateX25519KeyPairResponse)
-	err := c.cc.Invoke(ctx, Api_GenerateX25519KeyPair_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_GenerateX25519KeyPair_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -400,8 +388,9 @@ func (c *apiClient) GenerateX25519KeyPair(ctx context.Context, in *GenerateX2551
 }
 
 func (c *apiClient) StartMacSystemProxy(ctx context.Context, in *StartMacSystemProxyRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, Api_StartMacSystemProxy_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_StartMacSystemProxy_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -409,8 +398,9 @@ func (c *apiClient) StartMacSystemProxy(ctx context.Context, in *StartMacSystemP
 }
 
 func (c *apiClient) StopMacSystemProxy(ctx context.Context, in *StopMacSystemProxyRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, Api_StopMacSystemProxy_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_StopMacSystemProxy_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -418,8 +408,9 @@ func (c *apiClient) StopMacSystemProxy(ctx context.Context, in *StopMacSystemPro
 }
 
 func (c *apiClient) CloseDb(ctx context.Context, in *CloseDbRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, Api_CloseDb_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_CloseDb_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -427,8 +418,9 @@ func (c *apiClient) CloseDb(ctx context.Context, in *CloseDbRequest, opts ...grp
 }
 
 func (c *apiClient) OpenDb(ctx context.Context, in *OpenDbRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, Api_OpenDb_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_OpenDb_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -436,8 +428,9 @@ func (c *apiClient) OpenDb(ctx context.Context, in *OpenDbRequest, opts ...grpc.
 }
 
 func (c *apiClient) InboundConfigToOutboundConfig(ctx context.Context, in *InboundConfigToOutboundConfigRequest, opts ...grpc.CallOption) (*InboundConfigToOutboundConfigResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(InboundConfigToOutboundConfigResponse)
-	err := c.cc.Invoke(ctx, Api_InboundConfigToOutboundConfig_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_InboundConfigToOutboundConfig_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -445,8 +438,9 @@ func (c *apiClient) InboundConfigToOutboundConfig(ctx context.Context, in *Inbou
 }
 
 func (c *apiClient) ToUrl(ctx context.Context, in *ToUrlRequest, opts ...grpc.CallOption) (*ToUrlResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ToUrlResponse)
-	err := c.cc.Invoke(ctx, Api_ToUrl_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Api_ToUrl_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -455,18 +449,18 @@ func (c *apiClient) ToUrl(ctx context.Context, in *ToUrlRequest, opts ...grpc.Ca
 
 // ApiServer is the server API for Api service.
 // All implementations must embed UnimplementedApiServer
-// for forward compatibility
+// for forward compatibility.
 type ApiServer interface {
 	UpdateTmStatus(context.Context, *UpdateTmStatusRequest) (*Receipt, error)
 	// rpc SetTunName(SetTunNameRequest) returns (SetTunNameResponse);
 	Download(context.Context, *DownloadRequest) (*DownloadResponse, error)
 	// rpc HandlerIp(HandlerIpRequest) returns (HandlerIpResponse);
 	HandlerUsable(context.Context, *HandlerUsableRequest) (*HandlerUsableResponse, error)
-	SpeedTest(*SpeedTestRequest, Api_SpeedTestServer) error
+	SpeedTest(*SpeedTestRequest, grpc.ServerStreamingServer[SpeedTestResponse]) error
 	RttTest(context.Context, *RttTestRequest) (*RttTestResponse, error)
 	GeoIP(context.Context, *GeoIPRequest) (*GeoIPResponse, error)
 	GetServerPublicKey(context.Context, *GetServerPublicKeyRequest) (*GetServerPublicKeyResponse, error)
-	MonitorServer(*MonitorServerRequest, Api_MonitorServerServer) error
+	MonitorServer(*MonitorServerRequest, grpc.ServerStreamingServer[MonitorServerResponse]) error
 	ServerAction(context.Context, *ServerActionRequest) (*ServerActionResponse, error)
 	VproxyStatus(context.Context, *VproxyStatusRequest) (*VproxyStatusResponse, error)
 	VX(context.Context, *VXRequest) (*Receipt, error)
@@ -487,7 +481,6 @@ type ApiServer interface {
 	ParseClashRuleFile(context.Context, *ParseClashRuleFileRequest) (*ParseClashRuleFileResponse, error)
 	ParseGeositeConfig(context.Context, *ParseGeositeConfigRequest) (*ParseGeositeConfigResponse, error)
 	ParseGeoIPConfig(context.Context, *ParseGeoIPConfigRequest) (*ParseGeoIPConfigResponse, error)
-	RunRealiScanner(context.Context, *RunRealiScannerRequest) (*RunRealiScannerResponse, error)
 	GenerateX25519KeyPair(context.Context, *GenerateX25519KeyPairRequest) (*GenerateX25519KeyPairResponse, error)
 	StartMacSystemProxy(context.Context, *StartMacSystemProxyRequest) (*Receipt, error)
 	StopMacSystemProxy(context.Context, *StopMacSystemProxyRequest) (*Receipt, error)
@@ -498,9 +491,12 @@ type ApiServer interface {
 	mustEmbedUnimplementedApiServer()
 }
 
-// UnimplementedApiServer must be embedded to have forward compatible implementations.
-type UnimplementedApiServer struct {
-}
+// UnimplementedApiServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedApiServer struct{}
 
 func (UnimplementedApiServer) UpdateTmStatus(context.Context, *UpdateTmStatusRequest) (*Receipt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTmStatus not implemented")
@@ -511,7 +507,7 @@ func (UnimplementedApiServer) Download(context.Context, *DownloadRequest) (*Down
 func (UnimplementedApiServer) HandlerUsable(context.Context, *HandlerUsableRequest) (*HandlerUsableResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HandlerUsable not implemented")
 }
-func (UnimplementedApiServer) SpeedTest(*SpeedTestRequest, Api_SpeedTestServer) error {
+func (UnimplementedApiServer) SpeedTest(*SpeedTestRequest, grpc.ServerStreamingServer[SpeedTestResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method SpeedTest not implemented")
 }
 func (UnimplementedApiServer) RttTest(context.Context, *RttTestRequest) (*RttTestResponse, error) {
@@ -523,7 +519,7 @@ func (UnimplementedApiServer) GeoIP(context.Context, *GeoIPRequest) (*GeoIPRespo
 func (UnimplementedApiServer) GetServerPublicKey(context.Context, *GetServerPublicKeyRequest) (*GetServerPublicKeyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetServerPublicKey not implemented")
 }
-func (UnimplementedApiServer) MonitorServer(*MonitorServerRequest, Api_MonitorServerServer) error {
+func (UnimplementedApiServer) MonitorServer(*MonitorServerRequest, grpc.ServerStreamingServer[MonitorServerResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method MonitorServer not implemented")
 }
 func (UnimplementedApiServer) ServerAction(context.Context, *ServerActionRequest) (*ServerActionResponse, error) {
@@ -580,9 +576,6 @@ func (UnimplementedApiServer) ParseGeositeConfig(context.Context, *ParseGeositeC
 func (UnimplementedApiServer) ParseGeoIPConfig(context.Context, *ParseGeoIPConfigRequest) (*ParseGeoIPConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ParseGeoIPConfig not implemented")
 }
-func (UnimplementedApiServer) RunRealiScanner(context.Context, *RunRealiScannerRequest) (*RunRealiScannerResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RunRealiScanner not implemented")
-}
 func (UnimplementedApiServer) GenerateX25519KeyPair(context.Context, *GenerateX25519KeyPairRequest) (*GenerateX25519KeyPairResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateX25519KeyPair not implemented")
 }
@@ -605,6 +598,7 @@ func (UnimplementedApiServer) ToUrl(context.Context, *ToUrlRequest) (*ToUrlRespo
 	return nil, status.Errorf(codes.Unimplemented, "method ToUrl not implemented")
 }
 func (UnimplementedApiServer) mustEmbedUnimplementedApiServer() {}
+func (UnimplementedApiServer) testEmbeddedByValue()             {}
 
 // UnsafeApiServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to ApiServer will
@@ -614,6 +608,13 @@ type UnsafeApiServer interface {
 }
 
 func RegisterApiServer(s grpc.ServiceRegistrar, srv ApiServer) {
+	// If the following call pancis, it indicates UnimplementedApiServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
 	s.RegisterService(&Api_ServiceDesc, srv)
 }
 
@@ -676,21 +677,11 @@ func _Api_SpeedTest_Handler(srv interface{}, stream grpc.ServerStream) error {
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ApiServer).SpeedTest(m, &apiSpeedTestServer{stream})
+	return srv.(ApiServer).SpeedTest(m, &grpc.GenericServerStream[SpeedTestRequest, SpeedTestResponse]{ServerStream: stream})
 }
 
-type Api_SpeedTestServer interface {
-	Send(*SpeedTestResponse) error
-	grpc.ServerStream
-}
-
-type apiSpeedTestServer struct {
-	grpc.ServerStream
-}
-
-func (x *apiSpeedTestServer) Send(m *SpeedTestResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Api_SpeedTestServer = grpc.ServerStreamingServer[SpeedTestResponse]
 
 func _Api_RttTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RttTestRequest)
@@ -751,21 +742,11 @@ func _Api_MonitorServer_Handler(srv interface{}, stream grpc.ServerStream) error
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ApiServer).MonitorServer(m, &apiMonitorServerServer{stream})
+	return srv.(ApiServer).MonitorServer(m, &grpc.GenericServerStream[MonitorServerRequest, MonitorServerResponse]{ServerStream: stream})
 }
 
-type Api_MonitorServerServer interface {
-	Send(*MonitorServerResponse) error
-	grpc.ServerStream
-}
-
-type apiMonitorServerServer struct {
-	grpc.ServerStream
-}
-
-func (x *apiMonitorServerServer) Send(m *MonitorServerResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Api_MonitorServerServer = grpc.ServerStreamingServer[MonitorServerResponse]
 
 func _Api_ServerAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ServerActionRequest)
@@ -1091,24 +1072,6 @@ func _Api_ParseGeoIPConfig_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Api_RunRealiScanner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RunRealiScannerRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ApiServer).RunRealiScanner(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Api_RunRealiScanner_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ApiServer).RunRealiScanner(ctx, req.(*RunRealiScannerRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Api_GenerateX25519KeyPair_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GenerateX25519KeyPairRequest)
 	if err := dec(in); err != nil {
@@ -1337,10 +1300,6 @@ var Api_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ParseGeoIPConfig",
 			Handler:    _Api_ParseGeoIPConfig_Handler,
-		},
-		{
-			MethodName: "RunRealiScanner",
-			Handler:    _Api_RunRealiScanner_Handler,
 		},
 		{
 			MethodName: "GenerateX25519KeyPair",

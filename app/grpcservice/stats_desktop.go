@@ -16,7 +16,7 @@ import (
 )
 
 func (s *GrpcService) GetStatsStream(in *GetStatsRequest,
-	stream ClientService_GetStatsStreamServer) error {
+	stream GrpcService_GetStatsStreamServer) error {
 	log.Debug().Msg("get outbound stats stream request received")
 	s.Client.Policy.StatsPolicy.SetOutboundStats(true)
 	var m runtime.MemStats

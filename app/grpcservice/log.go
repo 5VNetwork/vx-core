@@ -56,7 +56,7 @@ func (s *GrpcService) ToggleLogAppId(ctx context.Context, in *ToggleLogAppIdRequ
 	return &ToggleLogAppIdResponse{}, nil
 }
 
-func (s *GrpcService) UserLogStream(in *UserLogStreamRequest, stream ClientService_UserLogStreamServer) error {
+func (s *GrpcService) UserLogStream(in *UserLogStreamRequest, stream GrpcService_UserLogStreamServer) error {
 	log.Debug().Msg("user log stream request received")
 	ul := s.Client.UserLogger
 	ul.SetEnabled(true)

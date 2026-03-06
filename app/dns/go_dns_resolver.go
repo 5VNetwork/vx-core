@@ -5,8 +5,12 @@ package dns
 
 import (
 	"context"
-	"net"
 
+	"github.com/5vnetwork/vx-core/common/dispatcher"
+	"github.com/5vnetwork/vx-core/common/net"
+	"github.com/5vnetwork/vx-core/i"
+	"github.com/5vnetwork/vx-core/proxy/freedom"
+	"github.com/5vnetwork/vx-core/transport"
 	"github.com/rs/zerolog/log"
 )
 
@@ -58,4 +62,23 @@ func (d *DnsResolver) LookupIPPrefer4(ctx context.Context, host string) ([]net.I
 		return ips, nil
 	}
 	return d.Resolver.LookupIP(ctx, "ip6", host)
+}
+
+func DefaultCfResolver() i.DnsResolver {
+	freedom := freedom.New(transport.DefaultDialer, transport.DefaultPacketListener, "freedom", nil)
+	r := NewDnsServerConcurrent(
+		DnsServerConcurrentOption{
+			Name: "default_cf_resolver",
+			NameserverAddrs: []net.AddressPort{
+				{
+					Address: net.CfDns4,
+					Port:    53,
+				},
+			},
+			Handler: freedom,
+			Dispatcher: dispatcher.NewPacketDispatcher(
+				context.Background(), freedom),
+		},
+	)
+	return NewDnsServerToResolver(r)
 }

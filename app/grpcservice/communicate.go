@@ -14,19 +14,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (s *GrpcService) setCommunicateStream(stream ClientService_CommunicateServer) {
+func (s *GrpcService) setCommunicateStream(stream GrpcService_CommunicateServer) {
 	s.streamLock.Lock()
 	defer s.streamLock.Unlock()
 	s.communicateStream = stream
 }
 
-func (s *GrpcService) getCommunicateStream() ClientService_CommunicateServer {
+func (s *GrpcService) getCommunicateStream() GrpcService_CommunicateServer {
 	s.streamLock.RLock()
 	defer s.streamLock.RUnlock()
 	return s.communicateStream
 }
 
-func (s *GrpcService) Communicate(in *CommunicateRequest, stream ClientService_CommunicateServer) error {
+func (s *GrpcService) Communicate(in *CommunicateRequest, stream GrpcService_CommunicateServer) error {
 	s.setCommunicateStream(stream)
 	defer s.setCommunicateStream(nil)
 

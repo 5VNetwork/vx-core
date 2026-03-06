@@ -77,9 +77,6 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 	x.FakeDnsEnabled.Store(config.Dns.GetEnableFakeDns())
 
 	// logger
-	if config.Log == nil {
-		config.Log = &configs.LoggerConfig{LogLevel: configs.Level_ERROR, ConsoleWriter: true, ShowCaller: true}
-	}
 	l, err := logger.SetLog(config.Log)
 	if err != nil {
 		return nil, fmt.Errorf("failed to set log: %w", err)

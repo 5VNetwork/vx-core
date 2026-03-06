@@ -18,7 +18,7 @@ import (
 
 type GrpcService struct {
 	streamLock        sync.RWMutex
-	communicateStream ClientService_CommunicateServer
+	communicateStream GrpcService_CommunicateServer
 
 	Client *client.Client
 
@@ -31,7 +31,7 @@ type GrpcService struct {
 
 	UpdateLantency bool
 
-	UnimplementedClientServiceServer
+	UnimplementedGrpcServiceServer
 }
 
 type GrpcServiceConfig struct {
@@ -46,7 +46,7 @@ func NewGrpcService(grpcConfig *GrpcServiceConfig) (*GrpcService, error) {
 		Done:           done.New(),
 		UpdateLantency: grpcConfig.UpdateLantency,
 	}
-	RegisterClientServiceServer(grpcConfig.GrpcServer, client)
+	RegisterGrpcServiceServer(grpcConfig.GrpcServer, client)
 	return client, nil
 }
 

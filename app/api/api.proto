@@ -55,7 +55,6 @@ service Api {
   rpc ParseClashRuleFile(ParseClashRuleFileRequest) returns (ParseClashRuleFileResponse);
   rpc ParseGeositeConfig(ParseGeositeConfigRequest) returns (ParseGeositeConfigResponse);
   rpc ParseGeoIPConfig(ParseGeoIPConfigRequest) returns (ParseGeoIPConfigResponse);
-  rpc RunRealiScanner(RunRealiScannerRequest) returns (RunRealiScannerResponse);
   rpc GenerateX25519KeyPair(GenerateX25519KeyPairRequest) returns (GenerateX25519KeyPairResponse);
   rpc StartMacSystemProxy(StartMacSystemProxyRequest) returns (Receipt);
   rpc StopMacSystemProxy(StopMacSystemProxyRequest) returns (Receipt);
@@ -345,17 +344,6 @@ message ParseGeoIPConfigRequest {
 }
 message ParseGeoIPConfigResponse {
   repeated x.common.geo.CIDR cidrs = 1;
-}
-
-message RunRealiScannerRequest {
-  string addr = 1;
-}
-message RunRealiScannerResponse {
-  repeated RealiScannerResult results = 1;
-}
-message RealiScannerResult {
-  string ip = 1;
-  string domain = 2;
 }
 
 message GenerateX25519KeyPairRequest {}

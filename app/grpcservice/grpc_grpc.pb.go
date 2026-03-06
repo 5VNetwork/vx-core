@@ -2,7 +2,6 @@ package grpcservice
 
 import (
 	context "context"
-
 	userlogger "github.com/5vnetwork/vx-core/app/userlogger"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -11,53 +10,53 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-// Requires gRPC-Go v1.32.0 or later.
-const _ = grpc.SupportPackageIsVersion7
+// Requires gRPC-Go v1.64.0 or later.
+const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ClientService_Communicate_FullMethodName               = "/x.clientgrpc.ClientService/Communicate"
-	ClientService_AddInbound_FullMethodName                = "/x.clientgrpc.ClientService/AddInbound"
-	ClientService_RemoveInbound_FullMethodName             = "/x.clientgrpc.ClientService/RemoveInbound"
-	ClientService_GetStatsStream_FullMethodName            = "/x.clientgrpc.ClientService/GetStatsStream"
-	ClientService_SetOutboundHandlerSpeed_FullMethodName   = "/x.clientgrpc.ClientService/SetOutboundHandlerSpeed"
-	ClientService_UserLogStream_FullMethodName             = "/x.clientgrpc.ClientService/UserLogStream"
-	ClientService_ToggleUserLog_FullMethodName             = "/x.clientgrpc.ClientService/ToggleUserLog"
-	ClientService_ToggleLogAppId_FullMethodName            = "/x.clientgrpc.ClientService/ToggleLogAppId"
-	ClientService_ChangeOutbound_FullMethodName            = "/x.clientgrpc.ClientService/ChangeOutbound"
-	ClientService_CurrentOutbound_FullMethodName           = "/x.clientgrpc.ClientService/CurrentOutbound"
-	ClientService_ChangeRoutingMode_FullMethodName         = "/x.clientgrpc.ClientService/ChangeRoutingMode"
-	ClientService_ChangeSelector_FullMethodName            = "/x.clientgrpc.ClientService/ChangeSelector"
-	ClientService_UpdateSelectorBalancer_FullMethodName    = "/x.clientgrpc.ClientService/UpdateSelectorBalancer"
-	ClientService_UpdateSelectorFilter_FullMethodName      = "/x.clientgrpc.ClientService/UpdateSelectorFilter"
-	ClientService_NotifyHandlerChange_FullMethodName       = "/x.clientgrpc.ClientService/NotifyHandlerChange"
-	ClientService_SwitchFakeDns_FullMethodName             = "/x.clientgrpc.ClientService/SwitchFakeDns"
-	ClientService_UpdateGeo_FullMethodName                 = "/x.clientgrpc.ClientService/UpdateGeo"
-	ClientService_AddGeoDomain_FullMethodName              = "/x.clientgrpc.ClientService/AddGeoDomain"
-	ClientService_RemoveGeoDomain_FullMethodName           = "/x.clientgrpc.ClientService/RemoveGeoDomain"
-	ClientService_ReplaceGeoDomains_FullMethodName         = "/x.clientgrpc.ClientService/ReplaceGeoDomains"
-	ClientService_ReplaceGeoIPs_FullMethodName             = "/x.clientgrpc.ClientService/ReplaceGeoIPs"
-	ClientService_UpdateRouter_FullMethodName              = "/x.clientgrpc.ClientService/UpdateRouter"
-	ClientService_SetSubscriptionInterval_FullMethodName   = "/x.clientgrpc.ClientService/SetSubscriptionInterval"
-	ClientService_SetAutoSubscriptionUpdate_FullMethodName = "/x.clientgrpc.ClientService/SetAutoSubscriptionUpdate"
-	ClientService_RttTest_FullMethodName                   = "/x.clientgrpc.ClientService/RttTest"
+	GrpcService_Communicate_FullMethodName               = "/x.grpcservice.GrpcService/Communicate"
+	GrpcService_AddInbound_FullMethodName                = "/x.grpcservice.GrpcService/AddInbound"
+	GrpcService_RemoveInbound_FullMethodName             = "/x.grpcservice.GrpcService/RemoveInbound"
+	GrpcService_GetStatsStream_FullMethodName            = "/x.grpcservice.GrpcService/GetStatsStream"
+	GrpcService_SetOutboundHandlerSpeed_FullMethodName   = "/x.grpcservice.GrpcService/SetOutboundHandlerSpeed"
+	GrpcService_UserLogStream_FullMethodName             = "/x.grpcservice.GrpcService/UserLogStream"
+	GrpcService_ToggleUserLog_FullMethodName             = "/x.grpcservice.GrpcService/ToggleUserLog"
+	GrpcService_ToggleLogAppId_FullMethodName            = "/x.grpcservice.GrpcService/ToggleLogAppId"
+	GrpcService_ChangeOutbound_FullMethodName            = "/x.grpcservice.GrpcService/ChangeOutbound"
+	GrpcService_CurrentOutbound_FullMethodName           = "/x.grpcservice.GrpcService/CurrentOutbound"
+	GrpcService_ChangeRoutingMode_FullMethodName         = "/x.grpcservice.GrpcService/ChangeRoutingMode"
+	GrpcService_ChangeSelector_FullMethodName            = "/x.grpcservice.GrpcService/ChangeSelector"
+	GrpcService_UpdateSelectorBalancer_FullMethodName    = "/x.grpcservice.GrpcService/UpdateSelectorBalancer"
+	GrpcService_UpdateSelectorFilter_FullMethodName      = "/x.grpcservice.GrpcService/UpdateSelectorFilter"
+	GrpcService_NotifyHandlerChange_FullMethodName       = "/x.grpcservice.GrpcService/NotifyHandlerChange"
+	GrpcService_SwitchFakeDns_FullMethodName             = "/x.grpcservice.GrpcService/SwitchFakeDns"
+	GrpcService_UpdateGeo_FullMethodName                 = "/x.grpcservice.GrpcService/UpdateGeo"
+	GrpcService_AddGeoDomain_FullMethodName              = "/x.grpcservice.GrpcService/AddGeoDomain"
+	GrpcService_RemoveGeoDomain_FullMethodName           = "/x.grpcservice.GrpcService/RemoveGeoDomain"
+	GrpcService_ReplaceGeoDomains_FullMethodName         = "/x.grpcservice.GrpcService/ReplaceGeoDomains"
+	GrpcService_ReplaceGeoIPs_FullMethodName             = "/x.grpcservice.GrpcService/ReplaceGeoIPs"
+	GrpcService_UpdateRouter_FullMethodName              = "/x.grpcservice.GrpcService/UpdateRouter"
+	GrpcService_SetSubscriptionInterval_FullMethodName   = "/x.grpcservice.GrpcService/SetSubscriptionInterval"
+	GrpcService_SetAutoSubscriptionUpdate_FullMethodName = "/x.grpcservice.GrpcService/SetAutoSubscriptionUpdate"
+	GrpcService_RttTest_FullMethodName                   = "/x.grpcservice.GrpcService/RttTest"
 )
 
-// ClientServiceClient is the client API for ClientService service.
+// GrpcServiceClient is the client API for GrpcService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ClientServiceClient interface {
+type GrpcServiceClient interface {
 	// server to client
-	Communicate(ctx context.Context, in *CommunicateRequest, opts ...grpc.CallOption) (ClientService_CommunicateClient, error)
+	Communicate(ctx context.Context, in *CommunicateRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[CommunicateMessage], error)
 	// inbound
 	AddInbound(ctx context.Context, in *AddInboundRequest, opts ...grpc.CallOption) (*AddInboundResponse, error)
 	RemoveInbound(ctx context.Context, in *RemoveInboundRequest, opts ...grpc.CallOption) (*RemoveInboundResponse, error)
 	// stats
-	GetStatsStream(ctx context.Context, in *GetStatsRequest, opts ...grpc.CallOption) (ClientService_GetStatsStreamClient, error)
+	GetStatsStream(ctx context.Context, in *GetStatsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StatsResponse], error)
 	SetOutboundHandlerSpeed(ctx context.Context, in *SetOutboundHandlerSpeedRequest, opts ...grpc.CallOption) (*SetOutboundHandlerSpeedResponse, error)
 	// log
 	// rpc ChangeLogLevel(ChangeLogLevelRequest) returns (ChangeLogLevelResponse);
 	// rpc LogStream(LogStreamRequest) returns (stream LogMessage);
-	UserLogStream(ctx context.Context, in *UserLogStreamRequest, opts ...grpc.CallOption) (ClientService_UserLogStreamClient, error)
+	UserLogStream(ctx context.Context, in *UserLogStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[userlogger.UserLogMessage], error)
 	ToggleUserLog(ctx context.Context, in *ToggleUserLogRequest, opts ...grpc.CallOption) (*ToggleUserLogResponse, error)
 	ToggleLogAppId(ctx context.Context, in *ToggleLogAppIdRequest, opts ...grpc.CallOption) (*ToggleLogAppIdResponse, error)
 	// outbound
@@ -85,20 +84,21 @@ type ClientServiceClient interface {
 	RttTest(ctx context.Context, in *RttTestRequest, opts ...grpc.CallOption) (*RttTestResponse, error)
 }
 
-type clientServiceClient struct {
+type grpcServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewClientServiceClient(cc grpc.ClientConnInterface) ClientServiceClient {
-	return &clientServiceClient{cc}
+func NewGrpcServiceClient(cc grpc.ClientConnInterface) GrpcServiceClient {
+	return &grpcServiceClient{cc}
 }
 
-func (c *clientServiceClient) Communicate(ctx context.Context, in *CommunicateRequest, opts ...grpc.CallOption) (ClientService_CommunicateClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ClientService_ServiceDesc.Streams[0], ClientService_Communicate_FullMethodName, opts...)
+func (c *grpcServiceClient) Communicate(ctx context.Context, in *CommunicateRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[CommunicateMessage], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &GrpcService_ServiceDesc.Streams[0], GrpcService_Communicate_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &clientServiceCommunicateClient{stream}
+	x := &grpc.GenericClientStream[CommunicateRequest, CommunicateMessage]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -108,47 +108,36 @@ func (c *clientServiceClient) Communicate(ctx context.Context, in *CommunicateRe
 	return x, nil
 }
 
-type ClientService_CommunicateClient interface {
-	Recv() (*CommunicateMessage, error)
-	grpc.ClientStream
-}
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GrpcService_CommunicateClient = grpc.ServerStreamingClient[CommunicateMessage]
 
-type clientServiceCommunicateClient struct {
-	grpc.ClientStream
-}
-
-func (x *clientServiceCommunicateClient) Recv() (*CommunicateMessage, error) {
-	m := new(CommunicateMessage)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *clientServiceClient) AddInbound(ctx context.Context, in *AddInboundRequest, opts ...grpc.CallOption) (*AddInboundResponse, error) {
+func (c *grpcServiceClient) AddInbound(ctx context.Context, in *AddInboundRequest, opts ...grpc.CallOption) (*AddInboundResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AddInboundResponse)
-	err := c.cc.Invoke(ctx, ClientService_AddInbound_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_AddInbound_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) RemoveInbound(ctx context.Context, in *RemoveInboundRequest, opts ...grpc.CallOption) (*RemoveInboundResponse, error) {
+func (c *grpcServiceClient) RemoveInbound(ctx context.Context, in *RemoveInboundRequest, opts ...grpc.CallOption) (*RemoveInboundResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(RemoveInboundResponse)
-	err := c.cc.Invoke(ctx, ClientService_RemoveInbound_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_RemoveInbound_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) GetStatsStream(ctx context.Context, in *GetStatsRequest, opts ...grpc.CallOption) (ClientService_GetStatsStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ClientService_ServiceDesc.Streams[1], ClientService_GetStatsStream_FullMethodName, opts...)
+func (c *grpcServiceClient) GetStatsStream(ctx context.Context, in *GetStatsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StatsResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &GrpcService_ServiceDesc.Streams[1], GrpcService_GetStatsStream_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &clientServiceGetStatsStreamClient{stream}
+	x := &grpc.GenericClientStream[GetStatsRequest, StatsResponse]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -158,38 +147,26 @@ func (c *clientServiceClient) GetStatsStream(ctx context.Context, in *GetStatsRe
 	return x, nil
 }
 
-type ClientService_GetStatsStreamClient interface {
-	Recv() (*StatsResponse, error)
-	grpc.ClientStream
-}
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GrpcService_GetStatsStreamClient = grpc.ServerStreamingClient[StatsResponse]
 
-type clientServiceGetStatsStreamClient struct {
-	grpc.ClientStream
-}
-
-func (x *clientServiceGetStatsStreamClient) Recv() (*StatsResponse, error) {
-	m := new(StatsResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *clientServiceClient) SetOutboundHandlerSpeed(ctx context.Context, in *SetOutboundHandlerSpeedRequest, opts ...grpc.CallOption) (*SetOutboundHandlerSpeedResponse, error) {
+func (c *grpcServiceClient) SetOutboundHandlerSpeed(ctx context.Context, in *SetOutboundHandlerSpeedRequest, opts ...grpc.CallOption) (*SetOutboundHandlerSpeedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SetOutboundHandlerSpeedResponse)
-	err := c.cc.Invoke(ctx, ClientService_SetOutboundHandlerSpeed_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_SetOutboundHandlerSpeed_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) UserLogStream(ctx context.Context, in *UserLogStreamRequest, opts ...grpc.CallOption) (ClientService_UserLogStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ClientService_ServiceDesc.Streams[2], ClientService_UserLogStream_FullMethodName, opts...)
+func (c *grpcServiceClient) UserLogStream(ctx context.Context, in *UserLogStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[userlogger.UserLogMessage], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &GrpcService_ServiceDesc.Streams[2], GrpcService_UserLogStream_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &clientServiceUserLogStreamClient{stream}
+	x := &grpc.GenericClientStream[UserLogStreamRequest, userlogger.UserLogMessage]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -199,210 +176,215 @@ func (c *clientServiceClient) UserLogStream(ctx context.Context, in *UserLogStre
 	return x, nil
 }
 
-type ClientService_UserLogStreamClient interface {
-	Recv() (*userlogger.UserLogMessage, error)
-	grpc.ClientStream
-}
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GrpcService_UserLogStreamClient = grpc.ServerStreamingClient[userlogger.UserLogMessage]
 
-type clientServiceUserLogStreamClient struct {
-	grpc.ClientStream
-}
-
-func (x *clientServiceUserLogStreamClient) Recv() (*userlogger.UserLogMessage, error) {
-	m := new(userlogger.UserLogMessage)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *clientServiceClient) ToggleUserLog(ctx context.Context, in *ToggleUserLogRequest, opts ...grpc.CallOption) (*ToggleUserLogResponse, error) {
+func (c *grpcServiceClient) ToggleUserLog(ctx context.Context, in *ToggleUserLogRequest, opts ...grpc.CallOption) (*ToggleUserLogResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ToggleUserLogResponse)
-	err := c.cc.Invoke(ctx, ClientService_ToggleUserLog_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_ToggleUserLog_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) ToggleLogAppId(ctx context.Context, in *ToggleLogAppIdRequest, opts ...grpc.CallOption) (*ToggleLogAppIdResponse, error) {
+func (c *grpcServiceClient) ToggleLogAppId(ctx context.Context, in *ToggleLogAppIdRequest, opts ...grpc.CallOption) (*ToggleLogAppIdResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ToggleLogAppIdResponse)
-	err := c.cc.Invoke(ctx, ClientService_ToggleLogAppId_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_ToggleLogAppId_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) ChangeOutbound(ctx context.Context, in *ChangeOutboundRequest, opts ...grpc.CallOption) (*ChangeOutboundResponse, error) {
+func (c *grpcServiceClient) ChangeOutbound(ctx context.Context, in *ChangeOutboundRequest, opts ...grpc.CallOption) (*ChangeOutboundResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ChangeOutboundResponse)
-	err := c.cc.Invoke(ctx, ClientService_ChangeOutbound_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_ChangeOutbound_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) CurrentOutbound(ctx context.Context, in *CurrentOutboundRequest, opts ...grpc.CallOption) (*CurrentOutboundResponse, error) {
+func (c *grpcServiceClient) CurrentOutbound(ctx context.Context, in *CurrentOutboundRequest, opts ...grpc.CallOption) (*CurrentOutboundResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CurrentOutboundResponse)
-	err := c.cc.Invoke(ctx, ClientService_CurrentOutbound_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_CurrentOutbound_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) ChangeRoutingMode(ctx context.Context, in *ChangeRoutingModeRequest, opts ...grpc.CallOption) (*ChangeRoutingModeResponse, error) {
+func (c *grpcServiceClient) ChangeRoutingMode(ctx context.Context, in *ChangeRoutingModeRequest, opts ...grpc.CallOption) (*ChangeRoutingModeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ChangeRoutingModeResponse)
-	err := c.cc.Invoke(ctx, ClientService_ChangeRoutingMode_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_ChangeRoutingMode_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) ChangeSelector(ctx context.Context, in *ChangeSelectorRequest, opts ...grpc.CallOption) (*ChangeSelectorResponse, error) {
+func (c *grpcServiceClient) ChangeSelector(ctx context.Context, in *ChangeSelectorRequest, opts ...grpc.CallOption) (*ChangeSelectorResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ChangeSelectorResponse)
-	err := c.cc.Invoke(ctx, ClientService_ChangeSelector_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_ChangeSelector_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) UpdateSelectorBalancer(ctx context.Context, in *UpdateSelectorBalancerRequest, opts ...grpc.CallOption) (*Receipt, error) {
+func (c *grpcServiceClient) UpdateSelectorBalancer(ctx context.Context, in *UpdateSelectorBalancerRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_UpdateSelectorBalancer_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_UpdateSelectorBalancer_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) UpdateSelectorFilter(ctx context.Context, in *UpdateSelectorFilterRequest, opts ...grpc.CallOption) (*Receipt, error) {
+func (c *grpcServiceClient) UpdateSelectorFilter(ctx context.Context, in *UpdateSelectorFilterRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_UpdateSelectorFilter_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_UpdateSelectorFilter_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) NotifyHandlerChange(ctx context.Context, in *HandlerChangeNotify, opts ...grpc.CallOption) (*HandlerChangeNotifyResponse, error) {
+func (c *grpcServiceClient) NotifyHandlerChange(ctx context.Context, in *HandlerChangeNotify, opts ...grpc.CallOption) (*HandlerChangeNotifyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(HandlerChangeNotifyResponse)
-	err := c.cc.Invoke(ctx, ClientService_NotifyHandlerChange_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_NotifyHandlerChange_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) SwitchFakeDns(ctx context.Context, in *SwitchFakeDnsRequest, opts ...grpc.CallOption) (*SwitchFakeDnsResponse, error) {
+func (c *grpcServiceClient) SwitchFakeDns(ctx context.Context, in *SwitchFakeDnsRequest, opts ...grpc.CallOption) (*SwitchFakeDnsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SwitchFakeDnsResponse)
-	err := c.cc.Invoke(ctx, ClientService_SwitchFakeDns_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_SwitchFakeDns_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) UpdateGeo(ctx context.Context, in *UpdateGeoRequest, opts ...grpc.CallOption) (*UpdateGeoResponse, error) {
+func (c *grpcServiceClient) UpdateGeo(ctx context.Context, in *UpdateGeoRequest, opts ...grpc.CallOption) (*UpdateGeoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateGeoResponse)
-	err := c.cc.Invoke(ctx, ClientService_UpdateGeo_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_UpdateGeo_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) AddGeoDomain(ctx context.Context, in *AddGeoDomainRequest, opts ...grpc.CallOption) (*Receipt, error) {
+func (c *grpcServiceClient) AddGeoDomain(ctx context.Context, in *AddGeoDomainRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_AddGeoDomain_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_AddGeoDomain_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) RemoveGeoDomain(ctx context.Context, in *RemoveGeoDomainRequest, opts ...grpc.CallOption) (*Receipt, error) {
+func (c *grpcServiceClient) RemoveGeoDomain(ctx context.Context, in *RemoveGeoDomainRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_RemoveGeoDomain_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_RemoveGeoDomain_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) ReplaceGeoDomains(ctx context.Context, in *ReplaceDomainSetRequest, opts ...grpc.CallOption) (*Receipt, error) {
+func (c *grpcServiceClient) ReplaceGeoDomains(ctx context.Context, in *ReplaceDomainSetRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_ReplaceGeoDomains_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_ReplaceGeoDomains_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) ReplaceGeoIPs(ctx context.Context, in *ReplaceIPSetRequest, opts ...grpc.CallOption) (*Receipt, error) {
+func (c *grpcServiceClient) ReplaceGeoIPs(ctx context.Context, in *ReplaceIPSetRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_ReplaceGeoIPs_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_ReplaceGeoIPs_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) UpdateRouter(ctx context.Context, in *UpdateRouterRequest, opts ...grpc.CallOption) (*UpdateRouterResponse, error) {
+func (c *grpcServiceClient) UpdateRouter(ctx context.Context, in *UpdateRouterRequest, opts ...grpc.CallOption) (*UpdateRouterResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateRouterResponse)
-	err := c.cc.Invoke(ctx, ClientService_UpdateRouter_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_UpdateRouter_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) SetSubscriptionInterval(ctx context.Context, in *SetSubscriptionIntervalRequest, opts ...grpc.CallOption) (*SetSubscriptionIntervalResponse, error) {
+func (c *grpcServiceClient) SetSubscriptionInterval(ctx context.Context, in *SetSubscriptionIntervalRequest, opts ...grpc.CallOption) (*SetSubscriptionIntervalResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SetSubscriptionIntervalResponse)
-	err := c.cc.Invoke(ctx, ClientService_SetSubscriptionInterval_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_SetSubscriptionInterval_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) SetAutoSubscriptionUpdate(ctx context.Context, in *SetAutoSubscriptionUpdateRequest, opts ...grpc.CallOption) (*Receipt, error) {
+func (c *grpcServiceClient) SetAutoSubscriptionUpdate(ctx context.Context, in *SetAutoSubscriptionUpdateRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, ClientService_SetAutoSubscriptionUpdate_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_SetAutoSubscriptionUpdate_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientServiceClient) RttTest(ctx context.Context, in *RttTestRequest, opts ...grpc.CallOption) (*RttTestResponse, error) {
+func (c *grpcServiceClient) RttTest(ctx context.Context, in *RttTestRequest, opts ...grpc.CallOption) (*RttTestResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(RttTestResponse)
-	err := c.cc.Invoke(ctx, ClientService_RttTest_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GrpcService_RttTest_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// ClientServiceServer is the server API for ClientService service.
-// All implementations must embed UnimplementedClientServiceServer
-// for forward compatibility
-type ClientServiceServer interface {
+// GrpcServiceServer is the server API for GrpcService service.
+// All implementations must embed UnimplementedGrpcServiceServer
+// for forward compatibility.
+type GrpcServiceServer interface {
 	// server to client
-	Communicate(*CommunicateRequest, ClientService_CommunicateServer) error
+	Communicate(*CommunicateRequest, grpc.ServerStreamingServer[CommunicateMessage]) error
 	// inbound
 	AddInbound(context.Context, *AddInboundRequest) (*AddInboundResponse, error)
 	RemoveInbound(context.Context, *RemoveInboundRequest) (*RemoveInboundResponse, error)
 	// stats
-	GetStatsStream(*GetStatsRequest, ClientService_GetStatsStreamServer) error
+	GetStatsStream(*GetStatsRequest, grpc.ServerStreamingServer[StatsResponse]) error
 	SetOutboundHandlerSpeed(context.Context, *SetOutboundHandlerSpeedRequest) (*SetOutboundHandlerSpeedResponse, error)
 	// log
 	// rpc ChangeLogLevel(ChangeLogLevelRequest) returns (ChangeLogLevelResponse);
 	// rpc LogStream(LogStreamRequest) returns (stream LogMessage);
-	UserLogStream(*UserLogStreamRequest, ClientService_UserLogStreamServer) error
+	UserLogStream(*UserLogStreamRequest, grpc.ServerStreamingServer[userlogger.UserLogMessage]) error
 	ToggleUserLog(context.Context, *ToggleUserLogRequest) (*ToggleUserLogResponse, error)
 	ToggleLogAppId(context.Context, *ToggleLogAppIdRequest) (*ToggleLogAppIdResponse, error)
 	// outbound
@@ -428,672 +410,653 @@ type ClientServiceServer interface {
 	SetSubscriptionInterval(context.Context, *SetSubscriptionIntervalRequest) (*SetSubscriptionIntervalResponse, error)
 	SetAutoSubscriptionUpdate(context.Context, *SetAutoSubscriptionUpdateRequest) (*Receipt, error)
 	RttTest(context.Context, *RttTestRequest) (*RttTestResponse, error)
-	mustEmbedUnimplementedClientServiceServer()
+	mustEmbedUnimplementedGrpcServiceServer()
 }
 
-// UnimplementedClientServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedClientServiceServer struct {
-}
+// UnimplementedGrpcServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedGrpcServiceServer struct{}
 
-func (UnimplementedClientServiceServer) Communicate(*CommunicateRequest, ClientService_CommunicateServer) error {
+func (UnimplementedGrpcServiceServer) Communicate(*CommunicateRequest, grpc.ServerStreamingServer[CommunicateMessage]) error {
 	return status.Errorf(codes.Unimplemented, "method Communicate not implemented")
 }
-func (UnimplementedClientServiceServer) AddInbound(context.Context, *AddInboundRequest) (*AddInboundResponse, error) {
+func (UnimplementedGrpcServiceServer) AddInbound(context.Context, *AddInboundRequest) (*AddInboundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddInbound not implemented")
 }
-func (UnimplementedClientServiceServer) RemoveInbound(context.Context, *RemoveInboundRequest) (*RemoveInboundResponse, error) {
+func (UnimplementedGrpcServiceServer) RemoveInbound(context.Context, *RemoveInboundRequest) (*RemoveInboundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveInbound not implemented")
 }
-func (UnimplementedClientServiceServer) GetStatsStream(*GetStatsRequest, ClientService_GetStatsStreamServer) error {
+func (UnimplementedGrpcServiceServer) GetStatsStream(*GetStatsRequest, grpc.ServerStreamingServer[StatsResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method GetStatsStream not implemented")
 }
-func (UnimplementedClientServiceServer) SetOutboundHandlerSpeed(context.Context, *SetOutboundHandlerSpeedRequest) (*SetOutboundHandlerSpeedResponse, error) {
+func (UnimplementedGrpcServiceServer) SetOutboundHandlerSpeed(context.Context, *SetOutboundHandlerSpeedRequest) (*SetOutboundHandlerSpeedResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetOutboundHandlerSpeed not implemented")
 }
-func (UnimplementedClientServiceServer) UserLogStream(*UserLogStreamRequest, ClientService_UserLogStreamServer) error {
+func (UnimplementedGrpcServiceServer) UserLogStream(*UserLogStreamRequest, grpc.ServerStreamingServer[userlogger.UserLogMessage]) error {
 	return status.Errorf(codes.Unimplemented, "method UserLogStream not implemented")
 }
-func (UnimplementedClientServiceServer) ToggleUserLog(context.Context, *ToggleUserLogRequest) (*ToggleUserLogResponse, error) {
+func (UnimplementedGrpcServiceServer) ToggleUserLog(context.Context, *ToggleUserLogRequest) (*ToggleUserLogResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ToggleUserLog not implemented")
 }
-func (UnimplementedClientServiceServer) ToggleLogAppId(context.Context, *ToggleLogAppIdRequest) (*ToggleLogAppIdResponse, error) {
+func (UnimplementedGrpcServiceServer) ToggleLogAppId(context.Context, *ToggleLogAppIdRequest) (*ToggleLogAppIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ToggleLogAppId not implemented")
 }
-func (UnimplementedClientServiceServer) ChangeOutbound(context.Context, *ChangeOutboundRequest) (*ChangeOutboundResponse, error) {
+func (UnimplementedGrpcServiceServer) ChangeOutbound(context.Context, *ChangeOutboundRequest) (*ChangeOutboundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeOutbound not implemented")
 }
-func (UnimplementedClientServiceServer) CurrentOutbound(context.Context, *CurrentOutboundRequest) (*CurrentOutboundResponse, error) {
+func (UnimplementedGrpcServiceServer) CurrentOutbound(context.Context, *CurrentOutboundRequest) (*CurrentOutboundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CurrentOutbound not implemented")
 }
-func (UnimplementedClientServiceServer) ChangeRoutingMode(context.Context, *ChangeRoutingModeRequest) (*ChangeRoutingModeResponse, error) {
+func (UnimplementedGrpcServiceServer) ChangeRoutingMode(context.Context, *ChangeRoutingModeRequest) (*ChangeRoutingModeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeRoutingMode not implemented")
 }
-func (UnimplementedClientServiceServer) ChangeSelector(context.Context, *ChangeSelectorRequest) (*ChangeSelectorResponse, error) {
+func (UnimplementedGrpcServiceServer) ChangeSelector(context.Context, *ChangeSelectorRequest) (*ChangeSelectorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeSelector not implemented")
 }
-func (UnimplementedClientServiceServer) UpdateSelectorBalancer(context.Context, *UpdateSelectorBalancerRequest) (*Receipt, error) {
+func (UnimplementedGrpcServiceServer) UpdateSelectorBalancer(context.Context, *UpdateSelectorBalancerRequest) (*Receipt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSelectorBalancer not implemented")
 }
-func (UnimplementedClientServiceServer) UpdateSelectorFilter(context.Context, *UpdateSelectorFilterRequest) (*Receipt, error) {
+func (UnimplementedGrpcServiceServer) UpdateSelectorFilter(context.Context, *UpdateSelectorFilterRequest) (*Receipt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSelectorFilter not implemented")
 }
-func (UnimplementedClientServiceServer) NotifyHandlerChange(context.Context, *HandlerChangeNotify) (*HandlerChangeNotifyResponse, error) {
+func (UnimplementedGrpcServiceServer) NotifyHandlerChange(context.Context, *HandlerChangeNotify) (*HandlerChangeNotifyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NotifyHandlerChange not implemented")
 }
-func (UnimplementedClientServiceServer) SwitchFakeDns(context.Context, *SwitchFakeDnsRequest) (*SwitchFakeDnsResponse, error) {
+func (UnimplementedGrpcServiceServer) SwitchFakeDns(context.Context, *SwitchFakeDnsRequest) (*SwitchFakeDnsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SwitchFakeDns not implemented")
 }
-func (UnimplementedClientServiceServer) UpdateGeo(context.Context, *UpdateGeoRequest) (*UpdateGeoResponse, error) {
+func (UnimplementedGrpcServiceServer) UpdateGeo(context.Context, *UpdateGeoRequest) (*UpdateGeoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGeo not implemented")
 }
-func (UnimplementedClientServiceServer) AddGeoDomain(context.Context, *AddGeoDomainRequest) (*Receipt, error) {
+func (UnimplementedGrpcServiceServer) AddGeoDomain(context.Context, *AddGeoDomainRequest) (*Receipt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddGeoDomain not implemented")
 }
-func (UnimplementedClientServiceServer) RemoveGeoDomain(context.Context, *RemoveGeoDomainRequest) (*Receipt, error) {
+func (UnimplementedGrpcServiceServer) RemoveGeoDomain(context.Context, *RemoveGeoDomainRequest) (*Receipt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveGeoDomain not implemented")
 }
-func (UnimplementedClientServiceServer) ReplaceGeoDomains(context.Context, *ReplaceDomainSetRequest) (*Receipt, error) {
+func (UnimplementedGrpcServiceServer) ReplaceGeoDomains(context.Context, *ReplaceDomainSetRequest) (*Receipt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReplaceGeoDomains not implemented")
 }
-func (UnimplementedClientServiceServer) ReplaceGeoIPs(context.Context, *ReplaceIPSetRequest) (*Receipt, error) {
+func (UnimplementedGrpcServiceServer) ReplaceGeoIPs(context.Context, *ReplaceIPSetRequest) (*Receipt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReplaceGeoIPs not implemented")
 }
-func (UnimplementedClientServiceServer) UpdateRouter(context.Context, *UpdateRouterRequest) (*UpdateRouterResponse, error) {
+func (UnimplementedGrpcServiceServer) UpdateRouter(context.Context, *UpdateRouterRequest) (*UpdateRouterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateRouter not implemented")
 }
-func (UnimplementedClientServiceServer) SetSubscriptionInterval(context.Context, *SetSubscriptionIntervalRequest) (*SetSubscriptionIntervalResponse, error) {
+func (UnimplementedGrpcServiceServer) SetSubscriptionInterval(context.Context, *SetSubscriptionIntervalRequest) (*SetSubscriptionIntervalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetSubscriptionInterval not implemented")
 }
-func (UnimplementedClientServiceServer) SetAutoSubscriptionUpdate(context.Context, *SetAutoSubscriptionUpdateRequest) (*Receipt, error) {
+func (UnimplementedGrpcServiceServer) SetAutoSubscriptionUpdate(context.Context, *SetAutoSubscriptionUpdateRequest) (*Receipt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetAutoSubscriptionUpdate not implemented")
 }
-func (UnimplementedClientServiceServer) RttTest(context.Context, *RttTestRequest) (*RttTestResponse, error) {
+func (UnimplementedGrpcServiceServer) RttTest(context.Context, *RttTestRequest) (*RttTestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RttTest not implemented")
 }
-func (UnimplementedClientServiceServer) mustEmbedUnimplementedClientServiceServer() {}
+func (UnimplementedGrpcServiceServer) mustEmbedUnimplementedGrpcServiceServer() {}
+func (UnimplementedGrpcServiceServer) testEmbeddedByValue()                     {}
 
-// UnsafeClientServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ClientServiceServer will
+// UnsafeGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to GrpcServiceServer will
 // result in compilation errors.
-type UnsafeClientServiceServer interface {
-	mustEmbedUnimplementedClientServiceServer()
+type UnsafeGrpcServiceServer interface {
+	mustEmbedUnimplementedGrpcServiceServer()
 }
 
-func RegisterClientServiceServer(s grpc.ServiceRegistrar, srv ClientServiceServer) {
-	s.RegisterService(&ClientService_ServiceDesc, srv)
+func RegisterGrpcServiceServer(s grpc.ServiceRegistrar, srv GrpcServiceServer) {
+	// If the following call pancis, it indicates UnimplementedGrpcServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&GrpcService_ServiceDesc, srv)
 }
 
-func _ClientService_Communicate_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _GrpcService_Communicate_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(CommunicateRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ClientServiceServer).Communicate(m, &clientServiceCommunicateServer{stream})
+	return srv.(GrpcServiceServer).Communicate(m, &grpc.GenericServerStream[CommunicateRequest, CommunicateMessage]{ServerStream: stream})
 }
 
-type ClientService_CommunicateServer interface {
-	Send(*CommunicateMessage) error
-	grpc.ServerStream
-}
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GrpcService_CommunicateServer = grpc.ServerStreamingServer[CommunicateMessage]
 
-type clientServiceCommunicateServer struct {
-	grpc.ServerStream
-}
-
-func (x *clientServiceCommunicateServer) Send(m *CommunicateMessage) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _ClientService_AddInbound_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_AddInbound_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddInboundRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).AddInbound(ctx, in)
+		return srv.(GrpcServiceServer).AddInbound(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_AddInbound_FullMethodName,
+		FullMethod: GrpcService_AddInbound_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).AddInbound(ctx, req.(*AddInboundRequest))
+		return srv.(GrpcServiceServer).AddInbound(ctx, req.(*AddInboundRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_RemoveInbound_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_RemoveInbound_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RemoveInboundRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).RemoveInbound(ctx, in)
+		return srv.(GrpcServiceServer).RemoveInbound(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_RemoveInbound_FullMethodName,
+		FullMethod: GrpcService_RemoveInbound_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).RemoveInbound(ctx, req.(*RemoveInboundRequest))
+		return srv.(GrpcServiceServer).RemoveInbound(ctx, req.(*RemoveInboundRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_GetStatsStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _GrpcService_GetStatsStream_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(GetStatsRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ClientServiceServer).GetStatsStream(m, &clientServiceGetStatsStreamServer{stream})
+	return srv.(GrpcServiceServer).GetStatsStream(m, &grpc.GenericServerStream[GetStatsRequest, StatsResponse]{ServerStream: stream})
 }
 
-type ClientService_GetStatsStreamServer interface {
-	Send(*StatsResponse) error
-	grpc.ServerStream
-}
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GrpcService_GetStatsStreamServer = grpc.ServerStreamingServer[StatsResponse]
 
-type clientServiceGetStatsStreamServer struct {
-	grpc.ServerStream
-}
-
-func (x *clientServiceGetStatsStreamServer) Send(m *StatsResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _ClientService_SetOutboundHandlerSpeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_SetOutboundHandlerSpeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetOutboundHandlerSpeedRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).SetOutboundHandlerSpeed(ctx, in)
+		return srv.(GrpcServiceServer).SetOutboundHandlerSpeed(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_SetOutboundHandlerSpeed_FullMethodName,
+		FullMethod: GrpcService_SetOutboundHandlerSpeed_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).SetOutboundHandlerSpeed(ctx, req.(*SetOutboundHandlerSpeedRequest))
+		return srv.(GrpcServiceServer).SetOutboundHandlerSpeed(ctx, req.(*SetOutboundHandlerSpeedRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_UserLogStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _GrpcService_UserLogStream_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(UserLogStreamRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ClientServiceServer).UserLogStream(m, &clientServiceUserLogStreamServer{stream})
+	return srv.(GrpcServiceServer).UserLogStream(m, &grpc.GenericServerStream[UserLogStreamRequest, userlogger.UserLogMessage]{ServerStream: stream})
 }
 
-type ClientService_UserLogStreamServer interface {
-	Send(*userlogger.UserLogMessage) error
-	grpc.ServerStream
-}
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GrpcService_UserLogStreamServer = grpc.ServerStreamingServer[userlogger.UserLogMessage]
 
-type clientServiceUserLogStreamServer struct {
-	grpc.ServerStream
-}
-
-func (x *clientServiceUserLogStreamServer) Send(m *userlogger.UserLogMessage) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _ClientService_ToggleUserLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_ToggleUserLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ToggleUserLogRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).ToggleUserLog(ctx, in)
+		return srv.(GrpcServiceServer).ToggleUserLog(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_ToggleUserLog_FullMethodName,
+		FullMethod: GrpcService_ToggleUserLog_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).ToggleUserLog(ctx, req.(*ToggleUserLogRequest))
+		return srv.(GrpcServiceServer).ToggleUserLog(ctx, req.(*ToggleUserLogRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_ToggleLogAppId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_ToggleLogAppId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ToggleLogAppIdRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).ToggleLogAppId(ctx, in)
+		return srv.(GrpcServiceServer).ToggleLogAppId(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_ToggleLogAppId_FullMethodName,
+		FullMethod: GrpcService_ToggleLogAppId_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).ToggleLogAppId(ctx, req.(*ToggleLogAppIdRequest))
+		return srv.(GrpcServiceServer).ToggleLogAppId(ctx, req.(*ToggleLogAppIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_ChangeOutbound_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_ChangeOutbound_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ChangeOutboundRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).ChangeOutbound(ctx, in)
+		return srv.(GrpcServiceServer).ChangeOutbound(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_ChangeOutbound_FullMethodName,
+		FullMethod: GrpcService_ChangeOutbound_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).ChangeOutbound(ctx, req.(*ChangeOutboundRequest))
+		return srv.(GrpcServiceServer).ChangeOutbound(ctx, req.(*ChangeOutboundRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_CurrentOutbound_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_CurrentOutbound_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CurrentOutboundRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).CurrentOutbound(ctx, in)
+		return srv.(GrpcServiceServer).CurrentOutbound(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_CurrentOutbound_FullMethodName,
+		FullMethod: GrpcService_CurrentOutbound_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).CurrentOutbound(ctx, req.(*CurrentOutboundRequest))
+		return srv.(GrpcServiceServer).CurrentOutbound(ctx, req.(*CurrentOutboundRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_ChangeRoutingMode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_ChangeRoutingMode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ChangeRoutingModeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).ChangeRoutingMode(ctx, in)
+		return srv.(GrpcServiceServer).ChangeRoutingMode(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_ChangeRoutingMode_FullMethodName,
+		FullMethod: GrpcService_ChangeRoutingMode_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).ChangeRoutingMode(ctx, req.(*ChangeRoutingModeRequest))
+		return srv.(GrpcServiceServer).ChangeRoutingMode(ctx, req.(*ChangeRoutingModeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_ChangeSelector_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_ChangeSelector_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ChangeSelectorRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).ChangeSelector(ctx, in)
+		return srv.(GrpcServiceServer).ChangeSelector(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_ChangeSelector_FullMethodName,
+		FullMethod: GrpcService_ChangeSelector_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).ChangeSelector(ctx, req.(*ChangeSelectorRequest))
+		return srv.(GrpcServiceServer).ChangeSelector(ctx, req.(*ChangeSelectorRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_UpdateSelectorBalancer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_UpdateSelectorBalancer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateSelectorBalancerRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).UpdateSelectorBalancer(ctx, in)
+		return srv.(GrpcServiceServer).UpdateSelectorBalancer(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_UpdateSelectorBalancer_FullMethodName,
+		FullMethod: GrpcService_UpdateSelectorBalancer_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).UpdateSelectorBalancer(ctx, req.(*UpdateSelectorBalancerRequest))
+		return srv.(GrpcServiceServer).UpdateSelectorBalancer(ctx, req.(*UpdateSelectorBalancerRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_UpdateSelectorFilter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_UpdateSelectorFilter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateSelectorFilterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).UpdateSelectorFilter(ctx, in)
+		return srv.(GrpcServiceServer).UpdateSelectorFilter(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_UpdateSelectorFilter_FullMethodName,
+		FullMethod: GrpcService_UpdateSelectorFilter_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).UpdateSelectorFilter(ctx, req.(*UpdateSelectorFilterRequest))
+		return srv.(GrpcServiceServer).UpdateSelectorFilter(ctx, req.(*UpdateSelectorFilterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_NotifyHandlerChange_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_NotifyHandlerChange_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(HandlerChangeNotify)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).NotifyHandlerChange(ctx, in)
+		return srv.(GrpcServiceServer).NotifyHandlerChange(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_NotifyHandlerChange_FullMethodName,
+		FullMethod: GrpcService_NotifyHandlerChange_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).NotifyHandlerChange(ctx, req.(*HandlerChangeNotify))
+		return srv.(GrpcServiceServer).NotifyHandlerChange(ctx, req.(*HandlerChangeNotify))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_SwitchFakeDns_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_SwitchFakeDns_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SwitchFakeDnsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).SwitchFakeDns(ctx, in)
+		return srv.(GrpcServiceServer).SwitchFakeDns(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_SwitchFakeDns_FullMethodName,
+		FullMethod: GrpcService_SwitchFakeDns_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).SwitchFakeDns(ctx, req.(*SwitchFakeDnsRequest))
+		return srv.(GrpcServiceServer).SwitchFakeDns(ctx, req.(*SwitchFakeDnsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_UpdateGeo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_UpdateGeo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateGeoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).UpdateGeo(ctx, in)
+		return srv.(GrpcServiceServer).UpdateGeo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_UpdateGeo_FullMethodName,
+		FullMethod: GrpcService_UpdateGeo_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).UpdateGeo(ctx, req.(*UpdateGeoRequest))
+		return srv.(GrpcServiceServer).UpdateGeo(ctx, req.(*UpdateGeoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_AddGeoDomain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_AddGeoDomain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddGeoDomainRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).AddGeoDomain(ctx, in)
+		return srv.(GrpcServiceServer).AddGeoDomain(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_AddGeoDomain_FullMethodName,
+		FullMethod: GrpcService_AddGeoDomain_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).AddGeoDomain(ctx, req.(*AddGeoDomainRequest))
+		return srv.(GrpcServiceServer).AddGeoDomain(ctx, req.(*AddGeoDomainRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_RemoveGeoDomain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_RemoveGeoDomain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RemoveGeoDomainRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).RemoveGeoDomain(ctx, in)
+		return srv.(GrpcServiceServer).RemoveGeoDomain(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_RemoveGeoDomain_FullMethodName,
+		FullMethod: GrpcService_RemoveGeoDomain_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).RemoveGeoDomain(ctx, req.(*RemoveGeoDomainRequest))
+		return srv.(GrpcServiceServer).RemoveGeoDomain(ctx, req.(*RemoveGeoDomainRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_ReplaceGeoDomains_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_ReplaceGeoDomains_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ReplaceDomainSetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).ReplaceGeoDomains(ctx, in)
+		return srv.(GrpcServiceServer).ReplaceGeoDomains(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_ReplaceGeoDomains_FullMethodName,
+		FullMethod: GrpcService_ReplaceGeoDomains_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).ReplaceGeoDomains(ctx, req.(*ReplaceDomainSetRequest))
+		return srv.(GrpcServiceServer).ReplaceGeoDomains(ctx, req.(*ReplaceDomainSetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_ReplaceGeoIPs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_ReplaceGeoIPs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ReplaceIPSetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).ReplaceGeoIPs(ctx, in)
+		return srv.(GrpcServiceServer).ReplaceGeoIPs(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_ReplaceGeoIPs_FullMethodName,
+		FullMethod: GrpcService_ReplaceGeoIPs_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).ReplaceGeoIPs(ctx, req.(*ReplaceIPSetRequest))
+		return srv.(GrpcServiceServer).ReplaceGeoIPs(ctx, req.(*ReplaceIPSetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_UpdateRouter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_UpdateRouter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateRouterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).UpdateRouter(ctx, in)
+		return srv.(GrpcServiceServer).UpdateRouter(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_UpdateRouter_FullMethodName,
+		FullMethod: GrpcService_UpdateRouter_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).UpdateRouter(ctx, req.(*UpdateRouterRequest))
+		return srv.(GrpcServiceServer).UpdateRouter(ctx, req.(*UpdateRouterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_SetSubscriptionInterval_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_SetSubscriptionInterval_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetSubscriptionIntervalRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).SetSubscriptionInterval(ctx, in)
+		return srv.(GrpcServiceServer).SetSubscriptionInterval(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_SetSubscriptionInterval_FullMethodName,
+		FullMethod: GrpcService_SetSubscriptionInterval_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).SetSubscriptionInterval(ctx, req.(*SetSubscriptionIntervalRequest))
+		return srv.(GrpcServiceServer).SetSubscriptionInterval(ctx, req.(*SetSubscriptionIntervalRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_SetAutoSubscriptionUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_SetAutoSubscriptionUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetAutoSubscriptionUpdateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).SetAutoSubscriptionUpdate(ctx, in)
+		return srv.(GrpcServiceServer).SetAutoSubscriptionUpdate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_SetAutoSubscriptionUpdate_FullMethodName,
+		FullMethod: GrpcService_SetAutoSubscriptionUpdate_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).SetAutoSubscriptionUpdate(ctx, req.(*SetAutoSubscriptionUpdateRequest))
+		return srv.(GrpcServiceServer).SetAutoSubscriptionUpdate(ctx, req.(*SetAutoSubscriptionUpdateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClientService_RttTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GrpcService_RttTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RttTestRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServiceServer).RttTest(ctx, in)
+		return srv.(GrpcServiceServer).RttTest(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClientService_RttTest_FullMethodName,
+		FullMethod: GrpcService_RttTest_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServiceServer).RttTest(ctx, req.(*RttTestRequest))
+		return srv.(GrpcServiceServer).RttTest(ctx, req.(*RttTestRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// ClientService_ServiceDesc is the grpc.ServiceDesc for ClientService service.
+// GrpcService_ServiceDesc is the grpc.ServiceDesc for GrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var ClientService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "x.clientgrpc.ClientService",
-	HandlerType: (*ClientServiceServer)(nil),
+var GrpcService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "x.grpcservice.GrpcService",
+	HandlerType: (*GrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "AddInbound",
-			Handler:    _ClientService_AddInbound_Handler,
+			Handler:    _GrpcService_AddInbound_Handler,
 		},
 		{
 			MethodName: "RemoveInbound",
-			Handler:    _ClientService_RemoveInbound_Handler,
+			Handler:    _GrpcService_RemoveInbound_Handler,
 		},
 		{
 			MethodName: "SetOutboundHandlerSpeed",
-			Handler:    _ClientService_SetOutboundHandlerSpeed_Handler,
+			Handler:    _GrpcService_SetOutboundHandlerSpeed_Handler,
 		},
 		{
 			MethodName: "ToggleUserLog",
-			Handler:    _ClientService_ToggleUserLog_Handler,
+			Handler:    _GrpcService_ToggleUserLog_Handler,
 		},
 		{
 			MethodName: "ToggleLogAppId",
-			Handler:    _ClientService_ToggleLogAppId_Handler,
+			Handler:    _GrpcService_ToggleLogAppId_Handler,
 		},
 		{
 			MethodName: "ChangeOutbound",
-			Handler:    _ClientService_ChangeOutbound_Handler,
+			Handler:    _GrpcService_ChangeOutbound_Handler,
 		},
 		{
 			MethodName: "CurrentOutbound",
-			Handler:    _ClientService_CurrentOutbound_Handler,
+			Handler:    _GrpcService_CurrentOutbound_Handler,
 		},
 		{
 			MethodName: "ChangeRoutingMode",
-			Handler:    _ClientService_ChangeRoutingMode_Handler,
+			Handler:    _GrpcService_ChangeRoutingMode_Handler,
 		},
 		{
 			MethodName: "ChangeSelector",
-			Handler:    _ClientService_ChangeSelector_Handler,
+			Handler:    _GrpcService_ChangeSelector_Handler,
 		},
 		{
 			MethodName: "UpdateSelectorBalancer",
-			Handler:    _ClientService_UpdateSelectorBalancer_Handler,
+			Handler:    _GrpcService_UpdateSelectorBalancer_Handler,
 		},
 		{
 			MethodName: "UpdateSelectorFilter",
-			Handler:    _ClientService_UpdateSelectorFilter_Handler,
+			Handler:    _GrpcService_UpdateSelectorFilter_Handler,
 		},
 		{
 			MethodName: "NotifyHandlerChange",
-			Handler:    _ClientService_NotifyHandlerChange_Handler,
+			Handler:    _GrpcService_NotifyHandlerChange_Handler,
 		},
 		{
 			MethodName: "SwitchFakeDns",
-			Handler:    _ClientService_SwitchFakeDns_Handler,
+			Handler:    _GrpcService_SwitchFakeDns_Handler,
 		},
 		{
 			MethodName: "UpdateGeo",
-			Handler:    _ClientService_UpdateGeo_Handler,
+			Handler:    _GrpcService_UpdateGeo_Handler,
 		},
 		{
 			MethodName: "AddGeoDomain",
-			Handler:    _ClientService_AddGeoDomain_Handler,
+			Handler:    _GrpcService_AddGeoDomain_Handler,
 		},
 		{
 			MethodName: "RemoveGeoDomain",
-			Handler:    _ClientService_RemoveGeoDomain_Handler,
+			Handler:    _GrpcService_RemoveGeoDomain_Handler,
 		},
 		{
 			MethodName: "ReplaceGeoDomains",
-			Handler:    _ClientService_ReplaceGeoDomains_Handler,
+			Handler:    _GrpcService_ReplaceGeoDomains_Handler,
 		},
 		{
 			MethodName: "ReplaceGeoIPs",
-			Handler:    _ClientService_ReplaceGeoIPs_Handler,
+			Handler:    _GrpcService_ReplaceGeoIPs_Handler,
 		},
 		{
 			MethodName: "UpdateRouter",
-			Handler:    _ClientService_UpdateRouter_Handler,
+			Handler:    _GrpcService_UpdateRouter_Handler,
 		},
 		{
 			MethodName: "SetSubscriptionInterval",
-			Handler:    _ClientService_SetSubscriptionInterval_Handler,
+			Handler:    _GrpcService_SetSubscriptionInterval_Handler,
 		},
 		{
 			MethodName: "SetAutoSubscriptionUpdate",
-			Handler:    _ClientService_SetAutoSubscriptionUpdate_Handler,
+			Handler:    _GrpcService_SetAutoSubscriptionUpdate_Handler,
 		},
 		{
 			MethodName: "RttTest",
-			Handler:    _ClientService_RttTest_Handler,
+			Handler:    _GrpcService_RttTest_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "Communicate",
-			Handler:       _ClientService_Communicate_Handler,
+			Handler:       _GrpcService_Communicate_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "GetStatsStream",
-			Handler:       _ClientService_GetStatsStream_Handler,
+			Handler:       _GrpcService_GetStatsStream_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "UserLogStream",
-			Handler:       _ClientService_UserLogStream_Handler,
+			Handler:       _GrpcService_UserLogStream_Handler,
 			ServerStreams: true,
 		},
 	},
-	Metadata: "app/clientgrpc/grpc.proto",
+	Metadata: "app/grpcservice/grpc.proto",
 }

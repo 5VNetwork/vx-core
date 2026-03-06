@@ -23,7 +23,6 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.FatalLevel)
 }
 
-// TODO: upload logger
 const ipv4Pattern = `\b(?:\d{1,3}\.){3}\d{1,3}\b`
 const ipv6Pattern = `\b(?:[0-9a-fA-F]{1,4}:){2,7}[0-9a-fA-F]{1,4}\b|\b(?:[0-9a-fA-F]{1,4}:)*::(?:[0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}\b`
 const domainPattern = `\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\b`

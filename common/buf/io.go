@@ -18,6 +18,7 @@ type ReaderWriter interface {
 // Reader extends io.Reader with MultiBuffer.
 type Reader interface {
 	// Same as io.Reader.Read, MultiBuffer might be not empty and error is not-nil
+	// Should not return empty MultiBuffer and nil error
 	ReadMultiBuffer() (MultiBuffer, error)
 }
 

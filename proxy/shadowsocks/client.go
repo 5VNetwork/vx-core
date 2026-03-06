@@ -45,7 +45,8 @@ func (c *Client) dial(ctx context.Context, network net.Network) (net.Conn, *Memo
 	return conn, c.Account, err
 }
 
-func (c *Client) HandleFlow(ctx context.Context, dst net.Destination, rw buf.ReaderWriter) error {
+func (c *Client) HandleFlow(ctx context.Context, dst net.Destination,
+	rw buf.ReaderWriter) error {
 	request := &protocol.RequestHeader{
 		Version: Version,
 		Address: dst.Address,

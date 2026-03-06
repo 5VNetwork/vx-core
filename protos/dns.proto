@@ -14,6 +14,7 @@ message DnsConfig {
   // if not zero, dns responses will be cached for this duration.
   // if zero, the minimum ttl of all answers will be used.
   uint32 cache_duration = 6;
+  repeated DnsServerConfig internal_dns_servers = 7;
 }
 
 message DnsRules {

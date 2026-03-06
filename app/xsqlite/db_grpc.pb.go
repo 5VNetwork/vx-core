@@ -9,8 +9,8 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-// Requires gRPC-Go v1.32.0 or later.
-const _ = grpc.SupportPackageIsVersion7
+// Requires gRPC-Go v1.64.0 or later.
+const _ = grpc.SupportPackageIsVersion9
 
 const (
 	DbService_GetHandler_FullMethodName         = "/x.db.DbService/GetHandler"
@@ -40,8 +40,9 @@ func NewDbServiceClient(cc grpc.ClientConnInterface) DbServiceClient {
 }
 
 func (c *dbServiceClient) GetHandler(ctx context.Context, in *GetHandlerRequest, opts ...grpc.CallOption) (*DbOutboundHandler, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DbOutboundHandler)
-	err := c.cc.Invoke(ctx, DbService_GetHandler_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, DbService_GetHandler_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +50,9 @@ func (c *dbServiceClient) GetHandler(ctx context.Context, in *GetHandlerRequest,
 }
 
 func (c *dbServiceClient) GetAllHandlers(ctx context.Context, in *GetAllHandlersRequest, opts ...grpc.CallOption) (*DbHandlers, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DbHandlers)
-	err := c.cc.Invoke(ctx, DbService_GetAllHandlers_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, DbService_GetAllHandlers_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +60,9 @@ func (c *dbServiceClient) GetAllHandlers(ctx context.Context, in *GetAllHandlers
 }
 
 func (c *dbServiceClient) GetHandlersByGroup(ctx context.Context, in *GetHandlersByGroupRequest, opts ...grpc.CallOption) (*DbHandlers, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DbHandlers)
-	err := c.cc.Invoke(ctx, DbService_GetHandlersByGroup_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, DbService_GetHandlersByGroup_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +70,9 @@ func (c *dbServiceClient) GetHandlersByGroup(ctx context.Context, in *GetHandler
 }
 
 func (c *dbServiceClient) GetBatchedHandlers(ctx context.Context, in *GetBatchedHandlersRequest, opts ...grpc.CallOption) (*DbHandlers, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DbHandlers)
-	err := c.cc.Invoke(ctx, DbService_GetBatchedHandlers_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, DbService_GetBatchedHandlers_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +80,9 @@ func (c *dbServiceClient) GetBatchedHandlers(ctx context.Context, in *GetBatched
 }
 
 func (c *dbServiceClient) UpdateHandler(ctx context.Context, in *UpdateHandlerRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Receipt)
-	err := c.cc.Invoke(ctx, DbService_UpdateHandler_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, DbService_UpdateHandler_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +91,7 @@ func (c *dbServiceClient) UpdateHandler(ctx context.Context, in *UpdateHandlerRe
 
 // DbServiceServer is the server API for DbService service.
 // All implementations must embed UnimplementedDbServiceServer
-// for forward compatibility
+// for forward compatibility.
 type DbServiceServer interface {
 	GetHandler(context.Context, *GetHandlerRequest) (*DbOutboundHandler, error)
 	GetAllHandlers(context.Context, *GetAllHandlersRequest) (*DbHandlers, error)
@@ -96,9 +101,12 @@ type DbServiceServer interface {
 	mustEmbedUnimplementedDbServiceServer()
 }
 
-// UnimplementedDbServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedDbServiceServer struct {
-}
+// UnimplementedDbServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedDbServiceServer struct{}
 
 func (UnimplementedDbServiceServer) GetHandler(context.Context, *GetHandlerRequest) (*DbOutboundHandler, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHandler not implemented")
@@ -116,6 +124,7 @@ func (UnimplementedDbServiceServer) UpdateHandler(context.Context, *UpdateHandle
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateHandler not implemented")
 }
 func (UnimplementedDbServiceServer) mustEmbedUnimplementedDbServiceServer() {}
+func (UnimplementedDbServiceServer) testEmbeddedByValue()                   {}
 
 // UnsafeDbServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to DbServiceServer will
@@ -125,6 +134,13 @@ type UnsafeDbServiceServer interface {
 }
 
 func RegisterDbServiceServer(s grpc.ServiceRegistrar, srv DbServiceServer) {
+	// If the following call pancis, it indicates UnimplementedDbServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
 	s.RegisterService(&DbService_ServiceDesc, srv)
 }
 

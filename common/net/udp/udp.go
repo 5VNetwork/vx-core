@@ -55,7 +55,7 @@ func (r *SecondDdlReaderWriter) ReadPacket() (*Packet, error) {
 	return r.DdlPacketReaderWriter.ReadPacket()
 }
 
-// adapts a PacketConn to a buf.ReaderWriter
+// adapts a PacketReaderWriter to a buf.ReaderWriter
 type ReaderWriterAdaptor struct {
 	PacketReaderWriter
 	Addr net.Destination
@@ -84,6 +84,48 @@ func (p *ReaderWriterAdaptor) WriteMultiBuffer(mb buf.MultiBuffer) error {
 			return fmt.Errorf("failed to write all multibuffer, %w", err)
 		}
 	}
+	return nil
+}
+
+type BufReaderWriterToPacketReaderWriter struct {
+	buf.ReaderWriter
+	Dest  net.Destination
+	cache buf.MultiBuffer
+}
+
+func (p *BufReaderWriterToPacketReaderWriter) ReadPacket() (*Packet, error) {
+	if len(p.cache) > 0 {
+		packet := p.cache[0]
+		p.cache = p.cache[1:]
+		return &Packet{
+			Payload: packet,
+			Target:  p.Dest,
+		}, nil
+	}
+
+	mb, err := p.ReaderWriter.ReadMultiBuffer()
+	if len(mb) > 0 {
+		packet := mb[0]
+		p.cache = mb[1:]
+		return &Packet{
+			Payload: packet,
+			Target:  p.Dest,
+		}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	// err is nil and mb is empty. This case should not happen
+	panic("buf.ReaderWriter.ReadMultiBuffer() returned empty MultiBuffer and nil error")
+}
+
+func (p *BufReaderWriterToPacketReaderWriter) WritePacket(packet *Packet) error {
+	return p.ReaderWriter.WriteMultiBuffer(p.cache)
+}
+
+func (p *BufReaderWriterToPacketReaderWriter) ClearCache() error {
+	buf.ReleaseMulti(p.cache)
+	p.cache = nil
 	return nil
 }
 
