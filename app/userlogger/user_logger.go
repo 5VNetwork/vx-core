@@ -18,6 +18,8 @@ import (
 	"github.com/5vnetwork/vx-core/common/session"
 	"github.com/5vnetwork/vx-core/common/signal/done"
 	"github.com/5vnetwork/vx-core/i"
+	"github.com/5vnetwork/vx-core/proxy/hysteria2"
+	"github.com/5vnetwork/vx-core/proxy/vless/outbound"
 	"github.com/rs/zerolog/log"
 )
 
@@ -209,6 +211,11 @@ func (s *UserLogger) LogSessionError(info *session.Info, err error) {
 		return
 	}
 
+	if errors.Is(err, hysteria2.ErrRejectQuic) {
+		return
+	} else if errors.Is(err, outbound.ErrRejectQuic) {
+		return
+	}
 	if err == router.ErrBlocked {
 		s.LogReject(info, err.Error())
 	} else if err == router.ErrNoHandler {

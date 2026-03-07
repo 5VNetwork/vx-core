@@ -458,7 +458,7 @@ func (d *HysClient) dialCommon(ctx context.Context, dst net.Destination) (net.Co
 	var wrappedClient *wrappedClient
 	if dst.Network == net.Network_UDP {
 		if dst.Port == 443 && d.RejectQuic {
-			return nil, nil, errors.New("reject quic over hysteria2")
+			return nil, nil, ErrRejectQuic
 		}
 		var udpConn client.HyUDPConn
 		udpConn, wrappedClient, err = d.udp(ctx)
