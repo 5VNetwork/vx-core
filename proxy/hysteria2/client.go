@@ -452,6 +452,8 @@ func (c *hysConnFactory) New(addr net.Addr) (net.PacketConn, error) {
 	return conn, nil
 }
 
+var ErrRejectQuic = errors.New("reject quic over hysteria2")
+
 func (d *HysClient) dialCommon(ctx context.Context, dst net.Destination) (net.Conn, *wrappedClient, error) {
 	var conn net.Conn
 	var err error
@@ -465,17 +467,15 @@ func (d *HysClient) dialCommon(ctx context.Context, dst net.Destination) (net.Co
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to dial UDP: %w", err)
 		}
-		target := dst
-		// change target to ip if it is domain. Because if target is domain,
-		//  this connection will likely fail
-		if d.IpResolverForTargetAddress != nil && dst.Address.Family().IsDomain() {
-			ips, _ := d.IpResolverForTargetAddress.LookupIP(
-				ctx, dst.Address.Domain())
-			if len(ips) > 0 {
-				target.Address = net.IPAddress(ips[rand.Intn(len(ips))])
-			}
-		}
-		conn = &HyUdpConnToNetConn{addr: target.NetAddr(), hyUdpConn: udpConn}
+		// if d.IpResolverForTargetAddress != nil && dst.Address.Family().IsDomain() {
+		// 	// TODO: should consider whether server support ipv6
+		// 	ips, _ := d.IpResolverForTargetAddress.LookupIP(
+		// 		ctx, dst.Address.Domain())
+		// 	if len(ips) > 0 {
+		// 		target.Address = net.IPAddress(ips[rand.Intn(len(ips))])
+		// 	}
+		// }
+		conn = &HyUdpConnToNetConn{addr: dst.NetAddr(), hyUdpConn: udpConn}
 	} else {
 		conn, wrappedClient, err = d.tcp(ctx, dst)
 		if err != nil {
@@ -786,16 +786,15 @@ type HyUdpConnToNetConn struct {
 }
 
 func (c *HyUdpConnToNetConn) Read(p []byte) (n int, err error) {
-	for {
-		data, src, err := c.hyUdpConn.Receive()
-		if err != nil {
-			return 0, fmt.Errorf("failed to receive: %w", err)
-		}
-		if src == c.addr {
-			n = copy(p, data)
-			return n, nil
-		}
+	data, src, err := c.hyUdpConn.Receive()
+	if err != nil {
+		return 0, fmt.Errorf("failed to receive: %w", err)
 	}
+	if src != c.addr {
+		log.Warn().Str("src", src).Str("addr", c.addr).Msg("hys udp conn to net conn src not equal to addr")
+	}
+	n = copy(p, data)
+	return n, nil
 }
 
 func (c *HyUdpConnToNetConn) Write(p []byte) (int, error) {

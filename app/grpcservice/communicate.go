@@ -54,24 +54,6 @@ func (s *GrpcService) Communicate(in *CommunicateRequest, stream GrpcService_Com
 	}
 }
 
-// func (s *ClientGrpc) OnHandlerError(tag string, err error) {
-// 	stream := s.getCommunicateStream()
-// 	if stream == nil {
-// 		return
-// 	}
-// 	erro := stream.Send(&CommunicateMessage{
-// 		Message: &CommunicateMessage_HandlerError{
-// 			HandlerError: &HandlerError{
-// 				Tag:   tag,
-// 				Error: err.Error(),
-// 			},
-// 		},
-// 	})
-// 	if erro != nil && !errors.Is(erro, context.Canceled) {
-// 		log.Error().Err(erro).Msg("failed to send handler error")
-// 	}
-// }
-
 // TODO: Lock?
 func (s *GrpcService) OnSubscriptionUpdated() {
 	if proxyHandlers := GetAllProxyhandlers(s.Client.OutboundManager); len(proxyHandlers) > 0 {

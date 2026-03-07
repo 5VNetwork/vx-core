@@ -309,7 +309,7 @@ type RealIpPacketConn struct {
 	ctx     context.Context
 }
 
-// assume to be called sequentially
+// should be called sequentially
 func (p *RealIpPacketConn) ReadPacket() (*udp.Packet, error) {
 	packet, err := p.PacketReaderWriter.ReadPacket()
 	if err != nil {
