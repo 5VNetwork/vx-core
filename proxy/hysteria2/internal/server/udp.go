@@ -112,7 +112,7 @@ func (e *udpSessionEntry) Feed(msg *protocol.UDPMessage) (int, error) {
 		addr = e.OverrideAddr
 	}
 
-	netAddr, err := net.ResolveUDPAddr("udp", addr)
+	netAddr, err := net.ParseDestination(addr)
 	if err != nil {
 		return 0, err
 	}
@@ -122,8 +122,8 @@ func (e *udpSessionEntry) Feed(msg *protocol.UDPMessage) (int, error) {
 	err = e.conn.WritePacket(&udp.Packet{
 		Payload: b,
 		Target: net.Destination{
-			Address: net.IPAddress(netAddr.IP),
-			Port:    net.Port(netAddr.Port),
+			Address: netAddr.Address,
+			Port:    netAddr.Port,
 			Network: net.Network_UDP,
 		},
 	})
