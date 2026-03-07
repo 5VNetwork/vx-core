@@ -123,7 +123,10 @@ type TunConfig struct {
 	ShouldBindDevice bool             `protobuf:"varint,4,opt,name=should_bind_device,json=shouldBindDevice,proto3" json:"should_bind_device,omitempty"`
 	Device           *TunDeviceConfig `protobuf:"bytes,5,opt,name=device,proto3" json:"device,omitempty"`
 	// Controls whether to apply ipv4 and ipv6 settings of [device] to the tun.
-	Tun46Setting  TunConfig_TUN46Setting `protobuf:"varint,8,opt,name=tun46_setting,json=tun46Setting,proto3,enum=x.TunConfig_TUN46Setting" json:"tun46_setting,omitempty"`
+	Tun46Setting TunConfig_TUN46Setting `protobuf:"varint,8,opt,name=tun46_setting,json=tun46Setting,proto3,enum=x.TunConfig_TUN46Setting" json:"tun46_setting,omitempty"`
+	// based on dst, src, network to match a handler,
+	// if the handler does not support ipv6, reject the request
+	RejectIpv6    bool `protobuf:"varint,9,opt,name=reject_ipv6,json=rejectIpv6,proto3" json:"reject_ipv6,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -191,6 +194,13 @@ func (x *TunConfig) GetTun46Setting() TunConfig_TUN46Setting {
 		return x.Tun46Setting
 	}
 	return TunConfig_FOUR_ONLY
+}
+
+func (x *TunConfig) GetRejectIpv6() bool {
+	if x != nil {
+		return x.RejectIpv6
+	}
+	return false
 }
 
 type TunDeviceConfig struct {
@@ -336,13 +346,15 @@ var File_protos_tun_proto protoreflect.FileDescriptor
 
 const file_protos_tun_proto_rawDesc = "" +
 	"\n" +
-	"\x10protos/tun.proto\x12\x01x\"\x8a\x02\n" +
+	"\x10protos/tun.proto\x12\x01x\"\xab\x02\n" +
 	"\tTunConfig\x12\x10\n" +
 	"\x03tag\x18\x02 \x01(\tR\x03tag\x12\x1b\n" +
 	"\x04mode\x18\x03 \x01(\x0e2\a.x.ModeR\x04mode\x12,\n" +
 	"\x12should_bind_device\x18\x04 \x01(\bR\x10shouldBindDevice\x12*\n" +
 	"\x06device\x18\x05 \x01(\v2\x12.x.TunDeviceConfigR\x06device\x12>\n" +
-	"\rtun46_setting\x18\b \x01(\x0e2\x19.x.TunConfig.TUN46SettingR\ftun46Setting\"4\n" +
+	"\rtun46_setting\x18\b \x01(\x0e2\x19.x.TunConfig.TUN46SettingR\ftun46Setting\x12\x1f\n" +
+	"\vreject_ipv6\x18\t \x01(\bR\n" +
+	"rejectIpv6\"4\n" +
 	"\fTUN46Setting\x12\r\n" +
 	"\tFOUR_ONLY\x10\x00\x12\b\n" +
 	"\x04BOTH\x10\x01\x12\v\n" +

@@ -38,16 +38,13 @@ type TmConfig struct {
 	Subscription        *SubscriptionConfig `protobuf:"bytes,21,opt,name=subscription,proto3" json:"subscription,omitempty"`
 	Hysteria2RejectQuic bool                `protobuf:"varint,24,opt,name=hysteria2_reject_quic,json=hysteria2RejectQuic,proto3" json:"hysteria2_reject_quic,omitempty"`
 	// outbound
-	Outbound       *OutboundConfig `protobuf:"bytes,30,opt,name=outbound,proto3" json:"outbound,omitempty"`
-	RedirectStdErr string          `protobuf:"bytes,31,opt,name=redirect_std_err,json=redirectStdErr,proto3" json:"redirect_std_err,omitempty"`
-	// based on dst, src, network, if there is no handler matched or the
-	// matched handler does not support ipv6, reject the request
-	RejectIpv6    bool               `protobuf:"varint,32,opt,name=reject_ipv6,json=rejectIpv6,proto3" json:"reject_ipv6,omitempty"`
-	Wfp           *WfpConfig         `protobuf:"bytes,33,opt,name=wfp,proto3" json:"wfp,omitempty"`
-	UserLog       *UserLoggerConfig  `protobuf:"bytes,35,opt,name=user_log,json=userLog,proto3" json:"user_log,omitempty"`
-	GrpcService   *GrpcServiceConfig `protobuf:"bytes,36,opt,name=grpc_service,json=grpcService,proto3" json:"grpc_service,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Outbound       *OutboundConfig    `protobuf:"bytes,30,opt,name=outbound,proto3" json:"outbound,omitempty"`
+	RedirectStdErr string             `protobuf:"bytes,31,opt,name=redirect_std_err,json=redirectStdErr,proto3" json:"redirect_std_err,omitempty"`
+	Wfp            *WfpConfig         `protobuf:"bytes,33,opt,name=wfp,proto3" json:"wfp,omitempty"`
+	UserLog        *UserLoggerConfig  `protobuf:"bytes,35,opt,name=user_log,json=userLog,proto3" json:"user_log,omitempty"`
+	GrpcService    *GrpcServiceConfig `protobuf:"bytes,36,opt,name=grpc_service,json=grpcService,proto3" json:"grpc_service,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *TmConfig) Reset() {
@@ -213,13 +210,6 @@ func (x *TmConfig) GetRedirectStdErr() string {
 	return ""
 }
 
-func (x *TmConfig) GetRejectIpv6() bool {
-	if x != nil {
-		return x.RejectIpv6
-	}
-	return false
-}
-
 func (x *TmConfig) GetWfp() *WfpConfig {
 	if x != nil {
 		return x.Wfp
@@ -382,7 +372,7 @@ var File_protos_client_proto protoreflect.FileDescriptor
 
 const file_protos_client_proto_rawDesc = "" +
 	"\n" +
-	"\x13protos/client.proto\x12\x01x\x1a\x14protos/inbound.proto\x1a\x15protos/outbound.proto\x1a\x10protos/dns.proto\x1a\x13protos/router.proto\x1a\x13protos/policy.proto\x1a\x13protos/logger.proto\x1a\x10protos/geo.proto\x1a\x17protos/dispatcher.proto\x1a\x10protos/tun.proto\x1a\x15protos/sysproxy.proto\x1a\x19protos/grpc_service.proto\"\xe6\a\n" +
+	"\x13protos/client.proto\x12\x01x\x1a\x14protos/inbound.proto\x1a\x15protos/outbound.proto\x1a\x10protos/dns.proto\x1a\x13protos/router.proto\x1a\x13protos/policy.proto\x1a\x13protos/logger.proto\x1a\x10protos/geo.proto\x1a\x17protos/dispatcher.proto\x1a\x10protos/tun.proto\x1a\x15protos/sysproxy.proto\x1a\x19protos/grpc_service.proto\"\xc5\a\n" +
 	"\bTmConfig\x12@\n" +
 	"\x0finbound_manager\x18\x01 \x01(\v2\x17.x.InboundManagerConfigR\x0einboundManager\x12\x1e\n" +
 	"\x03dns\x18\x03 \x01(\v2\f.x.DnsConfigR\x03dns\x12'\n" +
@@ -404,9 +394,7 @@ const file_protos_client_proto_rawDesc = "" +
 	"\fsubscription\x18\x15 \x01(\v2\x15.x.SubscriptionConfigR\fsubscription\x122\n" +
 	"\x15hysteria2_reject_quic\x18\x18 \x01(\bR\x13hysteria2RejectQuic\x12-\n" +
 	"\boutbound\x18\x1e \x01(\v2\x11.x.OutboundConfigR\boutbound\x12(\n" +
-	"\x10redirect_std_err\x18\x1f \x01(\tR\x0eredirectStdErr\x12\x1f\n" +
-	"\vreject_ipv6\x18  \x01(\bR\n" +
-	"rejectIpv6\x12\x1e\n" +
+	"\x10redirect_std_err\x18\x1f \x01(\tR\x0eredirectStdErr\x12\x1e\n" +
 	"\x03wfp\x18! \x01(\v2\f.x.WfpConfigR\x03wfp\x12.\n" +
 	"\buser_log\x18# \x01(\v2\x13.x.UserLoggerConfigR\auserLog\x127\n" +
 	"\fgrpc_service\x18$ \x01(\v2\x14.x.GrpcServiceConfigR\vgrpcServiceJ\x04\b\"\x10#\"\x7f\n" +

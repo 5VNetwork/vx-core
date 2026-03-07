@@ -181,17 +181,14 @@ func (t *tm) CreateInbound(tunConfig *configs.TunConfig, fd int32, support6 bool
 		return errors.New("client is nil")
 	}
 
-	rejector := &reject.TCPReject{
-		InboundTag:  tunConfig.Tag,
-		Router:      c.Router,
-		FakeDnsPool: c.AllFakeDns,
-		UserLogger:  c.UserLogger,
-	}
-	udpRejector := &reject.UdpReject{
-		InboundTag:  tunConfig.Tag,
-		Router:      c.Router,
-		FakeDnsPool: c.AllFakeDns,
-		UserLogger:  c.UserLogger,
+	var rejector *reject.Rejector
+	if tunConfig.GetRejectIpv6() {
+		rejector = &reject.Rejector{
+			InboundTag:  tunConfig.Tag,
+			Router:      c.Router,
+			FakeDnsPool: c.AllFakeDns,
+			UserLogger:  c.UserLogger,
+		}
 	}
 
 	tunDeviceWithInfo, err := getTunDeviceWithInfo(fd, tunConfig, support6)
@@ -202,7 +199,7 @@ func (t *tm) CreateInbound(tunConfig *configs.TunConfig, fd int32, support6 bool
 
 	tunInbound, err := buildclient.NewTunSystemInbound(
 		tunDeviceWithInfo, tunConfig.Tag,
-		c.Dispatcher, dnsConn, rejector, udpRejector)
+		c.Dispatcher, dnsConn, rejector)
 	if err != nil {
 		return fmt.Errorf("failed to create tun system inbound: %w", err)
 	}

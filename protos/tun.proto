@@ -21,7 +21,11 @@ message TunConfig {
   }
   // Controls whether to apply ipv4 and ipv6 settings of [device] to the tun.
   TUN46Setting tun46_setting = 8;
+  // based on dst, src, network to match a handler, 
+  // if the handler does not support ipv6, reject the request
+  bool reject_ipv6 = 9;
 }
+
 
 enum Mode {
   MODE_SYSTEM = 0;

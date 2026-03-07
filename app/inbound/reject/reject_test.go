@@ -1,6 +1,7 @@
 package reject
 
 import (
+	"bytes"
 	"net"
 	"testing"
 
@@ -186,5 +187,115 @@ func verifyRstPacket(t *testing.T, rstPacket []byte, originalIPv6 header.IPv6, o
 	// Verify TCP checksum is set (non-zero)
 	if rstTCP.Checksum() == 0 {
 		t.Error("TCP checksum is not set")
+	}
+}
+
+func TestCreateICMPv4Unreachable(t *testing.T) {
+	mockIPv4Packet := createMockIPv4UDPPacket(16)
+	ipv4Header := header.IPv4(mockIPv4Packet)
+
+	icmpPacket := CreateICMPv4Unreachable(ipv4Header)
+	if icmpPacket == nil {
+		t.Fatal("CreateICMPv4Unreachable returned nil")
+	}
+
+	verifyICMPv4UnreachablePacket(t, icmpPacket.Bytes(), ipv4Header)
+}
+
+func TestCreateICMPv4Unreachable_ShortPacketCopiesWholeOriginal(t *testing.T) {
+	mockIPv4Packet := createMockIPv4UDPPacket(0)
+	ipv4Header := header.IPv4(mockIPv4Packet)
+
+	icmpPacket := CreateICMPv4Unreachable(ipv4Header)
+	if icmpPacket == nil {
+		t.Fatal("CreateICMPv4Unreachable returned nil")
+	}
+
+	packet := icmpPacket.Bytes()
+	icmpv4 := header.ICMPv4(packet[header.IPv4MinimumSize:])
+	copied := icmpv4[header.ICMPv4MinimumSize:]
+
+	if !bytes.Equal(copied, mockIPv4Packet) {
+		t.Errorf("ICMP payload copied incorrect original packet: got %v, want %v", copied, mockIPv4Packet)
+	}
+}
+
+func createMockIPv4UDPPacket(payloadLen int) []byte {
+	totalSize := header.IPv4MinimumSize + header.UDPMinimumSize + payloadLen
+	packet := make([]byte, totalSize)
+
+	ipv4 := header.IPv4(packet[:header.IPv4MinimumSize])
+	srcAddr := tcpip.AddrFromSlice(net.ParseIP("192.0.2.1").To4())
+	dstAddr := tcpip.AddrFromSlice(net.ParseIP("198.51.100.2").To4())
+	ipv4.Encode(&header.IPv4Fields{
+		TotalLength: uint16(totalSize),
+		TTL:         64,
+		Protocol:    uint8(header.UDPProtocolNumber),
+		SrcAddr:     srcAddr,
+		DstAddr:     dstAddr,
+	})
+	ipv4.SetChecksum(^ipv4.CalculateChecksum())
+
+	udp := header.UDP(packet[header.IPv4MinimumSize:])
+	udp.Encode(&header.UDPFields{
+		SrcPort: 12345,
+		DstPort: 443,
+		Length:  uint16(header.UDPMinimumSize + payloadLen),
+	})
+
+	for i := 0; i < payloadLen; i++ {
+		packet[header.IPv4MinimumSize+header.UDPMinimumSize+i] = byte(i + 1)
+	}
+
+	return packet
+}
+
+func verifyICMPv4UnreachablePacket(t *testing.T, icmpPacket []byte, originalIPv4 header.IPv4) {
+	t.Helper()
+
+	expectedCopiedLen := int(originalIPv4.HeaderLength()) + header.ICMPv4MinimumErrorPayloadSize
+	if expectedCopiedLen > len(originalIPv4) {
+		expectedCopiedLen = len(originalIPv4)
+	}
+	expectedLength := header.IPv4MinimumSize + header.ICMPv4MinimumSize + expectedCopiedLen
+	if len(icmpPacket) != expectedLength {
+		t.Errorf("ICMPv4 packet has incorrect length: got %d, want %d", len(icmpPacket), expectedLength)
+	}
+
+	ipv4 := header.IPv4(icmpPacket[:header.IPv4MinimumSize])
+	icmpv4 := header.ICMPv4(icmpPacket[header.IPv4MinimumSize:])
+
+	if ipv4.Protocol() != uint8(header.ICMPv4ProtocolNumber) {
+		t.Errorf("IPv4 protocol incorrect: got %d, want %d", ipv4.Protocol(), header.ICMPv4ProtocolNumber)
+	}
+
+	if ipv4.TTL() != 64 {
+		t.Errorf("IPv4 TTL incorrect: got %d, want %d", ipv4.TTL(), 64)
+	}
+
+	if ipv4.SourceAddress() != originalIPv4.DestinationAddress() {
+		t.Errorf("IPv4 source address incorrect: got %v, want %v", ipv4.SourceAddress(), originalIPv4.DestinationAddress())
+	}
+
+	if ipv4.DestinationAddress() != originalIPv4.SourceAddress() {
+		t.Errorf("IPv4 destination address incorrect: got %v, want %v", ipv4.DestinationAddress(), originalIPv4.SourceAddress())
+	}
+
+	if icmpv4.Type() != header.ICMPv4DstUnreachable {
+		t.Errorf("ICMPv4 type incorrect: got %d, want %d", icmpv4.Type(), header.ICMPv4DstUnreachable)
+	}
+
+	if icmpv4.Code() != header.ICMPv4PortUnreachable {
+		t.Errorf("ICMPv4 code incorrect: got %d, want %d", icmpv4.Code(), header.ICMPv4PortUnreachable)
+	}
+
+	if icmpv4.Checksum() == 0 {
+		t.Error("ICMPv4 checksum is not set")
+	}
+
+	expectedCopied := originalIPv4[:expectedCopiedLen]
+	gotCopied := icmpv4[header.ICMPv4MinimumSize:]
+	if !bytes.Equal(gotCopied, expectedCopied) {
+		t.Errorf("ICMPv4 payload incorrect: got %v, want %v", gotCopied, expectedCopied)
 	}
 }

@@ -28,7 +28,7 @@ func NewInterfaceMonotor(name string, f *Builder) (i.DefaultInterfaceInfo, error
 }
 
 func NewTunGvisorInbound(config *configs.TunConfig, f *Builder,
-	rejector *reject.TCPReject, udpRejector *reject.UdpReject, client *client.Client) error {
+	rejector *reject.Rejector, client *client.Client) error {
 	tun, err := getTun(config, f)
 	if err != nil {
 		return err

@@ -27,14 +27,15 @@ import (
 const offset int32 = 4
 
 func NewTunGvisorInbound(config *configs.TunConfig, f *Builder,
-	rejector *reject.TCPReject, udpRejector *reject.UdpReject, client *client.Client) error {
+	rejector *reject.Rejector, client *client.Client) error {
 	var le stack.LinkEndpoint
 	if config.Device.Fd == 0 {
-		tun, err := getTun(config, f)
-		if err != nil {
-			return err
-		}
-		le = gvisor.NewTunLinkEndpoint(tun, 1500, gvisor.TunLinkEndpointWithRejector(rejector))
+		// tun, err := getTun(config, f)
+		// if err != nil {
+		// 	return err
+		// }
+		// le = gvisor.NewTunLinkEndpoint(tun, 1500, gvisor.TunLinkEndpointWithRejector(rejector))
+		panic("not implemented")
 	} else {
 		log.Info().Int("fd", int(config.Device.Fd)).Send()
 		newFd, err := unix.Dup(int(config.Device.Fd))
@@ -49,16 +50,23 @@ func NewTunGvisorInbound(config *configs.TunConfig, f *Builder,
 		log.Info().Int("newFd", newFd).Send()
 		rw := os.NewFile(uintptr(newFd), "/dev/tun")
 		udpRw := gvisor.NewReadWriteCloserSplitUdp(rw, offset)
-		le = gvisor.NewIOLinkEndpoint(udpRw,
+		gvisorOpts := []gvisor.IOLinkEndpointOption{
 			gvisor.IOLinkEndpointWithOffset(4),
-			gvisor.IOLinkEndpointWithRejector(rejector),
 			gvisor.IOLinkEndpointWithMtu(config.Device.Mtu),
+		}
+		if rejector != nil {
+			gvisorOpts = append(gvisorOpts, gvisor.IOLinkEndpointWithRejector(rejector))
+		}
+		le = gvisor.NewIOLinkEndpoint(udpRw,
+			gvisorOpts...,
 		)
 
 		opts := []system.Option{
 			system.WithTag(config.Tag),
 			system.WithTun(udpRw),
-			system.WithUdpRejector(udpRejector),
+		}
+		if rejector != nil {
+			opts = append(opts, system.WithRejector(rejector))
 		}
 		tunInbound := system.New(opts...)
 		dnsAddress := make([]net.Destination, 0)

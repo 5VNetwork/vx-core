@@ -16,7 +16,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 )
 
-type TCPReject struct {
+type Rejector struct {
 	FakeDnsPool fakeDnsPool
 	NatIp6      net.IP
 	Router      i.Router
@@ -28,7 +28,7 @@ type fakeDnsPool interface {
 	IsIPInIPPool(ip net.Address) bool
 }
 
-func (r *TCPReject) Reject(p []byte) *buf.Buffer {
+func (r *Rejector) Reject(p []byte) *buf.Buffer {
 	if header.IPVersion(p) == header.IPv6Version {
 		ipv6 := header.IPv6(p)
 		if ipv6.TransportProtocol() == header.TCPProtocolNumber {
@@ -65,12 +65,44 @@ func (r *TCPReject) Reject(p []byte) *buf.Buffer {
 					return nil
 				}
 				if outHandler, ok := handler.(i.HandlerWith6Info); ok && !outHandler.Support6() {
-					log.Debug().Str("handler", handler.Tag()).Str("dst", target.String()).Msg("reject tcp because handler not support ipv6")
+					log.Debug().Str("handler", handler.Tag()).Any("dst", target).Msg("reject tcp because handler not support ipv6")
 					r.UserLogger.LogReject(info, "handler not support ipv6")
 					return GenerateRstForTcpSynIPv60(ipv6, tcp)
 				}
 			}
+		} else if ipv6.TransportProtocol() == header.UDPProtocolNumber {
+			udp := header.UDP(p[header.IPv6MinimumSize:])
+			dst := ipv6.DestinationAddress().As16()
+			if r.FakeDnsPool != nil && r.FakeDnsPool.IsIPInIPPool(net.IPAddress(dst[:])) {
+				return nil
+			}
+			src := ipv6.SourceAddress().As16()
+			srcDestination := net.Destination{
+				Address: net.IPAddress(src[:]),
+				Port:    net.Port(udp.SourcePort()),
+				Network: net.Network_UDP,
+			}
+			target := net.Destination{
+				Address: net.IPAddress(dst[:]),
+				Port:    net.Port(udp.DestinationPort()),
+				Network: net.Network_UDP,
+			}
 
+			ctx := log.Logger.WithContext(context.Background())
+			info := &session.Info{
+				Source:     srcDestination,
+				Target:     target,
+				InboundTag: r.InboundTag,
+			}
+			handler, _ := r.Router.PickHandler(ctx, info)
+			if handler == nil {
+				return nil
+			}
+			if outHandler, ok := handler.(i.HandlerWith6Info); ok && !outHandler.Support6() {
+				log.Debug().Str("handler", handler.Tag()).Any("dst", target).Msg("reject udp because handler not support ipv6")
+				r.UserLogger.LogReject(info, "handler not support ipv6")
+				return CreateICMPv6Unreachable(ipv6)
+			}
 		}
 	}
 	return nil
@@ -164,54 +196,6 @@ func GenerateRstForTcpSynIPv60(ipv6Header header.IPv6, tcpHeader header.TCP) *bu
 	return b
 }
 
-type UdpReject struct {
-	FakeDnsPool fakeDnsPool
-	Router      i.Router
-	InboundTag  string
-	UserLogger  *userlogger.UserLogger
-}
-
-// p is a ip packet with udp payload
-func (r *UdpReject) Reject(p []byte) *buf.Buffer {
-	if header.IPVersion(p) == header.IPv6Version {
-		ipv6 := header.IPv6(p)
-		udp := header.UDP(p[header.IPv6MinimumSize:])
-		dst := ipv6.DestinationAddress().As16()
-		if r.FakeDnsPool != nil && r.FakeDnsPool.IsIPInIPPool(net.IPAddress(dst[:])) {
-			return nil
-		}
-		src := ipv6.SourceAddress().As16()
-		srcDestination := net.Destination{
-			Address: net.IPAddress(src[:]),
-			Port:    net.Port(udp.SourcePort()),
-			Network: net.Network_UDP,
-		}
-		target := net.Destination{
-			Address: net.IPAddress(dst[:]),
-			Port:    net.Port(udp.DestinationPort()),
-			Network: net.Network_UDP,
-		}
-
-		ctx := log.Logger.WithContext(context.Background())
-		info := &session.Info{
-			Source:     srcDestination,
-			Target:     target,
-			InboundTag: r.InboundTag,
-		}
-		handler, _ := r.Router.PickHandler(ctx, info)
-		if handler == nil {
-			return nil
-		}
-		if outHandler, ok := handler.(i.HandlerWith6Info); ok && !outHandler.Support6() {
-			log.Debug().Str("handler", handler.Tag()).Str("dst", target.String()).Msg("reject udp because handler not support ipv6")
-			r.UserLogger.LogReject(info, "handler not support ipv6")
-			return CreateICMPv6Unreachable(ipv6)
-		}
-
-	}
-	return nil
-}
-
 // CreateICMPv6Unreachable takes an IPv6 packet with a UDP payload and returns an IPv6 packet
 // with an ICMPv6 Destination Unreachable (Type 1, Code 4) message.
 // ipv6Hdr contains entire ipv6 packet
@@ -250,27 +234,41 @@ func CreateICMPv6Unreachable(ipv6Hdr header.IPv6) *buf.Buffer {
 	return b
 }
 
-// func (r *TCPReject) Reject(src, dst net.Destination) bool {
-// 	if !dst.Address.Family().IsIPv6() {
-// 		return false
-// 	}
+// CreateICMPv4Unreachable takes an IPv4 packet with a UDP payload and returns an IPv4 packet
+// with an ICMP Destination Unreachable (Type 1, Code 4) message.
+// ipv4Hdr contains entire ipv4 packet
+func CreateICMPv4Unreachable(ipv4Hdr header.IPv4) *buf.Buffer {
+	icmpv4PayloadLen := len(ipv4Hdr)
+	minPayloadLen := int(ipv4Hdr.HeaderLength()) + header.ICMPv4MinimumErrorPayloadSize
+	if icmpv4PayloadLen > minPayloadLen {
+		icmpv4PayloadLen = minPayloadLen
+	}
 
-// 	if r.FakeDnsPool.IsIPInIPPool(dst.Address) {
-// 		return false
-// 	}
+	ipv4TotalLen := header.IPv4MinimumSize + header.ICMPv4MinimumSize + icmpv4PayloadLen
+	b := buf.New()
+	packet := b.Extend(int32(ipv4TotalLen))
 
-// 	handler := r.Router.PickHandler(context.Background(), &session.Info{
-// 		Source: src,
-// 		Target: dst,
-// 	})
-// 	if handler == nil {
-// 		log.Debug().Str("dst", dst.String()).Msg("reject")
-// 		return true
-// 	}
-// 	if outHandler, ok := handler.(*outbound.Handler); ok && !outHandler.Support6() {
-// 		log.Debug().Str("dst", dst.String()).Msg("reject")
-// 		return true
-// 	}
+	ipv4 := header.IPv4(packet[:header.IPv4MinimumSize])
+	ipv4.Encode(&header.IPv4Fields{
+		TotalLength: uint16(ipv4TotalLen),
+		TTL:         64,
+		Protocol:    uint8(header.ICMPv4ProtocolNumber),
+		SrcAddr:     ipv4Hdr.DestinationAddress(),
+		DstAddr:     ipv4Hdr.SourceAddress(),
+	})
+	ipv4.SetChecksum(^ipv4.CalculateChecksum())
 
-// 	return false
-// }
+	icmpv4 := header.ICMPv4(packet[header.IPv4MinimumSize:])
+	for i := range icmpv4[:header.ICMPv4MinimumSize] {
+		icmpv4[i] = 0
+	}
+	icmpv4.SetType(header.ICMPv4DstUnreachable)
+	icmpv4.SetCode(header.ICMPv4PortUnreachable)
+	copy(icmpv4[header.ICMPv4MinimumSize:], ipv4Hdr[:icmpv4PayloadLen])
+	icmpv4.SetChecksum(header.ICMPv4Checksum(
+		icmpv4[:header.ICMPv4MinimumSize],
+		checksum.Checksum(ipv4Hdr[:icmpv4PayloadLen], 0),
+	))
+
+	return b
+}

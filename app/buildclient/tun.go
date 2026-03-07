@@ -21,25 +21,22 @@ import (
 
 func Tun(config *configs.TmConfig, fc *Builder, client *client.Client) error {
 	if config.Tun != nil {
-		rejector := &reject.TCPReject{
-			InboundTag:  config.Tun.Tag,
-			FakeDnsPool: client.AllFakeDns,
+		var rejector *reject.Rejector
+		if config.Tun.GetRejectIpv6() {
+			rejector := &reject.Rejector{
+				InboundTag:  config.Tun.Tag,
+				FakeDnsPool: client.AllFakeDns,
+			}
+			fc.requireFeature(func(r i.Router, ul *userlogger.UserLogger) {
+				rejector.Router = r
+				rejector.UserLogger = ul
+			})
 		}
-		udpRejector := &reject.UdpReject{
-			InboundTag:  config.Tun.Tag,
-			FakeDnsPool: client.AllFakeDns,
-		}
-		fc.requireFeature(func(r i.Router, ul *userlogger.UserLogger) {
-			rejector.Router = r
-			udpRejector.Router = r
-			rejector.UserLogger = ul
-			udpRejector.UserLogger = ul
-		})
 		// tun inbound
 		if config.Tun.GetMode() == configs.Mode_MODE_SYSTEM {
-			return newTunSystemInbound(config.Tun, fc, rejector, udpRejector, client)
+			return newTunSystemInbound(config.Tun, fc, rejector, client)
 		} else if config.Tun.GetMode() == configs.Mode_MODE_GVISOR {
-			return NewTunGvisorInbound(config.Tun, fc, rejector, udpRejector, client)
+			return NewTunGvisorInbound(config.Tun, fc, rejector, client)
 		} else {
 			return fmt.Errorf("invalid tun mode: %d", config.Tun.GetMode())
 		}
@@ -49,7 +46,7 @@ func Tun(config *configs.TmConfig, fc *Builder, client *client.Client) error {
 
 func newTunSystemInbound(
 	config *configs.TunConfig, fc *Builder,
-	rejector *reject.TCPReject, udpRejector *reject.UdpReject, client *client.Client) error {
+	rejector *reject.Rejector, client *client.Client) error {
 
 	device, err := getTun(config, fc)
 	if err != nil {
@@ -57,7 +54,7 @@ func newTunSystemInbound(
 	}
 	return fc.requireFeature(func(h *dispatcher.Dispatcher, dnsConns *dns.Dns) error {
 		tunInbound, err := NewTunSystemInbound(device, config.Tag, h, dnsConns,
-			rejector, udpRejector)
+			rejector)
 		if err != nil {
 			return fmt.Errorf("failed to create tun system inbound: %w", err)
 		}
@@ -68,7 +65,7 @@ func newTunSystemInbound(
 
 func NewTunSystemInbound(
 	device tun.TunDeviceWithInfo, tag string, handler i.Handler, dnsConns *dns.Dns,
-	rejector *reject.TCPReject, udpRejector *reject.UdpReject) (*system.TunSystemInbound, error) {
+	rejector *reject.Rejector) (*system.TunSystemInbound, error) {
 	dnsAddress := make([]net.Destination, 0)
 	for _, dns := range device.DnsServers() {
 		dnsAddress = append(dnsAddress, net.UDPDestination(net.IPAddress(dns.AsSlice()), 53))
@@ -84,10 +81,11 @@ func NewTunSystemInbound(
 
 	if device.IP6().IsValid() {
 		napIp6 := device.IP6().Next().AsSlice()
-		rejector.NatIp6 = napIp6
-		opts = append(opts, system.WithRejector(rejector))
+		if rejector != nil {
+			rejector.NatIp6 = napIp6
+			opts = append(opts, system.WithRejector(rejector))
+		}
 		opts = append(opts, system.With6(napIp6, device.IP6().AsSlice(), 0))
-		opts = append(opts, system.WithUdpRejector(udpRejector))
 	}
 	tunInbound := system.New(opts...)
 

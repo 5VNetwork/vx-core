@@ -65,8 +65,7 @@ type TunSystemInbound struct {
 	dnsConn    dnsConn
 	dnsAddress []mynet.Destination
 
-	rejector    inboundcommon.Rejector
-	udpRejector inboundcommon.Rejector
+	rejector inboundcommon.Rejector
 
 	startOnce sync.Once
 	closeOnce sync.Once
@@ -145,12 +144,6 @@ func WithDns(dnsDispatcher dns.DnsConn, dnsAddress []mynet.Destination) Option {
 func WithRejector(rejector inboundcommon.Rejector) Option {
 	return func(t *TunSystemInbound) {
 		t.rejector = rejector
-	}
-}
-
-func WithUdpRejector(rejector inboundcommon.Rejector) Option {
-	return func(t *TunSystemInbound) {
-		t.udpRejector = rejector
 	}
 }
 
@@ -513,8 +506,8 @@ func (t *TunSystemInbound) handleUdpPacket(b *buf.Buffer) {
 
 	s, found := t.udpSessionManager.GetUdpSession(p.Source)
 	if !found {
-		if t.udpRejector != nil {
-			rejectPacket := t.udpRejector.Reject(packet)
+		if t.rejector != nil {
+			rejectPacket := t.rejector.Reject(packet)
 			if rejectPacket != nil {
 				err := t.tun.WritePacket(rejectPacket)
 				if err != nil {

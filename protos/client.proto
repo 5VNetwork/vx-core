@@ -41,14 +41,13 @@ message TmConfig {
   // outbound
   x.OutboundConfig outbound = 30;
   string redirect_std_err = 31;
-  // based on dst, src, network, if there is no handler matched or the
-  // matched handler does not support ipv6, reject the request
-  bool reject_ipv6 = 32;
   x.WfpConfig wfp = 33;
   reserved 34;
   x.UserLoggerConfig user_log = 35;
   x.GrpcServiceConfig grpc_service = 36;
 }
+
+
 
 message GrpcConfig { 
   // listen address

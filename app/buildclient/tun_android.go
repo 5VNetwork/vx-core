@@ -43,7 +43,7 @@ func NewInterfaceMonotor(name string, f *Builder) (i.DefaultInterfaceInfo, error
 }
 
 func NewTunGvisorInbound(config *configs.TunConfig, f *Builder,
-	rejector *reject.TCPReject, udpReject *reject.UdpReject, client *client.Client) error {
+	rejector *reject.Rejector, client *client.Client) error {
 	log.Info().Int("fd", int(config.Device.Fd)).Send()
 	// newFd, err := syscall.Dup(int(config.Device.Fd))
 	// if err != nil {
@@ -58,10 +58,8 @@ func NewTunGvisorInbound(config *configs.TunConfig, f *Builder,
 	if err != nil {
 		return fmt.Errorf("failed to create fdbased endpoint: %w", err)
 	}
-	ep = gvisor.NewFilterLinkEndpoint(ep, &reject.CombineRejector{
-		TCPReject: rejector,
-		UDPReject: udpReject,
-	}, true)
+
+	ep = gvisor.NewFilterLinkEndpoint(ep, rejector, true)
 
 	opts := []system.Option{
 		system.WithTag(config.Tag),
