@@ -92,8 +92,33 @@ func (d *DnsServerToResolver) LookupIPv4(ctx context.Context, host string) ([]ne
 				}
 			}
 			if resp.Truncated {
-				log.Ctx(subCtx).Warn().Any("resp", resp).Msg("ip resolver truncated response")
+				log.Ctx(subCtx).Debug().Any("resp", resp).Msg("ip resolver truncated response")
+				if len(ips) > 0 {
+					return ips, nil
+				}
+				// Retry with TCP for full response
+				resp, err = dnsServer.HandleQuery(subCtx, msg, true)
+				if err != nil || resp == nil {
+					continue
+				}
+				hasCname = false
+				ips = make([]net.IP, 0, len(resp.Answer))
+				for _, answer := range resp.Answer {
+					if a, ok := answer.(*dns.A); ok {
+						ips = append(ips, net.IP(a.A))
+					} else if _, ok := answer.(*dns.CNAME); ok {
+						hasCname = true
+					}
+				}
+				if len(ips) == 0 && hasCname {
+					for _, answer := range resp.Answer {
+						if cname, ok := answer.(*dns.CNAME); ok {
+							return d.LookupIPv4(subCtx, cname.Target)
+						}
+					}
+				}
 			}
+
 			return ips, nil
 		}
 	}
@@ -131,8 +156,34 @@ func (d *DnsServerToResolver) LookupIPv6(ctx context.Context, host string) ([]ne
 				}
 			}
 			if resp.Truncated {
-				log.Ctx(subCtx).Warn().Any("resp", resp).Msg("ip resolver truncated response")
+				log.Ctx(subCtx).Debug().Any("resp", resp).Msg("ip resolver truncated response")
+
+				if len(ips) > 0 {
+					return ips, nil
+				}
+				// Retry with TCP for full response
+				resp, err = dnsServer.HandleQuery(subCtx, msg, true)
+				if err != nil || resp == nil {
+					continue
+				}
+				hasCname = false
+				ips = make([]net.IP, 0, len(resp.Answer))
+				for _, answer := range resp.Answer {
+					if a, ok := answer.(*dns.AAAA); ok {
+						ips = append(ips, net.IP(a.AAAA))
+					} else if _, ok := answer.(*dns.CNAME); ok {
+						hasCname = true
+					}
+				}
+				if len(ips) == 0 && hasCname {
+					for _, answer := range resp.Answer {
+						if cname, ok := answer.(*dns.CNAME); ok {
+							return d.LookupIPv6(subCtx, cname.Target)
+						}
+					}
+				}
 			}
+
 			return ips, nil
 		}
 	}
