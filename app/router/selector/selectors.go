@@ -152,6 +152,10 @@ func NewSelector(config SelectorConfig) *Selector {
 		se = &highestThroughputStrategy{}
 	case configs.SelectorConfig_LEAST_PING:
 		se = &leastPingStrategy{}
+	case configs.SelectorConfig_TOP_PING:
+		se = &topPingStrategy{}
+	case configs.SelectorConfig_TOP_THROUGHPUT:
+		se = &topThroughputStrategy{}
 	}
 	selector0 := newSelector(selectorConfig{
 		Tag:                      sc.Tag,

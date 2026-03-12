@@ -616,6 +616,191 @@ func TestAllOkStrategy_Select(t *testing.T) {
 	assert.Len(t, selected, 1)
 }
 
+func TestTopPingStrategy_Select(t *testing.T) {
+	strategy := &topPingStrategy{}
+
+	// Min ping = 100ms, 30% above = 130. Select all with ping <= 130.
+	handlers := []outHandler{
+		&testOutHandler{name: "handler1", oStats: oStats{ping: 100, ok: 1}}, // best, in
+		&testOutHandler{name: "handler2", oStats: oStats{ping: 120, ok: 1}}, // in
+		&testOutHandler{name: "handler3", oStats: oStats{ping: 130, ok: 1}},  // in (boundary)
+		&testOutHandler{name: "handler4", oStats: oStats{ping: 140, ok: 1}}, // out (> 130)
+	}
+
+	selected := strategy.Select(handlers)
+
+	names := make([]string, len(selected))
+	for i, h := range selected {
+		names[i] = h.(*testOutHandler).name
+	}
+	assert.ElementsMatch(t, []string{"handler1", "handler2", "handler3"}, names)
+}
+
+func TestTopPingStrategy_Select_ThresholdBoundary(t *testing.T) {
+	strategy := &topPingStrategy{}
+
+	// Min ping = 100ms, 30% = 30, threshold = 130. Only handlers with ping <= 130.
+	handlers := []outHandler{
+		&testOutHandler{name: "best", oStats: oStats{ping: 100, ok: 1}},
+		&testOutHandler{name: "in1", oStats: oStats{ping: 130, ok: 1}},
+		&testOutHandler{name: "out", oStats: oStats{ping: 131, ok: 1}},
+	}
+
+	selected := strategy.Select(handlers)
+
+	assert.Len(t, selected, 2)
+	names := make([]string, len(selected))
+	for i, h := range selected {
+		names[i] = h.(*testOutHandler).name
+	}
+	assert.ElementsMatch(t, []string{"best", "in1"}, names)
+}
+
+func TestTopPingStrategy_Select_NoPingData(t *testing.T) {
+	strategy := &topPingStrategy{}
+
+	// No handler with ok>0 and ping>0 -> fallback to all with ok >= 0
+	handlers := []outHandler{
+		&testOutHandler{name: "handler1", oStats: oStats{ping: 0, ok: 1}},
+		&testOutHandler{name: "handler2", oStats: oStats{ping: 0, ok: 0}},
+		&testOutHandler{name: "handler3", oStats: oStats{ping: 0, ok: -1}},
+	}
+
+	selected := strategy.Select(handlers)
+
+	assert.Len(t, selected, 2) // ok 1 and 0; -1 excluded
+	names := make([]string, len(selected))
+	for i, h := range selected {
+		names[i] = h.(*testOutHandler).name
+	}
+	assert.ElementsMatch(t, []string{"handler1", "handler2"}, names)
+}
+
+func TestTopPingStrategy_Select_Empty(t *testing.T) {
+	strategy := &topPingStrategy{}
+	selected := strategy.Select(nil)
+	assert.Nil(t, selected)
+	selected = strategy.Select([]outHandler{})
+	assert.Nil(t, selected)
+}
+
+func TestTopThroughputStrategy_Select(t *testing.T) {
+	strategy := &topThroughputStrategy{}
+
+	// Max speed = 100, 70% = 70. Select all with speed >= 70.
+	handlers := []outHandler{
+		&testOutHandler{name: "handler1", oStats: oStats{speed: 100, ok: 1}}, // max, in
+		&testOutHandler{name: "handler2", oStats: oStats{speed: 80, ok: 1}},  // in
+		&testOutHandler{name: "handler3", oStats: oStats{speed: 70, ok: 1}},  // boundary, in
+		&testOutHandler{name: "handler4", oStats: oStats{speed: 69, ok: 1}},  // out
+		&testOutHandler{name: "handler5", oStats: oStats{speed: 50, ok: 1}},  // out
+	}
+
+	selected := strategy.Select(handlers)
+
+	names := make([]string, len(selected))
+	for i, h := range selected {
+		names[i] = h.(*testOutHandler).name
+	}
+	assert.ElementsMatch(t, []string{"handler1", "handler2", "handler3"}, names)
+}
+
+func TestTopThroughputStrategy_Select_ThresholdBoundary(t *testing.T) {
+	strategy := &topThroughputStrategy{}
+
+	// Max speed = 100, 70% = 70. Select speed >= 70.
+	handlers := []outHandler{
+		&testOutHandler{name: "max", oStats: oStats{speed: 100, ok: 1}},
+		&testOutHandler{name: "in", oStats: oStats{speed: 70, ok: 1}},
+		&testOutHandler{name: "out", oStats: oStats{speed: 69, ok: 1}},
+	}
+
+	selected := strategy.Select(handlers)
+
+	assert.Len(t, selected, 2)
+	names := make([]string, len(selected))
+	for i, h := range selected {
+		names[i] = h.(*testOutHandler).name
+	}
+	assert.ElementsMatch(t, []string{"max", "in"}, names)
+}
+
+func TestTopThroughputStrategy_Select_NoSpeedData(t *testing.T) {
+	strategy := &topThroughputStrategy{}
+
+	// All speed 0 -> fallback to all with ok >= 0
+	handlers := []outHandler{
+		&testOutHandler{name: "handler1", oStats: oStats{speed: 0, ok: 1}},
+		&testOutHandler{name: "handler2", oStats: oStats{speed: 0, ok: 0}},
+		&testOutHandler{name: "handler3", oStats: oStats{speed: 0, ok: -1}},
+	}
+
+	selected := strategy.Select(handlers)
+
+	assert.Len(t, selected, 2)
+	names := make([]string, len(selected))
+	for i, h := range selected {
+		names[i] = h.(*testOutHandler).name
+	}
+	assert.ElementsMatch(t, []string{"handler1", "handler2"}, names)
+}
+
+func TestTopThroughputStrategy_Select_Empty(t *testing.T) {
+	strategy := &topThroughputStrategy{}
+	selected := strategy.Select(nil)
+	assert.Nil(t, selected)
+	selected = strategy.Select([]outHandler{})
+	assert.Nil(t, selected)
+}
+
+func TestSelector_Start_WithTopPingStrategy(t *testing.T) {
+	filter := NewMockFilter()
+	filter.AddMockHandler("handler1", 100, 50, 1, 1)
+
+	balancer := NewMockBalancer()
+	tester := NewMockTester()
+
+	config := selectorConfig{
+		Tag:      "test-selector",
+		Strategy: &topPingStrategy{},
+		Filter:   filter,
+		Balancer: balancer,
+		Tester:   tester,
+	}
+
+	sel := newSelector(config)
+
+	err := sel.Start()
+	assert.NoError(t, err)
+	assert.NotNil(t, sel.periodicTestPing)
+
+	sel.Close()
+}
+
+func TestSelector_Start_WithTopThroughputStrategy(t *testing.T) {
+	filter := NewMockFilter()
+	filter.AddMockHandler("handler1", 100, 50, 1, 1)
+
+	balancer := NewMockBalancer()
+	tester := NewMockTester()
+
+	config := selectorConfig{
+		Tag:      "test-selector",
+		Strategy: &topThroughputStrategy{},
+		Filter:   filter,
+		Balancer: balancer,
+		Tester:   tester,
+	}
+
+	sel := newSelector(config)
+
+	err := sel.Start()
+	assert.NoError(t, err)
+	assert.NotNil(t, sel.periodicTestSpeed)
+
+	sel.Close()
+}
+
 func TestSelector_TestSpeedAll(t *testing.T) {
 	// Setup
 	filter := NewMockFilter()

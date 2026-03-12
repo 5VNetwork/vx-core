@@ -84,7 +84,13 @@ func (s *Selector) Start() error {
 	if _, ok := s.strategy.(*highestThroughputStrategy); ok {
 		s.periodicTestSpeed = task.NewPeriodicTask(time.Minute*60, s.TestSpeedAll)
 	}
+	if _, ok := s.strategy.(*topThroughputStrategy); ok {
+		s.periodicTestSpeed = task.NewPeriodicTask(time.Minute*60, s.TestSpeedAll)
+	}
 	if _, ok := s.strategy.(*leastPingStrategy); ok {
+		s.periodicTestPing = task.NewPeriodicTask(time.Minute*10, s.TestPingAll)
+	}
+	if _, ok := s.strategy.(*topPingStrategy); ok {
 		s.periodicTestPing = task.NewPeriodicTask(time.Minute*10, s.TestPingAll)
 	}
 	if _, ok := s.strategy.(*allOkStrategy); ok {
@@ -163,7 +169,13 @@ func (s *Selector) Load() {
 		if _, ok := s.strategy.(*highestThroughputStrategy); ok && os.GetSpeed() == 0 {
 			handlersToBeTestedForSpeed = append(handlersToBeTestedForSpeed, os)
 		}
+		if _, ok := s.strategy.(*topThroughputStrategy); ok && os.GetSpeed() == 0 {
+			handlersToBeTestedForSpeed = append(handlersToBeTestedForSpeed, os)
+		}
 		if _, ok := s.strategy.(*leastPingStrategy); ok && os.GetPing() == 0 {
+			handlersToBeTestedForPing = append(handlersToBeTestedForPing, os)
+		}
+		if _, ok := s.strategy.(*topPingStrategy); ok && os.GetPing() == 0 {
 			handlersToBeTestedForPing = append(handlersToBeTestedForPing, os)
 		}
 		if _, ok := s.strategy.(*allOkStrategy); ok && os.GetOk() == 0 {
@@ -425,6 +437,9 @@ func (s *Selector) OnHandlerSpeedChanged(tag string, speed int32) {
 	if _, ok := s.strategy.(*highestThroughputStrategy); ok {
 		s.setHandlers()
 	}
+	if _, ok := s.strategy.(*topThroughputStrategy); ok {
+		s.setHandlers()
+	}
 }
 
 type selectStrategy interface {
@@ -516,4 +531,86 @@ func (s *allOkStrategy) Select(handlers []outHandler) []outHandler {
 		}
 	}
 	return okHandlers
+}
+
+// topPingStrategy selects all nodes within 30% of the least ping (e.g. min 100ms -> select all with ping <= 130ms).
+type topPingStrategy struct{}
+
+func (s *topPingStrategy) Select(handlers []outHandler) []outHandler {
+	if len(handlers) == 0 {
+		return nil
+	}
+	minPing := -1
+	for _, v := range handlers {
+		if v.GetOk() > 0 && v.GetPing() > 0 {
+			if minPing < 0 || v.GetPing() < minPing {
+				minPing = v.GetPing()
+			}
+		}
+	}
+	if minPing < 0 {
+		// no usable ping data, fall back to all with GetOk >= 0
+		okHandlers := make([]outHandler, 0, len(handlers))
+		for _, h := range handlers {
+			if h.GetOk() >= 0 {
+				okHandlers = append(okHandlers, h)
+			}
+		}
+		return okHandlers
+	}
+	threshold := minPing + (minPing * 30 / 100) // 30% above least
+	selected := make([]outHandler, 0, len(handlers))
+	for _, h := range handlers {
+		if h.GetOk() > 0 && h.GetPing() > 0 && h.GetPing() <= threshold {
+			selected = append(selected, h)
+		}
+	}
+	if len(selected) == 0 {
+		for _, h := range handlers {
+			if h.GetOk() >= 0 {
+				selected = append(selected, h)
+			}
+		}
+	}
+	return selected
+}
+
+// topThroughputStrategy selects all nodes with throughput >= 70% of the highest (e.g. max 100 -> select all with speed >= 70).
+type topThroughputStrategy struct{}
+
+func (s *topThroughputStrategy) Select(handlers []outHandler) []outHandler {
+	if len(handlers) == 0 {
+		return nil
+	}
+	var maxSpeed int
+	for _, v := range handlers {
+		if v.GetOk() > 0 && v.GetSpeed() > maxSpeed {
+			maxSpeed = v.GetSpeed()
+		}
+	}
+	if maxSpeed == 0 {
+		// no usable speed data, fall back to all with GetOk >= 0
+		okHandlers := make([]outHandler, 0, len(handlers))
+		for _, h := range handlers {
+			if h.GetOk() >= 0 {
+				okHandlers = append(okHandlers, h)
+			}
+		}
+		return okHandlers
+	}
+	threshold := maxSpeed * 70 / 100 // 70% of highest
+	selected := make([]outHandler, 0, len(handlers))
+	for _, h := range handlers {
+		if h.GetOk() > 0 && h.GetSpeed() >= threshold {
+			selected = append(selected, h)
+		}
+	}
+	if len(selected) == 0 {
+		for _, h := range handlers {
+			if h.GetOk() >= 0 {
+				selected = append(selected, h)
+			}
+		}
+	}
+	return selected
 }
