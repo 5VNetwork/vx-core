@@ -214,6 +214,8 @@ func startService(path string, name string) error {
 			break
 		} else if status.State == svc.Stopped {
 			return errors.New("unable to start service")
+		} else {
+			log.Debug().Int("state", int(status.State)).Msg("service status. Start waiting")
 		}
 		if timeout.Before(time.Now()) {
 			return fmt.Errorf(
