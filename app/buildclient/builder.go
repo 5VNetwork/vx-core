@@ -214,6 +214,7 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to connect database: %w", err)
 		}
+		db.Exec("PRAGMA journal_mode = WAL")
 		db.Exec("PRAGMA foreign_keys = ON")
 		x.DB = &xsqlite.Database{DB: db}
 		err = builder.addComponent(x.DB)
@@ -259,7 +260,7 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 	if err := builder.addComponent(t); err != nil {
 		return nil, fmt.Errorf("failed to add tester: %w", err)
 	}
-	if err := builder.requireOptionalFeatures(func(reporter tester.ResultReporter) {
+	if err := builder.requireFeature(func(reporter tester.ResultReporter) {
 		t.ResultReporter = reporter
 	}); err != nil {
 		return nil, fmt.Errorf("failed to set result reporter: %w", err)

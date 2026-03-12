@@ -156,6 +156,7 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}
+	db.Exec("PRAGMA journal_mode = WAL")
 	db.Exec("PRAGMA foreign_keys = ON")
 
 	server := grpc.NewServer(opts...)
