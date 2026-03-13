@@ -10,6 +10,8 @@ message UserLogMessage {
     SessionError session_error = 3;
     RejectMessage reject_message = 4;
     Fallback fallback = 5;
+    SessionEnd session_end = 6;
+    SessionUsage session_usage = 7;
   }
 }
 message RouteMessage {
@@ -60,4 +62,19 @@ message RejectMessage {
   string domain = 3;
   string reason = 4;
   string app_id = 5;
+}
+
+message SessionEnd {
+  uint32 sid = 1;
+  uint64 up = 2;
+  uint64 down = 3;
+  int64 start = 4;
+  int64 end = 5;
+}
+
+message SessionUsage {
+  uint32 sid = 1;
+  uint64 up = 2;
+  uint64 down = 3;
+  int64 ts = 4;
 }

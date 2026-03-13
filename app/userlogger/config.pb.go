@@ -24,6 +24,8 @@ type UserLogMessage struct {
 	//	*UserLogMessage_SessionError
 	//	*UserLogMessage_RejectMessage
 	//	*UserLogMessage_Fallback
+	//	*UserLogMessage_SessionEnd
+	//	*UserLogMessage_SessionUsage
 	Message       isUserLogMessage_Message `protobuf_oneof:"message"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -111,6 +113,24 @@ func (x *UserLogMessage) GetFallback() *Fallback {
 	return nil
 }
 
+func (x *UserLogMessage) GetSessionEnd() *SessionEnd {
+	if x != nil {
+		if x, ok := x.Message.(*UserLogMessage_SessionEnd); ok {
+			return x.SessionEnd
+		}
+	}
+	return nil
+}
+
+func (x *UserLogMessage) GetSessionUsage() *SessionUsage {
+	if x != nil {
+		if x, ok := x.Message.(*UserLogMessage_SessionUsage); ok {
+			return x.SessionUsage
+		}
+	}
+	return nil
+}
+
 type isUserLogMessage_Message interface {
 	isUserLogMessage_Message()
 }
@@ -135,6 +155,14 @@ type UserLogMessage_Fallback struct {
 	Fallback *Fallback `protobuf:"bytes,5,opt,name=fallback,proto3,oneof"`
 }
 
+type UserLogMessage_SessionEnd struct {
+	SessionEnd *SessionEnd `protobuf:"bytes,6,opt,name=session_end,json=sessionEnd,proto3,oneof"`
+}
+
+type UserLogMessage_SessionUsage struct {
+	SessionUsage *SessionUsage `protobuf:"bytes,7,opt,name=session_usage,json=sessionUsage,proto3,oneof"`
+}
+
 func (*UserLogMessage_RouteMessage) isUserLogMessage_Message() {}
 
 func (*UserLogMessage_ErrorMessage) isUserLogMessage_Message() {}
@@ -144,6 +172,10 @@ func (*UserLogMessage_SessionError) isUserLogMessage_Message() {}
 func (*UserLogMessage_RejectMessage) isUserLogMessage_Message() {}
 
 func (*UserLogMessage_Fallback) isUserLogMessage_Message() {}
+
+func (*UserLogMessage_SessionEnd) isUserLogMessage_Message() {}
+
+func (*UserLogMessage_SessionUsage) isUserLogMessage_Message() {}
 
 type RouteMessage struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
@@ -547,17 +579,164 @@ func (x *RejectMessage) GetAppId() string {
 	return ""
 }
 
+type SessionEnd struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Sid           uint32                 `protobuf:"varint,1,opt,name=sid,proto3" json:"sid,omitempty"`
+	Up            uint64                 `protobuf:"varint,2,opt,name=up,proto3" json:"up,omitempty"`
+	Down          uint64                 `protobuf:"varint,3,opt,name=down,proto3" json:"down,omitempty"`
+	Start         int64                  `protobuf:"varint,4,opt,name=start,proto3" json:"start,omitempty"`
+	End           int64                  `protobuf:"varint,5,opt,name=end,proto3" json:"end,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SessionEnd) Reset() {
+	*x = SessionEnd{}
+	mi := &file_app_userlogger_config_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SessionEnd) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SessionEnd) ProtoMessage() {}
+
+func (x *SessionEnd) ProtoReflect() protoreflect.Message {
+	mi := &file_app_userlogger_config_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SessionEnd.ProtoReflect.Descriptor instead.
+func (*SessionEnd) Descriptor() ([]byte, []int) {
+	return file_app_userlogger_config_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *SessionEnd) GetSid() uint32 {
+	if x != nil {
+		return x.Sid
+	}
+	return 0
+}
+
+func (x *SessionEnd) GetUp() uint64 {
+	if x != nil {
+		return x.Up
+	}
+	return 0
+}
+
+func (x *SessionEnd) GetDown() uint64 {
+	if x != nil {
+		return x.Down
+	}
+	return 0
+}
+
+func (x *SessionEnd) GetStart() int64 {
+	if x != nil {
+		return x.Start
+	}
+	return 0
+}
+
+func (x *SessionEnd) GetEnd() int64 {
+	if x != nil {
+		return x.End
+	}
+	return 0
+}
+
+type SessionUsage struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Sid           uint32                 `protobuf:"varint,1,opt,name=sid,proto3" json:"sid,omitempty"`
+	Up            uint64                 `protobuf:"varint,2,opt,name=up,proto3" json:"up,omitempty"`
+	Down          uint64                 `protobuf:"varint,3,opt,name=down,proto3" json:"down,omitempty"`
+	Ts            int64                  `protobuf:"varint,4,opt,name=ts,proto3" json:"ts,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SessionUsage) Reset() {
+	*x = SessionUsage{}
+	mi := &file_app_userlogger_config_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SessionUsage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SessionUsage) ProtoMessage() {}
+
+func (x *SessionUsage) ProtoReflect() protoreflect.Message {
+	mi := &file_app_userlogger_config_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SessionUsage.ProtoReflect.Descriptor instead.
+func (*SessionUsage) Descriptor() ([]byte, []int) {
+	return file_app_userlogger_config_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *SessionUsage) GetSid() uint32 {
+	if x != nil {
+		return x.Sid
+	}
+	return 0
+}
+
+func (x *SessionUsage) GetUp() uint64 {
+	if x != nil {
+		return x.Up
+	}
+	return 0
+}
+
+func (x *SessionUsage) GetDown() uint64 {
+	if x != nil {
+		return x.Down
+	}
+	return 0
+}
+
+func (x *SessionUsage) GetTs() int64 {
+	if x != nil {
+		return x.Ts
+	}
+	return 0
+}
+
 var File_app_userlogger_config_proto protoreflect.FileDescriptor
 
 const file_app_userlogger_config_proto_rawDesc = "" +
 	"\n" +
-	"\x1bapp/userlogger/config.proto\x12\fx.userlogger\"\xe0\x02\n" +
+	"\x1bapp/userlogger/config.proto\x12\fx.userlogger\"\xe0\x03\n" +
 	"\x0eUserLogMessage\x12A\n" +
 	"\rroute_message\x18\x01 \x01(\v2\x1a.x.userlogger.RouteMessageH\x00R\frouteMessage\x12A\n" +
 	"\rerror_message\x18\x02 \x01(\v2\x1a.x.userlogger.ErrorMessageH\x00R\ferrorMessage\x12A\n" +
 	"\rsession_error\x18\x03 \x01(\v2\x1a.x.userlogger.SessionErrorH\x00R\fsessionError\x12D\n" +
 	"\x0ereject_message\x18\x04 \x01(\v2\x1b.x.userlogger.RejectMessageH\x00R\rrejectMessage\x124\n" +
-	"\bfallback\x18\x05 \x01(\v2\x16.x.userlogger.FallbackH\x00R\bfallbackB\t\n" +
+	"\bfallback\x18\x05 \x01(\v2\x16.x.userlogger.FallbackH\x00R\bfallback\x12;\n" +
+	"\vsession_end\x18\x06 \x01(\v2\x18.x.userlogger.SessionEndH\x00R\n" +
+	"sessionEnd\x12A\n" +
+	"\rsession_usage\x18\a \x01(\v2\x1a.x.userlogger.SessionUsageH\x00R\fsessionUsageB\t\n" +
 	"\amessage\"\xfe\x02\n" +
 	"\fRouteMessage\x12\x10\n" +
 	"\x03dst\x18\x01 \x01(\tR\x03dst\x12\x10\n" +
@@ -593,7 +772,19 @@ const file_app_userlogger_config_proto_rawDesc = "" +
 	"\ttimestamp\x18\x02 \x01(\x03R\ttimestamp\x12\x16\n" +
 	"\x06domain\x18\x03 \x01(\tR\x06domain\x12\x16\n" +
 	"\x06reason\x18\x04 \x01(\tR\x06reason\x12\x15\n" +
-	"\x06app_id\x18\x05 \x01(\tR\x05appIdB-Z+github.com/5vnetwork/vx-core/app/userloggerb\x06proto3"
+	"\x06app_id\x18\x05 \x01(\tR\x05appId\"j\n" +
+	"\n" +
+	"SessionEnd\x12\x10\n" +
+	"\x03sid\x18\x01 \x01(\rR\x03sid\x12\x0e\n" +
+	"\x02up\x18\x02 \x01(\x04R\x02up\x12\x12\n" +
+	"\x04down\x18\x03 \x01(\x04R\x04down\x12\x14\n" +
+	"\x05start\x18\x04 \x01(\x03R\x05start\x12\x10\n" +
+	"\x03end\x18\x05 \x01(\x03R\x03end\"T\n" +
+	"\fSessionUsage\x12\x10\n" +
+	"\x03sid\x18\x01 \x01(\rR\x03sid\x12\x0e\n" +
+	"\x02up\x18\x02 \x01(\x04R\x02up\x12\x12\n" +
+	"\x04down\x18\x03 \x01(\x04R\x04down\x12\x0e\n" +
+	"\x02ts\x18\x04 \x01(\x03R\x02tsB-Z+github.com/5vnetwork/vx-core/app/userloggerb\x06proto3"
 
 var (
 	file_app_userlogger_config_proto_rawDescOnce sync.Once
@@ -607,7 +798,7 @@ func file_app_userlogger_config_proto_rawDescGZIP() []byte {
 	return file_app_userlogger_config_proto_rawDescData
 }
 
-var file_app_userlogger_config_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_app_userlogger_config_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_app_userlogger_config_proto_goTypes = []any{
 	(*UserLogMessage)(nil), // 0: x.userlogger.UserLogMessage
 	(*RouteMessage)(nil),   // 1: x.userlogger.RouteMessage
@@ -615,6 +806,8 @@ var file_app_userlogger_config_proto_goTypes = []any{
 	(*Fallback)(nil),       // 3: x.userlogger.Fallback
 	(*SessionError)(nil),   // 4: x.userlogger.SessionError
 	(*RejectMessage)(nil),  // 5: x.userlogger.RejectMessage
+	(*SessionEnd)(nil),     // 6: x.userlogger.SessionEnd
+	(*SessionUsage)(nil),   // 7: x.userlogger.SessionUsage
 }
 var file_app_userlogger_config_proto_depIdxs = []int32{
 	1, // 0: x.userlogger.UserLogMessage.route_message:type_name -> x.userlogger.RouteMessage
@@ -622,11 +815,13 @@ var file_app_userlogger_config_proto_depIdxs = []int32{
 	4, // 2: x.userlogger.UserLogMessage.session_error:type_name -> x.userlogger.SessionError
 	5, // 3: x.userlogger.UserLogMessage.reject_message:type_name -> x.userlogger.RejectMessage
 	3, // 4: x.userlogger.UserLogMessage.fallback:type_name -> x.userlogger.Fallback
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	6, // 5: x.userlogger.UserLogMessage.session_end:type_name -> x.userlogger.SessionEnd
+	7, // 6: x.userlogger.UserLogMessage.session_usage:type_name -> x.userlogger.SessionUsage
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_app_userlogger_config_proto_init() }
@@ -640,6 +835,8 @@ func file_app_userlogger_config_proto_init() {
 		(*UserLogMessage_SessionError)(nil),
 		(*UserLogMessage_RejectMessage)(nil),
 		(*UserLogMessage_Fallback)(nil),
+		(*UserLogMessage_SessionEnd)(nil),
+		(*UserLogMessage_SessionUsage)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -647,7 +844,7 @@ func file_app_userlogger_config_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_userlogger_config_proto_rawDesc), len(file_app_userlogger_config_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
