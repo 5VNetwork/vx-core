@@ -178,9 +178,13 @@ type UserLoggerConfig struct {
 	// Whether output logs for VX client. Client only
 	Enable bool `protobuf:"varint,1,opt,name=enable,proto3" json:"enable,omitempty"`
 	// Whether log app id, specified by users in the app. Client only
-	LogAppId      bool `protobuf:"varint,2,opt,name=log_app_id,json=logAppId,proto3" json:"log_app_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	LogAppId bool `protobuf:"varint,2,opt,name=log_app_id,json=logAppId,proto3" json:"log_app_id,omitempty"`
+	// Whether log a SessionEnd message for every session.
+	LogSessionEnd bool `protobuf:"varint,3,opt,name=log_session_end,json=logSessionEnd,proto3" json:"log_session_end,omitempty"`
+	// Whether log realtime per-session usage (approx. every second).
+	LogRealtimeUsage bool `protobuf:"varint,4,opt,name=log_realtime_usage,json=logRealtimeUsage,proto3" json:"log_realtime_usage,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *UserLoggerConfig) Reset() {
@@ -227,6 +231,20 @@ func (x *UserLoggerConfig) GetLogAppId() bool {
 	return false
 }
 
+func (x *UserLoggerConfig) GetLogSessionEnd() bool {
+	if x != nil {
+		return x.LogSessionEnd
+	}
+	return false
+}
+
+func (x *UserLoggerConfig) GetLogRealtimeUsage() bool {
+	if x != nil {
+		return x.LogRealtimeUsage
+	}
+	return false
+}
+
 var File_protos_logger_proto protoreflect.FileDescriptor
 
 const file_protos_logger_proto_rawDesc = "" +
@@ -243,11 +261,13 @@ const file_protos_logger_proto_rawDesc = "" +
 	"\flog_file_dir\x18\t \x01(\tR\n" +
 	"logFileDir\x12\x16\n" +
 	"\x06redact\x18\n" +
-	" \x01(\bR\x06redactJ\x04\b\x06\x10\aJ\x04\b\a\x10\b\"H\n" +
+	" \x01(\bR\x06redactJ\x04\b\x06\x10\aJ\x04\b\a\x10\b\"\x9e\x01\n" +
 	"\x10UserLoggerConfig\x12\x16\n" +
 	"\x06enable\x18\x01 \x01(\bR\x06enable\x12\x1c\n" +
 	"\n" +
-	"log_app_id\x18\x02 \x01(\bR\blogAppId*J\n" +
+	"log_app_id\x18\x02 \x01(\bR\blogAppId\x12&\n" +
+	"\x0flog_session_end\x18\x03 \x01(\bR\rlogSessionEnd\x12,\n" +
+	"\x12log_realtime_usage\x18\x04 \x01(\bR\x10logRealtimeUsage*J\n" +
 	"\x05Level\x12\t\n" +
 	"\x05DEBUG\x10\x00\x12\b\n" +
 	"\x04INFO\x10\x01\x12\b\n" +

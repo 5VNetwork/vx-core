@@ -36,9 +36,8 @@ type Dispatcher struct {
 	SessionEndHooks             []SessionEndHook
 	Fallback                    Fallback
 
-	SessinoErrorLogger SessionErrorLogger
-	Flows              atomic.Int32
-	PacketConns        atomic.Int32
+	Flows       atomic.Int32
+	PacketConns atomic.Int32
 
 	observerLock          sync.Mutex
 	HandlerErrorObservers []i.HandlerErrorObserver
@@ -115,12 +114,13 @@ func (d *Dispatcher) HandleFlow(ctx context.Context, dst net.Destination,
 	defer d.Flows.Add(-1)
 
 	var err error
+	defer d.onFlowSessionEnd(ctx, info, err)
+
 	var rw0 any
 	for _, pre := range d.BeforeHandlerSelectionHooks {
 		ctx, rw0, err = pre.BeforeHandlerSelection(ctx, info, rw)
 		rw = rw0.(buf.ReaderWriter)
 		if err != nil {
-			d.SessinoErrorLogger.LogSessionError(info, err)
 			return err
 		}
 	}
@@ -128,7 +128,6 @@ func (d *Dispatcher) HandleFlow(ctx context.Context, dst net.Destination,
 	rw0, handler, err := d.Router.PickHandlerWithData(ctx, info, rw)
 	rw = rw0.(buf.ReaderWriter)
 	if err != nil {
-		d.SessinoErrorLogger.LogSessionError(info, err)
 		return err
 	}
 
@@ -136,11 +135,9 @@ func (d *Dispatcher) HandleFlow(ctx context.Context, dst net.Destination,
 		ctx, rw0, err = hook.AfterHandlerSelection(ctx, info, rw, handler)
 		rw = rw0.(buf.ReaderWriter)
 		if err != nil {
-			d.SessinoErrorLogger.LogSessionError(info, err)
 			return err
 		}
 	}
-
 	err = handler.HandleFlow(ctx, info.Target, rw)
 	if err != nil {
 		d.onHandlerError(ctx, info, handler.Tag(), err)
@@ -148,15 +145,20 @@ func (d *Dispatcher) HandleFlow(ctx context.Context, dst net.Destination,
 			err = d.Fallback.Fallback(ctx, info, rw, handler, err)
 		}
 	}
-	if err != nil && d.SessinoErrorLogger != nil {
-		d.SessinoErrorLogger.LogSessionError(info, err)
-	}
 
+	return err
+}
+
+func (d *Dispatcher) onFlowSessionEnd(ctx context.Context, info *session.Info, err error) {
 	for _, hook := range d.SessionEndHooks {
 		hook.FlowSessionEnd(ctx, info, err)
 	}
+}
 
-	return err
+func (d *Dispatcher) onPacketConnSessionEnd(ctx context.Context, info *session.Info, err error) {
+	for _, hook := range d.SessionEndHooks {
+		hook.PacketConnSessionEnd(ctx, info, err)
+	}
 }
 
 func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, pc udp.PacketReaderWriter) error {
@@ -168,12 +170,13 @@ func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, 
 	defer d.PacketConns.Add(-1)
 
 	var err error
+	defer d.onPacketConnSessionEnd(ctx, info, err)
+
 	var pc0 any
 	for _, pre := range d.BeforeHandlerSelectionHooks {
 		ctx, pc0, err = pre.BeforeHandlerSelection(ctx, info, pc)
 		pc = pc0.(udp.PacketReaderWriter)
 		if err != nil {
-			d.SessinoErrorLogger.LogSessionError(info, err)
 			return err
 		}
 	}
@@ -181,7 +184,6 @@ func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, 
 	pc0, handler, err := d.Router.PickHandlerWithData(ctx, info, pc)
 	pc = pc0.(udp.PacketReaderWriter)
 	if err != nil {
-		d.SessinoErrorLogger.LogSessionError(info, err)
 		return err
 	}
 
@@ -189,7 +191,6 @@ func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, 
 		ctx, pc0, err = hook.AfterHandlerSelection(ctx, info, pc, handler)
 		pc = pc0.(udp.PacketReaderWriter)
 		if err != nil {
-			d.SessinoErrorLogger.LogSessionError(info, err)
 			return err
 		}
 	}
@@ -197,11 +198,6 @@ func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, 
 	err = handler.HandlePacketConn(ctx, info.Target, pc)
 	if err != nil {
 		d.onHandlerError(ctx, info, handler.Tag(), err)
-		d.SessinoErrorLogger.LogSessionError(info, err)
-	}
-
-	for _, hook := range d.SessionEndHooks {
-		hook.PacketConnSessionEnd(ctx, info, err)
 	}
 
 	return err

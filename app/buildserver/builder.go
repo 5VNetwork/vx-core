@@ -212,9 +212,7 @@ type DispatcherResult struct {
 }
 
 func NewDispatcher(params DispatcherParams) (DispatcherResult, error) {
-	dp := &dispatcher.Dispatcher{
-		SessinoErrorLogger: &dispatcher.NullSessionErrorLogger{},
-	}
+	dp := &dispatcher.Dispatcher{}
 	dp.AddBeforeHandlerSelectionHook(&dispatcher.IdleHook{
 		TimeoutPolicy: params.Timeout,
 	})

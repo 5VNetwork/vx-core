@@ -28,9 +28,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 	common.Must(fc.addComponent(selectors))
 	cc.Selectors = selectors
 
-	d := &dispatcher.Dispatcher{
-		SessinoErrorLogger: &dispatcher.NullSessionErrorLogger{},
-	}
+	d := &dispatcher.Dispatcher{}
 
 	if config.Log.LogLevel == configs.Level_DEBUG {
 		debugHook := &dispatcher.DebugHook{}
@@ -69,7 +67,6 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 	cc.Dispatcher = d
 	fc.requireFeature(func(om *outbound.Manager, p *policy.Policy,
 		ul *userlogger.UserLogger) {
-		d.SessinoErrorLogger = ul
 		fallback.Om = om
 		fallback.Logger = ul
 		d.AddAfterHandlerSelectionHook(ul)
@@ -80,6 +77,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 			StatsPolicy: p,
 			OutStats:    cc.OutStats,
 		})
+		d.AddSessionEndHook(ul)
 	})
 	fc.requireOptionalFeatures(func(id *dns.Dns) {
 		rewriteDestination.FakeDns = cc.AllFakeDns

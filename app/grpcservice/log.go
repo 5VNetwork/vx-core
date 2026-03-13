@@ -46,14 +46,22 @@ import (
 // 	}
 // }
 
-func (s *GrpcService) ToggleUserLog(ctx context.Context, in *ToggleUserLogRequest) (*ToggleUserLogResponse, error) {
-	s.Client.UserLogger.SetEnabled(in.Enable)
-	return &ToggleUserLogResponse{}, nil
-}
-
-func (s *GrpcService) ToggleLogAppId(ctx context.Context, in *ToggleLogAppIdRequest) (*ToggleLogAppIdResponse, error) {
-	s.Client.UserLogger.LogAppId.Store(in.Enable)
-	return &ToggleLogAppIdResponse{}, nil
+func (s *GrpcService) ResetUserLogging(ctx context.Context, in *ResetUserLoggingRequest) (*ResetUserLoggingResponse, error) {
+	if in.Enable {
+		s.Client.UserLogger.SetEnabled(in.Enable)
+		if in.AppId {
+			s.Client.UserLogger.LogAppId.Store(true)
+		}
+		if in.SessionEnd {
+			s.Client.UserLogger.SetLogSessionEnd(true)
+		}
+		if in.RealtimeUsage {
+			s.Client.UserLogger.SetLogRealtimeUsage(true)
+		}
+	} else {
+		s.Client.UserLogger.SetEnabled(false)
+	}
+	return &ResetUserLoggingResponse{}, nil
 }
 
 func (s *GrpcService) UserLogStream(in *UserLogStreamRequest, stream GrpcService_UserLogStreamServer) error {

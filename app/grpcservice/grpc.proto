@@ -28,8 +28,7 @@ service GrpcService {
   // rpc ChangeLogLevel(ChangeLogLevelRequest) returns (ChangeLogLevelResponse);
   // rpc LogStream(LogStreamRequest) returns (stream LogMessage);
   rpc UserLogStream(UserLogStreamRequest) returns (stream x.userlogger.UserLogMessage);
-  rpc ToggleUserLog(ToggleUserLogRequest) returns (ToggleUserLogResponse);
-  rpc ToggleLogAppId(ToggleLogAppIdRequest) returns (ToggleLogAppIdResponse);
+  rpc ResetUserLogging(ResetUserLoggingRequest) returns (ResetUserLoggingResponse);
   
   // outbound
   rpc ChangeOutbound(ChangeOutboundRequest) returns (ChangeOutboundResponse);
@@ -134,10 +133,13 @@ message SetOutboundHandlerSpeedResponse {}
 // message LogStreamRequest {}
 // message LogMessage { string message = 1; }
 message UserLogStreamRequest {}
-message ToggleUserLogRequest { bool enable = 1; }
-message ToggleUserLogResponse {}
-message ToggleLogAppIdRequest { bool enable = 1; }
-message ToggleLogAppIdResponse {}
+message ResetUserLoggingRequest {
+  bool enable = 1;
+  bool app_id = 2;
+  bool session_end = 3;
+  bool realtime_usage = 4;
+}
+message ResetUserLoggingResponse {}
 
 // outbound
 message ChangeOutboundRequest {

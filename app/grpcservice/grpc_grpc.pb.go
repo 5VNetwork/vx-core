@@ -20,8 +20,7 @@ const (
 	GrpcService_GetStatsStream_FullMethodName            = "/x.grpcservice.GrpcService/GetStatsStream"
 	GrpcService_SetOutboundHandlerSpeed_FullMethodName   = "/x.grpcservice.GrpcService/SetOutboundHandlerSpeed"
 	GrpcService_UserLogStream_FullMethodName             = "/x.grpcservice.GrpcService/UserLogStream"
-	GrpcService_ToggleUserLog_FullMethodName             = "/x.grpcservice.GrpcService/ToggleUserLog"
-	GrpcService_ToggleLogAppId_FullMethodName            = "/x.grpcservice.GrpcService/ToggleLogAppId"
+	GrpcService_ResetUserLogging_FullMethodName          = "/x.grpcservice.GrpcService/ResetUserLogging"
 	GrpcService_ChangeOutbound_FullMethodName            = "/x.grpcservice.GrpcService/ChangeOutbound"
 	GrpcService_CurrentOutbound_FullMethodName           = "/x.grpcservice.GrpcService/CurrentOutbound"
 	GrpcService_ChangeRoutingMode_FullMethodName         = "/x.grpcservice.GrpcService/ChangeRoutingMode"
@@ -57,8 +56,7 @@ type GrpcServiceClient interface {
 	// rpc ChangeLogLevel(ChangeLogLevelRequest) returns (ChangeLogLevelResponse);
 	// rpc LogStream(LogStreamRequest) returns (stream LogMessage);
 	UserLogStream(ctx context.Context, in *UserLogStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[userlogger.UserLogMessage], error)
-	ToggleUserLog(ctx context.Context, in *ToggleUserLogRequest, opts ...grpc.CallOption) (*ToggleUserLogResponse, error)
-	ToggleLogAppId(ctx context.Context, in *ToggleLogAppIdRequest, opts ...grpc.CallOption) (*ToggleLogAppIdResponse, error)
+	ResetUserLogging(ctx context.Context, in *ResetUserLoggingRequest, opts ...grpc.CallOption) (*ResetUserLoggingResponse, error)
 	// outbound
 	ChangeOutbound(ctx context.Context, in *ChangeOutboundRequest, opts ...grpc.CallOption) (*ChangeOutboundResponse, error)
 	CurrentOutbound(ctx context.Context, in *CurrentOutboundRequest, opts ...grpc.CallOption) (*CurrentOutboundResponse, error)
@@ -179,20 +177,10 @@ func (c *grpcServiceClient) UserLogStream(ctx context.Context, in *UserLogStream
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type GrpcService_UserLogStreamClient = grpc.ServerStreamingClient[userlogger.UserLogMessage]
 
-func (c *grpcServiceClient) ToggleUserLog(ctx context.Context, in *ToggleUserLogRequest, opts ...grpc.CallOption) (*ToggleUserLogResponse, error) {
+func (c *grpcServiceClient) ResetUserLogging(ctx context.Context, in *ResetUserLoggingRequest, opts ...grpc.CallOption) (*ResetUserLoggingResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ToggleUserLogResponse)
-	err := c.cc.Invoke(ctx, GrpcService_ToggleUserLog_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *grpcServiceClient) ToggleLogAppId(ctx context.Context, in *ToggleLogAppIdRequest, opts ...grpc.CallOption) (*ToggleLogAppIdResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ToggleLogAppIdResponse)
-	err := c.cc.Invoke(ctx, GrpcService_ToggleLogAppId_FullMethodName, in, out, cOpts...)
+	out := new(ResetUserLoggingResponse)
+	err := c.cc.Invoke(ctx, GrpcService_ResetUserLogging_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -385,8 +373,7 @@ type GrpcServiceServer interface {
 	// rpc ChangeLogLevel(ChangeLogLevelRequest) returns (ChangeLogLevelResponse);
 	// rpc LogStream(LogStreamRequest) returns (stream LogMessage);
 	UserLogStream(*UserLogStreamRequest, grpc.ServerStreamingServer[userlogger.UserLogMessage]) error
-	ToggleUserLog(context.Context, *ToggleUserLogRequest) (*ToggleUserLogResponse, error)
-	ToggleLogAppId(context.Context, *ToggleLogAppIdRequest) (*ToggleLogAppIdResponse, error)
+	ResetUserLogging(context.Context, *ResetUserLoggingRequest) (*ResetUserLoggingResponse, error)
 	// outbound
 	ChangeOutbound(context.Context, *ChangeOutboundRequest) (*ChangeOutboundResponse, error)
 	CurrentOutbound(context.Context, *CurrentOutboundRequest) (*CurrentOutboundResponse, error)
@@ -438,11 +425,8 @@ func (UnimplementedGrpcServiceServer) SetOutboundHandlerSpeed(context.Context, *
 func (UnimplementedGrpcServiceServer) UserLogStream(*UserLogStreamRequest, grpc.ServerStreamingServer[userlogger.UserLogMessage]) error {
 	return status.Errorf(codes.Unimplemented, "method UserLogStream not implemented")
 }
-func (UnimplementedGrpcServiceServer) ToggleUserLog(context.Context, *ToggleUserLogRequest) (*ToggleUserLogResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ToggleUserLog not implemented")
-}
-func (UnimplementedGrpcServiceServer) ToggleLogAppId(context.Context, *ToggleLogAppIdRequest) (*ToggleLogAppIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ToggleLogAppId not implemented")
+func (UnimplementedGrpcServiceServer) ResetUserLogging(context.Context, *ResetUserLoggingRequest) (*ResetUserLoggingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResetUserLogging not implemented")
 }
 func (UnimplementedGrpcServiceServer) ChangeOutbound(context.Context, *ChangeOutboundRequest) (*ChangeOutboundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeOutbound not implemented")
@@ -603,38 +587,20 @@ func _GrpcService_UserLogStream_Handler(srv interface{}, stream grpc.ServerStrea
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type GrpcService_UserLogStreamServer = grpc.ServerStreamingServer[userlogger.UserLogMessage]
 
-func _GrpcService_ToggleUserLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ToggleUserLogRequest)
+func _GrpcService_ResetUserLogging_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResetUserLoggingRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GrpcServiceServer).ToggleUserLog(ctx, in)
+		return srv.(GrpcServiceServer).ResetUserLogging(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: GrpcService_ToggleUserLog_FullMethodName,
+		FullMethod: GrpcService_ResetUserLogging_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GrpcServiceServer).ToggleUserLog(ctx, req.(*ToggleUserLogRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _GrpcService_ToggleLogAppId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ToggleLogAppIdRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GrpcServiceServer).ToggleLogAppId(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: GrpcService_ToggleLogAppId_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GrpcServiceServer).ToggleLogAppId(ctx, req.(*ToggleLogAppIdRequest))
+		return srv.(GrpcServiceServer).ResetUserLogging(ctx, req.(*ResetUserLoggingRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -965,12 +931,8 @@ var GrpcService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _GrpcService_SetOutboundHandlerSpeed_Handler,
 		},
 		{
-			MethodName: "ToggleUserLog",
-			Handler:    _GrpcService_ToggleUserLog_Handler,
-		},
-		{
-			MethodName: "ToggleLogAppId",
-			Handler:    _GrpcService_ToggleLogAppId_Handler,
+			MethodName: "ResetUserLogging",
+			Handler:    _GrpcService_ResetUserLogging_Handler,
 		},
 		{
 			MethodName: "ChangeOutbound",

@@ -24,8 +24,10 @@ import (
 )
 
 type UserLogger struct {
-	LogAppId atomic.Bool
-	enabled  atomic.Bool
+	LogAppId         atomic.Bool
+	enabled          atomic.Bool
+	logSessionEnd    atomic.Bool
+	logRealtimeUsage atomic.Bool
 
 	ch   chan struct{}
 	done *done.Instance
@@ -49,6 +51,14 @@ func NewUserLogger(enabled bool, logAppId bool, size int) *UserLogger {
 	ul.SetEnabled(enabled)
 	ul.LogAppId.Store(logAppId)
 	return ul
+}
+
+func (s *UserLogger) SetLogSessionEnd(enabled bool) {
+	s.logSessionEnd.Store(enabled)
+}
+
+func (s *UserLogger) SetLogRealtimeUsage(enabled bool) {
+	s.logRealtimeUsage.Store(enabled)
 }
 
 func (s *UserLogger) SetDns(dnsConn ipToDomain) {
@@ -93,12 +103,6 @@ func (s *UserLogger) LogReject(info *session.Info, reason string) {
 		return
 	}
 
-	// ipToDomain := info.IpToDomain
-	// if s.dns != nil && ipToDomain == "" &&
-	// 	info.Target.Address != nil && info.Target.Address.Family().IsIP() {
-	// 	ipToDomain = s.dns.GetDomain(info.Target.Address.IP())
-	// }
-
 	if info.AppId == "" && s.LogAppId.Load() {
 		target := &info.Target
 		if info.FakeIP != nil {
@@ -141,7 +145,46 @@ func (s *UserLogger) AfterHandlerSelection(ctx context.Context, info *session.In
 	}
 	s.LogRoute(info, tag)
 
+	if s.logRealtimeUsage.Load() {
+		go s.logSessionUsageLoop(ctx, info)
+	}
+
 	return ctx, rw, nil
+}
+
+func (s *UserLogger) logSessionUsageLoop(ctx context.Context, info *session.Info) {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	for {
+		if !s.enabled.Load() || s.done.Done() || !s.logRealtimeUsage.Load() {
+			return
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			up := info.SessionUpCounter.Load()
+			down := info.SessionDownCounter.Load()
+
+			msg := &UserLogMessage{
+				Message: &UserLogMessage_SessionUsage{
+					SessionUsage: &SessionUsage{
+						Sid:  uint32(info.ID),
+						Up:   up,
+						Down: down,
+						Ts:   time.Now().Unix(),
+					},
+				},
+			}
+
+			s.buf.Add(msg)
+			select {
+			case s.ch <- struct{}{}:
+			default:
+			}
+		}
+	}
 }
 
 func (s *UserLogger) LogRoute(info *session.Info, tag string) {
@@ -202,8 +245,54 @@ func (s *UserLogger) LogRoute(info *session.Info, tag string) {
 	}
 }
 
+func (s *UserLogger) FlowSessionEnd(ctx context.Context, info *session.Info, err error) {
+	if err != nil {
+		s.logSessionError(info, err)
+	}
+	if s.logSessionEnd.Load() {
+		s.logSessionEndMessage(info)
+	}
+}
+
+func (s *UserLogger) PacketConnSessionEnd(ctx context.Context, info *session.Info, err error) {
+	if err != nil {
+		s.logSessionError(info, err)
+	}
+	if s.logSessionEnd.Load() {
+		s.logSessionEndMessage(info)
+	}
+}
+
+func (s *UserLogger) logSessionEndMessage(info *session.Info) {
+	if !s.enabled.Load() {
+		return
+	}
+	if s.done.Done() {
+		return
+	}
+
+	se := &SessionEnd{
+		Sid:   uint32(info.ID),
+		Up:    info.SessionUpCounter.Load(),
+		Down:  info.SessionDownCounter.Load(),
+		Start: info.StartTime,
+		End:   time.Now().Unix(),
+	}
+
+	msg := &UserLogMessage{
+		Message: &UserLogMessage_SessionEnd{
+			SessionEnd: se,
+		},
+	}
+	s.buf.Add(msg)
+	select {
+	case s.ch <- struct{}{}:
+	default:
+	}
+}
+
 // when down link is 0, this is called. err might be nil
-func (s *UserLogger) LogSessionError(info *session.Info, err error) {
+func (s *UserLogger) logSessionError(info *session.Info, err error) {
 	if !s.enabled.Load() {
 		return
 	}

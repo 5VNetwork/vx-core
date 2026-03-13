@@ -37,4 +37,8 @@ message UserLoggerConfig {
   bool enable = 1;
   // Whether log app id, specified by users in the app. Client only
   bool log_app_id = 2;
+  // Whether log a SessionEnd message for every session.
+  bool log_session_end = 3;
+  // Whether log realtime per-session usage (approx. every second).
+  bool log_realtime_usage = 4;
 }

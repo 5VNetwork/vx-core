@@ -964,27 +964,30 @@ func (*UserLogStreamRequest) Descriptor() ([]byte, []int) {
 	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{18}
 }
 
-type ToggleUserLogRequest struct {
+type ResetUserLoggingRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Enable        bool                   `protobuf:"varint,1,opt,name=enable,proto3" json:"enable,omitempty"`
+	AppId         bool                   `protobuf:"varint,2,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
+	SessionEnd    bool                   `protobuf:"varint,3,opt,name=session_end,json=sessionEnd,proto3" json:"session_end,omitempty"`
+	RealtimeUsage bool                   `protobuf:"varint,4,opt,name=realtime_usage,json=realtimeUsage,proto3" json:"realtime_usage,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ToggleUserLogRequest) Reset() {
-	*x = ToggleUserLogRequest{}
+func (x *ResetUserLoggingRequest) Reset() {
+	*x = ResetUserLoggingRequest{}
 	mi := &file_app_grpcservice_grpc_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ToggleUserLogRequest) String() string {
+func (x *ResetUserLoggingRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ToggleUserLogRequest) ProtoMessage() {}
+func (*ResetUserLoggingRequest) ProtoMessage() {}
 
-func (x *ToggleUserLogRequest) ProtoReflect() protoreflect.Message {
+func (x *ResetUserLoggingRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_app_grpcservice_grpc_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -996,38 +999,59 @@ func (x *ToggleUserLogRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ToggleUserLogRequest.ProtoReflect.Descriptor instead.
-func (*ToggleUserLogRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ResetUserLoggingRequest.ProtoReflect.Descriptor instead.
+func (*ResetUserLoggingRequest) Descriptor() ([]byte, []int) {
 	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{19}
 }
 
-func (x *ToggleUserLogRequest) GetEnable() bool {
+func (x *ResetUserLoggingRequest) GetEnable() bool {
 	if x != nil {
 		return x.Enable
 	}
 	return false
 }
 
-type ToggleUserLogResponse struct {
+func (x *ResetUserLoggingRequest) GetAppId() bool {
+	if x != nil {
+		return x.AppId
+	}
+	return false
+}
+
+func (x *ResetUserLoggingRequest) GetSessionEnd() bool {
+	if x != nil {
+		return x.SessionEnd
+	}
+	return false
+}
+
+func (x *ResetUserLoggingRequest) GetRealtimeUsage() bool {
+	if x != nil {
+		return x.RealtimeUsage
+	}
+	return false
+}
+
+type ResetUserLoggingResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ToggleUserLogResponse) Reset() {
-	*x = ToggleUserLogResponse{}
+func (x *ResetUserLoggingResponse) Reset() {
+	*x = ResetUserLoggingResponse{}
 	mi := &file_app_grpcservice_grpc_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ToggleUserLogResponse) String() string {
+func (x *ResetUserLoggingResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ToggleUserLogResponse) ProtoMessage() {}
+func (*ResetUserLoggingResponse) ProtoMessage() {}
 
-func (x *ToggleUserLogResponse) ProtoReflect() protoreflect.Message {
+func (x *ResetUserLoggingResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_app_grpcservice_grpc_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1039,89 +1063,9 @@ func (x *ToggleUserLogResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ToggleUserLogResponse.ProtoReflect.Descriptor instead.
-func (*ToggleUserLogResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ResetUserLoggingResponse.ProtoReflect.Descriptor instead.
+func (*ResetUserLoggingResponse) Descriptor() ([]byte, []int) {
 	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{20}
-}
-
-type ToggleLogAppIdRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Enable        bool                   `protobuf:"varint,1,opt,name=enable,proto3" json:"enable,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ToggleLogAppIdRequest) Reset() {
-	*x = ToggleLogAppIdRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[21]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ToggleLogAppIdRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ToggleLogAppIdRequest) ProtoMessage() {}
-
-func (x *ToggleLogAppIdRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[21]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ToggleLogAppIdRequest.ProtoReflect.Descriptor instead.
-func (*ToggleLogAppIdRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{21}
-}
-
-func (x *ToggleLogAppIdRequest) GetEnable() bool {
-	if x != nil {
-		return x.Enable
-	}
-	return false
-}
-
-type ToggleLogAppIdResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ToggleLogAppIdResponse) Reset() {
-	*x = ToggleLogAppIdResponse{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[22]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ToggleLogAppIdResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ToggleLogAppIdResponse) ProtoMessage() {}
-
-func (x *ToggleLogAppIdResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[22]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ToggleLogAppIdResponse.ProtoReflect.Descriptor instead.
-func (*ToggleLogAppIdResponse) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{22}
 }
 
 // outbound
@@ -1139,7 +1083,7 @@ type ChangeOutboundRequest struct {
 
 func (x *ChangeOutboundRequest) Reset() {
 	*x = ChangeOutboundRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[23]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1151,7 +1095,7 @@ func (x *ChangeOutboundRequest) String() string {
 func (*ChangeOutboundRequest) ProtoMessage() {}
 
 func (x *ChangeOutboundRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[23]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1164,7 +1108,7 @@ func (x *ChangeOutboundRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeOutboundRequest.ProtoReflect.Descriptor instead.
 func (*ChangeOutboundRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{23}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ChangeOutboundRequest) GetHandlers() []*configs.HandlerConfig {
@@ -1196,7 +1140,7 @@ type ChangeOutboundResponse struct {
 
 func (x *ChangeOutboundResponse) Reset() {
 	*x = ChangeOutboundResponse{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[24]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1208,7 +1152,7 @@ func (x *ChangeOutboundResponse) String() string {
 func (*ChangeOutboundResponse) ProtoMessage() {}
 
 func (x *ChangeOutboundResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[24]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1221,7 +1165,7 @@ func (x *ChangeOutboundResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeOutboundResponse.ProtoReflect.Descriptor instead.
 func (*ChangeOutboundResponse) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{24}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{22}
 }
 
 type CurrentOutboundRequest struct {
@@ -1232,7 +1176,7 @@ type CurrentOutboundRequest struct {
 
 func (x *CurrentOutboundRequest) Reset() {
 	*x = CurrentOutboundRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[25]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1244,7 +1188,7 @@ func (x *CurrentOutboundRequest) String() string {
 func (*CurrentOutboundRequest) ProtoMessage() {}
 
 func (x *CurrentOutboundRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[25]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1257,7 +1201,7 @@ func (x *CurrentOutboundRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CurrentOutboundRequest.ProtoReflect.Descriptor instead.
 func (*CurrentOutboundRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{25}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{23}
 }
 
 type CurrentOutboundResponse struct {
@@ -1269,7 +1213,7 @@ type CurrentOutboundResponse struct {
 
 func (x *CurrentOutboundResponse) Reset() {
 	*x = CurrentOutboundResponse{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[26]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1281,7 +1225,7 @@ func (x *CurrentOutboundResponse) String() string {
 func (*CurrentOutboundResponse) ProtoMessage() {}
 
 func (x *CurrentOutboundResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[26]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1294,7 +1238,7 @@ func (x *CurrentOutboundResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CurrentOutboundResponse.ProtoReflect.Descriptor instead.
 func (*CurrentOutboundResponse) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{26}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *CurrentOutboundResponse) GetOutboundTags() []string {
@@ -1315,7 +1259,7 @@ type ChangeRoutingModeRequest struct {
 
 func (x *ChangeRoutingModeRequest) Reset() {
 	*x = ChangeRoutingModeRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[27]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1327,7 +1271,7 @@ func (x *ChangeRoutingModeRequest) String() string {
 func (*ChangeRoutingModeRequest) ProtoMessage() {}
 
 func (x *ChangeRoutingModeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[27]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1340,7 +1284,7 @@ func (x *ChangeRoutingModeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeRoutingModeRequest.ProtoReflect.Descriptor instead.
 func (*ChangeRoutingModeRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{27}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *ChangeRoutingModeRequest) GetRouterConfig() *configs.RouterConfig {
@@ -1365,7 +1309,7 @@ type ChangeRoutingModeResponse struct {
 
 func (x *ChangeRoutingModeResponse) Reset() {
 	*x = ChangeRoutingModeResponse{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[28]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1377,7 +1321,7 @@ func (x *ChangeRoutingModeResponse) String() string {
 func (*ChangeRoutingModeResponse) ProtoMessage() {}
 
 func (x *ChangeRoutingModeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[28]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1390,7 +1334,7 @@ func (x *ChangeRoutingModeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeRoutingModeResponse.ProtoReflect.Descriptor instead.
 func (*ChangeRoutingModeResponse) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{28}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{26}
 }
 
 type ChangeSelectorRequest struct {
@@ -1404,7 +1348,7 @@ type ChangeSelectorRequest struct {
 
 func (x *ChangeSelectorRequest) Reset() {
 	*x = ChangeSelectorRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[29]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1416,7 +1360,7 @@ func (x *ChangeSelectorRequest) String() string {
 func (*ChangeSelectorRequest) ProtoMessage() {}
 
 func (x *ChangeSelectorRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[29]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1429,7 +1373,7 @@ func (x *ChangeSelectorRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeSelectorRequest.ProtoReflect.Descriptor instead.
 func (*ChangeSelectorRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{29}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *ChangeSelectorRequest) GetSelectorsToAdd() []*configs.SelectorConfig {
@@ -1463,7 +1407,7 @@ type UpdateSelectorBalancerRequest struct {
 
 func (x *UpdateSelectorBalancerRequest) Reset() {
 	*x = UpdateSelectorBalancerRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[30]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1475,7 +1419,7 @@ func (x *UpdateSelectorBalancerRequest) String() string {
 func (*UpdateSelectorBalancerRequest) ProtoMessage() {}
 
 func (x *UpdateSelectorBalancerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[30]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1488,7 +1432,7 @@ func (x *UpdateSelectorBalancerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateSelectorBalancerRequest.ProtoReflect.Descriptor instead.
 func (*UpdateSelectorBalancerRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{30}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *UpdateSelectorBalancerRequest) GetTag() string {
@@ -1516,7 +1460,7 @@ type UpdateSelectorFilterRequest struct {
 
 func (x *UpdateSelectorFilterRequest) Reset() {
 	*x = UpdateSelectorFilterRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[31]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1528,7 +1472,7 @@ func (x *UpdateSelectorFilterRequest) String() string {
 func (*UpdateSelectorFilterRequest) ProtoMessage() {}
 
 func (x *UpdateSelectorFilterRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[31]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1541,7 +1485,7 @@ func (x *UpdateSelectorFilterRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateSelectorFilterRequest.ProtoReflect.Descriptor instead.
 func (*UpdateSelectorFilterRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{31}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *UpdateSelectorFilterRequest) GetTag() string {
@@ -1573,7 +1517,7 @@ type ChangeSelectorResponse struct {
 
 func (x *ChangeSelectorResponse) Reset() {
 	*x = ChangeSelectorResponse{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[32]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1585,7 +1529,7 @@ func (x *ChangeSelectorResponse) String() string {
 func (*ChangeSelectorResponse) ProtoMessage() {}
 
 func (x *ChangeSelectorResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[32]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1598,7 +1542,7 @@ func (x *ChangeSelectorResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeSelectorResponse.ProtoReflect.Descriptor instead.
 func (*ChangeSelectorResponse) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{32}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{30}
 }
 
 type HandlerChangeNotify struct {
@@ -1609,7 +1553,7 @@ type HandlerChangeNotify struct {
 
 func (x *HandlerChangeNotify) Reset() {
 	*x = HandlerChangeNotify{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[33]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1621,7 +1565,7 @@ func (x *HandlerChangeNotify) String() string {
 func (*HandlerChangeNotify) ProtoMessage() {}
 
 func (x *HandlerChangeNotify) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[33]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1634,7 +1578,7 @@ func (x *HandlerChangeNotify) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HandlerChangeNotify.ProtoReflect.Descriptor instead.
 func (*HandlerChangeNotify) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{33}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{31}
 }
 
 type HandlerChangeNotifyResponse struct {
@@ -1645,7 +1589,7 @@ type HandlerChangeNotifyResponse struct {
 
 func (x *HandlerChangeNotifyResponse) Reset() {
 	*x = HandlerChangeNotifyResponse{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[34]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1657,7 +1601,7 @@ func (x *HandlerChangeNotifyResponse) String() string {
 func (*HandlerChangeNotifyResponse) ProtoMessage() {}
 
 func (x *HandlerChangeNotifyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[34]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1670,7 +1614,7 @@ func (x *HandlerChangeNotifyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HandlerChangeNotifyResponse.ProtoReflect.Descriptor instead.
 func (*HandlerChangeNotifyResponse) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{34}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{32}
 }
 
 // fake dns
@@ -1683,7 +1627,7 @@ type SwitchFakeDnsRequest struct {
 
 func (x *SwitchFakeDnsRequest) Reset() {
 	*x = SwitchFakeDnsRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[35]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1695,7 +1639,7 @@ func (x *SwitchFakeDnsRequest) String() string {
 func (*SwitchFakeDnsRequest) ProtoMessage() {}
 
 func (x *SwitchFakeDnsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[35]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1708,7 +1652,7 @@ func (x *SwitchFakeDnsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SwitchFakeDnsRequest.ProtoReflect.Descriptor instead.
 func (*SwitchFakeDnsRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{35}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *SwitchFakeDnsRequest) GetEnable() bool {
@@ -1726,7 +1670,7 @@ type SwitchFakeDnsResponse struct {
 
 func (x *SwitchFakeDnsResponse) Reset() {
 	*x = SwitchFakeDnsResponse{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[36]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1738,7 +1682,7 @@ func (x *SwitchFakeDnsResponse) String() string {
 func (*SwitchFakeDnsResponse) ProtoMessage() {}
 
 func (x *SwitchFakeDnsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[36]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1751,7 +1695,7 @@ func (x *SwitchFakeDnsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SwitchFakeDnsResponse.ProtoReflect.Descriptor instead.
 func (*SwitchFakeDnsResponse) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{36}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{34}
 }
 
 // geo
@@ -1764,7 +1708,7 @@ type UpdateGeoRequest struct {
 
 func (x *UpdateGeoRequest) Reset() {
 	*x = UpdateGeoRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[37]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1776,7 +1720,7 @@ func (x *UpdateGeoRequest) String() string {
 func (*UpdateGeoRequest) ProtoMessage() {}
 
 func (x *UpdateGeoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[37]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1789,7 +1733,7 @@ func (x *UpdateGeoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateGeoRequest.ProtoReflect.Descriptor instead.
 func (*UpdateGeoRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{37}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *UpdateGeoRequest) GetGeo() *configs.GeoConfig {
@@ -1807,7 +1751,7 @@ type UpdateGeoResponse struct {
 
 func (x *UpdateGeoResponse) Reset() {
 	*x = UpdateGeoResponse{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[38]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1819,7 +1763,7 @@ func (x *UpdateGeoResponse) String() string {
 func (*UpdateGeoResponse) ProtoMessage() {}
 
 func (x *UpdateGeoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[38]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1832,7 +1776,7 @@ func (x *UpdateGeoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateGeoResponse.ProtoReflect.Descriptor instead.
 func (*UpdateGeoResponse) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{38}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{36}
 }
 
 type AddGeoDomainRequest struct {
@@ -1845,7 +1789,7 @@ type AddGeoDomainRequest struct {
 
 func (x *AddGeoDomainRequest) Reset() {
 	*x = AddGeoDomainRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[39]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1857,7 +1801,7 @@ func (x *AddGeoDomainRequest) String() string {
 func (*AddGeoDomainRequest) ProtoMessage() {}
 
 func (x *AddGeoDomainRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[39]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1870,7 +1814,7 @@ func (x *AddGeoDomainRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddGeoDomainRequest.ProtoReflect.Descriptor instead.
 func (*AddGeoDomainRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{39}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *AddGeoDomainRequest) GetDomainSetName() string {
@@ -1897,7 +1841,7 @@ type RemoveGeoDomainRequest struct {
 
 func (x *RemoveGeoDomainRequest) Reset() {
 	*x = RemoveGeoDomainRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[40]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1909,7 +1853,7 @@ func (x *RemoveGeoDomainRequest) String() string {
 func (*RemoveGeoDomainRequest) ProtoMessage() {}
 
 func (x *RemoveGeoDomainRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[40]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1922,7 +1866,7 @@ func (x *RemoveGeoDomainRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveGeoDomainRequest.ProtoReflect.Descriptor instead.
 func (*RemoveGeoDomainRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{40}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *RemoveGeoDomainRequest) GetDomainSetName() string {
@@ -1948,7 +1892,7 @@ type ReplaceDomainSetRequest struct {
 
 func (x *ReplaceDomainSetRequest) Reset() {
 	*x = ReplaceDomainSetRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[41]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1960,7 +1904,7 @@ func (x *ReplaceDomainSetRequest) String() string {
 func (*ReplaceDomainSetRequest) ProtoMessage() {}
 
 func (x *ReplaceDomainSetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[41]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1973,7 +1917,7 @@ func (x *ReplaceDomainSetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReplaceDomainSetRequest.ProtoReflect.Descriptor instead.
 func (*ReplaceDomainSetRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{41}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *ReplaceDomainSetRequest) GetSet() *configs.AtomicDomainSetConfig {
@@ -1992,7 +1936,7 @@ type ReplaceIPSetRequest struct {
 
 func (x *ReplaceIPSetRequest) Reset() {
 	*x = ReplaceIPSetRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[42]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2004,7 +1948,7 @@ func (x *ReplaceIPSetRequest) String() string {
 func (*ReplaceIPSetRequest) ProtoMessage() {}
 
 func (x *ReplaceIPSetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[42]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2017,7 +1961,7 @@ func (x *ReplaceIPSetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReplaceIPSetRequest.ProtoReflect.Descriptor instead.
 func (*ReplaceIPSetRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{42}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *ReplaceIPSetRequest) GetSet() *configs.AtomicIPSetConfig {
@@ -2037,7 +1981,7 @@ type UpdateRouterRequest struct {
 
 func (x *UpdateRouterRequest) Reset() {
 	*x = UpdateRouterRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[43]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2049,7 +1993,7 @@ func (x *UpdateRouterRequest) String() string {
 func (*UpdateRouterRequest) ProtoMessage() {}
 
 func (x *UpdateRouterRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[43]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2062,7 +2006,7 @@ func (x *UpdateRouterRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRouterRequest.ProtoReflect.Descriptor instead.
 func (*UpdateRouterRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{43}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *UpdateRouterRequest) GetRouterConfig() *configs.RouterConfig {
@@ -2080,7 +2024,7 @@ type UpdateRouterResponse struct {
 
 func (x *UpdateRouterResponse) Reset() {
 	*x = UpdateRouterResponse{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[44]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2092,7 +2036,7 @@ func (x *UpdateRouterResponse) String() string {
 func (*UpdateRouterResponse) ProtoMessage() {}
 
 func (x *UpdateRouterResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[44]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2105,7 +2049,7 @@ func (x *UpdateRouterResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRouterResponse.ProtoReflect.Descriptor instead.
 func (*UpdateRouterResponse) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{44}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{42}
 }
 
 // subscription
@@ -2120,7 +2064,7 @@ type SetSubscriptionIntervalRequest struct {
 
 func (x *SetSubscriptionIntervalRequest) Reset() {
 	*x = SetSubscriptionIntervalRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[45]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2132,7 +2076,7 @@ func (x *SetSubscriptionIntervalRequest) String() string {
 func (*SetSubscriptionIntervalRequest) ProtoMessage() {}
 
 func (x *SetSubscriptionIntervalRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[45]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2145,7 +2089,7 @@ func (x *SetSubscriptionIntervalRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetSubscriptionIntervalRequest.ProtoReflect.Descriptor instead.
 func (*SetSubscriptionIntervalRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{45}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *SetSubscriptionIntervalRequest) GetInterval() int32 {
@@ -2163,7 +2107,7 @@ type SetSubscriptionIntervalResponse struct {
 
 func (x *SetSubscriptionIntervalResponse) Reset() {
 	*x = SetSubscriptionIntervalResponse{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[46]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2175,7 +2119,7 @@ func (x *SetSubscriptionIntervalResponse) String() string {
 func (*SetSubscriptionIntervalResponse) ProtoMessage() {}
 
 func (x *SetSubscriptionIntervalResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[46]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2188,7 +2132,7 @@ func (x *SetSubscriptionIntervalResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetSubscriptionIntervalResponse.ProtoReflect.Descriptor instead.
 func (*SetSubscriptionIntervalResponse) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{46}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{44}
 }
 
 type SetAutoSubscriptionUpdateRequest struct {
@@ -2200,7 +2144,7 @@ type SetAutoSubscriptionUpdateRequest struct {
 
 func (x *SetAutoSubscriptionUpdateRequest) Reset() {
 	*x = SetAutoSubscriptionUpdateRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[47]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2212,7 +2156,7 @@ func (x *SetAutoSubscriptionUpdateRequest) String() string {
 func (*SetAutoSubscriptionUpdateRequest) ProtoMessage() {}
 
 func (x *SetAutoSubscriptionUpdateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[47]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2225,7 +2169,7 @@ func (x *SetAutoSubscriptionUpdateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetAutoSubscriptionUpdateRequest.ProtoReflect.Descriptor instead.
 func (*SetAutoSubscriptionUpdateRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{47}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *SetAutoSubscriptionUpdateRequest) GetEnable() bool {
@@ -2246,7 +2190,7 @@ type SetProxyShareRequest struct {
 
 func (x *SetProxyShareRequest) Reset() {
 	*x = SetProxyShareRequest{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[48]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2258,7 +2202,7 @@ func (x *SetProxyShareRequest) String() string {
 func (*SetProxyShareRequest) ProtoMessage() {}
 
 func (x *SetProxyShareRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[48]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2271,7 +2215,7 @@ func (x *SetProxyShareRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetProxyShareRequest.ProtoReflect.Descriptor instead.
 func (*SetProxyShareRequest) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{48}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *SetProxyShareRequest) GetEnable() bool {
@@ -2303,7 +2247,7 @@ type SetProxyShareResponse struct {
 
 func (x *SetProxyShareResponse) Reset() {
 	*x = SetProxyShareResponse{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[49]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2315,7 +2259,7 @@ func (x *SetProxyShareResponse) String() string {
 func (*SetProxyShareResponse) ProtoMessage() {}
 
 func (x *SetProxyShareResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[49]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2328,7 +2272,7 @@ func (x *SetProxyShareResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetProxyShareResponse.ProtoReflect.Descriptor instead.
 func (*SetProxyShareResponse) Descriptor() ([]byte, []int) {
-	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{49}
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{47}
 }
 
 var File_app_grpcservice_grpc_proto protoreflect.FileDescriptor
@@ -2381,13 +2325,14 @@ const file_app_grpcservice_grpc_proto_rawDesc = "" +
 	"\x03tag\x18\x01 \x01(\tR\x03tag\x12\x14\n" +
 	"\x05speed\x18\x02 \x01(\x05R\x05speed\"!\n" +
 	"\x1fSetOutboundHandlerSpeedResponse\"\x16\n" +
-	"\x14UserLogStreamRequest\".\n" +
-	"\x14ToggleUserLogRequest\x12\x16\n" +
-	"\x06enable\x18\x01 \x01(\bR\x06enable\"\x17\n" +
-	"\x15ToggleUserLogResponse\"/\n" +
-	"\x15ToggleLogAppIdRequest\x12\x16\n" +
-	"\x06enable\x18\x01 \x01(\bR\x06enable\"\x18\n" +
-	"\x16ToggleLogAppIdResponse\"x\n" +
+	"\x14UserLogStreamRequest\"\x90\x01\n" +
+	"\x17ResetUserLoggingRequest\x12\x16\n" +
+	"\x06enable\x18\x01 \x01(\bR\x06enable\x12\x15\n" +
+	"\x06app_id\x18\x02 \x01(\bR\x05appId\x12\x1f\n" +
+	"\vsession_end\x18\x03 \x01(\bR\n" +
+	"sessionEnd\x12%\n" +
+	"\x0erealtime_usage\x18\x04 \x01(\bR\rrealtimeUsage\"\x1a\n" +
+	"\x18ResetUserLoggingResponse\"x\n" +
 	"\x15ChangeOutboundRequest\x12,\n" +
 	"\bhandlers\x18\x01 \x03(\v2\x10.x.HandlerConfigR\bhandlers\x12\x12\n" +
 	"\x04tags\x18\x02 \x03(\tR\x04tags\x12\x1d\n" +
@@ -2447,7 +2392,7 @@ const file_app_grpcservice_grpc_proto_rawDesc = "" +
 	"listenAddr\x12\x1f\n" +
 	"\vlisten_port\x18\x03 \x01(\rR\n" +
 	"listenPort\"\x17\n" +
-	"\x15SetProxyShareResponse2\x8c\x12\n" +
+	"\x15SetProxyShareResponse2\xb6\x11\n" +
 	"\vGrpcService\x12U\n" +
 	"\vCommunicate\x12!.x.grpcservice.CommunicateRequest\x1a!.x.grpcservice.CommunicateMessage0\x01\x12Q\n" +
 	"\n" +
@@ -2455,9 +2400,8 @@ const file_app_grpcservice_grpc_proto_rawDesc = "" +
 	"\rRemoveInbound\x12#.x.grpcservice.RemoveInboundRequest\x1a$.x.grpcservice.RemoveInboundResponse\x12R\n" +
 	"\x0eGetStatsStream\x12\x1e.x.grpcservice.GetStatsRequest\x1a\x1c.x.grpcservice.StatsResponse\"\x000\x01\x12x\n" +
 	"\x17SetOutboundHandlerSpeed\x12-.x.grpcservice.SetOutboundHandlerSpeedRequest\x1a..x.grpcservice.SetOutboundHandlerSpeedResponse\x12T\n" +
-	"\rUserLogStream\x12#.x.grpcservice.UserLogStreamRequest\x1a\x1c.x.userlogger.UserLogMessage0\x01\x12Z\n" +
-	"\rToggleUserLog\x12#.x.grpcservice.ToggleUserLogRequest\x1a$.x.grpcservice.ToggleUserLogResponse\x12]\n" +
-	"\x0eToggleLogAppId\x12$.x.grpcservice.ToggleLogAppIdRequest\x1a%.x.grpcservice.ToggleLogAppIdResponse\x12]\n" +
+	"\rUserLogStream\x12#.x.grpcservice.UserLogStreamRequest\x1a\x1c.x.userlogger.UserLogMessage0\x01\x12c\n" +
+	"\x10ResetUserLogging\x12&.x.grpcservice.ResetUserLoggingRequest\x1a'.x.grpcservice.ResetUserLoggingResponse\x12]\n" +
 	"\x0eChangeOutbound\x12$.x.grpcservice.ChangeOutboundRequest\x1a%.x.grpcservice.ChangeOutboundResponse\x12`\n" +
 	"\x0fCurrentOutbound\x12%.x.grpcservice.CurrentOutboundRequest\x1a&.x.grpcservice.CurrentOutboundResponse\x12f\n" +
 	"\x11ChangeRoutingMode\x12'.x.grpcservice.ChangeRoutingModeRequest\x1a(.x.grpcservice.ChangeRoutingModeResponse\x12]\n" +
@@ -2488,7 +2432,7 @@ func file_app_grpcservice_grpc_proto_rawDescGZIP() []byte {
 	return file_app_grpcservice_grpc_proto_rawDescData
 }
 
-var file_app_grpcservice_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 50)
+var file_app_grpcservice_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 48)
 var file_app_grpcservice_grpc_proto_goTypes = []any{
 	(*RttTestRequest)(nil),                      // 0: x.grpcservice.RttTestRequest
 	(*RttTestResponse)(nil),                     // 1: x.grpcservice.RttTestResponse
@@ -2509,120 +2453,116 @@ var file_app_grpcservice_grpc_proto_goTypes = []any{
 	(*SetOutboundHandlerSpeedRequest)(nil),      // 16: x.grpcservice.SetOutboundHandlerSpeedRequest
 	(*SetOutboundHandlerSpeedResponse)(nil),     // 17: x.grpcservice.SetOutboundHandlerSpeedResponse
 	(*UserLogStreamRequest)(nil),                // 18: x.grpcservice.UserLogStreamRequest
-	(*ToggleUserLogRequest)(nil),                // 19: x.grpcservice.ToggleUserLogRequest
-	(*ToggleUserLogResponse)(nil),               // 20: x.grpcservice.ToggleUserLogResponse
-	(*ToggleLogAppIdRequest)(nil),               // 21: x.grpcservice.ToggleLogAppIdRequest
-	(*ToggleLogAppIdResponse)(nil),              // 22: x.grpcservice.ToggleLogAppIdResponse
-	(*ChangeOutboundRequest)(nil),               // 23: x.grpcservice.ChangeOutboundRequest
-	(*ChangeOutboundResponse)(nil),              // 24: x.grpcservice.ChangeOutboundResponse
-	(*CurrentOutboundRequest)(nil),              // 25: x.grpcservice.CurrentOutboundRequest
-	(*CurrentOutboundResponse)(nil),             // 26: x.grpcservice.CurrentOutboundResponse
-	(*ChangeRoutingModeRequest)(nil),            // 27: x.grpcservice.ChangeRoutingModeRequest
-	(*ChangeRoutingModeResponse)(nil),           // 28: x.grpcservice.ChangeRoutingModeResponse
-	(*ChangeSelectorRequest)(nil),               // 29: x.grpcservice.ChangeSelectorRequest
-	(*UpdateSelectorBalancerRequest)(nil),       // 30: x.grpcservice.UpdateSelectorBalancerRequest
-	(*UpdateSelectorFilterRequest)(nil),         // 31: x.grpcservice.UpdateSelectorFilterRequest
-	(*ChangeSelectorResponse)(nil),              // 32: x.grpcservice.ChangeSelectorResponse
-	(*HandlerChangeNotify)(nil),                 // 33: x.grpcservice.HandlerChangeNotify
-	(*HandlerChangeNotifyResponse)(nil),         // 34: x.grpcservice.HandlerChangeNotifyResponse
-	(*SwitchFakeDnsRequest)(nil),                // 35: x.grpcservice.SwitchFakeDnsRequest
-	(*SwitchFakeDnsResponse)(nil),               // 36: x.grpcservice.SwitchFakeDnsResponse
-	(*UpdateGeoRequest)(nil),                    // 37: x.grpcservice.UpdateGeoRequest
-	(*UpdateGeoResponse)(nil),                   // 38: x.grpcservice.UpdateGeoResponse
-	(*AddGeoDomainRequest)(nil),                 // 39: x.grpcservice.AddGeoDomainRequest
-	(*RemoveGeoDomainRequest)(nil),              // 40: x.grpcservice.RemoveGeoDomainRequest
-	(*ReplaceDomainSetRequest)(nil),             // 41: x.grpcservice.ReplaceDomainSetRequest
-	(*ReplaceIPSetRequest)(nil),                 // 42: x.grpcservice.ReplaceIPSetRequest
-	(*UpdateRouterRequest)(nil),                 // 43: x.grpcservice.UpdateRouterRequest
-	(*UpdateRouterResponse)(nil),                // 44: x.grpcservice.UpdateRouterResponse
-	(*SetSubscriptionIntervalRequest)(nil),      // 45: x.grpcservice.SetSubscriptionIntervalRequest
-	(*SetSubscriptionIntervalResponse)(nil),     // 46: x.grpcservice.SetSubscriptionIntervalResponse
-	(*SetAutoSubscriptionUpdateRequest)(nil),    // 47: x.grpcservice.SetAutoSubscriptionUpdateRequest
-	(*SetProxyShareRequest)(nil),                // 48: x.grpcservice.SetProxyShareRequest
-	(*SetProxyShareResponse)(nil),               // 49: x.grpcservice.SetProxyShareResponse
-	(*configs.ProxyInboundConfig)(nil),          // 50: x.ProxyInboundConfig
-	(*configs.HandlerConfig)(nil),               // 51: x.HandlerConfig
-	(*configs.RouterConfig)(nil),                // 52: x.RouterConfig
-	(*configs.GeoConfig)(nil),                   // 53: x.GeoConfig
-	(*configs.SelectorConfig)(nil),              // 54: x.SelectorConfig
-	(configs.SelectorConfig_BalanceStrategy)(0), // 55: x.SelectorConfig.BalanceStrategy
-	(*configs.SelectorConfig_Filter)(nil),       // 56: x.SelectorConfig.Filter
-	(*geo.Domain)(nil),                          // 57: x.common.geo.Domain
-	(*configs.AtomicDomainSetConfig)(nil),       // 58: x.AtomicDomainSetConfig
-	(*configs.AtomicIPSetConfig)(nil),           // 59: x.AtomicIPSetConfig
-	(*userlogger.UserLogMessage)(nil),           // 60: x.userlogger.UserLogMessage
+	(*ResetUserLoggingRequest)(nil),             // 19: x.grpcservice.ResetUserLoggingRequest
+	(*ResetUserLoggingResponse)(nil),            // 20: x.grpcservice.ResetUserLoggingResponse
+	(*ChangeOutboundRequest)(nil),               // 21: x.grpcservice.ChangeOutboundRequest
+	(*ChangeOutboundResponse)(nil),              // 22: x.grpcservice.ChangeOutboundResponse
+	(*CurrentOutboundRequest)(nil),              // 23: x.grpcservice.CurrentOutboundRequest
+	(*CurrentOutboundResponse)(nil),             // 24: x.grpcservice.CurrentOutboundResponse
+	(*ChangeRoutingModeRequest)(nil),            // 25: x.grpcservice.ChangeRoutingModeRequest
+	(*ChangeRoutingModeResponse)(nil),           // 26: x.grpcservice.ChangeRoutingModeResponse
+	(*ChangeSelectorRequest)(nil),               // 27: x.grpcservice.ChangeSelectorRequest
+	(*UpdateSelectorBalancerRequest)(nil),       // 28: x.grpcservice.UpdateSelectorBalancerRequest
+	(*UpdateSelectorFilterRequest)(nil),         // 29: x.grpcservice.UpdateSelectorFilterRequest
+	(*ChangeSelectorResponse)(nil),              // 30: x.grpcservice.ChangeSelectorResponse
+	(*HandlerChangeNotify)(nil),                 // 31: x.grpcservice.HandlerChangeNotify
+	(*HandlerChangeNotifyResponse)(nil),         // 32: x.grpcservice.HandlerChangeNotifyResponse
+	(*SwitchFakeDnsRequest)(nil),                // 33: x.grpcservice.SwitchFakeDnsRequest
+	(*SwitchFakeDnsResponse)(nil),               // 34: x.grpcservice.SwitchFakeDnsResponse
+	(*UpdateGeoRequest)(nil),                    // 35: x.grpcservice.UpdateGeoRequest
+	(*UpdateGeoResponse)(nil),                   // 36: x.grpcservice.UpdateGeoResponse
+	(*AddGeoDomainRequest)(nil),                 // 37: x.grpcservice.AddGeoDomainRequest
+	(*RemoveGeoDomainRequest)(nil),              // 38: x.grpcservice.RemoveGeoDomainRequest
+	(*ReplaceDomainSetRequest)(nil),             // 39: x.grpcservice.ReplaceDomainSetRequest
+	(*ReplaceIPSetRequest)(nil),                 // 40: x.grpcservice.ReplaceIPSetRequest
+	(*UpdateRouterRequest)(nil),                 // 41: x.grpcservice.UpdateRouterRequest
+	(*UpdateRouterResponse)(nil),                // 42: x.grpcservice.UpdateRouterResponse
+	(*SetSubscriptionIntervalRequest)(nil),      // 43: x.grpcservice.SetSubscriptionIntervalRequest
+	(*SetSubscriptionIntervalResponse)(nil),     // 44: x.grpcservice.SetSubscriptionIntervalResponse
+	(*SetAutoSubscriptionUpdateRequest)(nil),    // 45: x.grpcservice.SetAutoSubscriptionUpdateRequest
+	(*SetProxyShareRequest)(nil),                // 46: x.grpcservice.SetProxyShareRequest
+	(*SetProxyShareResponse)(nil),               // 47: x.grpcservice.SetProxyShareResponse
+	(*configs.ProxyInboundConfig)(nil),          // 48: x.ProxyInboundConfig
+	(*configs.HandlerConfig)(nil),               // 49: x.HandlerConfig
+	(*configs.RouterConfig)(nil),                // 50: x.RouterConfig
+	(*configs.GeoConfig)(nil),                   // 51: x.GeoConfig
+	(*configs.SelectorConfig)(nil),              // 52: x.SelectorConfig
+	(configs.SelectorConfig_BalanceStrategy)(0), // 53: x.SelectorConfig.BalanceStrategy
+	(*configs.SelectorConfig_Filter)(nil),       // 54: x.SelectorConfig.Filter
+	(*geo.Domain)(nil),                          // 55: x.common.geo.Domain
+	(*configs.AtomicDomainSetConfig)(nil),       // 56: x.AtomicDomainSetConfig
+	(*configs.AtomicIPSetConfig)(nil),           // 57: x.AtomicIPSetConfig
+	(*userlogger.UserLogMessage)(nil),           // 58: x.userlogger.UserLogMessage
 }
 var file_app_grpcservice_grpc_proto_depIdxs = []int32{
 	5,  // 0: x.grpcservice.CommunicateMessage.handler_error:type_name -> x.grpcservice.HandlerError
 	8,  // 1: x.grpcservice.CommunicateMessage.subscription_update:type_name -> x.grpcservice.SubscriptionUpdated
 	6,  // 2: x.grpcservice.CommunicateMessage.handler_being_used:type_name -> x.grpcservice.HandlerBeingUsed
 	7,  // 3: x.grpcservice.CommunicateMessage.handler_updated:type_name -> x.grpcservice.HandlerUpdated
-	50, // 4: x.grpcservice.AddInboundRequest.handler_config:type_name -> x.ProxyInboundConfig
+	48, // 4: x.grpcservice.AddInboundRequest.handler_config:type_name -> x.ProxyInboundConfig
 	13, // 5: x.grpcservice.StatsResponse.stats:type_name -> x.grpcservice.OutboundStats
-	51, // 6: x.grpcservice.ChangeOutboundRequest.handlers:type_name -> x.HandlerConfig
-	52, // 7: x.grpcservice.ChangeRoutingModeRequest.router_config:type_name -> x.RouterConfig
-	53, // 8: x.grpcservice.ChangeRoutingModeRequest.geo_config:type_name -> x.GeoConfig
-	54, // 9: x.grpcservice.ChangeSelectorRequest.selectors_to_add:type_name -> x.SelectorConfig
-	55, // 10: x.grpcservice.UpdateSelectorBalancerRequest.balance_strategy:type_name -> x.SelectorConfig.BalanceStrategy
-	56, // 11: x.grpcservice.UpdateSelectorFilterRequest.filter:type_name -> x.SelectorConfig.Filter
-	53, // 12: x.grpcservice.UpdateGeoRequest.geo:type_name -> x.GeoConfig
-	57, // 13: x.grpcservice.AddGeoDomainRequest.domain:type_name -> x.common.geo.Domain
-	57, // 14: x.grpcservice.RemoveGeoDomainRequest.domain:type_name -> x.common.geo.Domain
-	58, // 15: x.grpcservice.ReplaceDomainSetRequest.set:type_name -> x.AtomicDomainSetConfig
-	59, // 16: x.grpcservice.ReplaceIPSetRequest.set:type_name -> x.AtomicIPSetConfig
-	52, // 17: x.grpcservice.UpdateRouterRequest.router_config:type_name -> x.RouterConfig
+	49, // 6: x.grpcservice.ChangeOutboundRequest.handlers:type_name -> x.HandlerConfig
+	50, // 7: x.grpcservice.ChangeRoutingModeRequest.router_config:type_name -> x.RouterConfig
+	51, // 8: x.grpcservice.ChangeRoutingModeRequest.geo_config:type_name -> x.GeoConfig
+	52, // 9: x.grpcservice.ChangeSelectorRequest.selectors_to_add:type_name -> x.SelectorConfig
+	53, // 10: x.grpcservice.UpdateSelectorBalancerRequest.balance_strategy:type_name -> x.SelectorConfig.BalanceStrategy
+	54, // 11: x.grpcservice.UpdateSelectorFilterRequest.filter:type_name -> x.SelectorConfig.Filter
+	51, // 12: x.grpcservice.UpdateGeoRequest.geo:type_name -> x.GeoConfig
+	55, // 13: x.grpcservice.AddGeoDomainRequest.domain:type_name -> x.common.geo.Domain
+	55, // 14: x.grpcservice.RemoveGeoDomainRequest.domain:type_name -> x.common.geo.Domain
+	56, // 15: x.grpcservice.ReplaceDomainSetRequest.set:type_name -> x.AtomicDomainSetConfig
+	57, // 16: x.grpcservice.ReplaceIPSetRequest.set:type_name -> x.AtomicIPSetConfig
+	50, // 17: x.grpcservice.UpdateRouterRequest.router_config:type_name -> x.RouterConfig
 	3,  // 18: x.grpcservice.GrpcService.Communicate:input_type -> x.grpcservice.CommunicateRequest
 	9,  // 19: x.grpcservice.GrpcService.AddInbound:input_type -> x.grpcservice.AddInboundRequest
 	11, // 20: x.grpcservice.GrpcService.RemoveInbound:input_type -> x.grpcservice.RemoveInboundRequest
 	14, // 21: x.grpcservice.GrpcService.GetStatsStream:input_type -> x.grpcservice.GetStatsRequest
 	16, // 22: x.grpcservice.GrpcService.SetOutboundHandlerSpeed:input_type -> x.grpcservice.SetOutboundHandlerSpeedRequest
 	18, // 23: x.grpcservice.GrpcService.UserLogStream:input_type -> x.grpcservice.UserLogStreamRequest
-	19, // 24: x.grpcservice.GrpcService.ToggleUserLog:input_type -> x.grpcservice.ToggleUserLogRequest
-	21, // 25: x.grpcservice.GrpcService.ToggleLogAppId:input_type -> x.grpcservice.ToggleLogAppIdRequest
-	23, // 26: x.grpcservice.GrpcService.ChangeOutbound:input_type -> x.grpcservice.ChangeOutboundRequest
-	25, // 27: x.grpcservice.GrpcService.CurrentOutbound:input_type -> x.grpcservice.CurrentOutboundRequest
-	27, // 28: x.grpcservice.GrpcService.ChangeRoutingMode:input_type -> x.grpcservice.ChangeRoutingModeRequest
-	29, // 29: x.grpcservice.GrpcService.ChangeSelector:input_type -> x.grpcservice.ChangeSelectorRequest
-	30, // 30: x.grpcservice.GrpcService.UpdateSelectorBalancer:input_type -> x.grpcservice.UpdateSelectorBalancerRequest
-	31, // 31: x.grpcservice.GrpcService.UpdateSelectorFilter:input_type -> x.grpcservice.UpdateSelectorFilterRequest
-	33, // 32: x.grpcservice.GrpcService.NotifyHandlerChange:input_type -> x.grpcservice.HandlerChangeNotify
-	35, // 33: x.grpcservice.GrpcService.SwitchFakeDns:input_type -> x.grpcservice.SwitchFakeDnsRequest
-	37, // 34: x.grpcservice.GrpcService.UpdateGeo:input_type -> x.grpcservice.UpdateGeoRequest
-	39, // 35: x.grpcservice.GrpcService.AddGeoDomain:input_type -> x.grpcservice.AddGeoDomainRequest
-	40, // 36: x.grpcservice.GrpcService.RemoveGeoDomain:input_type -> x.grpcservice.RemoveGeoDomainRequest
-	41, // 37: x.grpcservice.GrpcService.ReplaceGeoDomains:input_type -> x.grpcservice.ReplaceDomainSetRequest
-	42, // 38: x.grpcservice.GrpcService.ReplaceGeoIPs:input_type -> x.grpcservice.ReplaceIPSetRequest
-	43, // 39: x.grpcservice.GrpcService.UpdateRouter:input_type -> x.grpcservice.UpdateRouterRequest
-	45, // 40: x.grpcservice.GrpcService.SetSubscriptionInterval:input_type -> x.grpcservice.SetSubscriptionIntervalRequest
-	47, // 41: x.grpcservice.GrpcService.SetAutoSubscriptionUpdate:input_type -> x.grpcservice.SetAutoSubscriptionUpdateRequest
-	0,  // 42: x.grpcservice.GrpcService.RttTest:input_type -> x.grpcservice.RttTestRequest
-	4,  // 43: x.grpcservice.GrpcService.Communicate:output_type -> x.grpcservice.CommunicateMessage
-	10, // 44: x.grpcservice.GrpcService.AddInbound:output_type -> x.grpcservice.AddInboundResponse
-	12, // 45: x.grpcservice.GrpcService.RemoveInbound:output_type -> x.grpcservice.RemoveInboundResponse
-	15, // 46: x.grpcservice.GrpcService.GetStatsStream:output_type -> x.grpcservice.StatsResponse
-	17, // 47: x.grpcservice.GrpcService.SetOutboundHandlerSpeed:output_type -> x.grpcservice.SetOutboundHandlerSpeedResponse
-	60, // 48: x.grpcservice.GrpcService.UserLogStream:output_type -> x.userlogger.UserLogMessage
-	20, // 49: x.grpcservice.GrpcService.ToggleUserLog:output_type -> x.grpcservice.ToggleUserLogResponse
-	22, // 50: x.grpcservice.GrpcService.ToggleLogAppId:output_type -> x.grpcservice.ToggleLogAppIdResponse
-	24, // 51: x.grpcservice.GrpcService.ChangeOutbound:output_type -> x.grpcservice.ChangeOutboundResponse
-	26, // 52: x.grpcservice.GrpcService.CurrentOutbound:output_type -> x.grpcservice.CurrentOutboundResponse
-	28, // 53: x.grpcservice.GrpcService.ChangeRoutingMode:output_type -> x.grpcservice.ChangeRoutingModeResponse
-	32, // 54: x.grpcservice.GrpcService.ChangeSelector:output_type -> x.grpcservice.ChangeSelectorResponse
-	2,  // 55: x.grpcservice.GrpcService.UpdateSelectorBalancer:output_type -> x.grpcservice.Receipt
-	2,  // 56: x.grpcservice.GrpcService.UpdateSelectorFilter:output_type -> x.grpcservice.Receipt
-	34, // 57: x.grpcservice.GrpcService.NotifyHandlerChange:output_type -> x.grpcservice.HandlerChangeNotifyResponse
-	36, // 58: x.grpcservice.GrpcService.SwitchFakeDns:output_type -> x.grpcservice.SwitchFakeDnsResponse
-	38, // 59: x.grpcservice.GrpcService.UpdateGeo:output_type -> x.grpcservice.UpdateGeoResponse
-	2,  // 60: x.grpcservice.GrpcService.AddGeoDomain:output_type -> x.grpcservice.Receipt
-	2,  // 61: x.grpcservice.GrpcService.RemoveGeoDomain:output_type -> x.grpcservice.Receipt
-	2,  // 62: x.grpcservice.GrpcService.ReplaceGeoDomains:output_type -> x.grpcservice.Receipt
-	2,  // 63: x.grpcservice.GrpcService.ReplaceGeoIPs:output_type -> x.grpcservice.Receipt
-	44, // 64: x.grpcservice.GrpcService.UpdateRouter:output_type -> x.grpcservice.UpdateRouterResponse
-	46, // 65: x.grpcservice.GrpcService.SetSubscriptionInterval:output_type -> x.grpcservice.SetSubscriptionIntervalResponse
-	2,  // 66: x.grpcservice.GrpcService.SetAutoSubscriptionUpdate:output_type -> x.grpcservice.Receipt
-	1,  // 67: x.grpcservice.GrpcService.RttTest:output_type -> x.grpcservice.RttTestResponse
-	43, // [43:68] is the sub-list for method output_type
-	18, // [18:43] is the sub-list for method input_type
+	19, // 24: x.grpcservice.GrpcService.ResetUserLogging:input_type -> x.grpcservice.ResetUserLoggingRequest
+	21, // 25: x.grpcservice.GrpcService.ChangeOutbound:input_type -> x.grpcservice.ChangeOutboundRequest
+	23, // 26: x.grpcservice.GrpcService.CurrentOutbound:input_type -> x.grpcservice.CurrentOutboundRequest
+	25, // 27: x.grpcservice.GrpcService.ChangeRoutingMode:input_type -> x.grpcservice.ChangeRoutingModeRequest
+	27, // 28: x.grpcservice.GrpcService.ChangeSelector:input_type -> x.grpcservice.ChangeSelectorRequest
+	28, // 29: x.grpcservice.GrpcService.UpdateSelectorBalancer:input_type -> x.grpcservice.UpdateSelectorBalancerRequest
+	29, // 30: x.grpcservice.GrpcService.UpdateSelectorFilter:input_type -> x.grpcservice.UpdateSelectorFilterRequest
+	31, // 31: x.grpcservice.GrpcService.NotifyHandlerChange:input_type -> x.grpcservice.HandlerChangeNotify
+	33, // 32: x.grpcservice.GrpcService.SwitchFakeDns:input_type -> x.grpcservice.SwitchFakeDnsRequest
+	35, // 33: x.grpcservice.GrpcService.UpdateGeo:input_type -> x.grpcservice.UpdateGeoRequest
+	37, // 34: x.grpcservice.GrpcService.AddGeoDomain:input_type -> x.grpcservice.AddGeoDomainRequest
+	38, // 35: x.grpcservice.GrpcService.RemoveGeoDomain:input_type -> x.grpcservice.RemoveGeoDomainRequest
+	39, // 36: x.grpcservice.GrpcService.ReplaceGeoDomains:input_type -> x.grpcservice.ReplaceDomainSetRequest
+	40, // 37: x.grpcservice.GrpcService.ReplaceGeoIPs:input_type -> x.grpcservice.ReplaceIPSetRequest
+	41, // 38: x.grpcservice.GrpcService.UpdateRouter:input_type -> x.grpcservice.UpdateRouterRequest
+	43, // 39: x.grpcservice.GrpcService.SetSubscriptionInterval:input_type -> x.grpcservice.SetSubscriptionIntervalRequest
+	45, // 40: x.grpcservice.GrpcService.SetAutoSubscriptionUpdate:input_type -> x.grpcservice.SetAutoSubscriptionUpdateRequest
+	0,  // 41: x.grpcservice.GrpcService.RttTest:input_type -> x.grpcservice.RttTestRequest
+	4,  // 42: x.grpcservice.GrpcService.Communicate:output_type -> x.grpcservice.CommunicateMessage
+	10, // 43: x.grpcservice.GrpcService.AddInbound:output_type -> x.grpcservice.AddInboundResponse
+	12, // 44: x.grpcservice.GrpcService.RemoveInbound:output_type -> x.grpcservice.RemoveInboundResponse
+	15, // 45: x.grpcservice.GrpcService.GetStatsStream:output_type -> x.grpcservice.StatsResponse
+	17, // 46: x.grpcservice.GrpcService.SetOutboundHandlerSpeed:output_type -> x.grpcservice.SetOutboundHandlerSpeedResponse
+	58, // 47: x.grpcservice.GrpcService.UserLogStream:output_type -> x.userlogger.UserLogMessage
+	20, // 48: x.grpcservice.GrpcService.ResetUserLogging:output_type -> x.grpcservice.ResetUserLoggingResponse
+	22, // 49: x.grpcservice.GrpcService.ChangeOutbound:output_type -> x.grpcservice.ChangeOutboundResponse
+	24, // 50: x.grpcservice.GrpcService.CurrentOutbound:output_type -> x.grpcservice.CurrentOutboundResponse
+	26, // 51: x.grpcservice.GrpcService.ChangeRoutingMode:output_type -> x.grpcservice.ChangeRoutingModeResponse
+	30, // 52: x.grpcservice.GrpcService.ChangeSelector:output_type -> x.grpcservice.ChangeSelectorResponse
+	2,  // 53: x.grpcservice.GrpcService.UpdateSelectorBalancer:output_type -> x.grpcservice.Receipt
+	2,  // 54: x.grpcservice.GrpcService.UpdateSelectorFilter:output_type -> x.grpcservice.Receipt
+	32, // 55: x.grpcservice.GrpcService.NotifyHandlerChange:output_type -> x.grpcservice.HandlerChangeNotifyResponse
+	34, // 56: x.grpcservice.GrpcService.SwitchFakeDns:output_type -> x.grpcservice.SwitchFakeDnsResponse
+	36, // 57: x.grpcservice.GrpcService.UpdateGeo:output_type -> x.grpcservice.UpdateGeoResponse
+	2,  // 58: x.grpcservice.GrpcService.AddGeoDomain:output_type -> x.grpcservice.Receipt
+	2,  // 59: x.grpcservice.GrpcService.RemoveGeoDomain:output_type -> x.grpcservice.Receipt
+	2,  // 60: x.grpcservice.GrpcService.ReplaceGeoDomains:output_type -> x.grpcservice.Receipt
+	2,  // 61: x.grpcservice.GrpcService.ReplaceGeoIPs:output_type -> x.grpcservice.Receipt
+	42, // 62: x.grpcservice.GrpcService.UpdateRouter:output_type -> x.grpcservice.UpdateRouterResponse
+	44, // 63: x.grpcservice.GrpcService.SetSubscriptionInterval:output_type -> x.grpcservice.SetSubscriptionIntervalResponse
+	2,  // 64: x.grpcservice.GrpcService.SetAutoSubscriptionUpdate:output_type -> x.grpcservice.Receipt
+	1,  // 65: x.grpcservice.GrpcService.RttTest:output_type -> x.grpcservice.RttTestResponse
+	42, // [42:66] is the sub-list for method output_type
+	18, // [18:42] is the sub-list for method input_type
 	18, // [18:18] is the sub-list for extension type_name
 	18, // [18:18] is the sub-list for extension extendee
 	0,  // [0:18] is the sub-list for field type_name
@@ -2645,7 +2585,7 @@ func file_app_grpcservice_grpc_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_grpcservice_grpc_proto_rawDesc), len(file_app_grpcservice_grpc_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   50,
+			NumMessages:   48,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

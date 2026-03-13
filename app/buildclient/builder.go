@@ -113,6 +113,8 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 	}
 	ul := userlogger.NewUserLogger(config.GetUserLog().GetEnable(),
 		config.GetUserLog().GetLogAppId(), size)
+	ul.SetLogSessionEnd(config.GetUserLog().GetLogSessionEnd())
+	ul.SetLogRealtimeUsage(config.GetUserLog().GetLogRealtimeUsage())
 	x.UserLogger = ul
 	common.Must(builder.addComponent(ul))
 	builder.requireOptionalFeatures(func(ipToDomain *dns.IPToDomain) {
