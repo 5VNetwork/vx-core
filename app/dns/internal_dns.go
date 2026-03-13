@@ -31,6 +31,11 @@ func NewInternalDns(staticDns *StaticDnsServer, DnsServers ...DnsServer) *Intern
 	}
 }
 
+func (d *InternalDns) AddDnsServer(dnsServer DnsServer) {
+	d.DnsServers = append(d.DnsServers, dnsServer)
+	d.DnsServerToIPResolver = NewDnsServerToResolver(d.DnsServers...)
+}
+
 func (d *InternalDns) Start() error {
 	return common.StartAll(d.DnsServers)
 }

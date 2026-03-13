@@ -71,8 +71,8 @@ type DnsConfig struct {
 	EnableFakeDns bool                   `protobuf:"varint,5,opt,name=enable_fake_dns,json=enableFakeDns,proto3" json:"enable_fake_dns,omitempty"`
 	// if not zero, dns responses will be cached for this duration.
 	// if zero, the minimum ttl of all answers will be used.
-	CacheDuration      uint32             `protobuf:"varint,6,opt,name=cache_duration,json=cacheDuration,proto3" json:"cache_duration,omitempty"`
-	InternalDnsServers []*DnsServerConfig `protobuf:"bytes,7,rep,name=internal_dns_servers,json=internalDnsServers,proto3" json:"internal_dns_servers,omitempty"`
+	CacheDuration      uint32   `protobuf:"varint,6,opt,name=cache_duration,json=cacheDuration,proto3" json:"cache_duration,omitempty"`
+	InternalDnsServers []string `protobuf:"bytes,7,rep,name=internal_dns_servers,json=internalDnsServers,proto3" json:"internal_dns_servers,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -149,7 +149,7 @@ func (x *DnsConfig) GetCacheDuration() uint32 {
 	return 0
 }
 
-func (x *DnsConfig) GetInternalDnsServers() []*DnsServerConfig {
+func (x *DnsConfig) GetInternalDnsServers() []string {
 	if x != nil {
 		return x.InternalDnsServers
 	}
@@ -792,7 +792,7 @@ var File_protos_dns_proto protoreflect.FileDescriptor
 
 const file_protos_dns_proto_rawDesc = "" +
 	"\n" +
-	"\x10protos/dns.proto\x12\x01x\x1a\x14common/geo/geo.proto\"\xd0\x02\n" +
+	"\x10protos/dns.proto\x12\x01x\x1a\x14common/geo/geo.proto\"\xbc\x02\n" +
 	"\tDnsConfig\x12#\n" +
 	"\arecords\x18\x01 \x03(\v2\t.x.RecordR\arecords\x12%\n" +
 	"\x0erecord_strings\x18\x02 \x03(\tR\rrecordStrings\x123\n" +
@@ -800,8 +800,8 @@ const file_protos_dns_proto_rawDesc = "" +
 	"dnsServers\x12-\n" +
 	"\tdns_rules\x18\x04 \x03(\v2\x10.x.DnsRuleConfigR\bdnsRules\x12&\n" +
 	"\x0fenable_fake_dns\x18\x05 \x01(\bR\renableFakeDns\x12%\n" +
-	"\x0ecache_duration\x18\x06 \x01(\rR\rcacheDuration\x12D\n" +
-	"\x14internal_dns_servers\x18\a \x03(\v2\x12.x.DnsServerConfigR\x12internalDnsServers\"2\n" +
+	"\x0ecache_duration\x18\x06 \x01(\rR\rcacheDuration\x120\n" +
+	"\x14internal_dns_servers\x18\a \x03(\tR\x12internalDnsServers\"2\n" +
 	"\bDnsRules\x12&\n" +
 	"\x05rules\x18\x01 \x03(\v2\x10.x.DnsRuleConfigR\x05rules\"\xd8\x01\n" +
 	"\rDnsRuleConfig\x12&\n" +
@@ -883,21 +883,20 @@ var file_protos_dns_proto_depIdxs = []int32{
 	9,  // 0: x.DnsConfig.records:type_name -> x.Record
 	4,  // 1: x.DnsConfig.dns_servers:type_name -> x.DnsServerConfig
 	3,  // 2: x.DnsConfig.dns_rules:type_name -> x.DnsRuleConfig
-	4,  // 3: x.DnsConfig.internal_dns_servers:type_name -> x.DnsServerConfig
-	3,  // 4: x.DnsRules.rules:type_name -> x.DnsRuleConfig
-	12, // 5: x.DnsRuleConfig.domains:type_name -> x.common.geo.Domain
-	0,  // 6: x.DnsRuleConfig.included_types:type_name -> x.DnsType
-	5,  // 7: x.DnsServerConfig.plain_dns_server:type_name -> x.PlainDnsServer
-	7,  // 8: x.DnsServerConfig.doh_dns_server:type_name -> x.DohDnsServer
-	8,  // 9: x.DnsServerConfig.quic_dns_server:type_name -> x.QuicDnsServer
-	10, // 10: x.DnsServerConfig.fake_dns_server:type_name -> x.FakeDnsServer
-	6,  // 11: x.DnsServerConfig.tls_dns_server:type_name -> x.TlsDnsServer
-	11, // 12: x.FakeDnsServer.pool_configs:type_name -> x.FakeDnsServer.PoolConfig
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	3,  // 3: x.DnsRules.rules:type_name -> x.DnsRuleConfig
+	12, // 4: x.DnsRuleConfig.domains:type_name -> x.common.geo.Domain
+	0,  // 5: x.DnsRuleConfig.included_types:type_name -> x.DnsType
+	5,  // 6: x.DnsServerConfig.plain_dns_server:type_name -> x.PlainDnsServer
+	7,  // 7: x.DnsServerConfig.doh_dns_server:type_name -> x.DohDnsServer
+	8,  // 8: x.DnsServerConfig.quic_dns_server:type_name -> x.QuicDnsServer
+	10, // 9: x.DnsServerConfig.fake_dns_server:type_name -> x.FakeDnsServer
+	6,  // 10: x.DnsServerConfig.tls_dns_server:type_name -> x.TlsDnsServer
+	11, // 11: x.FakeDnsServer.pool_configs:type_name -> x.FakeDnsServer.PoolConfig
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_protos_dns_proto_init() }
