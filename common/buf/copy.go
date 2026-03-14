@@ -5,67 +5,47 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"sync/atomic"
 	"time"
-
-	"github.com/5vnetwork/vx-core/common/signal"
 )
 
 // Copy dumps all payload from reader to writer or stops when an error occurs or
 // EOF in which case it returns nil. An error is either failure to read or failure to write
-func Copy(reader Reader, writer Writer, options ...CopyOption) error {
-	var setting copySetting
-	for _, option := range options {
-		option(&setting)
-	}
-	if setting.onEnd != nil {
-		defer setting.onEnd()
-	}
-
-	return copyRW(reader, writer, &setting)
+func Copy(reader Reader, writer Writer, datahandlers ...DataHandler) error {
+	return copyRW(reader, writer, datahandlers...)
 }
 
-func transformReadError(err error, setting *copySetting) error {
+func transformReadError(err error) error {
 	if errors.Is(err, io.EOF) {
-		if setting.onEOF != nil {
-			setting.onEOF()
-		}
 		return nil
 	}
 	return ReadError{err}
 }
 
-func copyRW(reader Reader, writer Writer, setting *copySetting) error {
+func copyRW(reader Reader, writer Writer, datahandlers ...DataHandler) error {
 	for {
 		buffer, err := reader.ReadMultiBuffer()
 		if !buffer.IsEmpty() {
-			for _, handler := range setting.dataHandlers {
-				handler(buffer)
+			for _, handler := range datahandlers {
+				handler.HandleData(buffer)
 			}
 			if werr := writer.WriteMultiBuffer(buffer); werr != nil {
 				return WriteError{werr}
 			}
 		}
 		if err != nil {
-			return transformReadError(err, setting)
+			return transformReadError(err)
 		}
 	}
 }
 
-type copySetting struct {
-	dataHandlers []dataHandler //functions to apply to data before writing
-	onEOF        func()
-	onEnd        func()
+type CopySetting struct {
+	DataHandlers []DataHandler //functions to apply to data before writing
+	OnEOF        func()
+	OnEnd        func()
 }
 
-type CopyOption func(*copySetting)
-
-type dataHandler func(MultiBuffer)
-
-func DataHandler(dh dataHandler) CopyOption {
-	return func(handler *copySetting) {
-		handler.dataHandlers = append(handler.dataHandlers, dh)
-	}
+type DataHandler interface {
+	HandleData(MultiBuffer)
 }
 
 // SizeCounter is for counting bytes copied by Copy().
@@ -74,44 +54,40 @@ type SizeCounter struct {
 }
 
 // CountSize is a CopyOption that sums the total size of data copied into the given SizeCounter.
-func CountSize(sc *SizeCounter) CopyOption {
-	return func(handler *copySetting) {
-		handler.dataHandlers = append(handler.dataHandlers, func(b MultiBuffer) {
-			sc.Size += int64(b.Len())
-		})
-	}
+func (sc *SizeCounter) HandleData(mb MultiBuffer) {
+	sc.Size += int64(mb.Len())
 }
 
 // AddToStatCounter a CopyOption add to stat counter
-func AddToStatCounter(sc *atomic.Uint64) CopyOption {
-	return func(handler *copySetting) {
-		handler.dataHandlers = append(handler.dataHandlers, func(b MultiBuffer) {
-			if sc != nil {
-				sc.Add(uint64(b.Len()))
-			}
-		})
-	}
-}
+// func AddToStatCounter(sc *atomic.Uint64) CopyOption {
+// 	return func(handler *CopySetting) {
+// 		handler.DataHandlers = append(handler.DataHandlers, func(b MultiBuffer) {
+// 			if sc != nil {
+// 				sc.Add(uint64(b.Len()))
+// 			}
+// 		})
+// 	}
+// }
 
-func UpdateActivityCopyOption(ac *signal.ActivityChecker) CopyOption {
-	return func(handler *copySetting) {
-		handler.dataHandlers = append(handler.dataHandlers, func(MultiBuffer) {
-			ac.Update()
-		})
-	}
-}
+// func UpdateActivityCopyOption(ac *signal.ActivityChecker) CopyOption {
+// 	return func(handler *CopySetting) {
+// 		handler.DataHandlers = append(handler.DataHandlers, func(MultiBuffer) {
+// 			ac.Update()
+// 		})
+// 	}
+// }
 
-func OnEOFCopyOption(f func()) CopyOption {
-	return func(handler *copySetting) {
-		handler.onEOF = f
-	}
-}
+// func OnEOFCopyOption(f func()) CopyOption {
+// 	return func(handler *CopySetting) {
+// 		handler.OnEOF = f
+// 	}
+// }
 
-func OnEndCopyOption(f func()) CopyOption {
-	return func(handler *copySetting) {
-		handler.onEnd = f
-	}
-}
+// func OnEndCopyOption(f func()) CopyOption {
+// 	return func(handler *CopySetting) {
+// 		handler.OnEnd = f
+// 	}
+// }
 
 type ReadError struct {
 	error
