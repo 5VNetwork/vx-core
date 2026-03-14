@@ -33,11 +33,10 @@ func Relay(ctx context.Context, leftReader buf.Reader, leftWriter buf.Writer,
 				rightWriter.CloseWrite()
 			}
 		} else {
-			err = buf.Copy(leftReader, rightWriter,
-				buf.OnEOFCopyOption(func() {
-					rightWriter.CloseWrite()
-				}),
-			)
+			err = buf.Copy(leftReader, rightWriter)
+			if err == nil {
+				rightWriter.CloseWrite()
+			}
 		}
 		if err != nil {
 			err = errors.NewLeftToRightError(err)
@@ -53,11 +52,10 @@ func Relay(ctx context.Context, leftReader buf.Reader, leftWriter buf.Writer,
 				leftWriter.CloseWrite()
 			}
 		} else {
-			err = buf.Copy(rightReader, leftWriter,
-				buf.OnEOFCopyOption(func() {
-					leftWriter.CloseWrite()
-				}),
-			)
+			err = buf.Copy(rightReader, leftWriter)
+			if err == nil {
+				leftWriter.CloseWrite()
+			}
 		}
 		if err != nil {
 			err = errors.NewRightToLeftError(err)

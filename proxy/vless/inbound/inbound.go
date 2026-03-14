@@ -222,7 +222,7 @@ func (h *Handler) Process(ctx context.Context, conn net.Conn) error {
 			err = encoding.XtlsRead(clientReader, serverWriter, timer, conn, input, rawInput, trafficState, nil, ctx1)
 		} else {
 			// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBuffer
-			err = buf.Copy(clientReader, serverWriter, buf.UpdateActivityCopyOption(timer))
+			err = buf.Copy(clientReader, serverWriter, &vless.ActivityCopyHandler{Timer: timer})
 		}
 
 		if err != nil {
@@ -259,7 +259,7 @@ func (h *Handler) Process(ctx context.Context, conn net.Conn) error {
 			err = encoding.XtlsWrite(serverReader, clientWriter, timer, conn, trafficState, nil, ctx)
 		} else {
 			// from serverReader.ReadMultiBuffer to clientWriter.WriteMultiBuffer
-			err = buf.Copy(serverReader, clientWriter, buf.UpdateActivityCopyOption(timer))
+			err = buf.Copy(serverReader, clientWriter, &vless.ActivityCopyHandler{Timer: timer})
 		}
 		if err != nil {
 			return errors.New("failed to transfer response payload").Base(err)

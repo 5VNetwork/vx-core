@@ -517,8 +517,27 @@ func CopyRawConnIfExist(ctx context.Context, readerConn net.Conn, writerConn net
 }
 
 func readV(ctx context.Context, reader buf.Reader, writer buf.Writer, timer *signal.ActivityChecker, readCounter *atomic.Uint64) error {
-	if err := buf.Copy(reader, writer, buf.UpdateActivityCopyOption(timer), buf.AddToStatCounter(readCounter)); err != nil {
+	if err := buf.Copy(reader, writer, &ActivityCopyHandler{timer}, &CounterCopyHandler{readCounter}); err != nil {
 		return fmt.Errorf("failed to copy, %w", err)
 	}
 	return nil
+}
+
+type ActivityCopyHandler struct {
+	Timer *signal.ActivityChecker
+}
+
+func (h *ActivityCopyHandler) HandleData(mb buf.MultiBuffer) {
+	h.Timer.Update()
+}
+
+type CounterCopyHandler struct {
+	counter *atomic.Uint64
+}
+
+func (h *CounterCopyHandler) HandleData(mb buf.MultiBuffer) {
+	if h.counter == nil {
+		return
+	}
+	h.counter.Add(uint64(mb.Len()))
 }

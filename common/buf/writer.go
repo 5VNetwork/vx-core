@@ -77,7 +77,7 @@ func (w *BufferToBytesWriter) WriteMultiBuffer(mb MultiBuffer) error {
 // ReadFrom implements io.ReaderFrom.
 func (w *BufferToBytesWriter) ReadFrom(reader io.Reader) (int64, error) {
 	var sc SizeCounter
-	err := Copy(NewReader(reader), w, CountSize(&sc))
+	err := Copy(NewReader(reader), w, &sc)
 	return sc.Size, err
 }
 
@@ -238,7 +238,7 @@ func (w *BufferedWriter) ReadFrom(reader io.Reader) (int64, error) {
 	}
 
 	var sc SizeCounter
-	err := Copy(NewReader(reader), w, CountSize(&sc))
+	err := Copy(NewReader(reader), w, &sc)
 	return sc.Size, err
 }
 

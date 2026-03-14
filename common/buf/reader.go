@@ -137,7 +137,7 @@ func (r *BufferedReader) writeToInternal(writer io.Writer) (int64, error) {
 		r.Buffer = nil
 	}
 
-	err := Copy(r.Reader, mbWriter, CountSize(&sc))
+	err := Copy(r.Reader, mbWriter, &sc)
 	return sc.Size, err
 }
 

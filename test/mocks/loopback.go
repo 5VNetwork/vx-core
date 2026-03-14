@@ -17,13 +17,11 @@ func NewLoopbackHandler() *LoopbackHandler {
 }
 
 func (p *LoopbackHandler) HandleFlow(ctx context.Context, dst net.Destination, rw buf.ReaderWriter) error {
-	err := buf.Copy(rw, rw, buf.OnEOFCopyOption(func() {
-		rw.CloseWrite()
-	}))
+	err := buf.Copy(rw, rw)
 	if err != nil {
 		return fmt.Errorf("failed to copy data: %w", err)
 	}
-	return nil
+	return rw.CloseWrite()
 }
 
 func (p *LoopbackHandler) HandlePacketConn(ctx context.Context, dst net.Destination, conn udp.PacketReaderWriter) error {
