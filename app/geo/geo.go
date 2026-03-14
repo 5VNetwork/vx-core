@@ -4,6 +4,7 @@
 package geo
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"runtime"
@@ -54,33 +55,27 @@ func (g *GeoWrapper) AddIPSet(name string, set i.IPSet) {
 	g.geo.IpSets[name] = set
 }
 
-func (g *GeoWrapper) MatchDomain(domain string, tag string) bool {
+func (g *GeoWrapper) MatchDomain(domain string, tag string) (bool, error) {
 	g.RLock()
 	defer g.RUnlock()
-	if g.geo == nil {
-		return false
-	}
-	matched := g.geo.MatchDomain(domain, tag)
+
+	matched, err := g.geo.MatchDomain(domain, tag)
 	log.Debug().Str("domain", domain).Str("tag", tag).Bool("matched", matched).Msg("geo match domain")
-	return matched
+	return matched, err
 }
 
-func (g *GeoWrapper) MatchAppId(appId string, tag string) bool {
+func (g *GeoWrapper) MatchAppId(appId string, tag string) (bool, error) {
 	g.RLock()
 	defer g.RUnlock()
-	if g.geo == nil {
-		return false
-	}
 	return g.geo.MatchAppId(appId, tag)
 }
 
-func (g *GeoWrapper) MatchIP(ip net.IP, tag string) bool {
+func (g *GeoWrapper) MatchIP(ip net.IP, tag string) (bool, error) {
 	g.RLock()
 	defer g.RUnlock()
-	if g.geo == nil {
-		return false
-	}
-	return g.geo.MatchIP(ip, tag)
+	matched, err := g.geo.MatchIP(ip, tag)
+	log.Debug().IPAddr("ip", ip).Str("tag", tag).Bool("matched", matched).Msg("geo match ip")
+	return matched, err
 }
 
 type Geo struct {
@@ -129,36 +124,37 @@ func (g *Geo) RemoveDomain(name string, domain *cgeo.Domain) error {
 	return nil
 }
 
-func (g *Geo) MatchDomain(domain string, tag string) bool {
+func (g *Geo) MatchDomain(domain string, tag string) (bool, error) {
 	if m, found := g.DomainSets[tag]; found {
-		return m.Match(domain)
+		return m.Match(domain), nil
 	}
 	// if its opposite is known
 	if opposite, found := g.OppositeDomainTags[tag]; found {
 		if m, found := g.DomainSets[opposite]; found {
-			return !m.Match(domain)
+			return !m.Match(domain), nil
 		}
 	}
-	return false
+	return false, ErrSetNotFound
 }
 
-func (g *Geo) MatchIP(ip net.IP, tag string) bool {
+func (g *Geo) MatchIP(ip net.IP, tag string) (bool, error) {
 	if m, found := g.IpSets[tag]; found {
-		return m.Match(ip)
+		return m.Match(ip), nil
 	}
 	// if its opposite is known
 	if oTag, found := g.OppositeIpTags[tag]; found {
 		if m, found := g.IpSets[oTag]; found {
-			return !m.Match(ip)
+			return !m.Match(ip), nil
 		}
 	}
-	// log.Warn().Str("tag", tag).Msg("ip matcher not found")
-	return false
+	return false, ErrSetNotFound
 }
 
-func (g *Geo) MatchAppId(appId string, tag string) bool {
+func (g *Geo) MatchAppId(appId string, tag string) (bool, error) {
 	if m, found := g.AppSets[tag]; found {
-		return m.Match(appId)
+		return m.Match(appId), nil
 	}
-	return false
+	return false, ErrSetNotFound
 }
+
+var ErrSetNotFound = errors.New("set not found")

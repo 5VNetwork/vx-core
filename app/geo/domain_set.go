@@ -97,14 +97,14 @@ func NewGreatDomainSet(im []string, es []string, geo i.GeoHelper) *GreatDomainSe
 func (d *GreatDomainSet) Match(domain string) bool {
 	if d.exMacthers != nil {
 		for _, m := range d.exMacthers {
-			if d.geo.MatchDomain(domain, m) {
+			if matched, _ := d.geo.MatchDomain(domain, m); matched {
 				return false
 			}
 		}
 	}
 	if d.inMacthers != nil {
 		for _, m := range d.inMacthers {
-			if d.geo.MatchDomain(domain, m) {
+			if matched, _ := d.geo.MatchDomain(domain, m); matched {
 				return true
 			}
 		}
@@ -151,7 +151,7 @@ func (d *DomainSet) Match(domain string) bool {
 	}
 	if d.h != nil {
 		for _, tag := range d.tags {
-			if d.h.MatchDomain(domain, tag) {
+			if matched, _ := d.h.MatchDomain(domain, tag); matched {
 				return true
 			}
 		}

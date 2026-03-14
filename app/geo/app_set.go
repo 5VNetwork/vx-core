@@ -56,7 +56,7 @@ func (a *AppSet) Match(appId string) bool {
 	}
 	if a.h != nil {
 		for _, tag := range a.tags {
-			if a.h.MatchAppId(appId, tag) {
+			if matched, _ := a.h.MatchAppId(appId, tag); matched {
 				return true
 			}
 		}

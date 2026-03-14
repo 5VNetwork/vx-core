@@ -69,7 +69,7 @@ func (i *IpSet) Match(ip net.IP) bool {
 	}
 	if i.h != nil {
 		for _, tag := range i.tags {
-			if i.h.MatchIP(ip, tag) {
+			if matched, _ := i.h.MatchIP(ip, tag); matched {
 				return true
 			}
 		}

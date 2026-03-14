@@ -71,10 +71,11 @@ type HandlerWith6Info interface {
 	Support6() bool
 }
 
+// the only error would be returned is ErrSetNotFound
 type GeoHelper interface {
-	MatchDomain(domain string, tag string) bool
-	MatchIP(ip net.IP, tag string) bool
-	MatchAppId(appId string, tag string) bool
+	MatchDomain(domain string, tag string) (bool, error)
+	MatchIP(ip net.IP, tag string) (bool, error)
+	MatchAppId(appId string, tag string) (bool, error)
 }
 
 type TimeoutSetting interface {
