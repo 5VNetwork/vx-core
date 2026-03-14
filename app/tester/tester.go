@@ -42,7 +42,9 @@ func (t *Tester) TestPing(ctx context.Context, h i.Outbound) int {
 		log.Debug().Err(err).Str("handler", h.Tag()).Msg("ping test func error")
 		ping = -1
 	}
-	t.ResultReporter.PingResult(h.Tag(), ping)
+	if t.ResultReporter != nil {
+		t.ResultReporter.PingResult(h.Tag(), ping)
+	}
 	return ping
 }
 
@@ -51,7 +53,9 @@ func (t *Tester) TestIPv6(ctx context.Context, h i.Outbound) bool {
 	if err != nil {
 		log.Debug().Err(err).Str("handler", h.Tag()).Msg("ipv6 test func error")
 	}
-	t.ResultReporter.IPv6Result(h.Tag(), yes)
+	if t.ResultReporter != nil {
+		t.ResultReporter.IPv6Result(h.Tag(), yes)
+	}
 	log.Debug().Bool("yes", yes).Str("handler", h.Tag()).Msg("ipv6 test done")
 	return yes
 }
@@ -77,7 +81,9 @@ func (t *Tester) TestSpeed(ctx context.Context, h i.Outbound, rtry bool) int64 {
 		speed = -1
 	}
 
-	t.ResultReporter.SpeedResult(h.Tag(), speed)
+	if t.ResultReporter != nil {
+		t.ResultReporter.SpeedResult(h.Tag(), speed)
+	}
 	return speed
 }
 
@@ -115,7 +121,9 @@ func (t *Tester) TestUsable(ctx context.Context, h i.Outbound, retry bool) bool 
 		time.Sleep(time.Millisecond * 1000)
 	}
 
-	t.ResultReporter.UsableResult(h.Tag(), ok)
+	if t.ResultReporter != nil {
+		t.ResultReporter.UsableResult(h.Tag(), ok)
+	}
 
 	// Update result and signal completion
 	result.result = ok

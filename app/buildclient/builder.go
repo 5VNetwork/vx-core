@@ -262,7 +262,7 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 	if err := builder.addComponent(t); err != nil {
 		return nil, fmt.Errorf("failed to add tester: %w", err)
 	}
-	if err := builder.requireFeature(func(reporter tester.ResultReporter) {
+	if err := builder.requireOptionalFeatures(func(reporter tester.ResultReporter) {
 		t.ResultReporter = reporter
 	}); err != nil {
 		return nil, fmt.Errorf("failed to set result reporter: %w", err)
