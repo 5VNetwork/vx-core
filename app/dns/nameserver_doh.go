@@ -1,6 +1,3 @@
-// Copyright 2025 5V Network LLC
-// SPDX-License-Identifier: AGPL-3.0
-
 package dns
 
 import (
@@ -34,7 +31,7 @@ type DoHNameServer struct {
 	dohURL     string
 	name       string
 	clientIp   net.IP
-
+	rewriter   MsgRewriter
 	ipToDomain *IPToDomain
 }
 
@@ -46,6 +43,7 @@ type DoHNameServerOption struct {
 	IpToDomain *IPToDomain
 	Tls        *tls.Config
 	RrCache    *rrCache
+	Rewriter   MsgRewriter
 }
 
 // NewDoHNameServer creates DOH server object for remote resolving.
@@ -60,6 +58,7 @@ func NewDoHNameServer(option DoHNameServerOption) (*DoHNameServer, error) {
 		dohURL:   option.Url,
 		cache:    rrCache,
 		clientIp: option.ClientIP,
+		rewriter: option.Rewriter,
 	}
 
 	// Dispatched connection will be closed (interrupted) after each request
@@ -182,11 +181,15 @@ func (d *DoHNameServer) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool)
 		Dur("time", time.Since(startTime)).
 		Str("type", dns.TypeToString[msg.Question[0].Qtype]).
 		Any("reply", rply).Msg("doh reply")
+	d.cache.Set(rply)
+
+	if d.rewriter != nil {
+		rply = d.rewriter.Rewrite(rply)
+	}
 
 	if d.ipToDomain != nil {
-		d.ipToDomain.SetDomain(msg, net.ParseAddress(d.dohURL))
+		d.ipToDomain.SetDomain(rply, net.ParseAddress(d.dohURL))
 	}
-	d.cache.Set(rply)
 
 	return rply, nil
 }

@@ -295,6 +295,8 @@ type DnsServerConfig struct {
 	// if not zero, dns responses will be cached for this duration.
 	// if zero, the minimum ttl of all answers will be used.
 	CacheDuration uint32 `protobuf:"varint,12,opt,name=cache_duration,json=cacheDuration,proto3" json:"cache_duration,omitempty"`
+	// the result should in these ip sets
+	IpTags        []string `protobuf:"bytes,13,rep,name=ip_tags,json=ipTags,proto3" json:"ip_tags,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -400,6 +402,13 @@ func (x *DnsServerConfig) GetCacheDuration() uint32 {
 		return x.CacheDuration
 	}
 	return 0
+}
+
+func (x *DnsServerConfig) GetIpTags() []string {
+	if x != nil {
+		return x.IpTags
+	}
+	return nil
 }
 
 type isDnsServerConfig_Type interface {
@@ -812,7 +821,7 @@ const file_protos_dns_proto_rawDesc = "" +
 	"domainTags\x121\n" +
 	"\x0eincluded_types\x18\f \x03(\x0e2\n" +
 	".x.DnsTypeR\rincludedTypes\x12\x1b\n" +
-	"\trule_name\x18\x14 \x01(\tR\bruleName\"\x9a\x03\n" +
+	"\trule_name\x18\x14 \x01(\tR\bruleName\"\xb3\x03\n" +
 	"\x0fDnsServerConfig\x12=\n" +
 	"\x10plain_dns_server\x18\x01 \x01(\v2\x11.x.PlainDnsServerH\x00R\x0eplainDnsServer\x127\n" +
 	"\x0edoh_dns_server\x18\x02 \x01(\v2\x0f.x.DohDnsServerH\x00R\fdohDnsServer\x12:\n" +
@@ -822,7 +831,8 @@ const file_protos_dns_proto_rawDesc = "" +
 	"\x04name\x18\n" +
 	" \x01(\tR\x04name\x12\x1b\n" +
 	"\tclient_ip\x18\v \x01(\tR\bclientIp\x12%\n" +
-	"\x0ecache_duration\x18\f \x01(\rR\rcacheDurationB\x06\n" +
+	"\x0ecache_duration\x18\f \x01(\rR\rcacheDuration\x12\x17\n" +
+	"\aip_tags\x18\r \x03(\tR\x06ipTagsB\x06\n" +
 	"\x04type\"V\n" +
 	"\x0ePlainDnsServer\x12\x1c\n" +
 	"\taddresses\x18\x02 \x03(\tR\taddresses\x12&\n" +

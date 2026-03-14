@@ -80,9 +80,10 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 			// dns
 			var dnsServers []idns.DnsServer
 			var dnsRules []*idns.DnsRule
+			internalDnsServers := make(map[string]idns.DnsServer)
 			for _, dsConfig := range config.Dns.DnsServers {
 				ds, err := newDnsServer(dsConfig, h, ipToDomain, fc, client, dailer,
-					internalDns, config.Dns.CacheDuration)
+					internalDns, config.Dns.CacheDuration, gh)
 				if err != nil {
 					return err
 				}
@@ -98,8 +99,15 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 				}
 				for _, internalDnsServer := range config.Dns.InternalDnsServers {
 					if internalDnsServer == dsConfig.Name {
-						internalDns.AddDnsServer(ds)
+						internalDnsServers[internalDnsServer] = ds
 					}
+				}
+			}
+			for _, internalDnsServer := range config.Dns.InternalDnsServers {
+				if ds, ok := internalDnsServers[internalDnsServer]; ok {
+					internalDns.AddDnsServer(ds)
+				} else {
+					return fmt.Errorf("internal dns server %s not found", internalDnsServer)
 				}
 			}
 			dns := idns.NewDns(staticDnsServer, dnsRules, dnsServers)
@@ -118,22 +126,33 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 			return err
 		}
 	} else {
-		fc.requireFeature(func(internalDns *idns.InternalDns) {
-			client.Dns = idns.NewDns(staticDnsServer, nil, nil)
-			common.Must(fc.addComponent(client.Dns))
-			client.IPResolverForRequestAddress = internalDns
-		})
+		client.Dns = idns.NewDns(staticDnsServer, nil, nil)
+		common.Must(fc.addComponent(client.Dns))
+		common.Must(fc.addComponent(&dns.DnsResolver{}))
+		client.IPResolverForRequestAddress = &dns.DnsResolver{}
+		client.IPResolver = &dns.DnsResolver{}
+		client.EchResolver = dns.DefaultCfResolver()
 	}
 
 	return nil
 }
 func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain *idns.IPToDomain,
-	fc *Builder, client *client.Client, dailer i.Dialer, ipResolver i.IPResolver, globalDuration uint32) (idns.DnsServer, error) {
+	fc *Builder, client *client.Client, dailer i.Dialer, ipResolver i.IPResolver,
+	globalDuration uint32, gh i.GeoHelper) (idns.DnsServer, error) {
 	duration := config.CacheDuration
 	if duration == 0 {
 		duration = globalDuration
 	}
 	rrCache := idns.NewRrCache(idns.RrCacheSetting{Duration: duration})
+
+	var dnsRewriter idns.MsgRewriter
+	if len(config.IpTags) > 0 {
+		ipSet, err := geo.NewIPSet(config.IpTags, gh)
+		if err != nil {
+			return nil, err
+		}
+		dnsRewriter = idns.NewMsgRewriter(idns.MsgRewriterOption{IPSet: ipSet})
+	}
 
 	switch c := config.Type.(type) {
 	case *configs.DnsServerConfig_DohDnsServer:
@@ -144,6 +163,7 @@ func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain
 			IpToDomain: ipToDomain,
 			RrCache:    rrCache,
 			ClientIP:   net.ParseIP(config.ClientIp),
+			Rewriter:   dnsRewriter,
 		})
 	case *configs.DnsServerConfig_FakeDnsServer:
 		pools, err := idns.NewPools(c.FakeDnsServer.GetPoolConfigs())
@@ -175,6 +195,7 @@ func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain
 			ClientIp:        net.ParseIP(config.ClientIp),
 			Dispatcher:      dis,
 			RrCache:         rrCache,
+			Rewriter:        dnsRewriter,
 		})
 		if c.PlainDnsServer.UseDefaultDns {
 			fc.requireFeature(func(info i.DefaultInterfaceInfo) {
@@ -209,6 +230,7 @@ func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain
 			NameserverAddrs: addressPorts,
 			RrCache:         rrCache,
 			ClientIp:        net.ParseIP(config.ClientIp),
+			Rewriter:        dnsRewriter,
 		}), nil
 	case *configs.DnsServerConfig_QuicDnsServer:
 		dst, _ := mynet.ParseDestination(c.QuicDnsServer.Address)
@@ -221,6 +243,7 @@ func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain
 			IPResolver:  ipResolver,
 			ClientIp:    net.ParseIP(config.ClientIp),
 			RrCache:     rrCache,
+			Rewriter:    dnsRewriter,
 		})
 	default:
 		return nil, fmt.Errorf("unsupported DNS server type: %s", config.Type)

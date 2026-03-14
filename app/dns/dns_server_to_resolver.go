@@ -51,6 +51,10 @@ func (d *DnsServerToResolver) LookupIP(ctx context.Context, host string) ([]net.
 	return append(ipv4s, ipv6s...), nil
 }
 
+func (d *DnsServerToResolver) LookupIPSpeed(ctx context.Context, host string) ([]net.IP, error) {
+	return d.LookupIP(ctx, host)
+}
+
 func (d *DnsServerToResolver) LookupIPPrefer4(ctx context.Context, host string) ([]net.IP, error) {
 	ips, err := d.LookupIPv4(ctx, host)
 	if err != nil {

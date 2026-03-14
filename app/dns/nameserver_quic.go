@@ -1,6 +1,3 @@
-// Copyright 2025 5V Network LLC
-// SPDX-License-Identifier: AGPL-3.0
-
 package dns
 
 import (
@@ -32,12 +29,12 @@ const handshakeIdleTimeout = time.Second * 8
 // QUICNameServer implemented DNS over QUIC
 type QUICNameServer struct {
 	sync.RWMutex
-	cache       *rrCache
-	name        string
-	destination net.Destination
-	connection  *quic.Conn
-	clientIp    net.IP
-
+	cache         *rrCache
+	name          string
+	destination   net.Destination
+	connection    *quic.Conn
+	clientIp      net.IP
+	rewriter      MsgRewriter
 	packetHandler i.PacketHandler
 	ipToDomain    *IPToDomain
 	ipResolver    i.IPResolver
@@ -51,6 +48,7 @@ type QuicNameServerOption struct {
 	IpToDomain  *IPToDomain
 	IPResolver  i.IPResolver
 	RrCache     *rrCache
+	Rewriter    MsgRewriter
 }
 
 // NewQUICNameServer creates DNS-over-QUIC client object for local resolving
@@ -67,6 +65,7 @@ func NewQUICNameServer(option QuicNameServerOption) (*QUICNameServer, error) {
 		ipToDomain:    option.IpToDomain,
 		ipResolver:    option.IPResolver,
 		clientIp:      option.ClientIp,
+		rewriter:      option.Rewriter,
 	}
 
 	return s, nil
@@ -83,23 +82,6 @@ func (s *QUICNameServer) Close() error {
 func (s *QUICNameServer) Name() string {
 	return s.name
 }
-
-// func (d *QUICNameServer) GetResolver(domain string, ip net.Address) (string, bool) {
-// 	q := dns.Question{
-// 		Name:   dns.Fqdn(domain),
-// 		Qclass: dns.ClassINET,
-// 	}
-// 	if ip.Family().IsIPv4() {
-// 		q.Qtype = dns.TypeA
-// 	} else {
-// 		q.Qtype = dns.TypeAAAA
-// 	}
-// 	entry, ok := d.cache.cache[q]
-// 	if ok {
-// 		return entry.resolver, true
-// 	}
-// 	return "", false
-// }
 
 // QueryIP is called from dns.Server->queryIPTimeout
 func (s *QUICNameServer) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool) (*dns.Msg, error) {
@@ -173,8 +155,13 @@ func (s *QUICNameServer) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool
 	if s.cache != nil {
 		s.cache.Set(rply)
 	}
+
+	if s.rewriter != nil {
+		rply = s.rewriter.Rewrite(rply)
+	}
+
 	if s.ipToDomain != nil {
-		s.ipToDomain.SetDomain(msg, s.destination.Address)
+		s.ipToDomain.SetDomain(rply, s.destination.Address)
 	}
 	return rply, nil
 }

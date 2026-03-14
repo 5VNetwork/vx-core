@@ -21,6 +21,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/net/udp"
 	"github.com/5vnetwork/vx-core/common/serial"
+	"github.com/5vnetwork/vx-core/common/session"
 	"github.com/5vnetwork/vx-core/i"
 
 	"github.com/miekg/dns"
@@ -43,8 +44,6 @@ type DnsServerConcurrent struct {
 	idLock sync.RWMutex
 	nextId uint16
 
-	// dispatcher                   atomic.Value
-	// periodicallyUpdateDispatcher *task.Periodic
 	handler    atomic.Value //i.FlowHandler
 	dispatcher packetDispatcher
 
@@ -57,6 +56,7 @@ type DnsServerConcurrent struct {
 	tcpWaiting     map[uint16]*request
 
 	clientIp net.IP
+	rewriter MsgRewriter
 
 	startOnce sync.Once
 	closeOnce sync.Once
@@ -77,6 +77,7 @@ type DnsServerConcurrentOption struct {
 	ClientIp        net.IP
 	Dispatcher      packetDispatcher
 	RrCache         *rrCache
+	Rewriter        MsgRewriter
 }
 
 func NewDnsServerConcurrent(opts DnsServerConcurrentOption) *DnsServerConcurrent {
@@ -92,6 +93,7 @@ func NewDnsServerConcurrent(opts DnsServerConcurrentOption) *DnsServerConcurrent
 		ipToDomain: opts.IPToDomain,
 		useTls:     opts.Tls,
 		clientIp:   opts.ClientIp,
+		rewriter:   opts.Rewriter,
 		nextId:     1,
 		dispatcher: opts.Dispatcher,
 	}
@@ -282,6 +284,9 @@ func (ns *DnsServerConcurrent) HandleQuery(ctx context.Context, msg *dns.Msg, tc
 		if tcp || ns.useTls {
 			reply.Msg.Id = oldId
 		}
+		if ns.rewriter != nil {
+			reply.Msg = ns.rewriter.Rewrite(reply.Msg)
+		}
 		return reply.Msg, nil
 	}
 }
@@ -328,11 +333,13 @@ type t2 struct {
 }
 
 func (t2 *t2) recreateConn(dest net.Destination, w *DnsServerConcurrent) error {
+	id := rand.Uint32()
 	ctx := log.Logger.With().
-		Uint32("conn_id", rand.Uint32()).
+		Uint32("conn_id", id).
 		Str("name", w.tag).
 		Logger().WithContext(context.Background())
 	ctx = inbound.ContextWithInboundTag(ctx, w.tag)
+	ctx = session.ContextWithID(ctx, id)
 	conn, err := (&util.FlowHandlerToDialer{
 		FlowHandler: w.handler.Load().(i.Handler),
 	}).Dial(ctx, dest)
@@ -445,6 +452,9 @@ func (w *DnsServerConcurrent) handleTcpReply(ctx context.Context, t2 *t2,
 		}
 		w.tcpWaitingLock.Unlock()
 		if !ok {
+			if w.rewriter != nil {
+				msg = w.rewriter.Rewrite(msg)
+			}
 			w.dnsConnImpl.handlerReply(msg)
 		}
 		if w.ipToDomain != nil {
@@ -482,6 +492,9 @@ func (w *DnsServerConcurrent) handleReply(b *udp.Packet) {
 	}
 	w.udpWaitingLock.Unlock()
 	if !ok {
+		if w.rewriter != nil {
+			msg = w.rewriter.Rewrite(msg)
+		}
 		w.dnsConnImpl.handlerReply(msg)
 	}
 	if w.ipToDomain != nil {

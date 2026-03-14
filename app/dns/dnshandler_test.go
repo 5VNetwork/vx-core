@@ -15,6 +15,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/common"
 
+	"github.com/5vnetwork/vx-core/common/geo"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/test/nameserver"
@@ -82,7 +83,22 @@ func TestDNSUDPTunnel(t *testing.T) {
 							Addresses: []string{"127.0.0.1:" + common.Uint16ToString(port)},
 						},
 					},
-					Name: "dns",
+					IpTags: []string{"!private"},
+					Name:   "dns",
+				},
+			},
+		},
+		Geo: &configs.GeoConfig{
+			AtomicIpSets: []*configs.AtomicIPSetConfig{
+				{
+					Name: "!private",
+					Cidrs: []*geo.CIDR{
+						{
+							Prefix: 24,
+							Ip:     net.IP{127, 0, 0, 1},
+						},
+					},
+					Inverse: true,
 				},
 			},
 		},

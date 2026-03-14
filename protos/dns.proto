@@ -51,6 +51,8 @@ message DnsServerConfig {
   // if not zero, dns responses will be cached for this duration.
   // if zero, the minimum ttl of all answers will be used.
   uint32 cache_duration = 12;
+  // the result should in these ip sets
+  repeated string ip_tags = 13;
 }
 
 message PlainDnsServer {
