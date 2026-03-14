@@ -45,6 +45,7 @@ message TmConfig {
   reserved 34;
   x.UserLoggerConfig user_log = 35;
   x.GrpcServiceConfig grpc_service = 36;
+  x.FallbackMonConfig fallback_mon = 37;
 }
 
 
@@ -62,4 +63,8 @@ message SubscriptionConfig {
   uint32 last_update_time = 21;
   uint32 interval = 22;
   bool periodic_update = 23;
+}
+
+message FallbackMonConfig {
+  string domain_set_name = 1;
 }

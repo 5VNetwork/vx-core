@@ -1922,6 +1922,15 @@ func (mr *MockIPResolverMockRecorder) LookupIPv4(ctx, domain interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupIPv4", reflect.TypeOf((*MockIPResolver)(nil).LookupIPv4), ctx, domain)
 }
 
+// LookupIPSpeed mocks base method.
+func (m *MockIPResolver) LookupIPSpeed(ctx context.Context, domain string) ([]net.IP, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LookupIPSpeed", ctx, domain)
+	ret0, _ := ret[0].([]net.IP)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
 // LookupIPv6 mocks base method.
 func (m *MockIPResolver) LookupIPv6(ctx context.Context, domain string) ([]net.IP, error) {
 	m.ctrl.T.Helper()

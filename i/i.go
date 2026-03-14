@@ -50,7 +50,8 @@ type ReadDeadline interface {
 }
 
 type ProxyDialer interface {
-	ProxyDial(ctx context.Context, dst net.Destination, initialData buf.MultiBuffer) (FlowConn, error)
+	ProxyDial(ctx context.Context, dst net.Destination,
+		initialData buf.MultiBuffer) (FlowConn, error)
 }
 type ProxyPacketListener interface {
 	// dst is the destination of the initial udp packet
@@ -188,6 +189,7 @@ type IPResolver interface {
 	LookupIP(ctx context.Context, domain string) ([]net.IP, error)
 	LookupIPv4(ctx context.Context, domain string) ([]net.IP, error)
 	LookupIPv6(ctx context.Context, domain string) ([]net.IP, error)
+	LookupIPSpeed(ctx context.Context, domain string) ([]net.IP, error)
 }
 
 type ECHResolver interface {
@@ -217,7 +219,13 @@ type OutboundManager interface {
 type Router interface {
 	PickHandler(ctx context.Context, si *session.Info) (Outbound, error)
 	// rw is either a buf.ReaderWriter or a udp.PacketConn
-	PickHandlerWithData(ctx context.Context, si *session.Info, rw interface{}) (interface{}, Outbound, error)
+	PickHandlerWithData(ctx context.Context, si *session.Info,
+		rw interface{}) (retRw interface{}, handler Outbound, retries []Fallback, err error)
+}
+
+type Fallback interface {
+	// handler might be nil, si might be changed
+	GetHandler(ctx context.Context, si *session.Info) (handler Outbound)
 }
 
 type IpToDomain interface {

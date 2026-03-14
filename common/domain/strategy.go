@@ -17,13 +17,23 @@ const (
 	DomainStrategy_PreferIPv6
 	DomainStrategy_IPv4Only
 	DomainStrategy_IPv6Only
+	DomainStrategy_Speed
 )
 
 func GetIPs(ctx context.Context, domain string,
 	stategy DomainStrategy, ipr i.IPResolver) []net.IP {
+	now := time.Now()
 	switch stategy {
+	case DomainStrategy_Speed:
+		ips, err := ipr.LookupIPSpeed(ctx, domain)
+		log.Ctx(ctx).Debug().Str("domain", domain).
+			Dur("cost", time.Since(now)).
+			Msg("DnsDialer look up speed")
+		if err != nil {
+			return nil
+		}
+		return ips
 	case DomainStrategy_PreferIPv4, DomainStrategy_PreferIPv6:
-		now := time.Now()
 		ips, err := ipr.LookupIP(ctx, domain)
 		log.Ctx(ctx).Debug().Str("domain", domain).
 			Dur("cost", time.Since(now)).
