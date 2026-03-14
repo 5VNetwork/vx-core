@@ -7,6 +7,7 @@ import (
 	"net"
 	"reflect"
 	"sync/atomic"
+	"time"
 
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/common/domain"
@@ -334,19 +335,113 @@ func (d *ResolveDomainDialer) Dial(ctx context.Context, dst net1.Destination) (n
 		if d.DefaultInterfaceInfo != nil &&
 			d.DefaultInterfaceInfo.SupportIPv6() < 0 &&
 			(strategy == domain.DomainStrategy_PreferIPv6 ||
-				strategy == domain.DomainStrategy_PreferIPv4) {
+				strategy == domain.DomainStrategy_PreferIPv4 ||
+				strategy == domain.DomainStrategy_Speed) {
 			strategy = domain.DomainStrategy_IPv4Only
 		}
 		ips := domain.GetIPs(ctx, dst.Address.Domain(), strategy, d.Dns)
-		for _, ip := range ips {
-			dst.Address = net1.IPAddress(ip)
-			conn, err := d.DialerListener.Dial(ctx, dst)
+		if len(ips) > 0 {
+			dest := dst
+			conn, err := d.dialHappyEyeballs(ctx, dest, ips)
 			if err == nil {
 				return conn, nil
 			}
+			// try another ip set
+			if strategy == domain.DomainStrategy_Speed {
+				var anotherIpSet []net.IP
+				isIpv4 := ips[0].To4() != nil
+				if isIpv4 && d.DefaultInterfaceInfo.SupportIPv6() > 0 {
+					anotherIpSet, _ = d.Dns.LookupIPv6(ctx, dst.Address.Domain())
+				} else {
+					anotherIpSet, _ = d.Dns.LookupIPv4(ctx, dst.Address.Domain())
+				}
+				if len(anotherIpSet) > 0 {
+					conn, err := d.dialHappyEyeballs(ctx, dest, anotherIpSet)
+					return conn, err
+				}
+			}
+			return nil, err
 		}
 	}
 	return d.DialerListener.Dial(ctx, dst)
+}
+
+func (d *ResolveDomainDialer) dialHappyEyeballs(ctx context.Context, dst net1.Destination, ips []net.IP) (net.Conn, error) {
+	if len(ips) == 0 {
+		return nil, errors.New("no ip addresses resolved")
+	}
+	if len(ips) == 1 {
+		dst.Address = net1.IPAddress(ips[0])
+		return d.DialerListener.Dial(ctx, dst)
+	}
+
+	const fallbackDelay = 250 * time.Millisecond
+
+	type dialResult struct {
+		conn net.Conn
+		err  error
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	results := make(chan dialResult, len(ips))
+
+	// Preserve the resolver's ordering, but stagger connection attempts so the
+	// preferred family gets a short head start before racing the fallback.
+	for idx, ip := range ips {
+		attemptDst := dst
+		attemptDst.Address = net1.IPAddress(ip)
+
+		go func(idx int, attemptDst net1.Destination) {
+			if idx > 0 {
+				timer := time.NewTimer(time.Duration(idx) * fallbackDelay)
+				defer timer.Stop()
+
+				select {
+				case <-ctx.Done():
+					return
+				case <-timer.C:
+				}
+			}
+
+			conn, err := d.DialerListener.Dial(ctx, attemptDst)
+			if err != nil {
+				select {
+				case results <- dialResult{
+					err: fmt.Errorf("dial %s: %w", attemptDst.Address.String(), err),
+				}:
+				case <-ctx.Done():
+				}
+				return
+			}
+
+			select {
+			case results <- dialResult{conn: conn}:
+			case <-ctx.Done():
+				_ = conn.Close()
+			}
+		}(idx, attemptDst)
+	}
+
+	var errs []error
+	for range ips {
+		select {
+		case result := <-results:
+			if result.err == nil {
+				cancel()
+				return result.conn, nil
+			}
+			errs = append(errs, result.err)
+		case <-ctx.Done():
+			if len(errs) == 0 {
+				return nil, ctx.Err()
+			}
+			return nil, errors.Join(append(errs, ctx.Err())...)
+		}
+	}
+
+	return nil, errors.Join(errs...)
 }
 
 // use a handler to dial and listen
