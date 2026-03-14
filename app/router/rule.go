@@ -6,7 +6,11 @@ package router
 import (
 	"context"
 
+	"github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/router/selector"
+	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/session"
+	"github.com/5vnetwork/vx-core/i"
 )
 
 type Condition interface {
@@ -18,14 +22,17 @@ type rule struct {
 	outboundTag string
 	selectorTag string
 	name        string
+	retries     []i.Fallback
 }
 
-func NewRule(name string, outboundTag, selectorTag string, conditions ...Condition) *rule {
+func NewRule(name string, outboundTag, selectorTag string,
+	fallbackers []i.Fallback, conditions ...Condition) *rule {
 	r := &rule{
 		name:        name,
 		conditions:  conditions,
 		outboundTag: outboundTag,
 		selectorTag: selectorTag,
+		retries:     fallbackers,
 	}
 
 	return r
@@ -47,4 +54,54 @@ func (r *rule) Apply(c context.Context, info *session.Info, rw interface{}) (int
 
 func (r *rule) Name() string {
 	return r.name
+}
+
+type Fallback struct {
+	// one of selectorTag and outboundTag must be set
+	selectorTag string
+	outboundTag string
+	action      *configs.RuleConfig_Fallback_Action
+	// must have at least one condition
+	conditions []Condition
+	om         i.OutboundManager
+	selectors  *selector.Selectors
+}
+
+func NewFallbacker(selectorTag, outboundTag string,
+	action *configs.RuleConfig_Fallback_Action, om i.OutboundManager,
+	selectors *selector.Selectors, conditions ...Condition) *Fallback {
+	return &Fallback{
+		selectorTag: selectorTag,
+		outboundTag: outboundTag,
+		action:      action,
+		conditions:  conditions,
+		om:          om,
+		selectors:   selectors,
+	}
+}
+
+func (f *Fallback) GetHandler(ctx context.Context, info *session.Info) i.Outbound {
+	if len(f.conditions) == 0 {
+		return nil
+	}
+	for _, cond := range f.conditions {
+		_, match := cond.Apply(ctx, info, nil)
+		if !match {
+			return nil
+		}
+	}
+	if f.action != nil {
+		if f.action.IpToDomain && info.GetTargetIP() != nil && info.GetTargetDomain() != "" {
+			info.Target.Address = net.ParseAddress(info.GetTargetDomain())
+		}
+	}
+	if f.selectorTag != "" {
+		if se := f.selectors.GetSelector(f.selectorTag); se != nil {
+			return se.GetHandler(info)
+		} else {
+			return nil
+		}
+	} else {
+		return f.om.GetHandler(f.outboundTag)
+	}
 }

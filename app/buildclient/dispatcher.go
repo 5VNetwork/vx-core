@@ -53,13 +53,6 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 	}
 	d.AddBeforeHandlerSelectionHook(rewriteDestination)
 
-	fallback := &dispatcher.Fallbacker{
-		FallbackToProxy:  config.GetDispatcher().GetFallbackToProxy(),
-		FallbackToDomain: config.GetDispatcher().GetFallbackToDomain(),
-		Sm:               selectors,
-	}
-	d.Fallback = fallback
-
 	if config.GetDispatcher().GetIpv6UseDomain() {
 		d.AddAfterHandlerSelectionHook(&dispatcher.RewriteIPv6ToDomainHook{})
 	}
@@ -67,8 +60,6 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 	cc.Dispatcher = d
 	fc.requireFeature(func(om *outbound.Manager, p *policy.Policy,
 		ul *userlogger.UserLogger) {
-		fallback.Om = om
-		fallback.Logger = ul
 		d.AddAfterHandlerSelectionHook(ul)
 		d.AddBeforeHandlerSelectionHook(&dispatcher.IdleHook{
 			TimeoutPolicy: p,
@@ -78,6 +69,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 			OutStats:    cc.OutStats,
 		})
 		d.AddSessionEndHook(ul)
+		d.AddOnFallback(ul)
 	})
 	fc.requireOptionalFeatures(func(id *dns.Dns) {
 		rewriteDestination.FakeDns = cc.AllFakeDns

@@ -16,13 +16,10 @@ const (
 )
 
 type DispatcherConfig struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// SniffingConfig sniff = 1;
-	FallbackToProxy     bool     `protobuf:"varint,2,opt,name=fallback_to_proxy,json=fallbackToProxy,proto3" json:"fallback_to_proxy,omitempty"`
-	FallbackToDomain    bool     `protobuf:"varint,3,opt,name=fallback_to_domain,json=fallbackToDomain,proto3" json:"fallback_to_domain,omitempty"`
-	DestinationOverride []string `protobuf:"bytes,4,rep,name=destination_override,json=destinationOverride,proto3" json:"destination_override,omitempty"`
-	Sniff               bool     `protobuf:"varint,5,opt,name=sniff,proto3" json:"sniff,omitempty"`
-	Ipv6UseDomain       bool     `protobuf:"varint,7,opt,name=ipv6_use_domain,json=ipv6UseDomain,proto3" json:"ipv6_use_domain,omitempty"`
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	DestinationOverride []string               `protobuf:"bytes,4,rep,name=destination_override,json=destinationOverride,proto3" json:"destination_override,omitempty"`
+	Sniff               bool                   `protobuf:"varint,5,opt,name=sniff,proto3" json:"sniff,omitempty"`
+	Ipv6UseDomain       bool                   `protobuf:"varint,7,opt,name=ipv6_use_domain,json=ipv6UseDomain,proto3" json:"ipv6_use_domain,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -57,20 +54,6 @@ func (*DispatcherConfig) Descriptor() ([]byte, []int) {
 	return file_protos_dispatcher_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *DispatcherConfig) GetFallbackToProxy() bool {
-	if x != nil {
-		return x.FallbackToProxy
-	}
-	return false
-}
-
-func (x *DispatcherConfig) GetFallbackToDomain() bool {
-	if x != nil {
-		return x.FallbackToDomain
-	}
-	return false
-}
-
 func (x *DispatcherConfig) GetDestinationOverride() []string {
 	if x != nil {
 		return x.DestinationOverride
@@ -96,10 +79,8 @@ var File_protos_dispatcher_proto protoreflect.FileDescriptor
 
 const file_protos_dispatcher_proto_rawDesc = "" +
 	"\n" +
-	"\x17protos/dispatcher.proto\x12\x01x\"\xe3\x01\n" +
-	"\x10DispatcherConfig\x12*\n" +
-	"\x11fallback_to_proxy\x18\x02 \x01(\bR\x0ffallbackToProxy\x12,\n" +
-	"\x12fallback_to_domain\x18\x03 \x01(\bR\x10fallbackToDomain\x121\n" +
+	"\x17protos/dispatcher.proto\x12\x01x\"\x89\x01\n" +
+	"\x10DispatcherConfig\x121\n" +
 	"\x14destination_override\x18\x04 \x03(\tR\x13destinationOverride\x12\x14\n" +
 	"\x05sniff\x18\x05 \x01(\bR\x05sniff\x12&\n" +
 	"\x0fipv6_use_domain\x18\a \x01(\bR\ripv6UseDomainJ\x04\b\x06\x10\aB*Z(github.com/5vnetwork/vx-core/app/configsb\x06proto3"

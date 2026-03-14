@@ -189,3 +189,24 @@ func (r *SecondDdlReaderWriter) ReadMultiBuffer() (MultiBuffer, error) {
 	}
 	return r.DdlReaderWriter.ReadMultiBuffer()
 }
+
+type SecondReaderWriter struct {
+	ReaderWriter
+	Mb MultiBuffer
+}
+
+func NewSecond(rw ReaderWriter, mb MultiBuffer) *SecondReaderWriter {
+	return &SecondReaderWriter{
+		ReaderWriter: rw,
+		Mb:           mb,
+	}
+}
+
+func (r *SecondReaderWriter) ReadMultiBuffer() (MultiBuffer, error) {
+	if r.Mb.Len() > 0 {
+		mb := r.Mb
+		r.Mb = nil
+		return mb, nil
+	}
+	return r.ReaderWriter.ReadMultiBuffer()
+}

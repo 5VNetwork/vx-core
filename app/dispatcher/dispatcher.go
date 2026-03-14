@@ -34,13 +34,19 @@ type Dispatcher struct {
 	Router                      i.Router
 	OnHandlerSelectedHooks      []AfterHandlerSelectedHook
 	SessionEndHooks             []SessionEndHook
-	Fallback                    Fallback
+	TimeoutSetting              i.TimeoutSetting
+	GetCounters                 GetCounters
+	OnFallbacks                 []OnFallback
 
 	Flows       atomic.Int32
 	PacketConns atomic.Int32
 
 	observerLock          sync.Mutex
 	HandlerErrorObservers []i.HandlerErrorObserver
+}
+
+type OnFallback interface {
+	OnFallback(info *session.Info, previousTag, tag string)
 }
 
 func (p *Dispatcher) AddHandlerErrorObserver(observer i.HandlerErrorObserver) {
@@ -58,6 +64,10 @@ func (p *Dispatcher) RemoveHandlerErrorObserver(observer i.HandlerErrorObserver)
 			break
 		}
 	}
+}
+
+type GetCounters interface {
+	GetCounters(ctx context.Context, info *session.Info, handler i.Outbound) (session.UpCounters, session.DownCounters)
 }
 
 type Fallback interface {
@@ -97,6 +107,10 @@ func (d *Dispatcher) AddSessionEndHook(hook SessionEndHook) {
 	d.SessionEndHooks = append(d.SessionEndHooks, hook)
 }
 
+func (d *Dispatcher) AddOnFallback(fallback OnFallback) {
+	d.OnFallbacks = append(d.OnFallbacks, fallback)
+}
+
 func (d *Dispatcher) HandleFlow(ctx context.Context, dst net.Destination,
 	rw buf.ReaderWriter) error {
 	if dst.Address == mux.MuxCoolAddressDst {
@@ -125,7 +139,9 @@ func (d *Dispatcher) HandleFlow(ctx context.Context, dst net.Destination,
 		}
 	}
 
-	rw0, handler, err := d.Router.PickHandlerWithData(ctx, info, rw)
+	var handler i.Outbound
+	var retries []i.Fallback
+	rw0, handler, retries, err = d.Router.PickHandlerWithData(ctx, info, rw)
 	rw = rw0.(buf.ReaderWriter)
 	if err != nil {
 		return err
@@ -138,15 +154,102 @@ func (d *Dispatcher) HandleFlow(ctx context.Context, dst net.Destination,
 			return err
 		}
 	}
-	err = handler.HandleFlow(ctx, info.Target, rw)
-	if err != nil {
-		d.onHandlerError(ctx, info, handler.Tag(), err)
-		if d.Fallback != nil {
-			err = d.Fallback.Fallback(ctx, info, rw, handler, err)
+
+	// if dialer, ok := handler.(i.ProxyDialer); ok {
+	// 	var conn i.FlowConn
+	// 	if ddlRw, ok := rw.(i.DeadlineRW); ok &&
+	// 		ddlRw.SetReadDeadline(time.Now().Add(time.Millisecond*10)) == nil {
+	// 		var mb buf.MultiBuffer
+	// 		mb, err = ddlRw.ReadMultiBuffer()
+	// 		ddlRw.SetReadDeadline(time.Time{})
+	// 		if err == nil {
+	// 			conn, err = dialer.ProxyDial(ctx, info.Target, mb)
+	// 		}
+	// 	} else {
+	// 		conn, err = dialer.ProxyDial(ctx, info.Target, nil)
+	// 	}
+	// 	if conn != nil {
+	// 		defer conn.Close()
+	// 		err = d.Relay(ctx, info, rw, conn, handler)
+	// 		if err != nil {
+	// 			d.onHandlerError(ctx, info, handler.Tag(), err)
+	// 		}
+	// 	}
+	// } else {
+	// }
+
+loop:
+	for {
+		retryable := len(retries) > 0
+		if retryable {
+			var mb buf.MultiBuffer
+			var fallbackable bool
+			fallbackable, mb, err = d.cacheHandle(ctx, info, rw, handler)
+			if err != nil {
+				defer buf.ReleaseMulti(mb)
+				// still fallbackable
+				if fallbackable {
+					log.Ctx(ctx).Debug().Err(err).Str("tag", handler.Tag()).
+						Int32("cacheSize", mb.Len()).Uint64("upCounter", info.SessionUpCounter.Load()).
+						Uint64("downCounter", info.SessionDownCounter.Load()).
+						Msg("cacheHandler failed")
+					for len(retries) > 0 {
+						nextHandler := retries[0].GetHandler(ctx, info)
+						retries = retries[1:]
+						if nextHandler != nil {
+							for _, fallback := range d.OnFallbacks {
+								fallback.OnFallback(info, handler.Tag(), nextHandler.Tag())
+							}
+							handler = nextHandler
+							rw = buf.NewSecondDdl(rw.(buf.DdlReaderWriter), mb)
+							// continue the outer loop
+							continue loop
+						}
+					}
+				}
+				return err
+			} else {
+				return nil
+			}
+		} else {
+			err = handler.HandleFlow(ctx, info.Target, rw)
+			if err != nil {
+				d.onHandlerError(ctx, info, handler.Tag(), err)
+			}
+			return err
 		}
 	}
+}
 
-	return err
+func (d *Dispatcher) cacheHandle(ctx context.Context, info *session.Info,
+	rw buf.ReaderWriter, handler i.Outbound) (bool, buf.MultiBuffer, error) {
+	cacheRw := &cacheReaderWriter{
+		DdlReaderWriter:  rw.(buf.DdlReaderWriter),
+		maximumCacheSize: 1024 * 16,
+		ctx:              ctx,
+	}
+
+	err := handler.HandleFlow(ctx, info.Target, cacheRw)
+	if err != nil {
+		cacheRw.Done(ctx)
+		if cacheRw.reading {
+			log.Ctx(ctx).Warn().Str("tag", handler.Tag()).Msg("cacheReaderWriter still reading")
+		}
+		rw.(buf.DdlReaderWriter).SetReadDeadline(time.Time{})
+		d.onHandlerError(ctx, info, handler.Tag(), err)
+		// this means the problem occur on the left
+		if (errors.Is(err, errors.LeftToRightError{}) && errors.Is(err, buf.ReadError{})) ||
+			(errors.Is(err, errors.RightToLeftError{}) && buf.IsWriteError(err)) {
+			buf.ReleaseMulti(cacheRw.mb)
+			return false, nil, err
+		}
+		if !cacheRw.stopCaching && ctx.Err() == nil && !cacheRw.reading {
+			return true, cacheRw.mb, err
+		}
+	}
+	cacheRw.Done(ctx)
+	buf.ReleaseMulti(cacheRw.mb)
+	return false, nil, err
 }
 
 func (d *Dispatcher) onFlowSessionEnd(ctx context.Context, info *session.Info, err error) {
@@ -181,7 +284,9 @@ func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, 
 		}
 	}
 
-	pc0, handler, err := d.Router.PickHandlerWithData(ctx, info, pc)
+	// var fallbackers []Fallbacker
+	var handler i.Outbound
+	pc0, handler, _, err = d.Router.PickHandlerWithData(ctx, info, pc)
 	pc = pc0.(udp.PacketReaderWriter)
 	if err != nil {
 		return err
@@ -195,7 +300,18 @@ func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, 
 		}
 	}
 
+	// if listener, ok := handler.(i.ProxyPacketListener); ok {
+	// 	var udpConn udp.UdpConn
+	// 	udpConn, err = listener.ListenPacket(ctx, info.Target)
+	// 	if err != nil {
+	// 		p.logError(ctx, info, err)
+	// 		return err
+	// 	}
+	// 	defer udpConn.Close()
+	// 	err = helper.RelayUDPPacketConn(ctx, pc, udpConn)
+	// } else {
 	err = handler.HandlePacketConn(ctx, info.Target, pc)
+	// }
 	if err != nil {
 		d.onHandlerError(ctx, info, handler.Tag(), err)
 	}

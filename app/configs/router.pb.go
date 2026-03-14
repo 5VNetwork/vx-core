@@ -293,12 +293,13 @@ type RuleConfig struct {
 	AppIds        []*AppId         `protobuf:"bytes,19,rep,name=app_ids,json=appIds,proto3" json:"app_ids,omitempty"`
 	Ipv6          bool             `protobuf:"varint,20,opt,name=ipv6,proto3" json:"ipv6,omitempty"`
 	// for debugging
-	RuleName      string   `protobuf:"bytes,21,opt,name=rule_name,json=ruleName,proto3" json:"rule_name,omitempty"`
-	FakeIp        bool     `protobuf:"varint,22,opt,name=fake_ip,json=fakeIp,proto3" json:"fake_ip,omitempty"`
-	MatchAll      bool     `protobuf:"varint,23,opt,name=match_all,json=matchAll,proto3" json:"match_all,omitempty"`
-	AppTags       []string `protobuf:"bytes,24,rep,name=app_tags,json=appTags,proto3" json:"app_tags,omitempty"`
-	AllTags       []string `protobuf:"bytes,25,rep,name=all_tags,json=allTags,proto3" json:"all_tags,omitempty"`
-	Protocols     []string `protobuf:"bytes,28,rep,name=protocols,proto3" json:"protocols,omitempty"`
+	RuleName      string                 `protobuf:"bytes,21,opt,name=rule_name,json=ruleName,proto3" json:"rule_name,omitempty"`
+	FakeIp        bool                   `protobuf:"varint,22,opt,name=fake_ip,json=fakeIp,proto3" json:"fake_ip,omitempty"`
+	MatchAll      bool                   `protobuf:"varint,23,opt,name=match_all,json=matchAll,proto3" json:"match_all,omitempty"`
+	AppTags       []string               `protobuf:"bytes,24,rep,name=app_tags,json=appTags,proto3" json:"app_tags,omitempty"`
+	AllTags       []string               `protobuf:"bytes,25,rep,name=all_tags,json=allTags,proto3" json:"all_tags,omitempty"`
+	Protocols     []string               `protobuf:"bytes,28,rep,name=protocols,proto3" json:"protocols,omitempty"`
+	Fallbacks     []*RuleConfig_Fallback `protobuf:"bytes,29,rep,name=fallbacks,proto3" json:"fallbacks,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -494,6 +495,13 @@ func (x *RuleConfig) GetProtocols() []string {
 	return nil
 }
 
+func (x *RuleConfig) GetFallbacks() []*RuleConfig_Fallback {
+	if x != nil {
+		return x.Fallbacks
+	}
+	return nil
+}
+
 type SelectorConfig struct {
 	state           protoimpl.MessageState           `protogen:"open.v1"`
 	Tag             string                           `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
@@ -632,6 +640,134 @@ func (x *AppId) GetValue() string {
 	return ""
 }
 
+type RuleConfig_Fallback struct {
+	state         protoimpl.MessageState      `protogen:"open.v1"`
+	SelectorTag   string                      `protobuf:"bytes,1,opt,name=selector_tag,json=selectorTag,proto3" json:"selector_tag,omitempty"`
+	OutboundTag   string                      `protobuf:"bytes,2,opt,name=outbound_tag,json=outboundTag,proto3" json:"outbound_tag,omitempty"`
+	Action        *RuleConfig_Fallback_Action `protobuf:"bytes,3,opt,name=action,proto3" json:"action,omitempty"`
+	DstIpTags     []string                    `protobuf:"bytes,10,rep,name=dst_ip_tags,json=dstIpTags,proto3" json:"dst_ip_tags,omitempty"`
+	DomainTags    []string                    `protobuf:"bytes,11,rep,name=domain_tags,json=domainTags,proto3" json:"domain_tags,omitempty"`
+	MatchAll      bool                        `protobuf:"varint,12,opt,name=match_all,json=matchAll,proto3" json:"match_all,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RuleConfig_Fallback) Reset() {
+	*x = RuleConfig_Fallback{}
+	mi := &file_protos_router_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RuleConfig_Fallback) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RuleConfig_Fallback) ProtoMessage() {}
+
+func (x *RuleConfig_Fallback) ProtoReflect() protoreflect.Message {
+	mi := &file_protos_router_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RuleConfig_Fallback.ProtoReflect.Descriptor instead.
+func (*RuleConfig_Fallback) Descriptor() ([]byte, []int) {
+	return file_protos_router_proto_rawDescGZIP(), []int{2, 0}
+}
+
+func (x *RuleConfig_Fallback) GetSelectorTag() string {
+	if x != nil {
+		return x.SelectorTag
+	}
+	return ""
+}
+
+func (x *RuleConfig_Fallback) GetOutboundTag() string {
+	if x != nil {
+		return x.OutboundTag
+	}
+	return ""
+}
+
+func (x *RuleConfig_Fallback) GetAction() *RuleConfig_Fallback_Action {
+	if x != nil {
+		return x.Action
+	}
+	return nil
+}
+
+func (x *RuleConfig_Fallback) GetDstIpTags() []string {
+	if x != nil {
+		return x.DstIpTags
+	}
+	return nil
+}
+
+func (x *RuleConfig_Fallback) GetDomainTags() []string {
+	if x != nil {
+		return x.DomainTags
+	}
+	return nil
+}
+
+func (x *RuleConfig_Fallback) GetMatchAll() bool {
+	if x != nil {
+		return x.MatchAll
+	}
+	return false
+}
+
+type RuleConfig_Fallback_Action struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	IpToDomain    bool                   `protobuf:"varint,1,opt,name=ip_to_domain,json=ipToDomain,proto3" json:"ip_to_domain,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RuleConfig_Fallback_Action) Reset() {
+	*x = RuleConfig_Fallback_Action{}
+	mi := &file_protos_router_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RuleConfig_Fallback_Action) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RuleConfig_Fallback_Action) ProtoMessage() {}
+
+func (x *RuleConfig_Fallback_Action) ProtoReflect() protoreflect.Message {
+	mi := &file_protos_router_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RuleConfig_Fallback_Action.ProtoReflect.Descriptor instead.
+func (*RuleConfig_Fallback_Action) Descriptor() ([]byte, []int) {
+	return file_protos_router_proto_rawDescGZIP(), []int{2, 0, 0}
+}
+
+func (x *RuleConfig_Fallback_Action) GetIpToDomain() bool {
+	if x != nil {
+		return x.IpToDomain
+	}
+	return false
+}
+
 type SelectorConfig_Filter struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// If an outbound's tag has prefix of any of the prefixes, match!
@@ -653,7 +789,7 @@ type SelectorConfig_Filter struct {
 
 func (x *SelectorConfig_Filter) Reset() {
 	*x = SelectorConfig_Filter{}
-	mi := &file_protos_router_proto_msgTypes[5]
+	mi := &file_protos_router_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -665,7 +801,7 @@ func (x *SelectorConfig_Filter) String() string {
 func (*SelectorConfig_Filter) ProtoMessage() {}
 
 func (x *SelectorConfig_Filter) ProtoReflect() protoreflect.Message {
-	mi := &file_protos_router_proto_msgTypes[5]
+	mi := &file_protos_router_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -759,7 +895,7 @@ const file_protos_router_proto_rawDesc = "" +
 	"\fRouterConfig\x12#\n" +
 	"\x05rules\x18\x01 \x03(\v2\r.x.RuleConfigR\x05rules\"B\n" +
 	"\x0fSelectorsConfig\x12/\n" +
-	"\tselectors\x18\x01 \x03(\v2\x11.x.SelectorConfigR\tselectors\"\xbe\x06\n" +
+	"\tselectors\x18\x01 \x03(\v2\x11.x.SelectorConfigR\tselectors\"\x88\t\n" +
 	"\n" +
 	"RuleConfig\x12!\n" +
 	"\foutbound_tag\x18\x01 \x01(\tR\voutboundTag\x12!\n" +
@@ -787,7 +923,20 @@ const file_protos_router_proto_rawDesc = "" +
 	"\tmatch_all\x18\x17 \x01(\bR\bmatchAll\x12\x19\n" +
 	"\bapp_tags\x18\x18 \x03(\tR\aappTags\x12\x19\n" +
 	"\ball_tags\x18\x19 \x03(\tR\aallTags\x12\x1c\n" +
-	"\tprotocols\x18\x1c \x03(\tR\tprotocols\"\xec\x05\n" +
+	"\tprotocols\x18\x1c \x03(\tR\tprotocols\x124\n" +
+	"\tfallbacks\x18\x1d \x03(\v2\x16.x.RuleConfig.FallbackR\tfallbacks\x1a\x91\x02\n" +
+	"\bFallback\x12!\n" +
+	"\fselector_tag\x18\x01 \x01(\tR\vselectorTag\x12!\n" +
+	"\foutbound_tag\x18\x02 \x01(\tR\voutboundTag\x125\n" +
+	"\x06action\x18\x03 \x01(\v2\x1d.x.RuleConfig.Fallback.ActionR\x06action\x12\x1e\n" +
+	"\vdst_ip_tags\x18\n" +
+	" \x03(\tR\tdstIpTags\x12\x1f\n" +
+	"\vdomain_tags\x18\v \x03(\tR\n" +
+	"domainTags\x12\x1b\n" +
+	"\tmatch_all\x18\f \x01(\bR\bmatchAll\x1a*\n" +
+	"\x06Action\x12 \n" +
+	"\fip_to_domain\x18\x01 \x01(\bR\n" +
+	"ipToDomain\"\xec\x05\n" +
 	"\x0eSelectorConfig\x12\x10\n" +
 	"\x03tag\x18\x01 \x01(\tR\x03tag\x120\n" +
 	"\x06filter\x18\x02 \x01(\v2\x18.x.SelectorConfig.FilterR\x06filter\x12?\n" +
@@ -846,7 +995,7 @@ func file_protos_router_proto_rawDescGZIP() []byte {
 }
 
 var file_protos_router_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_protos_router_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_protos_router_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_protos_router_proto_goTypes = []any{
 	(SelectorConfig_SelectingStrategy)(0), // 0: x.SelectorConfig.SelectingStrategy
 	(SelectorConfig_BalanceStrategy)(0),   // 1: x.SelectorConfig.BalanceStrategy
@@ -856,28 +1005,32 @@ var file_protos_router_proto_goTypes = []any{
 	(*RuleConfig)(nil),                    // 5: x.RuleConfig
 	(*SelectorConfig)(nil),                // 6: x.SelectorConfig
 	(*AppId)(nil),                         // 7: x.AppId
-	(*SelectorConfig_Filter)(nil),         // 8: x.SelectorConfig.Filter
-	(*geo.Domain)(nil),                    // 9: x.common.geo.Domain
-	(net.Network)(0),                      // 10: x.common.net.Network
-	(*net.PortRange)(nil),                 // 11: x.common.net.PortRange
+	(*RuleConfig_Fallback)(nil),           // 8: x.RuleConfig.Fallback
+	(*RuleConfig_Fallback_Action)(nil),    // 9: x.RuleConfig.Fallback.Action
+	(*SelectorConfig_Filter)(nil),         // 10: x.SelectorConfig.Filter
+	(*geo.Domain)(nil),                    // 11: x.common.geo.Domain
+	(net.Network)(0),                      // 12: x.common.net.Network
+	(*net.PortRange)(nil),                 // 13: x.common.net.PortRange
 }
 var file_protos_router_proto_depIdxs = []int32{
 	5,  // 0: x.RouterConfig.rules:type_name -> x.RuleConfig
 	6,  // 1: x.SelectorsConfig.selectors:type_name -> x.SelectorConfig
-	9,  // 2: x.RuleConfig.geo_domains:type_name -> x.common.geo.Domain
-	10, // 3: x.RuleConfig.networks:type_name -> x.common.net.Network
-	11, // 4: x.RuleConfig.src_port_ranges:type_name -> x.common.net.PortRange
-	11, // 5: x.RuleConfig.dst_port_ranges:type_name -> x.common.net.PortRange
+	11, // 2: x.RuleConfig.geo_domains:type_name -> x.common.geo.Domain
+	12, // 3: x.RuleConfig.networks:type_name -> x.common.net.Network
+	13, // 4: x.RuleConfig.src_port_ranges:type_name -> x.common.net.PortRange
+	13, // 5: x.RuleConfig.dst_port_ranges:type_name -> x.common.net.PortRange
 	7,  // 6: x.RuleConfig.app_ids:type_name -> x.AppId
-	8,  // 7: x.SelectorConfig.filter:type_name -> x.SelectorConfig.Filter
-	0,  // 8: x.SelectorConfig.strategy:type_name -> x.SelectorConfig.SelectingStrategy
-	1,  // 9: x.SelectorConfig.balance_strategy:type_name -> x.SelectorConfig.BalanceStrategy
-	2,  // 10: x.AppId.type:type_name -> x.AppId.Type
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	8,  // 7: x.RuleConfig.fallbacks:type_name -> x.RuleConfig.Fallback
+	10, // 8: x.SelectorConfig.filter:type_name -> x.SelectorConfig.Filter
+	0,  // 9: x.SelectorConfig.strategy:type_name -> x.SelectorConfig.SelectingStrategy
+	1,  // 10: x.SelectorConfig.balance_strategy:type_name -> x.SelectorConfig.BalanceStrategy
+	2,  // 11: x.AppId.type:type_name -> x.AppId.Type
+	9,  // 12: x.RuleConfig.Fallback.action:type_name -> x.RuleConfig.Fallback.Action
+	13, // [13:13] is the sub-list for method output_type
+	13, // [13:13] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_protos_router_proto_init() }
@@ -891,7 +1044,7 @@ func file_protos_router_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_protos_router_proto_rawDesc), len(file_protos_router_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   6,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

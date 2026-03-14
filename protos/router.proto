@@ -25,20 +25,17 @@ message RuleConfig {
   repeated string src_cidrs = 5;
   // used to match source ip
   repeated string src_ip_tags = 6;
-
   // used to match dst ip
   repeated string dst_cidrs = 8;
   // used to match dst ip
   repeated string dst_ip_tags = 9;
   // resolve domain to ip when ip is not available
   bool resolve_domain = 26;
-
   // used to match domain
   repeated x.common.geo.Domain geo_domains = 11;
   repeated string domain_tags = 13;
   // skip sniff for connectiosn use ip targets
   bool skip_sniff = 27;
-
   repeated string usernames = 14;
   repeated string inbound_tags = 15;
   repeated x.common.net.Network networks = 16;
@@ -52,8 +49,23 @@ message RuleConfig {
   bool match_all = 23;
   repeated string app_tags = 24;
   repeated string all_tags = 25;
-
   repeated string protocols = 28;
+
+  message Fallback {
+    string selector_tag = 1;
+    string outbound_tag = 2;
+
+    message Action {
+      bool ip_to_domain = 1;
+    }
+    Action action = 3;
+
+    repeated string dst_ip_tags = 10;
+    repeated string domain_tags = 11;
+    bool match_all = 12;
+
+  }
+  repeated Fallback fallbacks = 29;
 }
 
 

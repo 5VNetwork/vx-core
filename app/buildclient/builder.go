@@ -17,6 +17,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
+	"github.com/5vnetwork/vx-core/app/fallbackmon"
 	"github.com/5vnetwork/vx-core/app/geo"
 	"github.com/5vnetwork/vx-core/app/grpcserver"
 	"github.com/5vnetwork/vx-core/app/grpcservice"
@@ -266,6 +267,25 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 		t.ResultReporter = reporter
 	}); err != nil {
 		return nil, fmt.Errorf("failed to set result reporter: %w", err)
+	}
+
+	// fallback mon
+	if config.FallbackMon != nil {
+		err := builder.requireFeature(func(db fallbackmon.Db, dispatcher *dispatcher.Dispatcher) error {
+			fallbackMon := fallbackmon.NewFallbackMon(&fallbackmon.FallbackMonSetting{
+				Db:            db,
+				DomainSetName: config.FallbackMon.DomainSetName,
+			})
+			if err := builder.addComponent(fallbackMon); err != nil {
+				return fmt.Errorf("failed to add fallback mon: %w", err)
+			}
+			dispatcher.AddOnFallback(fallbackMon)
+			dispatcher.AddSessionEndHook(fallbackMon)
+			return nil
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to add fallback mon: %w", err)
+		}
 	}
 
 	if config.Grpc != nil {

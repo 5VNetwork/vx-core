@@ -25,6 +25,7 @@ func TestSimpleRouter(t *testing.T) {
 	router.AddRule(NewRule(
 		"test",
 		"test", "",
+		nil,
 		NewNetworkMatcher([]net1.Network{net1.Network_TCP}),
 	))
 

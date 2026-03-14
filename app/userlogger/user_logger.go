@@ -72,7 +72,7 @@ func (s *UserLogger) SetEnabled(enabled bool) {
 	}
 }
 
-func (s *UserLogger) LogFallback(info *session.Info, tag string) {
+func (s *UserLogger) OnFallback(info *session.Info, previous, tag string) {
 	if !s.enabled.Load() {
 		return
 	}

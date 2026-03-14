@@ -43,6 +43,7 @@ type TmConfig struct {
 	Wfp            *WfpConfig         `protobuf:"bytes,33,opt,name=wfp,proto3" json:"wfp,omitempty"`
 	UserLog        *UserLoggerConfig  `protobuf:"bytes,35,opt,name=user_log,json=userLog,proto3" json:"user_log,omitempty"`
 	GrpcService    *GrpcServiceConfig `protobuf:"bytes,36,opt,name=grpc_service,json=grpcService,proto3" json:"grpc_service,omitempty"`
+	FallbackMon    *FallbackMonConfig `protobuf:"bytes,37,opt,name=fallback_mon,json=fallbackMon,proto3" json:"fallback_mon,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -231,6 +232,13 @@ func (x *TmConfig) GetGrpcService() *GrpcServiceConfig {
 	return nil
 }
 
+func (x *TmConfig) GetFallbackMon() *FallbackMonConfig {
+	if x != nil {
+		return x.FallbackMon
+	}
+	return nil
+}
+
 type GrpcConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// listen address
@@ -368,11 +376,55 @@ func (x *SubscriptionConfig) GetPeriodicUpdate() bool {
 	return false
 }
 
+type FallbackMonConfig struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DomainSetName string                 `protobuf:"bytes,1,opt,name=domain_set_name,json=domainSetName,proto3" json:"domain_set_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FallbackMonConfig) Reset() {
+	*x = FallbackMonConfig{}
+	mi := &file_protos_client_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FallbackMonConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FallbackMonConfig) ProtoMessage() {}
+
+func (x *FallbackMonConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_protos_client_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FallbackMonConfig.ProtoReflect.Descriptor instead.
+func (*FallbackMonConfig) Descriptor() ([]byte, []int) {
+	return file_protos_client_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *FallbackMonConfig) GetDomainSetName() string {
+	if x != nil {
+		return x.DomainSetName
+	}
+	return ""
+}
+
 var File_protos_client_proto protoreflect.FileDescriptor
 
 const file_protos_client_proto_rawDesc = "" +
 	"\n" +
-	"\x13protos/client.proto\x12\x01x\x1a\x14protos/inbound.proto\x1a\x15protos/outbound.proto\x1a\x10protos/dns.proto\x1a\x13protos/router.proto\x1a\x13protos/policy.proto\x1a\x13protos/logger.proto\x1a\x10protos/geo.proto\x1a\x17protos/dispatcher.proto\x1a\x10protos/tun.proto\x1a\x15protos/sysproxy.proto\x1a\x19protos/grpc_service.proto\"\xc5\a\n" +
+	"\x13protos/client.proto\x12\x01x\x1a\x14protos/inbound.proto\x1a\x15protos/outbound.proto\x1a\x10protos/dns.proto\x1a\x13protos/router.proto\x1a\x13protos/policy.proto\x1a\x13protos/logger.proto\x1a\x10protos/geo.proto\x1a\x17protos/dispatcher.proto\x1a\x10protos/tun.proto\x1a\x15protos/sysproxy.proto\x1a\x19protos/grpc_service.proto\"\xfe\a\n" +
 	"\bTmConfig\x12@\n" +
 	"\x0finbound_manager\x18\x01 \x01(\v2\x17.x.InboundManagerConfigR\x0einboundManager\x12\x1e\n" +
 	"\x03dns\x18\x03 \x01(\v2\f.x.DnsConfigR\x03dns\x12'\n" +
@@ -397,7 +449,8 @@ const file_protos_client_proto_rawDesc = "" +
 	"\x10redirect_std_err\x18\x1f \x01(\tR\x0eredirectStdErr\x12\x1e\n" +
 	"\x03wfp\x18! \x01(\v2\f.x.WfpConfigR\x03wfp\x12.\n" +
 	"\buser_log\x18# \x01(\v2\x13.x.UserLoggerConfigR\auserLog\x127\n" +
-	"\fgrpc_service\x18$ \x01(\v2\x14.x.GrpcServiceConfigR\vgrpcServiceJ\x04\b\"\x10#\"\x7f\n" +
+	"\fgrpc_service\x18$ \x01(\v2\x14.x.GrpcServiceConfigR\vgrpcService\x127\n" +
+	"\ffallback_mon\x18% \x01(\v2\x14.x.FallbackMonConfigR\vfallbackMonJ\x04\b\"\x10#\"\x7f\n" +
 	"\n" +
 	"GrpcConfig\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x12\n" +
@@ -409,7 +462,9 @@ const file_protos_client_proto_rawDesc = "" +
 	"\x12SubscriptionConfig\x12(\n" +
 	"\x10last_update_time\x18\x15 \x01(\rR\x0elastUpdateTime\x12\x1a\n" +
 	"\binterval\x18\x16 \x01(\rR\binterval\x12'\n" +
-	"\x0fperiodic_update\x18\x17 \x01(\bR\x0eperiodicUpdateB*Z(github.com/5vnetwork/vx-core/app/configsb\x06proto3"
+	"\x0fperiodic_update\x18\x17 \x01(\bR\x0eperiodicUpdate\";\n" +
+	"\x11FallbackMonConfig\x12&\n" +
+	"\x0fdomain_set_name\x18\x01 \x01(\tR\rdomainSetNameB*Z(github.com/5vnetwork/vx-core/app/configsb\x06proto3"
 
 var (
 	file_protos_client_proto_rawDescOnce sync.Once
@@ -423,48 +478,50 @@ func file_protos_client_proto_rawDescGZIP() []byte {
 	return file_protos_client_proto_rawDescData
 }
 
-var file_protos_client_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_protos_client_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_protos_client_proto_goTypes = []any{
 	(*TmConfig)(nil),             // 0: x.TmConfig
 	(*GrpcConfig)(nil),           // 1: x.GrpcConfig
 	(*SubscriptionConfig)(nil),   // 2: x.SubscriptionConfig
-	(*InboundManagerConfig)(nil), // 3: x.InboundManagerConfig
-	(*DnsConfig)(nil),            // 4: x.DnsConfig
-	(*PolicyConfig)(nil),         // 5: x.PolicyConfig
-	(*SelectorsConfig)(nil),      // 6: x.SelectorsConfig
-	(*RouterConfig)(nil),         // 7: x.RouterConfig
-	(*LoggerConfig)(nil),         // 8: x.LoggerConfig
-	(*DispatcherConfig)(nil),     // 9: x.DispatcherConfig
-	(*GeoConfig)(nil),            // 10: x.GeoConfig
-	(*TunConfig)(nil),            // 11: x.TunConfig
-	(*SysProxyConfig)(nil),       // 12: x.SysProxyConfig
-	(*OutboundConfig)(nil),       // 13: x.OutboundConfig
-	(*WfpConfig)(nil),            // 14: x.WfpConfig
-	(*UserLoggerConfig)(nil),     // 15: x.UserLoggerConfig
-	(*GrpcServiceConfig)(nil),    // 16: x.GrpcServiceConfig
+	(*FallbackMonConfig)(nil),    // 3: x.FallbackMonConfig
+	(*InboundManagerConfig)(nil), // 4: x.InboundManagerConfig
+	(*DnsConfig)(nil),            // 5: x.DnsConfig
+	(*PolicyConfig)(nil),         // 6: x.PolicyConfig
+	(*SelectorsConfig)(nil),      // 7: x.SelectorsConfig
+	(*RouterConfig)(nil),         // 8: x.RouterConfig
+	(*LoggerConfig)(nil),         // 9: x.LoggerConfig
+	(*DispatcherConfig)(nil),     // 10: x.DispatcherConfig
+	(*GeoConfig)(nil),            // 11: x.GeoConfig
+	(*TunConfig)(nil),            // 12: x.TunConfig
+	(*SysProxyConfig)(nil),       // 13: x.SysProxyConfig
+	(*OutboundConfig)(nil),       // 14: x.OutboundConfig
+	(*WfpConfig)(nil),            // 15: x.WfpConfig
+	(*UserLoggerConfig)(nil),     // 16: x.UserLoggerConfig
+	(*GrpcServiceConfig)(nil),    // 17: x.GrpcServiceConfig
 }
 var file_protos_client_proto_depIdxs = []int32{
-	3,  // 0: x.TmConfig.inbound_manager:type_name -> x.InboundManagerConfig
-	4,  // 1: x.TmConfig.dns:type_name -> x.DnsConfig
-	5,  // 2: x.TmConfig.policy:type_name -> x.PolicyConfig
-	6,  // 3: x.TmConfig.selectors:type_name -> x.SelectorsConfig
-	7,  // 4: x.TmConfig.router:type_name -> x.RouterConfig
-	8,  // 5: x.TmConfig.log:type_name -> x.LoggerConfig
-	9,  // 6: x.TmConfig.dispatcher:type_name -> x.DispatcherConfig
-	10, // 7: x.TmConfig.geo:type_name -> x.GeoConfig
+	4,  // 0: x.TmConfig.inbound_manager:type_name -> x.InboundManagerConfig
+	5,  // 1: x.TmConfig.dns:type_name -> x.DnsConfig
+	6,  // 2: x.TmConfig.policy:type_name -> x.PolicyConfig
+	7,  // 3: x.TmConfig.selectors:type_name -> x.SelectorsConfig
+	8,  // 4: x.TmConfig.router:type_name -> x.RouterConfig
+	9,  // 5: x.TmConfig.log:type_name -> x.LoggerConfig
+	10, // 6: x.TmConfig.dispatcher:type_name -> x.DispatcherConfig
+	11, // 7: x.TmConfig.geo:type_name -> x.GeoConfig
 	1,  // 8: x.TmConfig.grpc:type_name -> x.GrpcConfig
-	11, // 9: x.TmConfig.tun:type_name -> x.TunConfig
-	12, // 10: x.TmConfig.sys_proxy:type_name -> x.SysProxyConfig
+	12, // 9: x.TmConfig.tun:type_name -> x.TunConfig
+	13, // 10: x.TmConfig.sys_proxy:type_name -> x.SysProxyConfig
 	2,  // 11: x.TmConfig.subscription:type_name -> x.SubscriptionConfig
-	13, // 12: x.TmConfig.outbound:type_name -> x.OutboundConfig
-	14, // 13: x.TmConfig.wfp:type_name -> x.WfpConfig
-	15, // 14: x.TmConfig.user_log:type_name -> x.UserLoggerConfig
-	16, // 15: x.TmConfig.grpc_service:type_name -> x.GrpcServiceConfig
-	16, // [16:16] is the sub-list for method output_type
-	16, // [16:16] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	14, // 12: x.TmConfig.outbound:type_name -> x.OutboundConfig
+	15, // 13: x.TmConfig.wfp:type_name -> x.WfpConfig
+	16, // 14: x.TmConfig.user_log:type_name -> x.UserLoggerConfig
+	17, // 15: x.TmConfig.grpc_service:type_name -> x.GrpcServiceConfig
+	3,  // 16: x.TmConfig.fallback_mon:type_name -> x.FallbackMonConfig
+	17, // [17:17] is the sub-list for method output_type
+	17, // [17:17] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_protos_client_proto_init() }
@@ -489,7 +546,7 @@ func file_protos_client_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_protos_client_proto_rawDesc), len(file_protos_client_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

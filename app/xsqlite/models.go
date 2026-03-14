@@ -42,6 +42,20 @@ type OutboundHandlerGroupRelation struct {
 // 	HandlerId    int    `gorm:"not null;foreignKey:ID;references:OutboundHandler"`
 // }
 
+type GeoDomain struct {
+	ID            int    `gorm:"primaryKey;autoIncrement"`
+	GeoDomain     []byte `gorm:"not null"`
+	DomainSetName string `gorm:"not null;foreignKey:Name;references:AtomicDomainSet"`
+}
+
+type AtomicDomainSet struct {
+	Name           string `gorm:"primaryKey;not null"`
+	GeositeConfig  []byte
+	UseBloomFilter bool
+	ClashRuleUrls  string
+	GeoUrl         string
+}
+
 type OutboundHandler struct {
 	ID          int
 	Selected    bool

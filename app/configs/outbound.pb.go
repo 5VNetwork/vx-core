@@ -23,22 +23,25 @@ const (
 	DomainStrategy_PreferIPv4 DomainStrategy = 0
 	DomainStrategy_PreferIPv6 DomainStrategy = 1
 	DomainStrategy_IPv4Only   DomainStrategy = 2
-	DomainStrategy_IPv6Only   DomainStrategy = 43
+	DomainStrategy_IPv6Only   DomainStrategy = 3
+	DomainStrategy_Speed      DomainStrategy = 4
 )
 
 // Enum value maps for DomainStrategy.
 var (
 	DomainStrategy_name = map[int32]string{
-		0:  "PreferIPv4",
-		1:  "PreferIPv6",
-		2:  "IPv4Only",
-		43: "IPv6Only",
+		0: "PreferIPv4",
+		1: "PreferIPv6",
+		2: "IPv4Only",
+		3: "IPv6Only",
+		4: "Speed",
 	}
 	DomainStrategy_value = map[string]int32{
 		"PreferIPv4": 0,
 		"PreferIPv6": 1,
 		"IPv4Only":   2,
-		"IPv6Only":   43,
+		"IPv6Only":   3,
+		"Speed":      4,
 	}
 )
 
@@ -521,14 +524,15 @@ const file_protos_outbound_proto_rawDesc = "" +
 	"\x04typeB\x0f\n" +
 	"\r_support_ipv6\"<\n" +
 	"\x0eHandlerConfigs\x12*\n" +
-	"\aconfigs\x18\x01 \x03(\v2\x10.x.HandlerConfigR\aconfigs*L\n" +
+	"\aconfigs\x18\x01 \x03(\v2\x10.x.HandlerConfigR\aconfigs*W\n" +
 	"\x0eDomainStrategy\x12\x0e\n" +
 	"\n" +
 	"PreferIPv4\x10\x00\x12\x0e\n" +
 	"\n" +
 	"PreferIPv6\x10\x01\x12\f\n" +
 	"\bIPv4Only\x10\x02\x12\f\n" +
-	"\bIPv6Only\x10+B*Z(github.com/5vnetwork/vx-core/app/configsb\x06proto3"
+	"\bIPv6Only\x10\x03\x12\t\n" +
+	"\x05Speed\x10\x04B*Z(github.com/5vnetwork/vx-core/app/configsb\x06proto3"
 
 var (
 	file_protos_outbound_proto_rawDescOnce sync.Once

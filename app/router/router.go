@@ -45,10 +45,11 @@ func (r *RouterWrapper) PickHandler(ctx context.Context, si *session.Info) (i.Ou
 	return router.(*Router).PickHandler(ctx, si)
 }
 
-func (r *RouterWrapper) PickHandlerWithData(ctx context.Context, si *session.Info, rw interface{}) (interface{}, i.Outbound, error) {
+func (r *RouterWrapper) PickHandlerWithData(ctx context.Context, si *session.Info,
+	rw interface{}) (interface{}, i.Outbound, []i.Fallback, error) {
 	router := r.Value.Load()
 	if router == nil {
-		return rw, nil, ErrNoHandlerPick
+		return rw, nil, nil, ErrNoHandlerPick
 	}
 	return router.(*Router).PickHandlerWithData(ctx, si, rw)
 }
@@ -57,8 +58,8 @@ var ErrNoHandlerPick = errors.New("no handler picked")
 
 // determine a outbound handler for a session
 type Router struct {
-	om        i.OutboundManager
 	rules     []*rule
+	om        i.OutboundManager
 	selectors *selector.Selectors
 }
 
@@ -248,7 +249,16 @@ func NewRouter(config *RouterConfig) (*Router, error) {
 				&ConditionTrue{},
 			}
 		}
-		rule := NewRule(routerRuleConfig.RuleName, routerRuleConfig.OutboundTag, routerRuleConfig.SelectorTag, conditions...)
+
+		fallbackers := make([]i.Fallback, 0, len(routerRuleConfig.Fallbacks))
+		for _, fallbackerConfig := range routerRuleConfig.Fallbacks {
+			fallbackers = append(fallbackers, NewFallbacker(
+				fallbackerConfig.SelectorTag, fallbackerConfig.OutboundTag,
+				fallbackerConfig.Action, r.om, r.selectors, conditions...))
+		}
+		rule := NewRule(routerRuleConfig.RuleName, routerRuleConfig.OutboundTag,
+			routerRuleConfig.SelectorTag, fallbackers,
+			conditions...)
 		r.AddRule(rule)
 	}
 	return r, nil
@@ -264,17 +274,18 @@ var ErrBlocked = errors.New("block")
 var ErrNoRule = errors.New("no rule matched")
 
 func (r *Router) PickHandler(ctx context.Context, si *session.Info) (i.Outbound, error) {
-	_, handler, err := r.PickHandlerWithData(ctx, si, nil)
+	_, handler, _, err := r.PickHandlerWithData(ctx, si, nil)
 	return handler, err
 }
 
-func (r *Router) PickHandlerWithData(ctx context.Context, si *session.Info, rw interface{}) (interface{}, i.Outbound, error) {
+func (r *Router) PickHandlerWithData(ctx context.Context, si *session.Info,
+	rw interface{}) (interface{}, i.Outbound, []i.Fallback, error) {
 	// for tests
 	if len(r.rules) == 0 {
 		if h := r.om.GetHandler(""); h != nil {
-			return rw, h, nil
+			return rw, h, nil, nil
 		} else {
-			return rw, r.om.GetHandler("direct"), nil
+			return rw, r.om.GetHandler("direct"), nil, nil
 		}
 	}
 
@@ -288,24 +299,24 @@ func (r *Router) PickHandlerWithData(ctx context.Context, si *session.Info, rw i
 			log.Ctx(ctx).Debug().Str("matched_rule", si.MatchedRule).Msg("matched rule")
 			if rule.outboundTag != "" {
 				if h := r.om.GetHandler(rule.outboundTag); h != nil {
-					return rw, h, nil
+					return rw, h, rule.retries, nil
 				}
-				return rw, nil, ErrNoHandler
+				return rw, nil, nil, ErrNoHandler
 			} else if rule.selectorTag != "" {
 				if se := r.selectors.GetSelector(rule.selectorTag); se != nil {
 					si.UsedSelector = rule.selectorTag
 					if h := se.GetHandler(si); h != nil {
-						return rw, h, nil
+						return rw, h, rule.retries, nil
 					}
-					return rw, nil, ErrNoHandler
+					return rw, nil, nil, ErrNoHandler
 				}
 				log.Ctx(ctx).Warn().Str("selector_tag", rule.selectorTag).Msg("selector not found")
-				return rw, nil, ErrSelectorNotFound
+				return rw, nil, nil, ErrSelectorNotFound
 			} else {
-				return rw, nil, ErrBlocked
+				return rw, nil, nil, ErrBlocked
 			}
 		}
 	}
 
-	return rw, nil, ErrNoRule
+	return rw, nil, nil, ErrNoRule
 }

@@ -75,6 +75,14 @@ func (mb MultiBuffer) Copy(b []byte) int {
 	return total
 }
 
+func (mb MultiBuffer) Clone() MultiBuffer {
+	mb2 := make(MultiBuffer, len(mb))
+	for i, b := range mb {
+		mb2[i] = b.Clone()
+	}
+	return mb2
+}
+
 // ReadFrom reads all content from reader until EOF.
 func ReadFrom(reader io.Reader) (MultiBuffer, error) {
 	mb := make(MultiBuffer, 0, 16)
