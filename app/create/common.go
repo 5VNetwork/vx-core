@@ -5,6 +5,7 @@ package create
 
 import (
 	"sync/atomic"
+	"time"
 
 	configs "github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/serial"
@@ -97,5 +98,6 @@ func SocketConfigToMemoryConfig(config *configs.SocketConfig, readCounter, write
 		LocalAddr6:                 config.LocalAddr6,
 		StatsReadCounter:           readCounter,
 		StatsWriteCounter:          writeCounter,
+		DialTimeout:                time.Duration(config.DialTimeout) * time.Second,
 	}
 }

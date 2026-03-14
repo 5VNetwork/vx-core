@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"sync/atomic"
+	"time"
 
 	net1 "github.com/5vnetwork/vx-core/common/net"
 )
@@ -39,6 +40,7 @@ type SocketSetting struct {
 	StatsWriteCounter *atomic.Uint64
 	Resolver          *net.Resolver
 	FdFunc            func(fd uintptr) error
+	DialTimeout       time.Duration
 }
 
 func (s *SocketSetting) Dial(ctx context.Context, dest net1.Destination) (net.Conn, error) {
@@ -281,5 +283,6 @@ func (so *SocketSetting) Dulplicate() *SocketSetting {
 		StatsWriteCounter:          so.StatsWriteCounter,
 		Resolver:                   so.Resolver,
 		FdFunc:                     so.FdFunc,
+		DialTimeout:                so.DialTimeout,
 	}
 }

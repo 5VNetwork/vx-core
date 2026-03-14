@@ -58,8 +58,12 @@ func (d *DefaultSystemDialer) DialConn(ctx context.Context, raddr net1.Destinati
 	if sockopt != nil && (sockopt.TcpKeepAliveInterval != 0 || sockopt.TcpKeepAliveIdle != 0) {
 		goStdKeepAlive = time.Duration(-1)
 	}
+	dialTimeout := sockopt.DialTimeout
+	if dialTimeout == 0 {
+		dialTimeout = time.Second * 16
+	}
 	dialer := &net.Dialer{
-		Timeout:   time.Second * 16,
+		Timeout:   dialTimeout,
 		LocalAddr: resolveSrcAddr(raddr.Network, laddr),
 		KeepAlive: goStdKeepAlive,
 	}
