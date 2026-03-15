@@ -5,104 +5,77 @@ package dispatcher
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"time"
 
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/errors"
-	"github.com/5vnetwork/vx-core/i"
 	"github.com/rs/zerolog/log"
 )
 
-// type Fallbacker struct {
-// 	FallbackToProxy bool
-// 	Sm              *selector.Selectors
-// 	Om              i.OutboundManager
-// 	Logger          fallbackLogger
-// }
-
-// type fallbackLogger interface {
-// 	LogFallback(info *session.Info, tag string)
-// }
-
-// func (p *Fallbacker) Fallback(ctx context.Context, info *session.Info,
-// 	rw buf.ReaderWriter, handler i.Outbound, err error) error {
-// 	if handler.Tag() == "direct" && p.FallbackToProxy {
-// 		log.Ctx(ctx).Warn().Str("dst", info.Target.String()).
-// 			Str("domain", info.SniffedDomain).Msg("fallback to proxy")
-// 		// since ip might be polluted, replace it with the domain
-// 		if info.Target.Address.Family().IsIP() && info.SniffedDomain != "" {
-// 			info.Target.Address = mynet.DomainAddress(info.SniffedDomain)
-// 		}
-// 		proxySelector := p.Sm.GetSelector("代理")
-// 		var handler i.Outbound
-// 		if proxySelector != nil {
-// 			handler = proxySelector.GetHandler(info)
-// 		} else {
-// 			for _, selector := range p.Sm.GetAllSelectors() {
-// 				handler = selector.GetHandler(info)
-// 				if handler != nil {
-// 					break
-// 				}
-// 			}
-// 			for _, h := range p.Om.GetAllHandlers() {
-// 				if h != nil && h.Tag() != "direct" && h.Tag() != "dns" {
-// 					handler = h
-// 					break
-// 				}
-// 			}
-// 		}
-// 		if handler != nil {
-// 			if p.Logger != nil {
-// 				p.Logger.LogFallback(info, handler.Tag())
-// 			}
-// 			err = handler.HandleFlow(ctx, info.Target, rw)
-// 		}
-// 	} /* else if p.FallbackToDomain && info.Target.Address.Family().IsIP() &&
-// 		(info.GetTargetDomain() != "") && strings.Contains(err.Error(), "i/o timeout") {
-// 		// This might due to polluted ip
-// 		log.Ctx(ctx).Warn().Str("dst", info.Target.String()).Str("domain", info.GetTargetDomain()).Msg("retry domain")
-// 		info.Target.Address = mynet.DomainAddress(info.GetTargetDomain())
-// 		err = handler.HandleFlow(ctx, info.Target, rw)
-// 	} */
-// 	return err
-// }
-
 type cacheReaderWriter struct {
 	buf.DdlReaderWriter
-	mb               buf.MultiBuffer
+	mb buf.MultiBuffer
+
+	lock     sync.RWMutex
+	readLock sync.Mutex
+
+	// when this value is true, no fallback
 	stopCaching      bool
 	maximumCacheSize int
-	reading          bool
-	done             bool
-	ctx              context.Context
+	// set to true when handler failed to handle
+	done bool
+	ctx  context.Context
 }
 
-func (f *cacheReaderWriter) Done(ctx context.Context) {
+// if fallbackable, make sure no reading and no writing of DdlReaderWriter and
+// return all cached request data. Else, return nil, err
+func (f *cacheReaderWriter) Done(ctx context.Context) (buf.MultiBuffer, error) {
+	f.lock.Lock()
 	f.done = true
+	if f.stopCaching {
+		f.lock.Unlock()
+		return nil, errors.New("unfallbackable")
+	}
+	f.lock.Unlock()
+
 	err := f.DdlReaderWriter.SetReadDeadline(time.Now().Add(-100 * time.Millisecond))
 	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Msg("set read deadline")
+		return nil, fmt.Errorf("unable to clean read ddl, %w", err)
 	}
 	log.Ctx(ctx).Debug().Msg("set read deadline to -100ms")
+
+	f.readLock.Lock()
+	defer f.readLock.Unlock()
+
+	return f.mb, nil
 }
 
 func (f *cacheReaderWriter) ReadMultiBuffer() (buf.MultiBuffer, error) {
+	f.lock.Lock()
 	if f.done {
+		f.lock.Unlock()
 		return nil, errors.New("done")
 	}
 	if f.stopCaching {
+		f.lock.Unlock()
 		return f.DdlReaderWriter.ReadMultiBuffer()
 	}
+	f.lock.Unlock()
 
-	f.reading = true
+	f.readLock.Lock()
 	mb, err := f.DdlReaderWriter.ReadMultiBuffer()
-	f.reading = false
-	if err != nil {
-		log.Ctx(f.ctx).Error().Err(err).Msg("read multi buffer")
-		return nil, err
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	defer f.readLock.Unlock()
+
+	if f.stopCaching {
+		return mb, err
 	}
 
-	if len(f.mb)+len(mb) > f.maximumCacheSize {
+	// if request data is too large, no fallback
+	if len(f.mb)+len(mb) > f.maximumCacheSize && !f.done {
 		f.stopCaching = true
 		buf.ReleaseMulti(f.mb)
 		f.mb = nil
@@ -111,25 +84,21 @@ func (f *cacheReaderWriter) ReadMultiBuffer() (buf.MultiBuffer, error) {
 		f.mb = append(f.mb, clone...)
 	}
 
-	return mb, nil
+	return mb, err
 }
 
 func (f *cacheReaderWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
+	f.lock.Lock()
 	if f.done {
+		f.lock.Unlock()
 		return errors.New("done")
 	}
+	// any write will make this session unfallbackable
 	if !f.stopCaching {
 		f.stopCaching = true
 		buf.ReleaseMulti(f.mb)
 		f.mb = nil
 	}
+	f.lock.Unlock()
 	return f.DdlReaderWriter.WriteMultiBuffer(mb)
-}
-
-type FallbackDeadlineRW struct {
-	buf.ReaderWriter
-	i.DeadlineRW
-	mb               buf.MultiBuffer
-	stopCaching      bool
-	maximumCacheSize int
 }

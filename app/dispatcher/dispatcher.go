@@ -187,12 +187,12 @@ loop:
 			fallbackable, mb, err = d.cacheHandle(ctx, info, rw, handler)
 			if err != nil {
 				defer buf.ReleaseMulti(mb)
-				// still fallbackable
 				if fallbackable {
 					log.Ctx(ctx).Debug().Err(err).Str("tag", handler.Tag()).
 						Int32("cacheSize", mb.Len()).Uint64("upCounter", info.SessionUpCounter.Load()).
 						Uint64("downCounter", info.SessionDownCounter.Load()).
 						Msg("cacheHandler failed")
+					// try to find next handler
 					for len(retries) > 0 {
 						nextHandler := retries[0].GetHandler(ctx, info)
 						retries = retries[1:]
@@ -202,13 +202,18 @@ loop:
 							}
 							handler = nextHandler
 							rw = buf.NewSecondDdl(rw.(buf.DdlReaderWriter), mb)
-							// continue the outer loop
+							// continue the outer loop. i.e. try next handler
 							continue loop
 						}
 					}
+					// no next handler is available. Return error.
+					return err
+				} else {
+					// unfallbackable. Return error.
+					return err
 				}
-				return err
 			} else {
+				// nothing wrong
 				return nil
 			}
 		} else {
@@ -222,34 +227,33 @@ loop:
 }
 
 func (d *Dispatcher) cacheHandle(ctx context.Context, info *session.Info,
-	rw buf.ReaderWriter, handler i.Outbound) (bool, buf.MultiBuffer, error) {
+	rw buf.ReaderWriter, handler i.Outbound) (fallbackable bool, allRequestData buf.MultiBuffer, err error) {
 	cacheRw := &cacheReaderWriter{
 		DdlReaderWriter:  rw.(buf.DdlReaderWriter),
 		maximumCacheSize: 1024 * 16,
 		ctx:              ctx,
 	}
 
-	err := handler.HandleFlow(ctx, info.Target, cacheRw)
+	err = handler.HandleFlow(ctx, info.Target, cacheRw)
 	if err != nil {
-		cacheRw.Done(ctx)
-		if cacheRw.reading {
-			log.Ctx(ctx).Warn().Str("tag", handler.Tag()).Msg("cacheReaderWriter still reading")
-		}
-		rw.(buf.DdlReaderWriter).SetReadDeadline(time.Time{})
 		d.onHandlerError(ctx, info, handler.Tag(), err)
-		// this means the problem occur on the left
-		if (errors.Is(err, errors.LeftToRightError{}) && errors.Is(err, buf.ReadError{})) ||
-			(errors.Is(err, errors.RightToLeftError{}) && buf.IsWriteError(err)) {
-			buf.ReleaseMulti(cacheRw.mb)
+
+		mb, err1 := cacheRw.Done(ctx)
+		if err1 != nil {
+			log.Ctx(ctx).Debug().Err(err1).Msg("unfallbackable due to")
 			return false, nil, err
 		}
-		if !cacheRw.stopCaching && ctx.Err() == nil && !cacheRw.reading {
-			return true, cacheRw.mb, err
+		rw.(buf.DdlReaderWriter).SetReadDeadline(time.Time{})
+		// this means the problem occur on the left. Unfallbackable.
+		if (errors.Is(err, errors.LeftToRightError{}) && errors.Is(err, buf.ReadError{})) ||
+			(errors.Is(err, errors.RightToLeftError{}) && buf.IsWriteError(err)) || ctx.Err() != nil {
+			buf.ReleaseMulti(mb)
+			return false, nil, err
 		}
+		return true, mb, err
 	}
-	cacheRw.Done(ctx)
-	buf.ReleaseMulti(cacheRw.mb)
-	return false, nil, err
+
+	return false, nil, nil
 }
 
 func (d *Dispatcher) onFlowSessionEnd(ctx context.Context, info *session.Info, err error) {
