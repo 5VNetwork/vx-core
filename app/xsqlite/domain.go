@@ -8,7 +8,7 @@ import (
 func (d *Database) AddGeoDomain(domain string, domainSetName string) error {
 	geoDomain := &geo.Domain{
 		Value: domain,
-		Type:  geo.Domain_Full,
+		Type:  geo.Domain_RootDomain,
 	}
 	geoDomainBytes, err := proto.Marshal(geoDomain)
 	if err != nil {
