@@ -19,7 +19,7 @@ type FallbackMon struct {
 type FallbackMonSetting struct {
 	Db            Db
 	DomainSetName string
-	Geo           *geo.Geo
+	Geo           *geo.GeoWrapper
 }
 
 type Db interface {
@@ -68,7 +68,7 @@ func (r *FallbackMon) FlowSessionEnd(ctx context.Context, info *session.Info, er
 		} else {
 			log.Ctx(ctx).Info().Str("domain", s.GetTargetDomain()).Msg("added geo domain to fallback set")
 		}
-		err = r.setting.Geo.AddDomain(r.setting.DomainSetName, &cgeo.Domain{
+		err = r.setting.Geo.GetGeo().AddDomain(r.setting.DomainSetName, &cgeo.Domain{
 			Value: s.GetTargetDomain(),
 			Type:  cgeo.Domain_Full,
 		})
