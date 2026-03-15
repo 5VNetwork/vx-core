@@ -503,6 +503,50 @@ func (x *UpdateHandlerRequest) GetSupport6TestTime() int32 {
 	return 0
 }
 
+type AddGeoDomainRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Domain        string                 `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddGeoDomainRequest) Reset() {
+	*x = AddGeoDomainRequest{}
+	mi := &file_protos_db_db_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddGeoDomainRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddGeoDomainRequest) ProtoMessage() {}
+
+func (x *AddGeoDomainRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_protos_db_db_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddGeoDomainRequest.ProtoReflect.Descriptor instead.
+func (*AddGeoDomainRequest) Descriptor() ([]byte, []int) {
+	return file_protos_db_db_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *AddGeoDomainRequest) GetDomain() string {
+	if x != nil {
+		return x.Domain
+	}
+	return ""
+}
+
 var File_protos_db_db_proto protoreflect.FileDescriptor
 
 const file_protos_db_db_proto_rawDesc = "" +
@@ -550,14 +594,17 @@ const file_protos_db_db_proto_rawDesc = "" +
 	"\t_support6B\x12\n" +
 	"\x10_speed_test_timeB\x11\n" +
 	"\x0f_ping_test_timeB\x15\n" +
-	"\x13_support6_test_time2\xda\x02\n" +
+	"\x13_support6_test_time\"-\n" +
+	"\x13AddGeoDomainRequest\x12\x16\n" +
+	"\x06domain\x18\x01 \x01(\tR\x06domain2\x94\x03\n" +
 	"\tDbService\x12>\n" +
 	"\n" +
 	"GetHandler\x12\x17.x.db.GetHandlerRequest\x1a\x17.x.db.DbOutboundHandler\x12?\n" +
 	"\x0eGetAllHandlers\x12\x1b.x.db.GetAllHandlersRequest\x1a\x10.x.db.DbHandlers\x12G\n" +
 	"\x12GetHandlersByGroup\x12\x1f.x.db.GetHandlersByGroupRequest\x1a\x10.x.db.DbHandlers\x12G\n" +
 	"\x12GetBatchedHandlers\x12\x1f.x.db.GetBatchedHandlersRequest\x1a\x10.x.db.DbHandlers\x12:\n" +
-	"\rUpdateHandler\x12\x1a.x.db.UpdateHandlerRequest\x1a\r.x.db.ReceiptB*Z(github.com/5vnetwork/vx-core/app/xsqliteb\x06proto3"
+	"\rUpdateHandler\x12\x1a.x.db.UpdateHandlerRequest\x1a\r.x.db.Receipt\x128\n" +
+	"\fAddGeoDomain\x12\x19.x.db.AddGeoDomainRequest\x1a\r.x.db.ReceiptB*Z(github.com/5vnetwork/vx-core/app/xsqliteb\x06proto3"
 
 var (
 	file_protos_db_db_proto_rawDescOnce sync.Once
@@ -571,7 +618,7 @@ func file_protos_db_db_proto_rawDescGZIP() []byte {
 	return file_protos_db_db_proto_rawDescData
 }
 
-var file_protos_db_db_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_protos_db_db_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_protos_db_db_proto_goTypes = []any{
 	(*Receipt)(nil),                   // 0: x.db.Receipt
 	(*GetHandlerRequest)(nil),         // 1: x.db.GetHandlerRequest
@@ -581,6 +628,7 @@ var file_protos_db_db_proto_goTypes = []any{
 	(*DbHandlers)(nil),                // 5: x.db.DbHandlers
 	(*DbOutboundHandler)(nil),         // 6: x.db.DbOutboundHandler
 	(*UpdateHandlerRequest)(nil),      // 7: x.db.UpdateHandlerRequest
+	(*AddGeoDomainRequest)(nil),       // 8: x.db.AddGeoDomainRequest
 }
 var file_protos_db_db_proto_depIdxs = []int32{
 	6, // 0: x.db.DbHandlers.handlers:type_name -> x.db.DbOutboundHandler
@@ -589,13 +637,15 @@ var file_protos_db_db_proto_depIdxs = []int32{
 	3, // 3: x.db.DbService.GetHandlersByGroup:input_type -> x.db.GetHandlersByGroupRequest
 	4, // 4: x.db.DbService.GetBatchedHandlers:input_type -> x.db.GetBatchedHandlersRequest
 	7, // 5: x.db.DbService.UpdateHandler:input_type -> x.db.UpdateHandlerRequest
-	6, // 6: x.db.DbService.GetHandler:output_type -> x.db.DbOutboundHandler
-	5, // 7: x.db.DbService.GetAllHandlers:output_type -> x.db.DbHandlers
-	5, // 8: x.db.DbService.GetHandlersByGroup:output_type -> x.db.DbHandlers
-	5, // 9: x.db.DbService.GetBatchedHandlers:output_type -> x.db.DbHandlers
-	0, // 10: x.db.DbService.UpdateHandler:output_type -> x.db.Receipt
-	6, // [6:11] is the sub-list for method output_type
-	1, // [1:6] is the sub-list for method input_type
+	8, // 6: x.db.DbService.AddGeoDomain:input_type -> x.db.AddGeoDomainRequest
+	6, // 7: x.db.DbService.GetHandler:output_type -> x.db.DbOutboundHandler
+	5, // 8: x.db.DbService.GetAllHandlers:output_type -> x.db.DbHandlers
+	5, // 9: x.db.DbService.GetHandlersByGroup:output_type -> x.db.DbHandlers
+	5, // 10: x.db.DbService.GetBatchedHandlers:output_type -> x.db.DbHandlers
+	0, // 11: x.db.DbService.UpdateHandler:output_type -> x.db.Receipt
+	0, // 12: x.db.DbService.AddGeoDomain:output_type -> x.db.Receipt
+	7, // [7:13] is the sub-list for method output_type
+	1, // [1:7] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -613,7 +663,7 @@ func file_protos_db_db_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_protos_db_db_proto_rawDesc), len(file_protos_db_db_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

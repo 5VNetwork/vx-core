@@ -10,6 +10,7 @@ service DbService {
   rpc GetHandlersByGroup(GetHandlersByGroupRequest) returns (DbHandlers);
   rpc GetBatchedHandlers(GetBatchedHandlersRequest) returns (DbHandlers);
   rpc UpdateHandler(UpdateHandlerRequest) returns (Receipt);
+  rpc AddGeoDomain(AddGeoDomainRequest) returns (Receipt);
 }
 
 message Receipt {}
@@ -52,4 +53,8 @@ message UpdateHandlerRequest {
   optional int32 speed_test_time = 6;
   optional int32 ping_test_time = 7;
   optional int32 support6_test_time = 8;
+}
+
+message AddGeoDomainRequest {
+  string domain = 1;
 }

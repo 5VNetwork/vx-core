@@ -136,6 +136,15 @@ func (d *Db) UpdateHandler(id int, m map[string]interface{}) error {
 	return nil
 }
 
+func (d *Db) AddGeoDomain(domain string, domainSetName string) error {
+	_, err := d.client.AddGeoDomain(context.Background(),
+		&AddGeoDomainRequest{Domain: domain})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (d *DbOutboundHandler) ToOutboundHandler() *OutboundHandler {
 	o := &OutboundHandler{
 		ID:               int(d.Id),

@@ -18,6 +18,7 @@ const (
 	DbService_GetHandlersByGroup_FullMethodName = "/x.db.DbService/GetHandlersByGroup"
 	DbService_GetBatchedHandlers_FullMethodName = "/x.db.DbService/GetBatchedHandlers"
 	DbService_UpdateHandler_FullMethodName      = "/x.db.DbService/UpdateHandler"
+	DbService_AddGeoDomain_FullMethodName       = "/x.db.DbService/AddGeoDomain"
 )
 
 // DbServiceClient is the client API for DbService service.
@@ -29,6 +30,7 @@ type DbServiceClient interface {
 	GetHandlersByGroup(ctx context.Context, in *GetHandlersByGroupRequest, opts ...grpc.CallOption) (*DbHandlers, error)
 	GetBatchedHandlers(ctx context.Context, in *GetBatchedHandlersRequest, opts ...grpc.CallOption) (*DbHandlers, error)
 	UpdateHandler(ctx context.Context, in *UpdateHandlerRequest, opts ...grpc.CallOption) (*Receipt, error)
+	AddGeoDomain(ctx context.Context, in *AddGeoDomainRequest, opts ...grpc.CallOption) (*Receipt, error)
 }
 
 type dbServiceClient struct {
@@ -89,6 +91,16 @@ func (c *dbServiceClient) UpdateHandler(ctx context.Context, in *UpdateHandlerRe
 	return out, nil
 }
 
+func (c *dbServiceClient) AddGeoDomain(ctx context.Context, in *AddGeoDomainRequest, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Receipt)
+	err := c.cc.Invoke(ctx, DbService_AddGeoDomain_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DbServiceServer is the server API for DbService service.
 // All implementations must embed UnimplementedDbServiceServer
 // for forward compatibility.
@@ -98,6 +110,7 @@ type DbServiceServer interface {
 	GetHandlersByGroup(context.Context, *GetHandlersByGroupRequest) (*DbHandlers, error)
 	GetBatchedHandlers(context.Context, *GetBatchedHandlersRequest) (*DbHandlers, error)
 	UpdateHandler(context.Context, *UpdateHandlerRequest) (*Receipt, error)
+	AddGeoDomain(context.Context, *AddGeoDomainRequest) (*Receipt, error)
 	mustEmbedUnimplementedDbServiceServer()
 }
 
@@ -122,6 +135,9 @@ func (UnimplementedDbServiceServer) GetBatchedHandlers(context.Context, *GetBatc
 }
 func (UnimplementedDbServiceServer) UpdateHandler(context.Context, *UpdateHandlerRequest) (*Receipt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateHandler not implemented")
+}
+func (UnimplementedDbServiceServer) AddGeoDomain(context.Context, *AddGeoDomainRequest) (*Receipt, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddGeoDomain not implemented")
 }
 func (UnimplementedDbServiceServer) mustEmbedUnimplementedDbServiceServer() {}
 func (UnimplementedDbServiceServer) testEmbeddedByValue()                   {}
@@ -234,6 +250,24 @@ func _DbService_UpdateHandler_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DbService_AddGeoDomain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddGeoDomainRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DbServiceServer).AddGeoDomain(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DbService_AddGeoDomain_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DbServiceServer).AddGeoDomain(ctx, req.(*AddGeoDomainRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DbService_ServiceDesc is the grpc.ServiceDesc for DbService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -260,6 +294,10 @@ var DbService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateHandler",
 			Handler:    _DbService_UpdateHandler_Handler,
+		},
+		{
+			MethodName: "AddGeoDomain",
+			Handler:    _DbService_AddGeoDomain_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
