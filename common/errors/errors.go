@@ -67,7 +67,7 @@ func NewLeftToRightError(err error) LeftToRightError {
 }
 
 func (e LeftToRightError) Is(target error) bool {
-	if _, ok := target.(*LeftToRightError); ok {
+	if _, ok := target.(LeftToRightError); ok {
 		return true
 	}
 	return false
@@ -87,6 +87,13 @@ type RightToLeftError struct {
 
 func NewRightToLeftError(err error) RightToLeftError {
 	return RightToLeftError{err}
+}
+
+func (e RightToLeftError) Is(target error) bool {
+	if _, ok := target.(RightToLeftError); ok {
+		return true
+	}
+	return false
 }
 
 func (e RightToLeftError) Error() string {

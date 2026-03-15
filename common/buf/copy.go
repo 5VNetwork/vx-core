@@ -97,6 +97,13 @@ func (e ReadError) Error() string {
 	return "readError: " + e.error.Error()
 }
 
+func (e ReadError) Is(target error) bool {
+	if _, ok := target.(ReadError); ok {
+		return true
+	}
+	return false
+}
+
 func (e ReadError) Inner() error {
 	return e.error
 }
@@ -117,6 +124,13 @@ type WriteError struct {
 
 func (e WriteError) Error() string {
 	return "writeError: " + e.error.Error()
+}
+
+func (e WriteError) Is(target error) bool {
+	if _, ok := target.(WriteError); ok {
+		return true
+	}
+	return false
 }
 
 func (e WriteError) Inner() error {
