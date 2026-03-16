@@ -9,12 +9,13 @@ import "protos/router.proto";
 import "common/geo/geo.proto";
 import "protos/geo.proto";
 import "protos/server/server.proto";
+import "protos/logger.proto";
 
 message ApiServerConfig {
   string listen_addr = 1;
   string geoip_path = 2;
   string tun_name = 3;
-  uint32 log_level = 4;
+  reserved 4;
   string db_path = 5;
   // milliseconds since epoch
   uint32 last_update_time = 6;
@@ -22,6 +23,7 @@ message ApiServerConfig {
   uint32 interval = 7;
   bool bind_to_default_nic = 8;
   bytes client_cert = 9;
+  x.LoggerConfig log_config = 10;
 }
 
 service Api {
@@ -62,6 +64,7 @@ service Api {
   rpc OpenDb(OpenDbRequest) returns (Receipt);
   rpc InboundConfigToOutboundConfig(InboundConfigToOutboundConfigRequest) returns (InboundConfigToOutboundConfigResponse);
   rpc ToUrl(ToUrlRequest) returns (ToUrlResponse);
+  rpc SetLog(x.LoggerConfig) returns (Receipt);
 }
 
 message XStatusChangeNotifyRequest {
@@ -392,3 +395,4 @@ message ToUrlResponse {
   repeated string urls = 1;
   repeated string failed_nodes = 2;
 }
+

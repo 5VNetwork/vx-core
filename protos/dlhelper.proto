@@ -59,6 +59,5 @@ message SocketConfig {
   // In V2ray, this is the Via property of a outbound handler
   string local_addr4 = 16;
   string local_addr6 = 17;
-    uint32 dial_timeout = 18;
-
+  uint32 dial_timeout = 18;
 }

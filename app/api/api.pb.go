@@ -121,14 +121,14 @@ type ApiServerConfig struct {
 	ListenAddr string                 `protobuf:"bytes,1,opt,name=listen_addr,json=listenAddr,proto3" json:"listen_addr,omitempty"`
 	GeoipPath  string                 `protobuf:"bytes,2,opt,name=geoip_path,json=geoipPath,proto3" json:"geoip_path,omitempty"`
 	TunName    string                 `protobuf:"bytes,3,opt,name=tun_name,json=tunName,proto3" json:"tun_name,omitempty"`
-	LogLevel   uint32                 `protobuf:"varint,4,opt,name=log_level,json=logLevel,proto3" json:"log_level,omitempty"`
 	DbPath     string                 `protobuf:"bytes,5,opt,name=db_path,json=dbPath,proto3" json:"db_path,omitempty"`
 	// milliseconds since epoch
 	LastUpdateTime uint32 `protobuf:"varint,6,opt,name=last_update_time,json=lastUpdateTime,proto3" json:"last_update_time,omitempty"`
 	// minutes
-	Interval         uint32 `protobuf:"varint,7,opt,name=interval,proto3" json:"interval,omitempty"`
-	BindToDefaultNic bool   `protobuf:"varint,8,opt,name=bind_to_default_nic,json=bindToDefaultNic,proto3" json:"bind_to_default_nic,omitempty"`
-	ClientCert       []byte `protobuf:"bytes,9,opt,name=client_cert,json=clientCert,proto3" json:"client_cert,omitempty"`
+	Interval         uint32                `protobuf:"varint,7,opt,name=interval,proto3" json:"interval,omitempty"`
+	BindToDefaultNic bool                  `protobuf:"varint,8,opt,name=bind_to_default_nic,json=bindToDefaultNic,proto3" json:"bind_to_default_nic,omitempty"`
+	ClientCert       []byte                `protobuf:"bytes,9,opt,name=client_cert,json=clientCert,proto3" json:"client_cert,omitempty"`
+	LogConfig        *configs.LoggerConfig `protobuf:"bytes,10,opt,name=log_config,json=logConfig,proto3" json:"log_config,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -184,13 +184,6 @@ func (x *ApiServerConfig) GetTunName() string {
 	return ""
 }
 
-func (x *ApiServerConfig) GetLogLevel() uint32 {
-	if x != nil {
-		return x.LogLevel
-	}
-	return 0
-}
-
 func (x *ApiServerConfig) GetDbPath() string {
 	if x != nil {
 		return x.DbPath
@@ -222,6 +215,13 @@ func (x *ApiServerConfig) GetBindToDefaultNic() bool {
 func (x *ApiServerConfig) GetClientCert() []byte {
 	if x != nil {
 		return x.ClientCert
+	}
+	return nil
+}
+
+func (x *ApiServerConfig) GetLogConfig() *configs.LoggerConfig {
+	if x != nil {
+		return x.LogConfig
 	}
 	return nil
 }
@@ -3826,20 +3826,22 @@ var File_app_api_api_proto protoreflect.FileDescriptor
 
 const file_app_api_api_proto_rawDesc = "" +
 	"\n" +
-	"\x11app/api/api.proto\x12\x05x.api\x1a\x15protos/outbound.proto\x1a\x14protos/inbound.proto\x1a\x13protos/router.proto\x1a\x14common/geo/geo.proto\x1a\x10protos/geo.proto\x1a\x1aprotos/server/server.proto\"\xb8\x02\n" +
+	"\x11app/api/api.proto\x12\x05x.api\x1a\x15protos/outbound.proto\x1a\x14protos/inbound.proto\x1a\x13protos/router.proto\x1a\x14common/geo/geo.proto\x1a\x10protos/geo.proto\x1a\x1aprotos/server/server.proto\x1a\x13protos/logger.proto\"\xd1\x02\n" +
 	"\x0fApiServerConfig\x12\x1f\n" +
 	"\vlisten_addr\x18\x01 \x01(\tR\n" +
 	"listenAddr\x12\x1d\n" +
 	"\n" +
 	"geoip_path\x18\x02 \x01(\tR\tgeoipPath\x12\x19\n" +
-	"\btun_name\x18\x03 \x01(\tR\atunName\x12\x1b\n" +
-	"\tlog_level\x18\x04 \x01(\rR\blogLevel\x12\x17\n" +
+	"\btun_name\x18\x03 \x01(\tR\atunName\x12\x17\n" +
 	"\adb_path\x18\x05 \x01(\tR\x06dbPath\x12(\n" +
 	"\x10last_update_time\x18\x06 \x01(\rR\x0elastUpdateTime\x12\x1a\n" +
 	"\binterval\x18\a \x01(\rR\binterval\x12-\n" +
 	"\x13bind_to_default_nic\x18\b \x01(\bR\x10bindToDefaultNic\x12\x1f\n" +
 	"\vclient_cert\x18\t \x01(\fR\n" +
-	"clientCert\"\xb5\x01\n" +
+	"clientCert\x12.\n" +
+	"\n" +
+	"log_config\x18\n" +
+	" \x01(\v2\x0f.x.LoggerConfigR\tlogConfigJ\x04\b\x04\x10\x05\"\xb5\x01\n" +
 	"\x1aXStatusChangeNotifyRequest\x12@\n" +
 	"\x06status\x18\x01 \x01(\x0e2(.x.api.XStatusChangeNotifyRequest.StatusR\x06status\"U\n" +
 	"\x06Status\x12\x10\n" +
@@ -4080,7 +4082,7 @@ const file_app_api_api_proto_rawDesc = "" +
 	"\x10outbound_confogs\x18\x01 \x03(\v2\x18.x.OutboundHandlerConfigR\x0foutboundConfogs\"F\n" +
 	"\rToUrlResponse\x12\x12\n" +
 	"\x04urls\x18\x01 \x03(\tR\x04urls\x12!\n" +
-	"\ffailed_nodes\x18\x02 \x03(\tR\vfailedNodes2\xf5\x12\n" +
+	"\ffailed_nodes\x18\x02 \x03(\tR\vfailedNodes2\xa0\x13\n" +
 	"\x03Api\x12>\n" +
 	"\x0eUpdateTmStatus\x12\x1c.x.api.UpdateTmStatusRequest\x1a\x0e.x.api.Receipt\x12;\n" +
 	"\bDownload\x12\x16.x.api.DownloadRequest\x1a\x17.x.api.DownloadResponse\x12J\n" +
@@ -4115,7 +4117,8 @@ const file_app_api_api_proto_rawDesc = "" +
 	"\aCloseDb\x12\x15.x.api.CloseDbRequest\x1a\x0e.x.api.Receipt\x12.\n" +
 	"\x06OpenDb\x12\x14.x.api.OpenDbRequest\x1a\x0e.x.api.Receipt\x12z\n" +
 	"\x1dInboundConfigToOutboundConfig\x12+.x.api.InboundConfigToOutboundConfigRequest\x1a,.x.api.InboundConfigToOutboundConfigResponse\x122\n" +
-	"\x05ToUrl\x12\x13.x.api.ToUrlRequest\x1a\x14.x.api.ToUrlResponseB&Z$github.com/5vnetwork/vx-core/app/apib\x06proto3"
+	"\x05ToUrl\x12\x13.x.api.ToUrlRequest\x1a\x14.x.api.ToUrlResponse\x12)\n" +
+	"\x06SetLog\x12\x0f.x.LoggerConfig\x1a\x0e.x.api.ReceiptB&Z$github.com/5vnetwork/vx-core/app/apib\x06proto3"
 
 var (
 	file_app_api_api_proto_rawDescOnce sync.Once
@@ -4208,123 +4211,127 @@ var file_app_api_api_proto_goTypes = []any{
 	nil,                                           // 73: x.api.UpdateSubscriptionResponse.ErrorReasonsEntry
 	nil,                                           // 74: x.api.DownloadResponse.UsageEntry
 	nil,                                           // 75: x.api.DeployRequest.FilesEntry
-	(*configs.HandlerConfig)(nil),                 // 76: x.HandlerConfig
-	(*configs.OutboundHandlerConfig)(nil),         // 77: x.OutboundHandlerConfig
-	(*server.ServerConfig)(nil),                   // 78: x.ServerConfig
-	(*configs.ProxyInboundConfig)(nil),            // 79: x.ProxyInboundConfig
-	(*geo.Domain)(nil),                            // 80: x.common.geo.Domain
-	(*geo.CIDR)(nil),                              // 81: x.common.geo.CIDR
-	(*configs.AppId)(nil),                         // 82: x.AppId
-	(*configs.GeositeConfig)(nil),                 // 83: x.GeositeConfig
-	(*configs.GeoIPConfig)(nil),                   // 84: x.GeoIPConfig
-	(*configs.MultiProxyInboundConfig)(nil),       // 85: x.MultiProxyInboundConfig
+	(*configs.LoggerConfig)(nil),                  // 76: x.LoggerConfig
+	(*configs.HandlerConfig)(nil),                 // 77: x.HandlerConfig
+	(*configs.OutboundHandlerConfig)(nil),         // 78: x.OutboundHandlerConfig
+	(*server.ServerConfig)(nil),                   // 79: x.ServerConfig
+	(*configs.ProxyInboundConfig)(nil),            // 80: x.ProxyInboundConfig
+	(*geo.Domain)(nil),                            // 81: x.common.geo.Domain
+	(*geo.CIDR)(nil),                              // 82: x.common.geo.CIDR
+	(*configs.AppId)(nil),                         // 83: x.AppId
+	(*configs.GeositeConfig)(nil),                 // 84: x.GeositeConfig
+	(*configs.GeoIPConfig)(nil),                   // 85: x.GeoIPConfig
+	(*configs.MultiProxyInboundConfig)(nil),       // 86: x.MultiProxyInboundConfig
 }
 var file_app_api_api_proto_depIdxs = []int32{
-	0,  // 0: x.api.XStatusChangeNotifyRequest.status:type_name -> x.api.XStatusChangeNotifyRequest.Status
-	76, // 1: x.api.UpdateSubscriptionRequest.handlers:type_name -> x.HandlerConfig
-	73, // 2: x.api.UpdateSubscriptionResponse.error_reasons:type_name -> x.api.UpdateSubscriptionResponse.ErrorReasonsEntry
-	76, // 3: x.api.DownloadRequest.handlers:type_name -> x.HandlerConfig
-	74, // 4: x.api.DownloadResponse.usage:type_name -> x.api.DownloadResponse.UsageEntry
-	77, // 5: x.api.HandlerIpRequest.handler:type_name -> x.OutboundHandlerConfig
-	76, // 6: x.api.HandlerUsableRequest.handler:type_name -> x.HandlerConfig
-	76, // 7: x.api.SpeedTestRequest.handlers:type_name -> x.HandlerConfig
-	23, // 8: x.api.MonitorServerRequest.ssh_config:type_name -> x.api.ServerSshConfig
-	23, // 9: x.api.DeployRequest.ssh_config:type_name -> x.api.ServerSshConfig
-	75, // 10: x.api.DeployRequest.files:type_name -> x.api.DeployRequest.FilesEntry
-	78, // 11: x.api.DeployRequest.vx_config:type_name -> x.ServerConfig
-	1,  // 12: x.api.ServerActionRequest.action:type_name -> x.api.ServerActionRequest.Action
-	23, // 13: x.api.ServerActionRequest.ssh_config:type_name -> x.api.ServerSshConfig
-	23, // 14: x.api.VproxyStatusRequest.ssh_config:type_name -> x.api.ServerSshConfig
-	23, // 15: x.api.VXRequest.ssh_config:type_name -> x.api.ServerSshConfig
-	23, // 16: x.api.ServerConfigRequest.ssh_config:type_name -> x.api.ServerSshConfig
-	78, // 17: x.api.ServerConfigResponse.config:type_name -> x.ServerConfig
-	23, // 18: x.api.UpdateServerConfigRequest.ssh_config:type_name -> x.api.ServerSshConfig
-	78, // 19: x.api.UpdateServerConfigRequest.config:type_name -> x.ServerConfig
-	77, // 20: x.api.DecodeResponse.handlers:type_name -> x.OutboundHandlerConfig
-	23, // 21: x.api.GetServerPublicKeyRequest.ssh_config:type_name -> x.api.ServerSshConfig
-	79, // 22: x.api.AddInboundRequest.inbound:type_name -> x.ProxyInboundConfig
-	80, // 23: x.api.ParseClashRuleFileResponse.domains:type_name -> x.common.geo.Domain
-	81, // 24: x.api.ParseClashRuleFileResponse.cidrs:type_name -> x.common.geo.CIDR
-	82, // 25: x.api.ParseClashRuleFileResponse.app_ids:type_name -> x.AppId
-	83, // 26: x.api.ParseGeositeConfigRequest.config:type_name -> x.GeositeConfig
-	80, // 27: x.api.ParseGeositeConfigResponse.domains:type_name -> x.common.geo.Domain
-	84, // 28: x.api.ParseGeoIPConfigRequest.config:type_name -> x.GeoIPConfig
-	81, // 29: x.api.ParseGeoIPConfigResponse.cidrs:type_name -> x.common.geo.CIDR
-	79, // 30: x.api.InboundConfigToOutboundConfigRequest.inbound:type_name -> x.ProxyInboundConfig
-	85, // 31: x.api.InboundConfigToOutboundConfigRequest.multi_inbound:type_name -> x.MultiProxyInboundConfig
-	77, // 32: x.api.InboundConfigToOutboundConfigResponse.outbound_configs:type_name -> x.OutboundHandlerConfig
-	77, // 33: x.api.ToUrlRequest.outbound_confogs:type_name -> x.OutboundHandlerConfig
-	53, // 34: x.api.Api.UpdateTmStatus:input_type -> x.api.UpdateTmStatusRequest
-	11, // 35: x.api.Api.Download:input_type -> x.api.DownloadRequest
-	17, // 36: x.api.Api.HandlerUsable:input_type -> x.api.HandlerUsableRequest
-	19, // 37: x.api.Api.SpeedTest:input_type -> x.api.SpeedTestRequest
-	14, // 38: x.api.Api.RttTest:input_type -> x.api.RttTestRequest
-	21, // 39: x.api.Api.GeoIP:input_type -> x.api.GeoIPRequest
-	41, // 40: x.api.Api.GetServerPublicKey:input_type -> x.api.GetServerPublicKeyRequest
-	24, // 41: x.api.Api.MonitorServer:input_type -> x.api.MonitorServerRequest
-	28, // 42: x.api.Api.ServerAction:input_type -> x.api.ServerActionRequest
-	30, // 43: x.api.Api.VproxyStatus:input_type -> x.api.VproxyStatusRequest
-	32, // 44: x.api.Api.VX:input_type -> x.api.VXRequest
-	33, // 45: x.api.Api.ServerConfig:input_type -> x.api.ServerConfigRequest
-	35, // 46: x.api.Api.UpdateServerConfig:input_type -> x.api.UpdateServerConfigRequest
-	7,  // 47: x.api.Api.UpdateSubscription:input_type -> x.api.UpdateSubscriptionRequest
-	37, // 48: x.api.Api.ProcessGeoFiles:input_type -> x.api.ProcessGeoFilesRequest
-	39, // 49: x.api.Api.Decode:input_type -> x.api.DecodeRequest
-	26, // 50: x.api.Api.Deploy:input_type -> x.api.DeployRequest
-	43, // 51: x.api.Api.GenerateCert:input_type -> x.api.GenerateCertRequest
-	63, // 52: x.api.Api.GenerateECH:input_type -> x.api.GenerateECHRequest
-	45, // 53: x.api.Api.GetCertDomain:input_type -> x.api.GetCertDomainRequest
-	47, // 54: x.api.Api.AddInbound:input_type -> x.api.AddInboundRequest
-	49, // 55: x.api.Api.UploadLog:input_type -> x.api.UploadLogRequest
-	51, // 56: x.api.Api.DefaultNICHasGlobalV6:input_type -> x.api.DefaultNICHasGlobalV6Request
-	55, // 57: x.api.Api.ParseClashRuleFile:input_type -> x.api.ParseClashRuleFileRequest
-	57, // 58: x.api.Api.ParseGeositeConfig:input_type -> x.api.ParseGeositeConfigRequest
-	59, // 59: x.api.Api.ParseGeoIPConfig:input_type -> x.api.ParseGeoIPConfigRequest
-	61, // 60: x.api.Api.GenerateX25519KeyPair:input_type -> x.api.GenerateX25519KeyPairRequest
-	65, // 61: x.api.Api.StartMacSystemProxy:input_type -> x.api.StartMacSystemProxyRequest
-	66, // 62: x.api.Api.StopMacSystemProxy:input_type -> x.api.StopMacSystemProxyRequest
-	67, // 63: x.api.Api.CloseDb:input_type -> x.api.CloseDbRequest
-	68, // 64: x.api.Api.OpenDb:input_type -> x.api.OpenDbRequest
-	69, // 65: x.api.Api.InboundConfigToOutboundConfig:input_type -> x.api.InboundConfigToOutboundConfigRequest
-	71, // 66: x.api.Api.ToUrl:input_type -> x.api.ToUrlRequest
-	54, // 67: x.api.Api.UpdateTmStatus:output_type -> x.api.Receipt
-	12, // 68: x.api.Api.Download:output_type -> x.api.DownloadResponse
-	18, // 69: x.api.Api.HandlerUsable:output_type -> x.api.HandlerUsableResponse
-	20, // 70: x.api.Api.SpeedTest:output_type -> x.api.SpeedTestResponse
-	15, // 71: x.api.Api.RttTest:output_type -> x.api.RttTestResponse
-	22, // 72: x.api.Api.GeoIP:output_type -> x.api.GeoIPResponse
-	42, // 73: x.api.Api.GetServerPublicKey:output_type -> x.api.GetServerPublicKeyResponse
-	25, // 74: x.api.Api.MonitorServer:output_type -> x.api.MonitorServerResponse
-	29, // 75: x.api.Api.ServerAction:output_type -> x.api.ServerActionResponse
-	31, // 76: x.api.Api.VproxyStatus:output_type -> x.api.VproxyStatusResponse
-	54, // 77: x.api.Api.VX:output_type -> x.api.Receipt
-	34, // 78: x.api.Api.ServerConfig:output_type -> x.api.ServerConfigResponse
-	36, // 79: x.api.Api.UpdateServerConfig:output_type -> x.api.UpdateServerConfigResponse
-	8,  // 80: x.api.Api.UpdateSubscription:output_type -> x.api.UpdateSubscriptionResponse
-	38, // 81: x.api.Api.ProcessGeoFiles:output_type -> x.api.ProcessGeoFilesResponse
-	40, // 82: x.api.Api.Decode:output_type -> x.api.DecodeResponse
-	27, // 83: x.api.Api.Deploy:output_type -> x.api.DeployResponse
-	44, // 84: x.api.Api.GenerateCert:output_type -> x.api.GenerateCertResponse
-	64, // 85: x.api.Api.GenerateECH:output_type -> x.api.GenerateECHResponse
-	46, // 86: x.api.Api.GetCertDomain:output_type -> x.api.GetCertDomainResponse
-	48, // 87: x.api.Api.AddInbound:output_type -> x.api.AddInboundResponse
-	50, // 88: x.api.Api.UploadLog:output_type -> x.api.UploadLogResponse
-	52, // 89: x.api.Api.DefaultNICHasGlobalV6:output_type -> x.api.DefaultNICHasGlobalV6Response
-	56, // 90: x.api.Api.ParseClashRuleFile:output_type -> x.api.ParseClashRuleFileResponse
-	58, // 91: x.api.Api.ParseGeositeConfig:output_type -> x.api.ParseGeositeConfigResponse
-	60, // 92: x.api.Api.ParseGeoIPConfig:output_type -> x.api.ParseGeoIPConfigResponse
-	62, // 93: x.api.Api.GenerateX25519KeyPair:output_type -> x.api.GenerateX25519KeyPairResponse
-	54, // 94: x.api.Api.StartMacSystemProxy:output_type -> x.api.Receipt
-	54, // 95: x.api.Api.StopMacSystemProxy:output_type -> x.api.Receipt
-	54, // 96: x.api.Api.CloseDb:output_type -> x.api.Receipt
-	54, // 97: x.api.Api.OpenDb:output_type -> x.api.Receipt
-	70, // 98: x.api.Api.InboundConfigToOutboundConfig:output_type -> x.api.InboundConfigToOutboundConfigResponse
-	72, // 99: x.api.Api.ToUrl:output_type -> x.api.ToUrlResponse
-	67, // [67:100] is the sub-list for method output_type
-	34, // [34:67] is the sub-list for method input_type
-	34, // [34:34] is the sub-list for extension type_name
-	34, // [34:34] is the sub-list for extension extendee
-	0,  // [0:34] is the sub-list for field type_name
+	76, // 0: x.api.ApiServerConfig.log_config:type_name -> x.LoggerConfig
+	0,  // 1: x.api.XStatusChangeNotifyRequest.status:type_name -> x.api.XStatusChangeNotifyRequest.Status
+	77, // 2: x.api.UpdateSubscriptionRequest.handlers:type_name -> x.HandlerConfig
+	73, // 3: x.api.UpdateSubscriptionResponse.error_reasons:type_name -> x.api.UpdateSubscriptionResponse.ErrorReasonsEntry
+	77, // 4: x.api.DownloadRequest.handlers:type_name -> x.HandlerConfig
+	74, // 5: x.api.DownloadResponse.usage:type_name -> x.api.DownloadResponse.UsageEntry
+	78, // 6: x.api.HandlerIpRequest.handler:type_name -> x.OutboundHandlerConfig
+	77, // 7: x.api.HandlerUsableRequest.handler:type_name -> x.HandlerConfig
+	77, // 8: x.api.SpeedTestRequest.handlers:type_name -> x.HandlerConfig
+	23, // 9: x.api.MonitorServerRequest.ssh_config:type_name -> x.api.ServerSshConfig
+	23, // 10: x.api.DeployRequest.ssh_config:type_name -> x.api.ServerSshConfig
+	75, // 11: x.api.DeployRequest.files:type_name -> x.api.DeployRequest.FilesEntry
+	79, // 12: x.api.DeployRequest.vx_config:type_name -> x.ServerConfig
+	1,  // 13: x.api.ServerActionRequest.action:type_name -> x.api.ServerActionRequest.Action
+	23, // 14: x.api.ServerActionRequest.ssh_config:type_name -> x.api.ServerSshConfig
+	23, // 15: x.api.VproxyStatusRequest.ssh_config:type_name -> x.api.ServerSshConfig
+	23, // 16: x.api.VXRequest.ssh_config:type_name -> x.api.ServerSshConfig
+	23, // 17: x.api.ServerConfigRequest.ssh_config:type_name -> x.api.ServerSshConfig
+	79, // 18: x.api.ServerConfigResponse.config:type_name -> x.ServerConfig
+	23, // 19: x.api.UpdateServerConfigRequest.ssh_config:type_name -> x.api.ServerSshConfig
+	79, // 20: x.api.UpdateServerConfigRequest.config:type_name -> x.ServerConfig
+	78, // 21: x.api.DecodeResponse.handlers:type_name -> x.OutboundHandlerConfig
+	23, // 22: x.api.GetServerPublicKeyRequest.ssh_config:type_name -> x.api.ServerSshConfig
+	80, // 23: x.api.AddInboundRequest.inbound:type_name -> x.ProxyInboundConfig
+	81, // 24: x.api.ParseClashRuleFileResponse.domains:type_name -> x.common.geo.Domain
+	82, // 25: x.api.ParseClashRuleFileResponse.cidrs:type_name -> x.common.geo.CIDR
+	83, // 26: x.api.ParseClashRuleFileResponse.app_ids:type_name -> x.AppId
+	84, // 27: x.api.ParseGeositeConfigRequest.config:type_name -> x.GeositeConfig
+	81, // 28: x.api.ParseGeositeConfigResponse.domains:type_name -> x.common.geo.Domain
+	85, // 29: x.api.ParseGeoIPConfigRequest.config:type_name -> x.GeoIPConfig
+	82, // 30: x.api.ParseGeoIPConfigResponse.cidrs:type_name -> x.common.geo.CIDR
+	80, // 31: x.api.InboundConfigToOutboundConfigRequest.inbound:type_name -> x.ProxyInboundConfig
+	86, // 32: x.api.InboundConfigToOutboundConfigRequest.multi_inbound:type_name -> x.MultiProxyInboundConfig
+	78, // 33: x.api.InboundConfigToOutboundConfigResponse.outbound_configs:type_name -> x.OutboundHandlerConfig
+	78, // 34: x.api.ToUrlRequest.outbound_confogs:type_name -> x.OutboundHandlerConfig
+	53, // 35: x.api.Api.UpdateTmStatus:input_type -> x.api.UpdateTmStatusRequest
+	11, // 36: x.api.Api.Download:input_type -> x.api.DownloadRequest
+	17, // 37: x.api.Api.HandlerUsable:input_type -> x.api.HandlerUsableRequest
+	19, // 38: x.api.Api.SpeedTest:input_type -> x.api.SpeedTestRequest
+	14, // 39: x.api.Api.RttTest:input_type -> x.api.RttTestRequest
+	21, // 40: x.api.Api.GeoIP:input_type -> x.api.GeoIPRequest
+	41, // 41: x.api.Api.GetServerPublicKey:input_type -> x.api.GetServerPublicKeyRequest
+	24, // 42: x.api.Api.MonitorServer:input_type -> x.api.MonitorServerRequest
+	28, // 43: x.api.Api.ServerAction:input_type -> x.api.ServerActionRequest
+	30, // 44: x.api.Api.VproxyStatus:input_type -> x.api.VproxyStatusRequest
+	32, // 45: x.api.Api.VX:input_type -> x.api.VXRequest
+	33, // 46: x.api.Api.ServerConfig:input_type -> x.api.ServerConfigRequest
+	35, // 47: x.api.Api.UpdateServerConfig:input_type -> x.api.UpdateServerConfigRequest
+	7,  // 48: x.api.Api.UpdateSubscription:input_type -> x.api.UpdateSubscriptionRequest
+	37, // 49: x.api.Api.ProcessGeoFiles:input_type -> x.api.ProcessGeoFilesRequest
+	39, // 50: x.api.Api.Decode:input_type -> x.api.DecodeRequest
+	26, // 51: x.api.Api.Deploy:input_type -> x.api.DeployRequest
+	43, // 52: x.api.Api.GenerateCert:input_type -> x.api.GenerateCertRequest
+	63, // 53: x.api.Api.GenerateECH:input_type -> x.api.GenerateECHRequest
+	45, // 54: x.api.Api.GetCertDomain:input_type -> x.api.GetCertDomainRequest
+	47, // 55: x.api.Api.AddInbound:input_type -> x.api.AddInboundRequest
+	49, // 56: x.api.Api.UploadLog:input_type -> x.api.UploadLogRequest
+	51, // 57: x.api.Api.DefaultNICHasGlobalV6:input_type -> x.api.DefaultNICHasGlobalV6Request
+	55, // 58: x.api.Api.ParseClashRuleFile:input_type -> x.api.ParseClashRuleFileRequest
+	57, // 59: x.api.Api.ParseGeositeConfig:input_type -> x.api.ParseGeositeConfigRequest
+	59, // 60: x.api.Api.ParseGeoIPConfig:input_type -> x.api.ParseGeoIPConfigRequest
+	61, // 61: x.api.Api.GenerateX25519KeyPair:input_type -> x.api.GenerateX25519KeyPairRequest
+	65, // 62: x.api.Api.StartMacSystemProxy:input_type -> x.api.StartMacSystemProxyRequest
+	66, // 63: x.api.Api.StopMacSystemProxy:input_type -> x.api.StopMacSystemProxyRequest
+	67, // 64: x.api.Api.CloseDb:input_type -> x.api.CloseDbRequest
+	68, // 65: x.api.Api.OpenDb:input_type -> x.api.OpenDbRequest
+	69, // 66: x.api.Api.InboundConfigToOutboundConfig:input_type -> x.api.InboundConfigToOutboundConfigRequest
+	71, // 67: x.api.Api.ToUrl:input_type -> x.api.ToUrlRequest
+	76, // 68: x.api.Api.SetLog:input_type -> x.LoggerConfig
+	54, // 69: x.api.Api.UpdateTmStatus:output_type -> x.api.Receipt
+	12, // 70: x.api.Api.Download:output_type -> x.api.DownloadResponse
+	18, // 71: x.api.Api.HandlerUsable:output_type -> x.api.HandlerUsableResponse
+	20, // 72: x.api.Api.SpeedTest:output_type -> x.api.SpeedTestResponse
+	15, // 73: x.api.Api.RttTest:output_type -> x.api.RttTestResponse
+	22, // 74: x.api.Api.GeoIP:output_type -> x.api.GeoIPResponse
+	42, // 75: x.api.Api.GetServerPublicKey:output_type -> x.api.GetServerPublicKeyResponse
+	25, // 76: x.api.Api.MonitorServer:output_type -> x.api.MonitorServerResponse
+	29, // 77: x.api.Api.ServerAction:output_type -> x.api.ServerActionResponse
+	31, // 78: x.api.Api.VproxyStatus:output_type -> x.api.VproxyStatusResponse
+	54, // 79: x.api.Api.VX:output_type -> x.api.Receipt
+	34, // 80: x.api.Api.ServerConfig:output_type -> x.api.ServerConfigResponse
+	36, // 81: x.api.Api.UpdateServerConfig:output_type -> x.api.UpdateServerConfigResponse
+	8,  // 82: x.api.Api.UpdateSubscription:output_type -> x.api.UpdateSubscriptionResponse
+	38, // 83: x.api.Api.ProcessGeoFiles:output_type -> x.api.ProcessGeoFilesResponse
+	40, // 84: x.api.Api.Decode:output_type -> x.api.DecodeResponse
+	27, // 85: x.api.Api.Deploy:output_type -> x.api.DeployResponse
+	44, // 86: x.api.Api.GenerateCert:output_type -> x.api.GenerateCertResponse
+	64, // 87: x.api.Api.GenerateECH:output_type -> x.api.GenerateECHResponse
+	46, // 88: x.api.Api.GetCertDomain:output_type -> x.api.GetCertDomainResponse
+	48, // 89: x.api.Api.AddInbound:output_type -> x.api.AddInboundResponse
+	50, // 90: x.api.Api.UploadLog:output_type -> x.api.UploadLogResponse
+	52, // 91: x.api.Api.DefaultNICHasGlobalV6:output_type -> x.api.DefaultNICHasGlobalV6Response
+	56, // 92: x.api.Api.ParseClashRuleFile:output_type -> x.api.ParseClashRuleFileResponse
+	58, // 93: x.api.Api.ParseGeositeConfig:output_type -> x.api.ParseGeositeConfigResponse
+	60, // 94: x.api.Api.ParseGeoIPConfig:output_type -> x.api.ParseGeoIPConfigResponse
+	62, // 95: x.api.Api.GenerateX25519KeyPair:output_type -> x.api.GenerateX25519KeyPairResponse
+	54, // 96: x.api.Api.StartMacSystemProxy:output_type -> x.api.Receipt
+	54, // 97: x.api.Api.StopMacSystemProxy:output_type -> x.api.Receipt
+	54, // 98: x.api.Api.CloseDb:output_type -> x.api.Receipt
+	54, // 99: x.api.Api.OpenDb:output_type -> x.api.Receipt
+	70, // 100: x.api.Api.InboundConfigToOutboundConfig:output_type -> x.api.InboundConfigToOutboundConfigResponse
+	72, // 101: x.api.Api.ToUrl:output_type -> x.api.ToUrlResponse
+	54, // 102: x.api.Api.SetLog:output_type -> x.api.Receipt
+	69, // [69:103] is the sub-list for method output_type
+	35, // [35:69] is the sub-list for method input_type
+	35, // [35:35] is the sub-list for extension type_name
+	35, // [35:35] is the sub-list for extension extendee
+	0,  // [0:35] is the sub-list for field type_name
 }
 
 func init() { file_app_api_api_proto_init() }

@@ -48,6 +48,7 @@ type Api struct {
 	server *grpc.Server
 	UnimplementedApiServer
 
+	log *logger.Logger
 	// geo
 	geoLock        sync.Mutex
 	geoIpMatcher   *geoIpMatcher
@@ -86,22 +87,21 @@ func WithDefaultInterfaceMonitor(mon i.DefaultInterfaceInfo) ApiOption {
 
 func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error) {
 	// set log
-	logger.SetLog(&configs.LoggerConfig{
-		LogLevel:      configs.Level(config.LogLevel),
-		ConsoleWriter: true,
-		ShowCaller:    true,
-	})
+	logger, err := logger.SetLog(config.LogConfig)
+	if err != nil {
+		return nil, err
+	}
 
 	api := &Api{
 		ApiServerConfig: config,
 		sshClientCache:  make(map[string]*SshClientCacheItem),
+		log:             logger,
 	}
 	for _, option := range options {
 		option(api)
 	}
 
 	var lis net.Listener
-	var err error
 	var opts []grpc.ServerOption
 	_, _, err = net.SplitHostPort(config.ListenAddr)
 	if err != nil { // unix addr
@@ -239,6 +239,19 @@ func (a *Api) Stop() {
 		a.sysProxy.Close()
 	}
 	a.server.Stop()
+	a.log.Close()
+}
+
+func (a *Api) SetLog(ctx context.Context, req *configs.LoggerConfig) (*Receipt, error) {
+	if a.log != nil {
+		a.log.Close()
+	}
+	log, err := logger.SetLog(req)
+	if err != nil {
+		return nil, err
+	}
+	a.log = log
+	return &Receipt{}, nil
 }
 
 func (a *Api) getDialerFactory() transport.DialerFactory {

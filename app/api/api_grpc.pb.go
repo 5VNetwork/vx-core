@@ -2,6 +2,7 @@ package api
 
 import (
 	context "context"
+	configs "github.com/5vnetwork/vx-core/app/configs"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -46,6 +47,7 @@ const (
 	Api_OpenDb_FullMethodName                        = "/x.api.Api/OpenDb"
 	Api_InboundConfigToOutboundConfig_FullMethodName = "/x.api.Api/InboundConfigToOutboundConfig"
 	Api_ToUrl_FullMethodName                         = "/x.api.Api/ToUrl"
+	Api_SetLog_FullMethodName                        = "/x.api.Api/SetLog"
 )
 
 // ApiClient is the client API for Api service.
@@ -89,6 +91,7 @@ type ApiClient interface {
 	OpenDb(ctx context.Context, in *OpenDbRequest, opts ...grpc.CallOption) (*Receipt, error)
 	InboundConfigToOutboundConfig(ctx context.Context, in *InboundConfigToOutboundConfigRequest, opts ...grpc.CallOption) (*InboundConfigToOutboundConfigResponse, error)
 	ToUrl(ctx context.Context, in *ToUrlRequest, opts ...grpc.CallOption) (*ToUrlResponse, error)
+	SetLog(ctx context.Context, in *configs.LoggerConfig, opts ...grpc.CallOption) (*Receipt, error)
 }
 
 type apiClient struct {
@@ -447,6 +450,16 @@ func (c *apiClient) ToUrl(ctx context.Context, in *ToUrlRequest, opts ...grpc.Ca
 	return out, nil
 }
 
+func (c *apiClient) SetLog(ctx context.Context, in *configs.LoggerConfig, opts ...grpc.CallOption) (*Receipt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Receipt)
+	err := c.cc.Invoke(ctx, Api_SetLog_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ApiServer is the server API for Api service.
 // All implementations must embed UnimplementedApiServer
 // for forward compatibility.
@@ -488,6 +501,7 @@ type ApiServer interface {
 	OpenDb(context.Context, *OpenDbRequest) (*Receipt, error)
 	InboundConfigToOutboundConfig(context.Context, *InboundConfigToOutboundConfigRequest) (*InboundConfigToOutboundConfigResponse, error)
 	ToUrl(context.Context, *ToUrlRequest) (*ToUrlResponse, error)
+	SetLog(context.Context, *configs.LoggerConfig) (*Receipt, error)
 	mustEmbedUnimplementedApiServer()
 }
 
@@ -596,6 +610,9 @@ func (UnimplementedApiServer) InboundConfigToOutboundConfig(context.Context, *In
 }
 func (UnimplementedApiServer) ToUrl(context.Context, *ToUrlRequest) (*ToUrlResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ToUrl not implemented")
+}
+func (UnimplementedApiServer) SetLog(context.Context, *configs.LoggerConfig) (*Receipt, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetLog not implemented")
 }
 func (UnimplementedApiServer) mustEmbedUnimplementedApiServer() {}
 func (UnimplementedApiServer) testEmbeddedByValue()             {}
@@ -1198,6 +1215,24 @@ func _Api_ToUrl_Handler(srv interface{}, ctx context.Context, dec func(interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Api_SetLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(configs.LoggerConfig)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApiServer).SetLog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Api_SetLog_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApiServer).SetLog(ctx, req.(*configs.LoggerConfig))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Api_ServiceDesc is the grpc.ServiceDesc for Api service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1328,6 +1363,10 @@ var Api_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ToUrl",
 			Handler:    _Api_ToUrl_Handler,
+		},
+		{
+			MethodName: "SetLog",
+			Handler:    _Api_SetLog_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

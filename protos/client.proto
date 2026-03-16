@@ -48,8 +48,6 @@ message TmConfig {
   x.FallbackMonConfig fallback_mon = 37;
 }
 
-
-
 message GrpcConfig { 
   // listen address
   string address = 1;
