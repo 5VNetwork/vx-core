@@ -26,7 +26,7 @@ func buildOutbound(config *configs.TmConfig, builder *Builder, client *client.Cl
 	client.OutboundManager = om
 	common.Must(builder.addComponent(om))
 	err := builder.requireFeature(func(df transport.DialerFactory,
-		policy *policy.Policy, _ *dns.Dns) error {
+		policy *policy.Policy, _ *dns.Dns, _ *dns.InternalDns) error {
 		var singleHandlers []*configs.HandlerConfig
 		var chainHandlers []*configs.HandlerConfig
 

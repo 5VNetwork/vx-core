@@ -11,6 +11,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
+	idns "github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/router"
@@ -125,7 +126,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 
 	// router
 	err := fc.requireFeature(func(om *outbound.Manager, g i.GeoHelper,
-		ipr i.IPResolver) error {
+		_ *idns.Dns) error {
 		r, err := router.NewRouter(&router.RouterConfig{
 			RouterConfig:    config.Router,
 			GeoHelper:       g,
