@@ -117,6 +117,10 @@ func TestHandler6(ctx context.Context, s Tester, item outHandler) {
 		log.Error().Str("tag", item.Name()).Err(err).Msg("failed to get handler")
 		return
 	}
+	if h == nil {
+		log.Fatal().Any("item", item).Msg("handler is nil")
+		return
+	}
 	ok := s.TestIPv6(ctx, h)
 	if ok {
 		item.SetSupport6(1)
