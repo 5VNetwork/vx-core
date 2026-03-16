@@ -123,7 +123,9 @@ func (d *DnsServerToResolver) LookupIPv4(ctx context.Context, host string) ([]ne
 				}
 			}
 
-			return ips, nil
+			if len(ips) != 0 {
+				return ips, nil
+			}
 		}
 	}
 
@@ -188,7 +190,9 @@ func (d *DnsServerToResolver) LookupIPv6(ctx context.Context, host string) ([]ne
 				}
 			}
 
-			return ips, nil
+			if len(ips) != 0 {
+				return ips, nil
+			}
 		}
 	}
 
