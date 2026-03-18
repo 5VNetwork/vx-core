@@ -97,6 +97,7 @@ func NewX(config *server.ServerConfig) (*fx.App, error) {
 		fxOptions = append(fxOptions, fx.WithLogger(func() fxevent.Logger {
 			return fxevent.NopLogger
 		}))
+	} else {
 		fxOptions = append(fxOptions, fx.Invoke(func(monitor *memmon.Monitor) {
 		}))
 	}
@@ -274,6 +275,7 @@ func NewInboundManager(lc fx.Lifecycle, params InboundManagerParams) (InboundMan
 
 type MonitorParams struct {
 	fx.In
+	Dispatcher *dispatcher.Dispatcher
 }
 
 type MonitorResult struct {
@@ -286,6 +288,7 @@ func NewMonitor(lc fx.Lifecycle, params MonitorParams) (MonitorResult, error) {
 		Interval:      time.Second * 1,
 		ListenAddress: "127.0.0.1:6060",
 	})
+	monitor.Dispatcher = params.Dispatcher
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			return monitor.Start()
