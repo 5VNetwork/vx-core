@@ -30,20 +30,14 @@ type udpIO interface {
 	i.PacketHandler
 }
 
-type udpEventLogger interface {
-	New(sessionID uint32, reqAddr string)
-	Close(sessionID uint32, err error)
-}
-
 type udpSessionEntry struct {
-	ID           uint32
-	OverrideAddr string // Ignore the address in the UDP message, always use this if not empty
-	OriginalAddr string // The original address in the UDP message
-	D            *frag.Defragger
-	Last         *utils.AtomicTime
+	ID   uint32
+	D    *frag.Defragger
+	Last *utils.AtomicTime
 	// used for sending messages
 	IO udpIO
 
+	DialFunc func(dest net.Destination) (conn *udp.PacketLink, err error)
 	ExitFunc func(err error)
 
 	conn     *udp.PacketLink
@@ -53,7 +47,7 @@ type udpSessionEntry struct {
 
 func newUDPSessionEntry(
 	id uint32, io udpIO,
-	conn *udp.PacketLink,
+	dialFunc func(dest net.Destination) (conn *udp.PacketLink, err error),
 	exitFunc func(error),
 ) (e *udpSessionEntry) {
 	e = &udpSessionEntry{
@@ -62,7 +56,7 @@ func newUDPSessionEntry(
 		Last: utils.NewAtomicTime(time.Now()),
 		IO:   io,
 
-		conn:     conn,
+		DialFunc: dialFunc,
 		ExitFunc: exitFunc,
 	}
 
@@ -102,16 +96,14 @@ func (e *udpSessionEntry) Feed(msg *protocol.UDPMessage) (int, error) {
 		return 0, nil
 	}
 
-	err := e.initConn()
-	if err != nil {
-		return 0, err
+	if e.conn == nil {
+		err := e.initConn(dfMsg)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	addr := dfMsg.Addr
-	if e.OverrideAddr != "" {
-		addr = e.OverrideAddr
-	}
-
 	netAddr, err := net.ParseDestination(addr)
 	if err != nil {
 		return 0, err
@@ -135,7 +127,7 @@ func (e *udpSessionEntry) Feed(msg *protocol.UDPMessage) (int, error) {
 
 // initConn initializes the UDP connection of the session.
 // If no error is returned, the e.conn is set to the new connection.
-func (e *udpSessionEntry) initConn() error {
+func (e *udpSessionEntry) initConn(firstMsg *protocol.UDPMessage) error {
 	// We need this lock to ensure not to create conn after session exit
 	e.connLock.Lock()
 
@@ -143,6 +135,21 @@ func (e *udpSessionEntry) initConn() error {
 		e.connLock.Unlock()
 		return errors.New("session is closed")
 	}
+
+	dest, err := net.ParseDestination(firstMsg.Addr)
+	if err != nil {
+		e.connLock.Unlock()
+		e.CloseWithErr(err)
+		return err
+	}
+
+	conn, err := e.DialFunc(dest)
+	if err != nil {
+		e.connLock.Unlock()
+		e.CloseWithErr(err)
+		return err
+	}
+	e.conn = conn
 
 	go e.receiveLoop()
 
@@ -286,29 +293,31 @@ func (m *udpSessionManager) feed(msg *protocol.UDPMessage) {
 
 	// Create a new session if not exists
 	if entry == nil {
-		p1, p2 := udp.NewLink(8)
+		dialFunc := func(dest net.Destination) (conn *udp.PacketLink, err error) {
+			p1, p2 := udp.NewLink(8)
+			ctx, cancel := inbound.GetCtx(net.DestinationFromAddr(m.src),
+				net.DestinationFromAddr(m.gateway), m.tag)
+			ctx = proxy.ContextWithUser(ctx, m.io.(*udpIOImpl).User)
+			ctx = proxy.ContextWithInboundProxyProtocol(ctx, "hysteria2")
 
-		ctx, cancel := inbound.GetCtx(net.DestinationFromAddr(m.src),
-			net.DestinationFromAddr(m.gateway), m.tag)
-		ctx = proxy.ContextWithUser(ctx, m.io.(*udpIOImpl).User)
-		ctx = proxy.ContextWithInboundProxyProtocol(ctx, "hysteria2")
-
-		go func() {
-			err := m.io.HandlePacketConn(ctx, net.AnyUdpDest, p2)
-			if err != nil {
-				log.Error().Err(err).Msg("failed to handle packet conn")
-			}
-		}()
-
+			go func() {
+				err := m.io.HandlePacketConn(ctx, dest, p2)
+				if err != nil {
+					log.Error().Err(err).Msg("failed to handle packet conn")
+				}
+				p2.Close()
+				cancel(err)
+			}()
+			return p1, nil
+		}
 		exitFunc := func(err error) {
 			// Remove the session from the map
 			m.mutex.Lock()
 			delete(m.m, entry.ID)
 			m.mutex.Unlock()
-			cancel(err)
 		}
 
-		entry = newUDPSessionEntry(msg.SessionID, m.io, p1, exitFunc)
+		entry = newUDPSessionEntry(msg.SessionID, m.io, dialFunc, exitFunc)
 
 		// Insert the session into the map
 		m.mutex.Lock()
