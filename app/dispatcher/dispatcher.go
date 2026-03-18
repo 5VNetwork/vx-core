@@ -128,7 +128,11 @@ func (d *Dispatcher) HandleFlow(ctx context.Context, dst net.Destination,
 	defer d.Flows.Add(-1)
 
 	var err error
-	defer d.onFlowSessionEnd(ctx, info, err)
+	defer func() {
+		for _, hook := range d.SessionEndHooks {
+			hook.FlowSessionEnd(ctx, info, err)
+		}
+	}()
 
 	var rw0 any
 	for _, pre := range d.BeforeHandlerSelectionHooks {
@@ -228,6 +232,9 @@ loop:
 
 func (d *Dispatcher) cacheHandle(ctx context.Context, info *session.Info,
 	rw buf.ReaderWriter, handler i.Outbound) (fallbackable bool, allRequestData buf.MultiBuffer, err error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	cacheRw := &cacheReaderWriter{
 		DdlReaderWriter:  rw.(buf.DdlReaderWriter),
 		maximumCacheSize: 1024 * 16,
@@ -256,18 +263,6 @@ func (d *Dispatcher) cacheHandle(ctx context.Context, info *session.Info,
 	return false, nil, nil
 }
 
-func (d *Dispatcher) onFlowSessionEnd(ctx context.Context, info *session.Info, err error) {
-	for _, hook := range d.SessionEndHooks {
-		hook.FlowSessionEnd(ctx, info, err)
-	}
-}
-
-func (d *Dispatcher) onPacketConnSessionEnd(ctx context.Context, info *session.Info, err error) {
-	for _, hook := range d.SessionEndHooks {
-		hook.PacketConnSessionEnd(ctx, info, err)
-	}
-}
-
 func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, pc udp.PacketReaderWriter) error {
 	info := infoFromContext(ctx, dst)
 	ctx = session.ContextWithInfo(ctx, info)
@@ -277,7 +272,11 @@ func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, 
 	defer d.PacketConns.Add(-1)
 
 	var err error
-	defer d.onPacketConnSessionEnd(ctx, info, err)
+	defer func() {
+		for _, hook := range d.SessionEndHooks {
+			hook.PacketConnSessionEnd(ctx, info, err)
+		}
+	}()
 
 	var pc0 any
 	for _, pre := range d.BeforeHandlerSelectionHooks {
