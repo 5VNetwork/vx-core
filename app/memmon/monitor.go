@@ -20,26 +20,29 @@ import (
 )
 
 type Monitor struct {
-	Dispatcher *dispatcher.Dispatcher
-	done       *done.Instance
-	Interval   time.Duration
-	Path       string
+	monitorConfig *MonitorConfig
+	Dispatcher    *dispatcher.Dispatcher
+	done          *done.Instance
 }
 
-func NewMonitor(interval time.Duration, path string) *Monitor {
+type MonitorConfig struct {
+	Interval      time.Duration
+	Path          string
+	ListenAddress string
+}
+
+func NewMonitor(config *MonitorConfig) *Monitor {
 	return &Monitor{
-		done:     done.New(),
-		Interval: interval,
-		Path:     path,
+		done:          done.New(),
+		monitorConfig: config,
 	}
 }
-
 func (m *Monitor) Start() error {
 	go m.log()
 	if zerolog.GlobalLevel() == zerolog.DebugLevel {
 		go func() {
-			log.Debug().Msg("starting pprof server on port 6060")
-			http.ListenAndServe("0.0.0.0:6060", nil)
+			log.Debug().Str("listen_address", m.monitorConfig.ListenAddress).Msg("starting pprof server")
+			http.ListenAndServe(m.monitorConfig.ListenAddress, nil)
 		}()
 	}
 	return nil
@@ -58,7 +61,7 @@ func (mon *Monitor) log() {
 		select {
 		case <-mon.done.Wait():
 			return
-		case <-time.After(mon.Interval):
+		case <-time.After(mon.monitorConfig.Interval):
 			runtime.ReadMemStats(&m)
 			log.Debug().
 				Int("HeapAlloc", int(units.BytesToMB(m.HeapAlloc))).
@@ -80,7 +83,7 @@ func (mon *Monitor) log() {
 				log.Debug().Msg("Memory threshold exceeded, forcing GC")
 				runtime.GC()
 				if zerolog.GlobalLevel() == zerolog.DebugLevel {
-					TakeHeapSnapshot(mon.Path)
+					TakeHeapSnapshot(mon.monitorConfig.Path)
 				}
 			}
 		}

@@ -42,6 +42,13 @@ func (f *cacheReaderWriter) Done(ctx context.Context) (buf.MultiBuffer, error) {
 
 	err := f.DdlReaderWriter.SetReadDeadline(time.Now().Add(-100 * time.Millisecond))
 	if err != nil {
+		f.lock.Lock()
+		if !f.stopCaching {
+			f.stopCaching = true
+			buf.ReleaseMulti(f.mb)
+			f.mb = nil
+		}
+		f.lock.Unlock()
 		return nil, fmt.Errorf("unable to clean read ddl, %w", err)
 	}
 	log.Ctx(ctx).Debug().Msg("set read deadline to -100ms")

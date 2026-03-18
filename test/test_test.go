@@ -98,11 +98,11 @@ func TestA(t *testing.T) {
 }
 
 func TestGeo(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 	loader := stdloader.NewStandartLoader()
 	domains, err := geo.GeositeConfigToGeoDomains(&configs.GeositeConfig{
-		Filepath: "assets/geosite.dat",
-		Codes:    []string{"google"},
+		Filepath: "simplified_geosite.dat",
+		Codes:    []string{"private"},
 	}, loader)
 	common.Must(err)
 	fmt.Printf("domains: %v\n", domains)

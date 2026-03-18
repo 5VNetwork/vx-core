@@ -152,7 +152,7 @@ func (ti *TunSystemInbound) Start() error {
 	ti.startOnce.Do(func() {
 		ti.tun.Start()
 		if ti.listenIp4 != nil {
-			err = ti.listenTcp(net.JoinHostPort(ti.listenIp4.String(), strings.ToString(ti.listenPort4)), true)
+			err = ti.listenTcp(ti.listenIp4.String(), ti.listenPort4, true)
 			if err != nil {
 				ti.Close()
 				return
@@ -160,7 +160,7 @@ func (ti *TunSystemInbound) Start() error {
 			log.Printf("listenIp4: %v, listenPort4: %v", ti.listenIp4, ti.listenPort4)
 		}
 		if ti.listenIp6 != nil {
-			err = ti.listenTcp(net.JoinHostPort(ti.listenIp6.String(), strings.ToString(ti.listenPort6)), false)
+			err = ti.listenTcp(ti.listenIp6.String(), ti.listenPort6, false)
 			if err != nil {
 				ti.Close()
 				return
@@ -206,8 +206,8 @@ func (t *TunSystemInbound) Close() error {
 }
 
 // listenTcp listens on a tcp address and returns the port number that it is listening on.
-func (t *TunSystemInbound) listenTcp(address string, ipv4 bool) error {
-	l, err := net.Listen("tcp", address)
+func (t *TunSystemInbound) listenTcp(address string, port uint16, ipv4 bool) error {
+	l, err := net.Listen("tcp", net.JoinHostPort(address, strings.ToString(port)))
 	if err != nil {
 		return fmt.Errorf("failed to listen on %s > %v", address, err)
 	}
@@ -229,6 +229,10 @@ func (t *TunSystemInbound) listenTcp(address string, ipv4 bool) error {
 					return
 				}
 				log.Error().Err(err).Str("addr", l.Addr().String()).Msg("listener failed to accept connection.")
+				if !t.done.Done() {
+					// relisten
+
+				}
 				return
 			}
 			go t.handleConn(conn)

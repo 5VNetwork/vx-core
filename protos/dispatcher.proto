@@ -8,4 +8,5 @@ message DispatcherConfig {
   bool sniff = 5;
   reserved 6;
   bool ipv6_use_domain = 7;
+  uint32 fallback_timeout = 8;
 }

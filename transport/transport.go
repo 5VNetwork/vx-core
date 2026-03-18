@@ -234,6 +234,7 @@ type DialerFactoryOption struct {
 	DefaultInterfaceMonitor i.DefaultInterfaceInfo
 	// used to bind to default nic
 	FdFunc FdFunc
+	
 }
 
 type FdFunc func(fd uintptr) error

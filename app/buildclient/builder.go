@@ -101,7 +101,11 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 	if config.GetLog().GetLogLevel() == configs.Level_DEBUG {
 		interval := time.Second * 1
 		dir := path.Dir(config.RedirectStdErr)
-		monitor := memmon.NewMonitor(interval, dir)
+		monitor := memmon.NewMonitor(&memmon.MonitorConfig{
+			Interval:      interval,
+			Path:          dir,
+			ListenAddress: "0.0.0.0:6060",
+		})
 		builder.requireFeature(func(d *dispatcher.Dispatcher) {
 			monitor.Dispatcher = d
 		})
