@@ -126,12 +126,12 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 			return err
 		}
 	} else {
-		client.Dns = idns.NewDns(staticDnsServer, nil, nil)
-		common.Must(fc.addComponent(client.Dns))
-		common.Must(fc.addComponent(&dns.DnsResolver{}))
 		client.IPResolverForRequestAddress = &dns.DnsResolver{}
 		client.IPResolver = &dns.DnsResolver{}
 		client.EchResolver = dns.DefaultCfResolver()
+		client.Dns = idns.NewDns(staticDnsServer, nil, nil)
+		common.Must(fc.addComponent(client.Dns))
+		common.Must(fc.addComponent(&dns.DnsResolver{}))
 	}
 
 	return nil
