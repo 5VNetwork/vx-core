@@ -37,6 +37,7 @@ type Dispatcher struct {
 	TimeoutSetting              i.TimeoutSetting
 	GetCounters                 GetCounters
 	OnFallbacks                 []OnFallback
+	FallbackTimeout             time.Duration
 
 	Flows       atomic.Int32
 	PacketConns atomic.Int32
@@ -230,15 +231,28 @@ loop:
 	}
 }
 
+var errFallbackTimeout = errors.New("fallback timeout")
+
 func (d *Dispatcher) cacheHandle(ctx context.Context, info *session.Info,
 	rw buf.ReaderWriter, handler i.Outbound) (fallbackable bool, allRequestData buf.MultiBuffer, err error) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	ctx, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
 
 	cacheRw := &cacheReaderWriter{
 		DdlReaderWriter:  rw.(buf.DdlReaderWriter),
 		maximumCacheSize: 1024 * 16,
 		ctx:              ctx,
+	}
+	if d.FallbackTimeout > 0 {
+		time.AfterFunc(d.FallbackTimeout, func() {
+			cacheRw.lock.Lock()
+			defer cacheRw.lock.Unlock()
+			if cacheRw.stopCaching {
+				return
+			}
+			log.Ctx(ctx).Debug().Msg("fallback timeout")
+			cancel(errFallbackTimeout)
+		})
 	}
 
 	err = handler.HandleFlow(ctx, info.Target, cacheRw)
@@ -253,7 +267,8 @@ func (d *Dispatcher) cacheHandle(ctx context.Context, info *session.Info,
 		rw.(buf.DdlReaderWriter).SetReadDeadline(time.Time{})
 		// this means the problem occur on the left. Unfallbackable.
 		if (errors.Is(err, errors.LeftToRightError{}) && errors.Is(err, buf.ReadError{})) ||
-			(errors.Is(err, errors.RightToLeftError{}) && buf.IsWriteError(err)) || ctx.Err() != nil {
+			(errors.Is(err, errors.RightToLeftError{}) && buf.IsWriteError(err)) ||
+			(ctx.Err() != nil && context.Cause(ctx) != errFallbackTimeout) {
 			buf.ReleaseMulti(mb)
 			return false, nil, err
 		}

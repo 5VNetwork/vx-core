@@ -20,6 +20,7 @@ type DispatcherConfig struct {
 	DestinationOverride []string               `protobuf:"bytes,4,rep,name=destination_override,json=destinationOverride,proto3" json:"destination_override,omitempty"`
 	Sniff               bool                   `protobuf:"varint,5,opt,name=sniff,proto3" json:"sniff,omitempty"`
 	Ipv6UseDomain       bool                   `protobuf:"varint,7,opt,name=ipv6_use_domain,json=ipv6UseDomain,proto3" json:"ipv6_use_domain,omitempty"`
+	FallbackTimeout     uint32                 `protobuf:"varint,8,opt,name=fallback_timeout,json=fallbackTimeout,proto3" json:"fallback_timeout,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -75,15 +76,23 @@ func (x *DispatcherConfig) GetIpv6UseDomain() bool {
 	return false
 }
 
+func (x *DispatcherConfig) GetFallbackTimeout() uint32 {
+	if x != nil {
+		return x.FallbackTimeout
+	}
+	return 0
+}
+
 var File_protos_dispatcher_proto protoreflect.FileDescriptor
 
 const file_protos_dispatcher_proto_rawDesc = "" +
 	"\n" +
-	"\x17protos/dispatcher.proto\x12\x01x\"\x89\x01\n" +
+	"\x17protos/dispatcher.proto\x12\x01x\"\xb4\x01\n" +
 	"\x10DispatcherConfig\x121\n" +
 	"\x14destination_override\x18\x04 \x03(\tR\x13destinationOverride\x12\x14\n" +
 	"\x05sniff\x18\x05 \x01(\bR\x05sniff\x12&\n" +
-	"\x0fipv6_use_domain\x18\a \x01(\bR\ripv6UseDomainJ\x04\b\x06\x10\aB*Z(github.com/5vnetwork/vx-core/app/configsb\x06proto3"
+	"\x0fipv6_use_domain\x18\a \x01(\bR\ripv6UseDomain\x12)\n" +
+	"\x10fallback_timeout\x18\b \x01(\rR\x0ffallbackTimeoutJ\x04\b\x06\x10\aB*Z(github.com/5vnetwork/vx-core/app/configsb\x06proto3"
 
 var (
 	file_protos_dispatcher_proto_rawDescOnce sync.Once

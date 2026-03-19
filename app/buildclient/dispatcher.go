@@ -29,7 +29,9 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 	common.Must(fc.addComponent(selectors))
 	cc.Selectors = selectors
 
-	d := &dispatcher.Dispatcher{}
+	d := &dispatcher.Dispatcher{
+		FallbackTimeout: time.Duration(config.GetDispatcher().GetFallbackTimeout()) * time.Second,
+	}
 
 	if config.Log.LogLevel == configs.Level_DEBUG {
 		debugHook := &dispatcher.DebugHook{}
