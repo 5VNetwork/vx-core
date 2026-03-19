@@ -16,6 +16,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/app/util"
 	mynet "github.com/5vnetwork/vx-core/common/net"
+	"github.com/5vnetwork/vx-core/common/signal/done"
 	"github.com/5vnetwork/vx-core/common/sshhelper"
 	"github.com/5vnetwork/vx-core/common/sshhelper/status"
 	"github.com/rs/zerolog/log"
@@ -36,14 +37,13 @@ func (a *Api) GetServerPublicKey(ctx context.Context, req *GetServerPublicKeyReq
 }
 
 func (a *Api) MonitorServer(req *MonitorServerRequest, in Api_MonitorServerServer) error {
-	sshClientCache, err := a.getSshClient(req.SshConfig)
+	sshClientCache, err := a.getSshClient(in.Context(), req.SshConfig)
 	if err != nil {
 		return err
 	}
 	defer a.DecreaseClientUser(sshClientCache)
 
 	sshClient := sshClientCache.client
-	log.Info().Msg("ssh client connected")
 	sch, err := status.GetStatusStream(in.Context(), sshClient,
 		time.Second*time.Duration(req.Interval))
 	if err != nil {
@@ -104,6 +104,9 @@ type SshClientCacheItem struct {
 	Users int
 	timer *time.Timer
 	key   string
+
+	done *done.Instance
+	err  error
 }
 
 func (a *Api) DecreaseClientUser(c *SshClientCacheItem) error {
@@ -115,6 +118,7 @@ func (a *Api) DecreaseClientUser(c *SshClientCacheItem) error {
 			a.sshClientCacheLock.Lock()
 			defer a.sshClientCacheLock.Unlock()
 			if c.Users == 0 {
+				log.Info().Msg("ssh client closed")
 				c.client.Close()
 				delete(a.sshClientCache, c.key)
 			}
@@ -123,51 +127,84 @@ func (a *Api) DecreaseClientUser(c *SshClientCacheItem) error {
 	return nil
 }
 
-func (a *Api) getSshClient(config *ServerSshConfig) (*SshClientCacheItem, error) {
+func (a *Api) getSshClient(ctx context.Context, config *ServerSshConfig) (*SshClientCacheItem, error) {
 	key := net.JoinHostPort(config.Address,
 		mynet.Port(config.Port).String())
 
 	// get existing
 	a.sshClientCacheLock.Lock()
 	cacheItem, ok := a.sshClientCache[key]
-	if ok {
-		cacheItem.Users++
-		if cacheItem.timer != nil {
-			cacheItem.timer.Stop()
-			cacheItem.timer = nil
+	if !ok {
+		cacheItem = &SshClientCacheItem{
+			key:  key,
+			done: done.New(),
 		}
-		a.sshClientCacheLock.Unlock()
-		return cacheItem, nil
+		a.sshClientCache[key] = cacheItem
+		go func() {
+			defer cacheItem.done.Close()
+			// create new ssh client if no existing one
+			s, err := serverConfigToDialConfig(config)
+			if err != nil {
+				cacheItem.err = err
+			} else if s.HostKey == nil {
+				cacheItem.err = errors.New("no host key")
+			} else {
+				sshClient, _, err := sshhelper.Dial(s)
+				if err != nil {
+					cacheItem.err = err
+				} else {
+					log.Info().Msg("ssh client connected")
+					cacheItem.client = sshClient
+					// remove the ssh connection when the connection is closed
+					go func(sshClient *sshhelper.Client) {
+						sshClient.Client.Wait()
+						a.sshClientCacheLock.Lock()
+						delete(a.sshClientCache, key)
+						a.sshClientCacheLock.Unlock()
+						sshClient.Close()
+					}(cacheItem.client)
+					return
+				}
+			}
+			a.sshClientCacheLock.Lock()
+			delete(a.sshClientCache, key)
+			a.sshClientCacheLock.Unlock()
+		}()
+	} else {
+		if cacheItem.done.Done() {
+			defer a.sshClientCacheLock.Unlock()
+			if cacheItem.err != nil {
+				return nil, cacheItem.err
+			}
+			cacheItem.Users++
+			if cacheItem.timer != nil {
+				cacheItem.timer.Stop()
+				cacheItem.timer = nil
+			}
+			return cacheItem, nil
+		}
 	}
 	a.sshClientCacheLock.Unlock()
 
-	// create new ssh client if no existing one
-	s, err := serverConfigToDialConfig(config)
-	if err != nil {
-		return nil, err
+	select {
+	case <-cacheItem.done.Wait():
+		if cacheItem.err != nil {
+			return nil, cacheItem.err
+		}
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
-	if s.HostKey == nil {
-		return nil, errors.New("no host key")
-	}
-	sshClient, _, err := sshhelper.Dial(s)
-	if err != nil {
-		return nil, err
-	}
-	cacheItem = &SshClientCacheItem{
-		client: sshClient,
-		key:    key,
-		Users:  1,
-	}
-	// add
+
 	a.sshClientCacheLock.Lock()
-	a.sshClientCache[key] = cacheItem
+	cacheItem.Users++
 	a.sshClientCacheLock.Unlock()
 
 	return cacheItem, nil
+
 }
 
 func (a *Api) Deploy(ctx context.Context, req *DeployRequest) (*DeployResponse, error) {
-	sshClientCache, err := a.getSshClient(req.SshConfig)
+	sshClientCache, err := a.getSshClient(ctx, req.SshConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +273,7 @@ func (a *Api) Deploy(ctx context.Context, req *DeployRequest) (*DeployResponse, 
 }
 
 func (a *Api) ServerAction(ctx context.Context, req *ServerActionRequest) (*ServerActionResponse, error) {
-	sshClientCache, err := a.getSshClient(req.SshConfig)
+	sshClientCache, err := a.getSshClient(ctx, req.SshConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +298,7 @@ func (a *Api) ServerAction(ctx context.Context, req *ServerActionRequest) (*Serv
 func (a *Api) VproxyStatus(ctx context.Context, req *VproxyStatusRequest) (*VproxyStatusResponse, error) {
 	response := &VproxyStatusResponse{}
 
-	sshClientCache, err := a.getSshClient(req.SshConfig)
+	sshClientCache, err := a.getSshClient(ctx, req.SshConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +344,7 @@ func (a *Api) VproxyStatus(ctx context.Context, req *VproxyStatusRequest) (*Vpro
 }
 
 func (a *Api) VX(ctx context.Context, req *VXRequest) (*Receipt, error) {
-	sshClientCache, err := a.getSshClient(req.SshConfig)
+	sshClientCache, err := a.getSshClient(ctx, req.SshConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +386,7 @@ func (a *Api) VX(ctx context.Context, req *VXRequest) (*Receipt, error) {
 }
 
 func (a *Api) ServerConfig(ctx context.Context, req *ServerConfigRequest) (*ServerConfigResponse, error) {
-	sshClientCache, err := a.getSshClient(req.SshConfig)
+	sshClientCache, err := a.getSshClient(ctx, req.SshConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -373,7 +410,7 @@ func (a *Api) ServerConfig(ctx context.Context, req *ServerConfigRequest) (*Serv
 const vxConfigPath = "/usr/local/etc/vx/config.json"
 
 func (a *Api) UpdateServerConfig(ctx context.Context, req *UpdateServerConfigRequest) (*UpdateServerConfigResponse, error) {
-	sshClientCache, err := a.getSshClient(req.SshConfig)
+	sshClientCache, err := a.getSshClient(ctx, req.SshConfig)
 	if err != nil {
 		return nil, err
 	}
