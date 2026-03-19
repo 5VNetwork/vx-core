@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"time"
 
 	configs "github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/configs/server"
@@ -19,6 +20,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/inbound/monitor"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy/multi"
+	"github.com/5vnetwork/vx-core/app/memmon"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/router"
 	"github.com/5vnetwork/vx-core/app/user"
@@ -64,6 +66,7 @@ func NewX(config *server.ServerConfig) (*fx.App, error) {
 	)))
 	fxOptions = append(fxOptions, fx.Provide(NewUserManager))
 	fxOptions = append(fxOptions, fx.Provide(monitor.NewInboundStats))
+	fxOptions = append(fxOptions, fx.Provide(NewMonitor))
 
 	// add users to inbounds
 	fxOptions = append(fxOptions, fx.Decorate(func(im *proxy.InboundManager, um *user.Manager) *proxy.InboundManager {
@@ -93,6 +96,9 @@ func NewX(config *server.ServerConfig) (*fx.App, error) {
 	if config.GetLog().GetLogLevel() != configs.Level_DEBUG {
 		fxOptions = append(fxOptions, fx.WithLogger(func() fxevent.Logger {
 			return fxevent.NopLogger
+		}))
+	} else {
+		fxOptions = append(fxOptions, fx.Invoke(func(monitor *memmon.Monitor) {
 		}))
 	}
 	return fx.New(
@@ -265,4 +271,31 @@ func NewInboundManager(lc fx.Lifecycle, params InboundManagerParams) (InboundMan
 		im.AddInbound(h)
 	}
 	return InboundManagerResult{InboundManager: im}, nil
+}
+
+type MonitorParams struct {
+	fx.In
+	Dispatcher *dispatcher.Dispatcher
+}
+
+type MonitorResult struct {
+	fx.Out
+	Monitor *memmon.Monitor
+}
+
+func NewMonitor(lc fx.Lifecycle, params MonitorParams) (MonitorResult, error) {
+	monitor := memmon.NewMonitor(&memmon.MonitorConfig{
+		Interval:      time.Second * 1,
+		ListenAddress: "127.0.0.1:6060",
+	})
+	monitor.Dispatcher = params.Dispatcher
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			return monitor.Start()
+		},
+		OnStop: func(ctx context.Context) error {
+			return monitor.Close()
+		},
+	})
+	return MonitorResult{Monitor: monitor}, nil
 }
