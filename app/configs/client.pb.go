@@ -38,12 +38,13 @@ type TmConfig struct {
 	Subscription        *SubscriptionConfig `protobuf:"bytes,21,opt,name=subscription,proto3" json:"subscription,omitempty"`
 	Hysteria2RejectQuic bool                `protobuf:"varint,24,opt,name=hysteria2_reject_quic,json=hysteria2RejectQuic,proto3" json:"hysteria2_reject_quic,omitempty"`
 	// outbound
-	Outbound       *OutboundConfig    `protobuf:"bytes,30,opt,name=outbound,proto3" json:"outbound,omitempty"`
-	RedirectStdErr string             `protobuf:"bytes,31,opt,name=redirect_std_err,json=redirectStdErr,proto3" json:"redirect_std_err,omitempty"`
-	Wfp            *WfpConfig         `protobuf:"bytes,33,opt,name=wfp,proto3" json:"wfp,omitempty"`
-	UserLog        *UserLoggerConfig  `protobuf:"bytes,35,opt,name=user_log,json=userLog,proto3" json:"user_log,omitempty"`
-	GrpcService    *GrpcServiceConfig `protobuf:"bytes,36,opt,name=grpc_service,json=grpcService,proto3" json:"grpc_service,omitempty"`
-	FallbackMon    *FallbackMonConfig `protobuf:"bytes,37,opt,name=fallback_mon,json=fallbackMon,proto3" json:"fallback_mon,omitempty"`
+	Outbound       *OutboundConfig      `protobuf:"bytes,30,opt,name=outbound,proto3" json:"outbound,omitempty"`
+	RedirectStdErr string               `protobuf:"bytes,31,opt,name=redirect_std_err,json=redirectStdErr,proto3" json:"redirect_std_err,omitempty"`
+	Wfp            *WfpConfig           `protobuf:"bytes,33,opt,name=wfp,proto3" json:"wfp,omitempty"`
+	UserLog        *UserLoggerConfig    `protobuf:"bytes,35,opt,name=user_log,json=userLog,proto3" json:"user_log,omitempty"`
+	GrpcService    *GrpcServiceConfig   `protobuf:"bytes,36,opt,name=grpc_service,json=grpcService,proto3" json:"grpc_service,omitempty"`
+	FallbackMon    *FallbackMonConfig   `protobuf:"bytes,37,opt,name=fallback_mon,json=fallbackMon,proto3" json:"fallback_mon,omitempty"`
+	DialerFactory  *DialerFactoryConfig `protobuf:"bytes,38,opt,name=dialer_factory,json=dialerFactory,proto3" json:"dialer_factory,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -239,6 +240,13 @@ func (x *TmConfig) GetFallbackMon() *FallbackMonConfig {
 	return nil
 }
 
+func (x *TmConfig) GetDialerFactory() *DialerFactoryConfig {
+	if x != nil {
+		return x.DialerFactory
+	}
+	return nil
+}
+
 type GrpcConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// listen address
@@ -420,11 +428,55 @@ func (x *FallbackMonConfig) GetDomainSetName() string {
 	return ""
 }
 
+type DialerFactoryConfig struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DialTimeout   uint32                 `protobuf:"varint,1,opt,name=dial_timeout,json=dialTimeout,proto3" json:"dial_timeout,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DialerFactoryConfig) Reset() {
+	*x = DialerFactoryConfig{}
+	mi := &file_protos_client_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DialerFactoryConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DialerFactoryConfig) ProtoMessage() {}
+
+func (x *DialerFactoryConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_protos_client_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DialerFactoryConfig.ProtoReflect.Descriptor instead.
+func (*DialerFactoryConfig) Descriptor() ([]byte, []int) {
+	return file_protos_client_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *DialerFactoryConfig) GetDialTimeout() uint32 {
+	if x != nil {
+		return x.DialTimeout
+	}
+	return 0
+}
+
 var File_protos_client_proto protoreflect.FileDescriptor
 
 const file_protos_client_proto_rawDesc = "" +
 	"\n" +
-	"\x13protos/client.proto\x12\x01x\x1a\x14protos/inbound.proto\x1a\x15protos/outbound.proto\x1a\x10protos/dns.proto\x1a\x13protos/router.proto\x1a\x13protos/policy.proto\x1a\x13protos/logger.proto\x1a\x10protos/geo.proto\x1a\x17protos/dispatcher.proto\x1a\x10protos/tun.proto\x1a\x15protos/sysproxy.proto\x1a\x19protos/grpc_service.proto\"\xfe\a\n" +
+	"\x13protos/client.proto\x12\x01x\x1a\x14protos/inbound.proto\x1a\x15protos/outbound.proto\x1a\x10protos/dns.proto\x1a\x13protos/router.proto\x1a\x13protos/policy.proto\x1a\x13protos/logger.proto\x1a\x10protos/geo.proto\x1a\x17protos/dispatcher.proto\x1a\x10protos/tun.proto\x1a\x15protos/sysproxy.proto\x1a\x19protos/grpc_service.proto\"\xbd\b\n" +
 	"\bTmConfig\x12@\n" +
 	"\x0finbound_manager\x18\x01 \x01(\v2\x17.x.InboundManagerConfigR\x0einboundManager\x12\x1e\n" +
 	"\x03dns\x18\x03 \x01(\v2\f.x.DnsConfigR\x03dns\x12'\n" +
@@ -450,7 +502,8 @@ const file_protos_client_proto_rawDesc = "" +
 	"\x03wfp\x18! \x01(\v2\f.x.WfpConfigR\x03wfp\x12.\n" +
 	"\buser_log\x18# \x01(\v2\x13.x.UserLoggerConfigR\auserLog\x127\n" +
 	"\fgrpc_service\x18$ \x01(\v2\x14.x.GrpcServiceConfigR\vgrpcService\x127\n" +
-	"\ffallback_mon\x18% \x01(\v2\x14.x.FallbackMonConfigR\vfallbackMonJ\x04\b\"\x10#\"\x7f\n" +
+	"\ffallback_mon\x18% \x01(\v2\x14.x.FallbackMonConfigR\vfallbackMon\x12=\n" +
+	"\x0edialer_factory\x18& \x01(\v2\x16.x.DialerFactoryConfigR\rdialerFactoryJ\x04\b\"\x10#\"\x7f\n" +
 	"\n" +
 	"GrpcConfig\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x12\n" +
@@ -464,7 +517,9 @@ const file_protos_client_proto_rawDesc = "" +
 	"\binterval\x18\x16 \x01(\rR\binterval\x12'\n" +
 	"\x0fperiodic_update\x18\x17 \x01(\bR\x0eperiodicUpdate\";\n" +
 	"\x11FallbackMonConfig\x12&\n" +
-	"\x0fdomain_set_name\x18\x01 \x01(\tR\rdomainSetNameB*Z(github.com/5vnetwork/vx-core/app/configsb\x06proto3"
+	"\x0fdomain_set_name\x18\x01 \x01(\tR\rdomainSetName\"8\n" +
+	"\x13DialerFactoryConfig\x12!\n" +
+	"\fdial_timeout\x18\x01 \x01(\rR\vdialTimeoutB*Z(github.com/5vnetwork/vx-core/app/configsb\x06proto3"
 
 var (
 	file_protos_client_proto_rawDescOnce sync.Once
@@ -478,50 +533,52 @@ func file_protos_client_proto_rawDescGZIP() []byte {
 	return file_protos_client_proto_rawDescData
 }
 
-var file_protos_client_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_protos_client_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_protos_client_proto_goTypes = []any{
 	(*TmConfig)(nil),             // 0: x.TmConfig
 	(*GrpcConfig)(nil),           // 1: x.GrpcConfig
 	(*SubscriptionConfig)(nil),   // 2: x.SubscriptionConfig
 	(*FallbackMonConfig)(nil),    // 3: x.FallbackMonConfig
-	(*InboundManagerConfig)(nil), // 4: x.InboundManagerConfig
-	(*DnsConfig)(nil),            // 5: x.DnsConfig
-	(*PolicyConfig)(nil),         // 6: x.PolicyConfig
-	(*SelectorsConfig)(nil),      // 7: x.SelectorsConfig
-	(*RouterConfig)(nil),         // 8: x.RouterConfig
-	(*LoggerConfig)(nil),         // 9: x.LoggerConfig
-	(*DispatcherConfig)(nil),     // 10: x.DispatcherConfig
-	(*GeoConfig)(nil),            // 11: x.GeoConfig
-	(*TunConfig)(nil),            // 12: x.TunConfig
-	(*SysProxyConfig)(nil),       // 13: x.SysProxyConfig
-	(*OutboundConfig)(nil),       // 14: x.OutboundConfig
-	(*WfpConfig)(nil),            // 15: x.WfpConfig
-	(*UserLoggerConfig)(nil),     // 16: x.UserLoggerConfig
-	(*GrpcServiceConfig)(nil),    // 17: x.GrpcServiceConfig
+	(*DialerFactoryConfig)(nil),  // 4: x.DialerFactoryConfig
+	(*InboundManagerConfig)(nil), // 5: x.InboundManagerConfig
+	(*DnsConfig)(nil),            // 6: x.DnsConfig
+	(*PolicyConfig)(nil),         // 7: x.PolicyConfig
+	(*SelectorsConfig)(nil),      // 8: x.SelectorsConfig
+	(*RouterConfig)(nil),         // 9: x.RouterConfig
+	(*LoggerConfig)(nil),         // 10: x.LoggerConfig
+	(*DispatcherConfig)(nil),     // 11: x.DispatcherConfig
+	(*GeoConfig)(nil),            // 12: x.GeoConfig
+	(*TunConfig)(nil),            // 13: x.TunConfig
+	(*SysProxyConfig)(nil),       // 14: x.SysProxyConfig
+	(*OutboundConfig)(nil),       // 15: x.OutboundConfig
+	(*WfpConfig)(nil),            // 16: x.WfpConfig
+	(*UserLoggerConfig)(nil),     // 17: x.UserLoggerConfig
+	(*GrpcServiceConfig)(nil),    // 18: x.GrpcServiceConfig
 }
 var file_protos_client_proto_depIdxs = []int32{
-	4,  // 0: x.TmConfig.inbound_manager:type_name -> x.InboundManagerConfig
-	5,  // 1: x.TmConfig.dns:type_name -> x.DnsConfig
-	6,  // 2: x.TmConfig.policy:type_name -> x.PolicyConfig
-	7,  // 3: x.TmConfig.selectors:type_name -> x.SelectorsConfig
-	8,  // 4: x.TmConfig.router:type_name -> x.RouterConfig
-	9,  // 5: x.TmConfig.log:type_name -> x.LoggerConfig
-	10, // 6: x.TmConfig.dispatcher:type_name -> x.DispatcherConfig
-	11, // 7: x.TmConfig.geo:type_name -> x.GeoConfig
+	5,  // 0: x.TmConfig.inbound_manager:type_name -> x.InboundManagerConfig
+	6,  // 1: x.TmConfig.dns:type_name -> x.DnsConfig
+	7,  // 2: x.TmConfig.policy:type_name -> x.PolicyConfig
+	8,  // 3: x.TmConfig.selectors:type_name -> x.SelectorsConfig
+	9,  // 4: x.TmConfig.router:type_name -> x.RouterConfig
+	10, // 5: x.TmConfig.log:type_name -> x.LoggerConfig
+	11, // 6: x.TmConfig.dispatcher:type_name -> x.DispatcherConfig
+	12, // 7: x.TmConfig.geo:type_name -> x.GeoConfig
 	1,  // 8: x.TmConfig.grpc:type_name -> x.GrpcConfig
-	12, // 9: x.TmConfig.tun:type_name -> x.TunConfig
-	13, // 10: x.TmConfig.sys_proxy:type_name -> x.SysProxyConfig
+	13, // 9: x.TmConfig.tun:type_name -> x.TunConfig
+	14, // 10: x.TmConfig.sys_proxy:type_name -> x.SysProxyConfig
 	2,  // 11: x.TmConfig.subscription:type_name -> x.SubscriptionConfig
-	14, // 12: x.TmConfig.outbound:type_name -> x.OutboundConfig
-	15, // 13: x.TmConfig.wfp:type_name -> x.WfpConfig
-	16, // 14: x.TmConfig.user_log:type_name -> x.UserLoggerConfig
-	17, // 15: x.TmConfig.grpc_service:type_name -> x.GrpcServiceConfig
+	15, // 12: x.TmConfig.outbound:type_name -> x.OutboundConfig
+	16, // 13: x.TmConfig.wfp:type_name -> x.WfpConfig
+	17, // 14: x.TmConfig.user_log:type_name -> x.UserLoggerConfig
+	18, // 15: x.TmConfig.grpc_service:type_name -> x.GrpcServiceConfig
 	3,  // 16: x.TmConfig.fallback_mon:type_name -> x.FallbackMonConfig
-	17, // [17:17] is the sub-list for method output_type
-	17, // [17:17] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	4,  // 17: x.TmConfig.dialer_factory:type_name -> x.DialerFactoryConfig
+	18, // [18:18] is the sub-list for method output_type
+	18, // [18:18] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_protos_client_proto_init() }
@@ -546,7 +603,7 @@ func file_protos_client_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_protos_client_proto_rawDesc), len(file_protos_client_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

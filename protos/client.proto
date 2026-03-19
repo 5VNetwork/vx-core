@@ -46,6 +46,7 @@ message TmConfig {
   x.UserLoggerConfig user_log = 35;
   x.GrpcServiceConfig grpc_service = 36;
   x.FallbackMonConfig fallback_mon = 37;
+  x.DialerFactoryConfig dialer_factory = 38;
 }
 
 message GrpcConfig { 
@@ -65,4 +66,8 @@ message SubscriptionConfig {
 
 message FallbackMonConfig {
   string domain_set_name = 1;
+}
+
+message DialerFactoryConfig {
+  uint32 dial_timeout = 1;
 }

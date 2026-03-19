@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+	"time"
 
 	"github.com/5vnetwork/vx-core/app/client"
 	"github.com/5vnetwork/vx-core/app/configs"
@@ -22,6 +23,7 @@ func DialerFactory(config *configs.TmConfig, fc *Builder, client *client.Client)
 				BindToDefaultNIC:        runtime.GOOS != "android",
 				IpResolver:              ipResolver,
 				DefaultInterfaceMonitor: bdl,
+				DialTimeout:             time.Duration(config.GetDialerFactory().GetDialTimeout()) * time.Second,
 			}
 			if runtime.GOOS == "android" {
 				fdFunc := fc.getFeature(reflect.TypeOf((*transport.FdFunc)(nil)).Elem())
@@ -37,6 +39,7 @@ func DialerFactory(config *configs.TmConfig, fc *Builder, client *client.Client)
 		}
 	} else {
 		df := transport.DefaultDialerFactory()
+		df.DialTimeout = time.Duration(config.GetDialerFactory().GetDialTimeout()) * time.Second
 		client.DialerFactory = df
 		err := fc.addComponent(df)
 		if err != nil {
