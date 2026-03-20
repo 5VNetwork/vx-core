@@ -92,6 +92,7 @@ type AtomicDomainSetConfig struct {
 	Geosite        *GeositeConfig `protobuf:"bytes,3,opt,name=geosite,proto3" json:"geosite,omitempty"`
 	UseBloomFilter bool           `protobuf:"varint,4,opt,name=use_bloom_filter,json=useBloomFilter,proto3" json:"use_bloom_filter,omitempty"`
 	ClashFiles     []string       `protobuf:"bytes,5,rep,name=clash_files,json=clashFiles,proto3" json:"clash_files,omitempty"`
+	Inverse        bool           `protobuf:"varint,6,opt,name=inverse,proto3" json:"inverse,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -159,6 +160,13 @@ func (x *AtomicDomainSetConfig) GetClashFiles() []string {
 		return x.ClashFiles
 	}
 	return nil
+}
+
+func (x *AtomicDomainSetConfig) GetInverse() bool {
+	if x != nil {
+		return x.Inverse
+	}
+	return false
 }
 
 type DomainSetConfig struct {
@@ -624,14 +632,15 @@ const file_protos_geo_proto_rawDesc = "" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12#\n" +
 	"\ropposite_name\x18\x04 \x01(\tR\foppositeName\x12\x19\n" +
 	"\bex_names\x18\x05 \x03(\tR\aexNames\x12\x19\n" +
-	"\bin_names\x18\x06 \x03(\tR\ainNames\"\xd2\x01\n" +
+	"\bin_names\x18\x06 \x03(\tR\ainNames\"\xec\x01\n" +
 	"\x15AtomicDomainSetConfig\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12.\n" +
 	"\adomains\x18\x02 \x03(\v2\x14.x.common.geo.DomainR\adomains\x12*\n" +
 	"\ageosite\x18\x03 \x01(\v2\x10.x.GeositeConfigR\ageosite\x12(\n" +
 	"\x10use_bloom_filter\x18\x04 \x01(\bR\x0euseBloomFilter\x12\x1f\n" +
 	"\vclash_files\x18\x05 \x03(\tR\n" +
-	"clashFiles\"9\n" +
+	"clashFiles\x12\x18\n" +
+	"\ainverse\x18\x06 \x01(\bR\ainverse\"9\n" +
 	"\x0fDomainSetConfig\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04tags\x18\x02 \x03(\tR\x04tags\"\x81\x01\n" +

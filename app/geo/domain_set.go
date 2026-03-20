@@ -18,9 +18,18 @@ type IndexMatcherToDomainSet struct {
 	matchersLock    sync.RWMutex
 	matchers        []strmatcher.Matcher
 	removedMatchers []strmatcher.Matcher
+	reverseMatch    bool
 }
 
 func (i *IndexMatcherToDomainSet) Match(domain string) bool {
+	matched := i.match(domain)
+	if i.reverseMatch {
+		return !matched
+	}
+	return matched
+}
+
+func (i *IndexMatcherToDomainSet) match(domain string) bool {
 	i.matchersLock.RLock()
 	defer i.matchersLock.RUnlock()
 

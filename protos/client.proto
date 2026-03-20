@@ -66,6 +66,7 @@ message SubscriptionConfig {
 
 message FallbackMonConfig {
   string domain_set_name = 1;
+  string local_file = 2;
 }
 
 message DialerFactoryConfig {

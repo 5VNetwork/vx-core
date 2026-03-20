@@ -387,6 +387,7 @@ func (x *SubscriptionConfig) GetPeriodicUpdate() bool {
 type FallbackMonConfig struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DomainSetName string                 `protobuf:"bytes,1,opt,name=domain_set_name,json=domainSetName,proto3" json:"domain_set_name,omitempty"`
+	LocalFile     string                 `protobuf:"bytes,2,opt,name=local_file,json=localFile,proto3" json:"local_file,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -424,6 +425,13 @@ func (*FallbackMonConfig) Descriptor() ([]byte, []int) {
 func (x *FallbackMonConfig) GetDomainSetName() string {
 	if x != nil {
 		return x.DomainSetName
+	}
+	return ""
+}
+
+func (x *FallbackMonConfig) GetLocalFile() string {
+	if x != nil {
+		return x.LocalFile
 	}
 	return ""
 }
@@ -515,9 +523,11 @@ const file_protos_client_proto_rawDesc = "" +
 	"\x12SubscriptionConfig\x12(\n" +
 	"\x10last_update_time\x18\x15 \x01(\rR\x0elastUpdateTime\x12\x1a\n" +
 	"\binterval\x18\x16 \x01(\rR\binterval\x12'\n" +
-	"\x0fperiodic_update\x18\x17 \x01(\bR\x0eperiodicUpdate\";\n" +
+	"\x0fperiodic_update\x18\x17 \x01(\bR\x0eperiodicUpdate\"Z\n" +
 	"\x11FallbackMonConfig\x12&\n" +
-	"\x0fdomain_set_name\x18\x01 \x01(\tR\rdomainSetName\"8\n" +
+	"\x0fdomain_set_name\x18\x01 \x01(\tR\rdomainSetName\x12\x1d\n" +
+	"\n" +
+	"local_file\x18\x02 \x01(\tR\tlocalFile\"8\n" +
 	"\x13DialerFactoryConfig\x12!\n" +
 	"\fdial_timeout\x18\x01 \x01(\rR\vdialTimeoutB*Z(github.com/5vnetwork/vx-core/app/configsb\x06proto3"
 

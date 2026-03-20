@@ -51,7 +51,7 @@ func NewGeo(config *configs.GeoConfig) (*Geo, error) {
 		}
 		// common.Log()
 		domainSets[atomicSet.Name] = &IndexMatcherToDomainSet{
-			IndexMatcher: matcher}
+			IndexMatcher: matcher, reverseMatch: atomicSet.Inverse}
 	}
 	for _, greatSet := range config.GetGreatDomainSets() {
 		d, err := getGreatDomainSet(greatSet, geo)

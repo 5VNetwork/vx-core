@@ -19,6 +19,7 @@ message AtomicDomainSetConfig {
   GeositeConfig geosite = 3;
   bool use_bloom_filter = 4;
   repeated string clash_files = 5;
+  bool inverse = 6;
 }
 
 message DomainSetConfig {
