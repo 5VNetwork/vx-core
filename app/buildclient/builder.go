@@ -275,16 +275,18 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 
 	// fallback mon
 	if config.FallbackMon != nil {
-		err := builder.requireFeature(func(db fallbackmon.Db,
-			dispatcher *dispatcher.Dispatcher, geo *geo.GeoWrapper) error {
+		err := builder.requireFeature(func(dispatcher *dispatcher.Dispatcher, geo *geo.GeoWrapper) error {
 			fallbackMon := fallbackmon.NewFallbackMon(&fallbackmon.FallbackMonSetting{
-				Db:            db,
 				DomainSetName: config.FallbackMon.DomainSetName,
 				Geo:           geo,
+				LocalFile:     config.FallbackMon.LocalFile,
 			})
 			if err := builder.addComponent(fallbackMon); err != nil {
 				return fmt.Errorf("failed to add fallback mon: %w", err)
 			}
+			builder.requireOptionalFeatures(func(db fallbackmon.Db) {
+				fallbackMon.Db = db
+			})
 			dispatcher.AddOnFallback(fallbackMon)
 			dispatcher.AddSessionEndHook(fallbackMon)
 			return nil
