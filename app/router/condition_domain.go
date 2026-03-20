@@ -22,13 +22,13 @@ func (m *DomainMatcher) Apply(c context.Context, info *session.Info, rw interfac
 	if info.Target.Address == nil {
 		return rw, false
 	}
-	if info.Target.Address.Family().IsDomain() {
-		return rw, m.DomainSet.Match(info.Target.Address.Domain())
+	if targetDomain := info.GetTargetDomain(); targetDomain != "" {
+		return rw, m.DomainSet.Match(targetDomain)
 	}
 	if m.SkipSniff {
 		return rw, false
 	}
-	if !info.Sniffed && rw != nil {
+	if !info.Sniffed && rw != nil && m.Sniffer != nil {
 		if readerWriter, ok := rw.(buf.ReaderWriter); ok {
 			rw, _ = m.Sniffer.Sniff(c, info, readerWriter)
 		}
