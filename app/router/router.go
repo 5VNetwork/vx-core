@@ -163,7 +163,8 @@ func NewRouter(config *RouterConfig) (*Router, error) {
 			})
 		}
 		if len(routerRuleConfig.GeoDomains) > 0 || len(routerRuleConfig.DomainTags) > 0 {
-			domainSet, err := geo.NewDomainSet(routerRuleConfig.DomainTags, config.GeoHelper, routerRuleConfig.GeoDomains...)
+			domainSet, err := geo.NewDomainSet(routerRuleConfig.DomainTags, config.GeoHelper,
+				routerRuleConfig.GeoDomains...)
 			if err != nil {
 				return nil, err
 			}
@@ -252,9 +253,34 @@ func NewRouter(config *RouterConfig) (*Router, error) {
 
 		fallbackers := make([]i.Fallback, 0, len(routerRuleConfig.Fallbacks))
 		for _, fallbackerConfig := range routerRuleConfig.Fallbacks {
+			var fallbackConditions []Condition
+			if fallbackerConfig.MatchAll {
+				fallbackConditions = []Condition{
+					&ConditionTrue{},
+				}
+			} else {
+				if len(fallbackerConfig.DomainTags) > 0 {
+					domainSet, err := geo.NewDomainSet(fallbackerConfig.DomainTags, config.GeoHelper)
+					if err != nil {
+						return nil, err
+					}
+					fallbackConditions = append(fallbackConditions, &DomainMatcher{
+						DomainSet: domainSet,
+					})
+				}
+				if len(fallbackerConfig.DstIpTags) > 0 {
+					ipSet, err := geo.NewIPSet(fallbackerConfig.DstIpTags, config.GeoHelper)
+					if err != nil {
+						return nil, err
+					}
+					fallbackConditions = append(fallbackConditions, &IpMatcher{
+						IpSet: ipSet,
+					})
+				}
+			}
 			fallbackers = append(fallbackers, NewFallbacker(
 				fallbackerConfig.SelectorTag, fallbackerConfig.OutboundTag,
-				fallbackerConfig.Action, r.om, r.selectors, conditions...))
+				fallbackerConfig.Action, r.om, r.selectors, fallbackConditions...))
 		}
 		rule := NewRule(routerRuleConfig.RuleName, routerRuleConfig.OutboundTag,
 			routerRuleConfig.SelectorTag, fallbackers,
