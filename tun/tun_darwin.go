@@ -15,14 +15,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-type Event int
-
-const (
-	EventUp = 1 << iota
-	EventDown
-	EventMTUUpdate
-)
-
 type ReadWriteCloserTun struct {
 	Rw         io.ReadWriteCloser
 	Offset     int32

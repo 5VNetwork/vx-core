@@ -6,61 +6,96 @@
 package tun
 
 import (
+	"io"
+	"net/netip"
+	"os"
+	sync "sync"
+
 	"github.com/5vnetwork/vx-core/common/buf"
-	"golang.zx2c4.com/wireguard/tun"
+	"golang.org/x/sys/unix"
 )
 
-type tunWrapper struct {
-	device tun.Device
-	name   string
-	mtu    int32
+type ReadWriteCloserTun struct {
+	Rw         io.ReadWriteCloser
+	once       sync.Once
+	mtu        uint32
+	name       string
+	ip4        netip.Addr
+	ip6        netip.Addr
+	dnsServers []netip.Addr
 }
 
-func NewTun(fd int, mtu int) (TunDevice, error) {
-	device, name, err := tun.CreateUnmonitoredTUNFromFD(fd)
+func NewTun(config *TunOption) (TunDeviceWithInfo, error) {
+	dupFd, err := unix.Dup(int(config.FD))
 	if err != nil {
 		return nil, err
 	}
-	t := &tunWrapper{
-		device: device,
-		name:   name,
-		mtu:    int32(mtu),
-	}
-	return t, nil
-}
-
-func (t *tunWrapper) Close() error {
-	return t.device.Close()
-}
-
-func (t *tunWrapper) WritePacket(pkt *buf.Buffer) error {
-	defer pkt.Release()
-	_, err := t.device.Write([][]byte{pkt.BytesTo(pkt.Len())}, 0)
+	err = unix.SetNonblock(dupFd, true)
 	if err != nil {
-		return err
+		unix.Close(dupFd)
+		return nil, err
 	}
+
+	file := os.NewFile(uintptr(dupFd), "/dev/tun")
+
+	dnsServers := make([]netip.Addr, 0, len(config.Dns4)+len(config.Dns6))
+	dnsServers = append(dnsServers, config.Dns4...)
+	dnsServers = append(dnsServers, config.Dns6...)
+
+	return &ReadWriteCloserTun{
+		Rw:         file,
+		ip4:        config.Ip4.Addr(),
+		ip6:        config.Ip6.Addr(),
+		dnsServers: dnsServers,
+		name:       config.Name,
+		mtu:        config.Mtu,
+	}, nil
+}
+
+func (u *ReadWriteCloserTun) Start() error {
 	return nil
 }
 
-func (t *tunWrapper) ReadPacket() (*buf.Buffer, error) {
-	b := buf.NewWithSize(t.mtu)
-	bufs := make([][]byte, 1)
-	bufs[0] = b.BytesTo(b.Cap())
-	sizes := []int{0}
+func (u *ReadWriteCloserTun) Close() error {
+	var err error
+	u.once.Do(func() {
+		err = u.Rw.Close()
+	})
+	return err
+}
 
-	_, err := t.device.Read(bufs, sizes, 0)
+func (t *ReadWriteCloserTun) Name() string {
+	return t.name
+}
+
+func (t *ReadWriteCloserTun) DnsServers() []netip.Addr {
+	return t.dnsServers
+}
+
+func (t *ReadWriteCloserTun) IP4() netip.Addr {
+	return t.ip4
+}
+
+func (t *ReadWriteCloserTun) IP6() netip.Addr {
+	return t.ip6
+}
+
+func (u *ReadWriteCloserTun) ReadPacket() (*buf.Buffer, error) {
+	b := buf.NewWithSize(int32(u.mtu))
+	n, err := u.Rw.Read(b.BytesTo(b.Cap()))
 	if err != nil {
 		b.Release()
 		return nil, err
 	}
-	b.Extend(int32(sizes[0]))
+	b.Resize(0, int32(n))
 	return b, nil
 }
 
-func (t *tunWrapper) Name() string {
-	return t.name
-}
+var ipv4FourBytes = []byte{0, 0, 0, 2}
+var ipv6FourBytes = []byte{0, 0, 0, 30}
 
-func (t *tunWrapper) Start() error {
-	return nil
+func (u *ReadWriteCloserTun) WritePacket(p *buf.Buffer) error {
+	defer p.Release()
+	_, err := u.Rw.Write(p.Bytes())
+	return err
 }

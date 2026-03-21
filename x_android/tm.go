@@ -154,10 +154,7 @@ func (t *tm) CloseInbound() error {
 }
 
 func getTunDeviceWithInfo(fd int32, config *configs.TunConfig, enable6 bool) (tun.TunDeviceWithInfo, error) {
-	tunDevice, err := tun.NewTun(int(fd), int(config.GetDevice().GetMtu()))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create tun: %w", err)
-	}
+	config.Device.Fd = uint32(fd)
 	to, err := buildclient.TunConfigToTunOption(config.Device)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tun option: %w", err)
@@ -167,10 +164,9 @@ func getTunDeviceWithInfo(fd int32, config *configs.TunConfig, enable6 bool) (tu
 		to.Route6 = []netip.Prefix{}
 		to.Dns6 = []netip.Addr{}
 	}
-	tunDeviceWithInfo := tun.NewTunDeviceWithInfo(tunDevice,
-		to.Ip4.Addr(), to.Ip6.Addr(), append(to.Dns4, to.Dns6...))
+	tunDeviceWithInfo, err := tun.NewTun(to)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create tun device with info: %w", err)
+		return nil, fmt.Errorf("failed to create tun devic: %w", err)
 	}
 	return tunDeviceWithInfo, nil
 }
