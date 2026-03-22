@@ -1,6 +1,6 @@
 package httpupgrade
 
-func (c *HttpUpgradeConfig) GetNormalizedPath() string {
+func normalizedPath(c *HttpUpgradeConfig) string {
 	path := c.Config.Path
 	if path == "" {
 		return "/"

@@ -28,7 +28,7 @@ import (
 
 	mdns "github.com/miekg/dns"
 
-	configs "github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/i"
 )
 

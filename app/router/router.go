@@ -10,11 +10,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	cgeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/geo"
+
 	"github.com/5vnetwork/vx-core/app/router/selector"
 	"github.com/5vnetwork/vx-core/app/sniff"
-	cgeo "github.com/5vnetwork/vx-core/common/geo"
 	"github.com/5vnetwork/vx-core/common/session"
 	"github.com/5vnetwork/vx-core/i"
 

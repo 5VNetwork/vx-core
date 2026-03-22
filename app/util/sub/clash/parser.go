@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/util/sub"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
@@ -146,7 +145,7 @@ func parseVmess(mapping map[string]any, name string) (*configs.OutboundHandlerCo
 	cipher, _ := mapping["cipher"].(string)
 
 	// Create vx-core vmess config
-	vmessConfig := &proxy.VmessClientConfig{
+	vmessConfig := &configs.VmessClientConfig{
 		Id:      uuid,
 		AlterId: uint32(alterId),
 	}
@@ -154,17 +153,17 @@ func parseVmess(mapping map[string]any, name string) (*configs.OutboundHandlerCo
 	// Map cipher to security type
 	switch cipher {
 	case "auto":
-		vmessConfig.Security = proxy.SecurityType_SecurityType_AUTO
+		vmessConfig.Security = configs.SecurityType_SecurityType_AUTO
 	case "aes-128-gcm":
-		vmessConfig.Security = proxy.SecurityType_SecurityType_AES128_GCM
+		vmessConfig.Security = configs.SecurityType_SecurityType_AES128_GCM
 	case "chacha20-poly1305":
-		vmessConfig.Security = proxy.SecurityType_SecurityType_CHACHA20_POLY1305
+		vmessConfig.Security = configs.SecurityType_SecurityType_CHACHA20_POLY1305
 	case "none":
-		vmessConfig.Security = proxy.SecurityType_SecurityType_NONE
+		vmessConfig.Security = configs.SecurityType_SecurityType_NONE
 	case "zero":
-		vmessConfig.Security = proxy.SecurityType_SecurityType_ZERO
+		vmessConfig.Security = configs.SecurityType_SecurityType_ZERO
 	default:
-		vmessConfig.Security = proxy.SecurityType_SecurityType_AUTO
+		vmessConfig.Security = configs.SecurityType_SecurityType_AUTO
 	}
 
 	outbound := &configs.OutboundHandlerConfig{
@@ -203,7 +202,7 @@ func parseVless(mapping map[string]any, name string) (*configs.OutboundHandlerCo
 		encryption = "none"
 	}
 
-	vlessConfig := &proxy.VlessClientConfig{
+	vlessConfig := &configs.VlessClientConfig{
 		Id:         uuid,
 		Flow:       flow,
 		Encryption: encryption,
@@ -239,7 +238,7 @@ func parseTrojan(mapping map[string]any, name string) (*configs.OutboundHandlerC
 		return nil, fmt.Errorf("missing password")
 	}
 
-	trojanConfig := &proxy.TrojanClientConfig{
+	trojanConfig := &configs.TrojanClientConfig{
 		Password: password,
 	}
 
@@ -279,21 +278,21 @@ func parseShadowsocks(mapping map[string]any, name string) (*configs.OutboundHan
 	}
 
 	// Map cipher string to CipherType enum
-	var cipherType proxy.ShadowsocksCipherType
+	var cipherType configs.ShadowsocksCipherType
 	switch cipher {
 	case "aes-128-gcm", "AEAD_AES_128_GCM":
-		cipherType = proxy.ShadowsocksCipherType_AES_128_GCM
+		cipherType = configs.ShadowsocksCipherType_AES_128_GCM
 	case "aes-256-gcm", "AEAD_AES_256_GCM":
-		cipherType = proxy.ShadowsocksCipherType_AES_256_GCM
+		cipherType = configs.ShadowsocksCipherType_AES_256_GCM
 	case "chacha20-poly1305", "chacha20-ietf-poly1305", "AEAD_CHACHA20_POLY1305":
-		cipherType = proxy.ShadowsocksCipherType_CHACHA20_POLY1305
+		cipherType = configs.ShadowsocksCipherType_CHACHA20_POLY1305
 	case "none", "plain":
-		cipherType = proxy.ShadowsocksCipherType_NONE
+		cipherType = configs.ShadowsocksCipherType_NONE
 	default:
 		return nil, fmt.Errorf("unsupported cipher: %s", cipher)
 	}
 
-	ssConfig := &proxy.ShadowsocksClientConfig{
+	ssConfig := &configs.ShadowsocksClientConfig{
 		Password:   password,
 		CipherType: cipherType,
 	}
@@ -330,7 +329,7 @@ func parseSocks(mapping map[string]any, name string) (*configs.OutboundHandlerCo
 	username, _ := mapping["username"].(string)
 	password, _ := mapping["password"].(string)
 
-	socksConfig := &proxy.SocksClientConfig{
+	socksConfig := &configs.SocksClientConfig{
 		Name:     username,
 		Password: password,
 	}
@@ -356,14 +355,14 @@ func parseHTTP(mapping map[string]any, name string) (*configs.OutboundHandlerCon
 	username, _ := mapping["username"].(string)
 	password, _ := mapping["password"].(string)
 
-	var account *proxy.Account
+	var account *configs.Account
 	if username != "" || password != "" {
-		account = &proxy.Account{
+		account = &configs.Account{
 			Username: username,
 			Password: password,
 		}
 	}
-	httpConfig := &proxy.HttpClientConfig{
+	httpConfig := &configs.HttpClientConfig{
 		Account: account,
 	}
 	outbound := &configs.OutboundHandlerConfig{
@@ -389,7 +388,7 @@ func parseAnytls(mapping map[string]any, name string) (*configs.OutboundHandlerC
 		return nil, fmt.Errorf("missing password")
 	}
 
-	anytlsConfig := &proxy.AnytlsClientConfig{
+	anytlsConfig := &configs.AnytlsClientConfig{
 		Password: password,
 	}
 	if idleSessionCheckInterval, ok := mapping["idle-session-check-interval"].(int); ok {
@@ -427,16 +426,16 @@ func parseHysteria(mapping map[string]any, name string) (*configs.OutboundHandle
 	} else if portVal, ok := mapping["ports"].(string); ok {
 		ports = sub.TryParsePorts(portVal)
 	}
-	hysteriaConfig := &proxy.Hysteria2ClientConfig{
-		Bandwidth: &proxy.BandwidthConfig{},
+	hysteriaConfig := &configs.Hysteria2ClientConfig{
+		Bandwidth: &configs.BandwidthConfig{},
 	}
 	if auth, ok := mapping["password"].(string); ok {
 		hysteriaConfig.Auth = auth
 	}
 	if mapping["obfs"] == "salamander" {
-		hysteriaConfig.Obfs = &proxy.ObfsConfig{
-			Obfs: &proxy.ObfsConfig_Salamander{
-				Salamander: &proxy.SalamanderConfig{
+		hysteriaConfig.Obfs = &configs.ObfsConfig{
+			Obfs: &configs.ObfsConfig_Salamander{
+				Salamander: &configs.SalamanderConfig{
 					Password: mapping["obfs-password"].(string),
 				},
 			},

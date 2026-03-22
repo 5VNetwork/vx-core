@@ -3,6 +3,7 @@ package http
 import (
 	"strings"
 
+	httppb "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/transport/headers/http"
 	"github.com/5vnetwork/vx-core/common/dice"
 )
 
@@ -18,83 +19,80 @@ func pickString(arr []string) string {
 	}
 }
 
-func (v *RequestConfig) PickURI() string {
-	return pickString(v.Uri)
+func pickRequestURI(v *RequestConfig) string {
+	return pickString(v.GetUri())
 }
 
-func (v *RequestConfig) PickHeaders() []string {
-	n := len(v.Header)
+func pickRequestHeaders(v *RequestConfig) []string {
+	n := len(v.GetHeader())
 	if n == 0 {
 		return nil
 	}
 	headers := make([]string, n)
-	for idx, headerConfig := range v.Header {
-		headerName := headerConfig.Name
-		headerValue := pickString(headerConfig.Value)
+	for idx, headerConfig := range v.GetHeader() {
+		headerName := headerConfig.GetName()
+		headerValue := pickString(headerConfig.GetValue())
 		headers[idx] = headerName + ": " + headerValue
 	}
 	return headers
 }
 
-func (v *RequestConfig) GetVersionValue() string {
-	if v == nil || v.Version == nil {
+func requestVersionValue(v *RequestConfig) string {
+	if v == nil || v.GetVersion() == nil {
 		return "1.1"
 	}
-	return v.Version.Value
+	return v.GetVersion().GetValue()
 }
 
-func (v *RequestConfig) GetMethodValue() string {
-	if v == nil || v.Method == nil {
+func requestMethodValue(v *RequestConfig) string {
+	if v == nil || v.GetMethod() == nil {
 		return "GET"
 	}
-	return v.Method.Value
+	return v.GetMethod().GetValue()
 }
 
-func (v *RequestConfig) GetFullVersion() string {
-	return "HTTP/" + v.GetVersionValue()
+func requestFullVersion(v *RequestConfig) string {
+	return "HTTP/" + requestVersionValue(v)
 }
 
-func (v *ResponseConfig) HasHeader(header string) bool {
+func responseHasHeader(v *ResponseConfig, header string) bool {
 	cHeader := strings.ToLower(header)
-	for _, tHeader := range v.Header {
-		if strings.EqualFold(tHeader.Name, cHeader) {
+	for _, tHeader := range v.GetHeader() {
+		if strings.EqualFold(tHeader.GetName(), cHeader) {
 			return true
 		}
 	}
 	return false
 }
 
-func (v *ResponseConfig) PickHeaders() []string {
-	n := len(v.Header)
+func pickResponseHeaders(v *ResponseConfig) []string {
+	n := len(v.GetHeader())
 	if n == 0 {
 		return nil
 	}
 	headers := make([]string, n)
-	for idx, headerConfig := range v.Header {
-		headerName := headerConfig.Name
-		headerValue := pickString(headerConfig.Value)
+	for idx, headerConfig := range v.GetHeader() {
+		headerName := headerConfig.GetName()
+		headerValue := pickString(headerConfig.GetValue())
 		headers[idx] = headerName + ": " + headerValue
 	}
 	return headers
 }
 
-func (v *ResponseConfig) GetVersionValue() string {
-	if v == nil || v.Version == nil {
+func responseVersionValue(v *ResponseConfig) string {
+	if v == nil || v.GetVersion() == nil {
 		return "1.1"
 	}
-	return v.Version.Value
+	return v.GetVersion().GetValue()
 }
 
-func (v *ResponseConfig) GetFullVersion() string {
-	return "HTTP/" + v.GetVersionValue()
+func responseFullVersion(v *ResponseConfig) string {
+	return "HTTP/" + responseVersionValue(v)
 }
 
-func (v *ResponseConfig) GetStatusValue() *Status {
-	if v == nil || v.Status == nil {
-		return &Status{
-			Code:   "200",
-			Reason: "OK",
-		}
+func responseStatusOrDefault(v *ResponseConfig) *Status {
+	if v == nil || v.GetStatus() == nil {
+		return (&httppb.Status_builder{Code: "200", Reason: "OK"}).Build()
 	}
-	return v.Status
+	return v.GetStatus()
 }

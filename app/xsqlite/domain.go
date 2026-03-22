@@ -1,7 +1,7 @@
 package xsqlite
 
 import (
-	"github.com/5vnetwork/vx-core/common/geo"
+	geo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/golang/protobuf/proto"
 )
 

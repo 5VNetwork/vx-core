@@ -3,9 +3,7 @@
 
 package buildclient
 
-import (
-	"github.com/5vnetwork/vx-core/app/configs"
-)
+import "github.com/5vnetwork/vx-core/app/configs"
 
 func Wfp(config *configs.WfpConfig, f *Builder) error {
 	// return f.requireFeature(func(d *dispatcher.Dispatcher, dns *dns.Dns) error {

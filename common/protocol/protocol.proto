@@ -3,7 +3,6 @@ syntax = "proto3";
 package x.common.protocol;
 option go_package = "github.com/5vnetwork/vx-core/common/protocol";
 
-
 enum SecurityType {
   UNKNOWN = 0;
   LEGACY = 1;

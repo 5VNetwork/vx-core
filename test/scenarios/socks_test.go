@@ -6,14 +6,12 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"log"
 	"testing"
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/buildserver"
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/common"
@@ -32,10 +30,10 @@ func TestSocksBridgeTCP(t *testing.T) {
 	uid := uuid.New()
 	psd := uuid.New()
 	err := testTcpCommon(testCommonConfig{
-		serverProtocol: &proxyconfig.SocksServerConfig{
+		serverProtocol: &configs.SocksServerConfig{
 			Address:    "127.0.0.1",
 			UdpEnabled: true,
-			AuthType:   proxyconfig.AuthType_PASSWORD,
+			AuthType:   configs.AuthType_PASSWORD,
 			Accounts: []*configs.UserConfig{
 				{
 					Id:     uid.String(),
@@ -43,7 +41,7 @@ func TestSocksBridgeTCP(t *testing.T) {
 				},
 			},
 		},
-		clientProtocol: &proxyconfig.SocksClientConfig{
+		clientProtocol: &configs.SocksClientConfig{
 			Name:     uid.String(),
 			Password: psd.String(),
 		},
@@ -55,12 +53,12 @@ func TestSocksBridgeTCP(t *testing.T) {
 
 func TestSocksBridgeTCPNoPassword(t *testing.T) {
 	err := testTcpCommon(testCommonConfig{
-		serverProtocol: &proxyconfig.SocksServerConfig{
+		serverProtocol: &configs.SocksServerConfig{
 			Address:    "127.0.0.1",
 			UdpEnabled: true,
-			AuthType:   proxyconfig.AuthType_NO_AUTH,
+			AuthType:   configs.AuthType_NO_AUTH,
 		},
-		clientProtocol: &proxyconfig.SocksClientConfig{},
+		clientProtocol: &configs.SocksClientConfig{},
 	})
 	if err != nil {
 		t.Error(err)
@@ -71,10 +69,10 @@ func TestSocksBridageUDP(t *testing.T) {
 	uid := uuid.New()
 	psd := uuid.New()
 	err := testUdpFlow(testCommonConfig{
-		serverProtocol: &proxyconfig.SocksServerConfig{
+		serverProtocol: &configs.SocksServerConfig{
 			Address:    "127.0.0.1",
 			UdpEnabled: true,
-			AuthType:   proxyconfig.AuthType_PASSWORD,
+			AuthType:   configs.AuthType_PASSWORD,
 			Accounts: []*configs.UserConfig{
 				{
 					Id:     uid.String(),
@@ -82,7 +80,7 @@ func TestSocksBridageUDP(t *testing.T) {
 				},
 			},
 		},
-		clientProtocol: &proxyconfig.SocksClientConfig{
+		clientProtocol: &configs.SocksClientConfig{
 			Name:     uid.String(),
 			Password: psd.String(),
 		},
@@ -97,16 +95,16 @@ func TestSocksBridageUDPMulti(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.SocksServerConfig{
+					&configs.SocksServerConfig{
 						Address:    "127.0.0.1",
 						UdpEnabled: true,
-						AuthType:   proxyconfig.AuthType_PASSWORD,
+						AuthType:   configs.AuthType_PASSWORD,
 						Accounts: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -131,7 +129,7 @@ func TestSocksBridageUDPMulti(t *testing.T) {
 				Outbound: &configs.OutboundHandlerConfig{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.SocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.SocksClientConfig{
 						Name:     userID.String(),
 						Password: userID.String(),
 					}),

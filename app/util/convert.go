@@ -5,11 +5,17 @@ package util
 
 import (
 	"fmt"
+
+	inbound "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/inbound"
+	outbound "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/outbound"
+	transport "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/transport"
+	vxreality "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/transport/security/reality"
+	vxtls "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/transport/security/tls"
+
 	"slices"
 	"strings"
 
-	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+	configs "github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
 	"github.com/5vnetwork/vx-core/common/serial"
@@ -26,8 +32,8 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func InboundConfigToOutboundConfig(namePrefix string, inboundConfig *configs.ProxyInboundConfig,
-	serverAddress string) ([]*configs.OutboundHandlerConfig, error) {
+func InboundConfigToOutboundConfig(namePrefix string, inboundConfig *inbound.ProxyInboundConfig,
+	serverAddress string) ([]*outbound.OutboundHandlerConfig, error) {
 	if len(inboundConfig.Users) == 0 {
 		return nil, fmt.Errorf("no users")
 	}
@@ -39,13 +45,13 @@ func InboundConfigToOutboundConfig(namePrefix string, inboundConfig *configs.Pro
 	}
 	var securityProtocols []any
 	if inboundConfig.GetTransport().GetSecurity() != nil {
-		if tlsConfig, ok := inboundConfig.Transport.Security.(*configs.TransportConfig_Tls); ok {
+		if tlsConfig, ok := inboundConfig.Transport.Security.(*transport.TransportConfig_Tls); ok {
 			clientConfigs, err := serverTlsConfigToClientTlsConfig(tlsConfig.Tls)
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert tls config: %w", err)
 			}
 			securityProtocols = append(securityProtocols, clientConfigs...)
-		} else if realityConfig, ok := inboundConfig.Transport.Security.(*configs.TransportConfig_Reality); ok {
+		} else if realityConfig, ok := inboundConfig.Transport.Security.(*transport.TransportConfig_Reality); ok {
 			clientConfigs, err := serverRealityConfigToClientRealityConfig(realityConfig.Reality)
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert reality config: %w", err)
@@ -169,41 +175,41 @@ func proxyProtocolToOutboundConfig(proxyProtocol []*anypb.Any, user *configs.Use
 			return nil, fmt.Errorf("failed to unmarshal protocol: %w", err)
 		}
 		switch pc := protocolConfig.(type) {
-		case *proxy.VmessServerConfig:
-			clientProtocols = append(clientProtocols, serial.ToTypedMessage(&proxy.VmessClientConfig{
+		case *configs.VmessServerConfig:
+			clientProtocols = append(clientProtocols, serial.ToTypedMessage(&configs.VmessClientConfig{
 				Id: user.Secret,
 			}))
-		case *proxy.ShadowsocksServerConfig:
-			clientProtocols = append(clientProtocols, serial.ToTypedMessage(&proxy.ShadowsocksClientConfig{
+		case *configs.ShadowsocksServerConfig:
+			clientProtocols = append(clientProtocols, serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 				Password:   user.Secret,
 				CipherType: pc.CipherType,
 			}))
-		case *proxy.TrojanServerConfig:
-			clientProtocols = append(clientProtocols, serial.ToTypedMessage(&proxy.TrojanClientConfig{
+		case *configs.TrojanServerConfig:
+			clientProtocols = append(clientProtocols, serial.ToTypedMessage(&configs.TrojanClientConfig{
 				Password: user.Secret,
 				Vision:   pc.Vision,
 			}))
-		case *proxy.AnytlsServerConfig:
-			clientProtocols = append(clientProtocols, serial.ToTypedMessage(&proxy.AnytlsClientConfig{
+		case *configs.AnytlsServerConfig:
+			clientProtocols = append(clientProtocols, serial.ToTypedMessage(&configs.AnytlsClientConfig{
 				Password: user.Secret,
 			}))
-		case *proxy.SocksServerConfig:
-			clientProtocols = append(clientProtocols, serial.ToTypedMessage(&proxy.SocksClientConfig{
+		case *configs.SocksServerConfig:
+			clientProtocols = append(clientProtocols, serial.ToTypedMessage(&configs.SocksClientConfig{
 				Name:     user.Id,
 				Password: user.Secret,
 			}))
-		case *proxy.Hysteria2ServerConfig:
+		case *configs.Hysteria2ServerConfig:
 			tlsConfigs, err := serverTlsConfigToClientTlsConfig(pc.TlsConfig)
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert tls config: %w", err)
 			}
 			for _, tlsConfig := range tlsConfigs {
-				clientProtocols = append(clientProtocols, serial.ToTypedMessage(&proxy.Hysteria2ClientConfig{
+				clientProtocols = append(clientProtocols, serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
 					TlsConfig: tlsConfig.(*tls.TlsConfig),
 					Quic:      pc.Quic,
 					Obfs:      pc.Obfs,
 					Auth:      user.Secret,
-					Bandwidth: &proxy.BandwidthConfig{
+					Bandwidth: &configs.BandwidthConfig{
 						MaxTx: 10,
 						MaxRx: 10,
 					},
@@ -324,7 +330,7 @@ func getPortRanges(ports []uint32) []*net.PortRange {
 	return returns
 }
 
-func serverRealityConfigToClientRealityConfig(realityConfig *reality.RealityConfig) ([]any, error) {
+func serverRealityConfigToClientRealityConfig(realityConfig *vxreality.RealityConfig) ([]any, error) {
 	var returns []any
 	pubKey, err := curve25519.X25519(realityConfig.PrivateKey, curve25519.Basepoint)
 	if err != nil {
@@ -335,7 +341,7 @@ func serverRealityConfigToClientRealityConfig(realityConfig *reality.RealityConf
 		shortId = realityConfig.ShortIds[0]
 	}
 	for _, dest := range realityConfig.ServerNames {
-		returns = append(returns, &reality.RealityConfig{
+		returns = append(returns, &vxreality.RealityConfig{
 			ServerName: dest,
 			PublicKey:  pubKey,
 			ShortId:    shortId,
@@ -344,7 +350,7 @@ func serverRealityConfigToClientRealityConfig(realityConfig *reality.RealityConf
 	return returns, nil
 }
 
-func serverTlsConfigToClientTlsConfig(serverTlsConfig *tls.TlsConfig) ([]any, error) {
+func serverTlsConfigToClientTlsConfig(serverTlsConfig *vxtls.TlsConfig) ([]any, error) {
 	if len(serverTlsConfig.Certificates) == 0 {
 		return nil, fmt.Errorf("no certificates")
 	}

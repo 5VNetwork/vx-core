@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/serial"
 )
 
@@ -18,14 +18,14 @@ func TestParseHysteriaFromLink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	hysteria := hysteriaConfig.(*proxy.Hysteria2ClientConfig)
+	hysteria := hysteriaConfig.(*configs.Hysteria2ClientConfig)
 	if hysteria.Auth != "12345678-1234-1234-1234-123456789012" {
 		t.Fatal("auth mismatch")
 	}
 	if hysteria.TlsConfig.ServerName != "a.b.com" {
 		t.Fatal("sni mismatch")
 	}
-	if hysteria.Obfs.Obfs.(*proxy.ObfsConfig_Salamander).Salamander.Password != "asdfwqr" {
+	if hysteria.Obfs.Obfs.(*configs.ObfsConfig_Salamander).Salamander.Password != "asdfwqr" {
 		t.Fatal("obfs password mismatch")
 	}
 	if config.Address != "a.b.com" {
@@ -49,14 +49,14 @@ func TestParseHysteriaFromLink1(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	hysteria := hysteriaConfig.(*proxy.Hysteria2ClientConfig)
+	hysteria := hysteriaConfig.(*configs.Hysteria2ClientConfig)
 	if hysteria.Auth != "username:password" {
 		t.Fatal("auth mismatch")
 	}
 	if hysteria.TlsConfig.ServerName != "a.b.com" {
 		t.Fatal("sni mismatch")
 	}
-	if hysteria.Obfs.Obfs.(*proxy.ObfsConfig_Salamander).Salamander.Password != "asdfwqr" {
+	if hysteria.Obfs.Obfs.(*configs.ObfsConfig_Salamander).Salamander.Password != "asdfwqr" {
 		t.Fatal("obfs password mismatch")
 	}
 	if config.Address != "a.b.com" {
@@ -84,14 +84,14 @@ func TestParseHysteriaFromLink2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	hysteria := hysteriaConfig.(*proxy.Hysteria2ClientConfig)
+	hysteria := hysteriaConfig.(*configs.Hysteria2ClientConfig)
 	if hysteria.Auth != "username:password" {
 		t.Fatal("auth mismatch")
 	}
 	if hysteria.TlsConfig.ServerName != "a.b.com" {
 		t.Fatal("sni mismatch")
 	}
-	if hysteria.Obfs.Obfs.(*proxy.ObfsConfig_Salamander).Salamander.Password != "asdfwqr" {
+	if hysteria.Obfs.Obfs.(*configs.ObfsConfig_Salamander).Salamander.Password != "asdfwqr" {
 		t.Fatal("obfs password mismatch")
 	}
 	if config.Address != "a.b.com" {
@@ -116,14 +116,14 @@ func TestParseHysteriaFromLink3(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	hysteria := hysteriaConfig.(*proxy.Hysteria2ClientConfig)
+	hysteria := hysteriaConfig.(*configs.Hysteria2ClientConfig)
 	if hysteria.Auth != "username:password" {
 		t.Fatal("auth mismatch")
 	}
 	if hysteria.TlsConfig.ServerName != "a.b.com" {
 		t.Fatal("sni mismatch")
 	}
-	if hysteria.Obfs.Obfs.(*proxy.ObfsConfig_Salamander).Salamander.Password != "asdfwqr" {
+	if hysteria.Obfs.Obfs.(*configs.ObfsConfig_Salamander).Salamander.Password != "asdfwqr" {
 		t.Fatal("obfs password mismatch")
 	}
 	if len(hysteria.TlsConfig.PinnedPeerCertificateChainSha256) != 1 {

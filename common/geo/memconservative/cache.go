@@ -6,31 +6,31 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
+	commongeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/5vnetwork/vx-core/common/errors"
-	"github.com/5vnetwork/vx-core/common/geo"
 )
 
-type GeoIPCache map[string]*geo.GeoIP
+type GeoIPCache map[string]*commongeo.GeoIP
 
 func (g GeoIPCache) Has(key string) bool {
 	return !(g.Get(key) == nil)
 }
 
-func (g GeoIPCache) Get(key string) *geo.GeoIP {
+func (g GeoIPCache) Get(key string) *commongeo.GeoIP {
 	if g == nil {
 		return nil
 	}
 	return g[key]
 }
 
-func (g GeoIPCache) Set(key string, value *geo.GeoIP) {
+func (g GeoIPCache) Set(key string, value *commongeo.GeoIP) {
 	if g == nil {
-		g = make(map[string]*geo.GeoIP)
+		g = make(map[string]*commongeo.GeoIP)
 	}
 	g[key] = value
 }
 
-func (g GeoIPCache) Unmarshal(filePath, code string) (*geo.GeoIP, error) {
+func (g GeoIPCache) Unmarshal(filePath, code string) (*commongeo.GeoIP, error) {
 	// asset := platform.GetAssetLocation(filename)
 	idx := strings.ToLower(filePath + ":" + code)
 	if g.Has(idx) {
@@ -40,7 +40,7 @@ func (g GeoIPCache) Unmarshal(filePath, code string) (*geo.GeoIP, error) {
 	geoipBytes, err := Decode(filePath, code)
 	switch err {
 	case nil:
-		var geoip geo.GeoIP
+		var geoip commongeo.GeoIP
 		if err := proto.Unmarshal(geoipBytes, &geoip); err != nil {
 			return nil, err
 		}
@@ -57,7 +57,7 @@ func (g GeoIPCache) Unmarshal(filePath, code string) (*geo.GeoIP, error) {
 		if err != nil {
 			return nil, err
 		}
-		var geoipList geo.GeoIPList
+		var geoipList commongeo.GeoIPList
 		if err := proto.Unmarshal(geoipBytes, &geoipList); err != nil {
 			return nil, err
 		}
@@ -75,27 +75,27 @@ func (g GeoIPCache) Unmarshal(filePath, code string) (*geo.GeoIP, error) {
 	return nil, errors.New("country code ", code, " not found in ", filePath)
 }
 
-type GeoSiteCache map[string]*geo.GeoSite
+type GeoSiteCache map[string]*commongeo.GeoSite
 
 func (g GeoSiteCache) Has(key string) bool {
 	return !(g.Get(key) == nil)
 }
 
-func (g GeoSiteCache) Get(key string) *geo.GeoSite {
+func (g GeoSiteCache) Get(key string) *commongeo.GeoSite {
 	if g == nil {
 		return nil
 	}
 	return g[key]
 }
 
-func (g GeoSiteCache) Set(key string, value *geo.GeoSite) {
+func (g GeoSiteCache) Set(key string, value *commongeo.GeoSite) {
 	if g == nil {
-		g = make(map[string]*geo.GeoSite)
+		g = make(map[string]*commongeo.GeoSite)
 	}
 	g[key] = value
 }
 
-func (g GeoSiteCache) Unmarshal(filepath, code string) (*geo.GeoSite, error) {
+func (g GeoSiteCache) Unmarshal(filepath, code string) (*commongeo.GeoSite, error) {
 	idx := strings.ToLower(filepath + ":" + code)
 	if g.Has(idx) {
 		return g.Get(idx), nil
@@ -104,7 +104,7 @@ func (g GeoSiteCache) Unmarshal(filepath, code string) (*geo.GeoSite, error) {
 	geositeBytes, err := Decode(filepath, code)
 	switch err {
 	case nil:
-		var geosite geo.GeoSite
+		var geosite commongeo.GeoSite
 		if err := proto.Unmarshal(geositeBytes, &geosite); err != nil {
 			return nil, err
 		}
@@ -121,7 +121,7 @@ func (g GeoSiteCache) Unmarshal(filepath, code string) (*geo.GeoSite, error) {
 		if err != nil {
 			return nil, err
 		}
-		var geositeList geo.GeoSiteList
+		var geositeList commongeo.GeoSiteList
 		if err := proto.Unmarshal(geositeBytes, &geositeList); err != nil {
 			return nil, err
 		}

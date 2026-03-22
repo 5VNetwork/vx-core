@@ -11,7 +11,7 @@ func Test_GetNormalizedPath(t *testing.T) {
 		Path: "/?world",
 	}
 
-	path := c.GetNormalizedPath()
+	path := GetNormalizedPath(&c)
 	if path != "/" {
 		t.Error("Unexpected: ", path)
 	}

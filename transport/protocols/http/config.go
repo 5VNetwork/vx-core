@@ -6,15 +6,15 @@ import (
 
 const protocolName = "http"
 
-func (c *HttpConfig) getHosts() []string {
-	if len(c.Host) == 0 {
+func httpHosts(c *HttpConfig) []string {
+	if len(c.GetHost()) == 0 {
 		return []string{"www.example.com"}
 	}
-	return c.Host
+	return c.GetHost()
 }
 
-func (c *HttpConfig) isValidHost(host string) bool {
-	hosts := c.getHosts()
+func isValidHTTPHost(c *HttpConfig, host string) bool {
+	hosts := httpHosts(c)
 	for _, h := range hosts {
 		if h == host {
 			return true
@@ -23,17 +23,18 @@ func (c *HttpConfig) isValidHost(host string) bool {
 	return false
 }
 
-func (c *HttpConfig) getRandomHost() string {
-	hosts := c.getHosts()
+func randomHTTPHost(c *HttpConfig) string {
+	hosts := httpHosts(c)
 	return hosts[dice.Roll(len(hosts))]
 }
 
-func (c *HttpConfig) getNormalizedPath() string {
-	if c.Path == "" {
+func normalizedHTTPPath(c *HttpConfig) string {
+	path := c.GetPath()
+	if path == "" {
 		return "/"
 	}
-	if c.Path[0] != '/' {
-		return "/" + c.Path
+	if path[0] != '/' {
+		return "/" + path
 	}
-	return c.Path
+	return path
 }

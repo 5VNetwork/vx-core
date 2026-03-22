@@ -50,7 +50,7 @@ func GetCtx(src, gateway net.Destination, tag string) (context.Context, context.
 	ctx = ContextWithInboundTag(ctx, tag)
 	ctx = ContextWithSrc(ctx, src)
 	ctx = ContextWithGateway(ctx, gateway)
-	log.Ctx(ctx).Debug().Str("tag", tag).Str("network", src.Network.SystemString()).
+	log.Ctx(ctx).Debug().Str("tag", tag).Str("network", net.SystemString(src.Network)).
 		Str("src", src.String()).Str("gateway", gateway.String()).Msg("new connection")
 	return ctx, cancel
 }

@@ -9,11 +9,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/buildclient"
+			"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
 	"github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
@@ -64,7 +62,7 @@ type testCommonConfig struct {
 func testTcpCommon(config testCommonConfig) error {
 	serverPort := tcp.PickPort()
 	log.Print("serverPort ", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address:   net.LocalHostIP.String(),
@@ -85,7 +83,7 @@ func testTcpCommon(config testCommonConfig) error {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  "127.0.0.1",
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -130,7 +128,7 @@ func testTcpCommon(config testCommonConfig) error {
 func testUdpFlow(config testCommonConfig) error {
 	serverPort := tcp.PickPort()
 	log.Print("serverPort ", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address:   net.LocalHostIP.String(),
@@ -158,7 +156,7 @@ func testUdpFlow(config testCommonConfig) error {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  "127.0.0.1",
 							Port:     uint32(udpDest.Port),
 							Networks: []net.Network{net.Network_UDP},

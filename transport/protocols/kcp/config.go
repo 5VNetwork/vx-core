@@ -10,64 +10,64 @@ import (
 const protocolName = "mkcp"
 
 // GetMTUValue returns the value of MTU settings.
-func (c *KcpConfig) GetMTUValue() uint32 {
-	if c == nil || c.Mtu == 0 {
+func GetMTUValue(c *KcpConfig) uint32 {
+	if c == nil || c.GetMtu() == 0 {
 		return 1350
 	}
-	return c.Mtu
+	return c.GetMtu()
 }
 
 // GetTTIValue returns the value of TTI settings.
-func (c *KcpConfig) GetTTIValue() uint32 {
-	if c == nil || c.Tti == 0 {
+func GetTTIValue(c *KcpConfig) uint32 {
+	if c == nil || c.GetTti() == 0 {
 		return 50
 	}
-	return c.Tti
+	return c.GetTti()
 }
 
 // GetUplinkCapacityValue returns the value of UplinkCapacity settings.
-func (c *KcpConfig) GetUplinkCapacityValue() uint32 {
-	if c == nil || c.UplinkCapacity == 0 {
+func GetUplinkCapacityValue(c *KcpConfig) uint32 {
+	if c == nil || c.GetUplinkCapacity() == 0 {
 		return 5
 	}
-	return c.UplinkCapacity
+	return c.GetUplinkCapacity()
 }
 
 // GetDownlinkCapacityValue returns the value of DownlinkCapacity settings.
-func (c *KcpConfig) GetDownlinkCapacityValue() uint32 {
-	if c == nil || c.DownlinkCapacity == 0 {
+func GetDownlinkCapacityValue(c *KcpConfig) uint32 {
+	if c == nil || c.GetDownlinkCapacity() == 0 {
 		return 20
 	}
-	return c.DownlinkCapacity
+	return c.GetDownlinkCapacity()
 }
 
 // GetWriteBufferSize returns the size of WriterBuffer in bytes.
-func (c *KcpConfig) GetWriteBufferSize() uint32 {
-	if c == nil || c.WriteBuffer == 0 {
+func GetWriteBufferSize(c *KcpConfig) uint32 {
+	if c == nil || c.GetWriteBuffer() == 0 {
 		return 2 * 1024 * 1024
 	}
-	return c.WriteBuffer
+	return c.GetWriteBuffer()
 }
 
 // GetReadBufferSize returns the size of ReadBuffer in bytes.
-func (c *KcpConfig) GetReadBufferSize() uint32 {
-	if c == nil || c.ReadBuffer == 0 {
+func GetReadBufferSize(c *KcpConfig) uint32 {
+	if c == nil || c.GetReadBuffer() == 0 {
 		return 2 * 1024 * 1024
 	}
-	return c.ReadBuffer
+	return c.GetReadBuffer()
 }
 
 // GetSecurity returns the security settings.
-func (c *KcpConfig) GetSecurity() (cipher.AEAD, error) {
-	if c.Seed != "" {
-		return NewAEADAESGCMBasedOnSeed(c.Seed), nil
+func GetSecurity(c *KcpConfig) (cipher.AEAD, error) {
+	if c.GetSeed() != "" {
+		return NewAEADAESGCMBasedOnSeed(c.GetSeed()), nil
 	}
 	return NewSimpleAuthenticator(), nil
 }
 
-func (c *KcpConfig) GetPackerHeader() (headers.PacketHeader, error) {
-	if c.HeaderConfig != nil {
-		rawConfig, err := serial.GetInstanceOf(c.HeaderConfig)
+func GetPackerHeader(c *KcpConfig) (headers.PacketHeader, error) {
+	if c.GetHeaderConfig() != nil {
+		rawConfig, err := serial.GetInstanceOf(c.GetHeaderConfig())
 		if err != nil {
 			return nil, err
 		}
@@ -77,26 +77,26 @@ func (c *KcpConfig) GetPackerHeader() (headers.PacketHeader, error) {
 	return nil, nil
 }
 
-func (c *KcpConfig) GetSendingInFlightSize() uint32 {
-	size := c.GetUplinkCapacityValue() * 1024 * 1024 / c.GetMTUValue() / (1000 / c.GetTTIValue())
+func GetSendingInFlightSize(c *KcpConfig) uint32 {
+	size := GetUplinkCapacityValue(c) * 1024 * 1024 / GetMTUValue(c) / (1000 / GetTTIValue(c))
 	if size < 8 {
 		size = 8
 	}
 	return size
 }
 
-func (c *KcpConfig) GetSendingBufferSize() uint32 {
-	return c.GetWriteBufferSize() / c.GetMTUValue()
+func GetSendingBufferSize(c *KcpConfig) uint32 {
+	return GetWriteBufferSize(c) / GetMTUValue(c)
 }
 
-func (c *KcpConfig) GetReceivingInFlightSize() uint32 {
-	size := c.GetDownlinkCapacityValue() * 1024 * 1024 / c.GetMTUValue() / (1000 / c.GetTTIValue())
+func GetReceivingInFlightSize(c *KcpConfig) uint32 {
+	size := GetDownlinkCapacityValue(c) * 1024 * 1024 / GetMTUValue(c) / (1000 / GetTTIValue(c))
 	if size < 8 {
 		size = 8
 	}
 	return size
 }
 
-func (c *KcpConfig) GetReceivingBufferSize() uint32 {
-	return c.GetReadBufferSize() / c.GetMTUValue()
+func GetReceivingBufferSize(c *KcpConfig) uint32 {
+	return GetReadBufferSize(c) / GetMTUValue(c)
 }

@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/util/sub/clash"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert/yaml"
@@ -50,7 +50,7 @@ func TestParseVmessProxy(t *testing.T) {
 	}
 
 	// Check protocol is vmess
-	vmessConfig := &proxy.VmessClientConfig{}
+	vmessConfig := &configs.VmessClientConfig{}
 	if err := config.Protocol.UnmarshalTo(vmessConfig); err != nil {
 		t.Fatalf("Failed to unmarshal vmess config: %v", err)
 	}
@@ -98,7 +98,7 @@ func TestParseVlessProxy(t *testing.T) {
 		t.Errorf("Expected tag 'vless-proxy', got %s", config.Tag)
 	}
 
-	vlessConfig := &proxy.VlessClientConfig{}
+	vlessConfig := &configs.VlessClientConfig{}
 	if err := config.Protocol.UnmarshalTo(vlessConfig); err != nil {
 		t.Fatalf("Failed to unmarshal vless config: %v", err)
 	}
@@ -135,7 +135,7 @@ func TestParseTrojanProxy(t *testing.T) {
 		t.Errorf("Expected tag 'trojan-proxy', got %s", config.Tag)
 	}
 
-	trojanConfig := &proxy.TrojanClientConfig{}
+	trojanConfig := &configs.TrojanClientConfig{}
 	if err := config.Protocol.UnmarshalTo(trojanConfig); err != nil {
 		t.Fatalf("Failed to unmarshal trojan config: %v", err)
 	}
@@ -172,7 +172,7 @@ func TestParseShadowsocksProxy(t *testing.T) {
 		t.Errorf("Expected tag 'ss-proxy', got %s", config.Tag)
 	}
 
-	ssConfig := &proxy.ShadowsocksClientConfig{}
+	ssConfig := &configs.ShadowsocksClientConfig{}
 	if err := config.Protocol.UnmarshalTo(ssConfig); err != nil {
 		t.Fatalf("Failed to unmarshal shadowsocks config: %v", err)
 	}
@@ -181,7 +181,7 @@ func TestParseShadowsocksProxy(t *testing.T) {
 		t.Errorf("Expected password 'password123', got %s", ssConfig.Password)
 	}
 
-	if ssConfig.CipherType != proxy.ShadowsocksCipherType_AES_256_GCM {
+	if ssConfig.CipherType != configs.ShadowsocksCipherType_AES_256_GCM {
 		t.Errorf("Expected AES_256_GCM cipher, got %v", ssConfig.CipherType)
 	}
 }
@@ -207,7 +207,7 @@ func TestParseAnytlsProxy(t *testing.T) {
 		t.Errorf("Expected tag 'anytls-proxy', got %s", config.Tag)
 	}
 
-	anytlsConfig := &proxy.AnytlsClientConfig{}
+	anytlsConfig := &configs.AnytlsClientConfig{}
 	if err := config.Protocol.UnmarshalTo(anytlsConfig); err != nil {
 		t.Fatalf("Failed to unmarshal anytls config: %v", err)
 	}
@@ -498,7 +498,7 @@ func TestParseSocksProxy(t *testing.T) {
 				return
 			}
 			if !tt.wantErr {
-				socksConfig := &proxy.SocksClientConfig{}
+				socksConfig := &configs.SocksClientConfig{}
 				if err := config.Protocol.UnmarshalTo(socksConfig); err != nil {
 					t.Fatalf("Failed to unmarshal socks config: %v", err)
 				}
@@ -551,7 +551,7 @@ func TestParseHTTPProxy(t *testing.T) {
 				return
 			}
 			if !tt.wantErr {
-				httpConfig := &proxy.HttpClientConfig{}
+				httpConfig := &configs.HttpClientConfig{}
 				if err := config.Protocol.UnmarshalTo(httpConfig); err != nil {
 					t.Fatalf("Failed to unmarshal http config: %v", err)
 				}
@@ -584,7 +584,7 @@ func TestParseHysteriaProxy(t *testing.T) {
 		t.Errorf("Expected tag 'hysteria-proxy', got %s", config.Tag)
 	}
 
-	hysteriaConfig := &proxy.Hysteria2ClientConfig{}
+	hysteriaConfig := &configs.Hysteria2ClientConfig{}
 	if err := config.Protocol.UnmarshalTo(hysteriaConfig); err != nil {
 		t.Fatalf("Failed to unmarshal hysteria config: %v", err)
 	}
@@ -655,14 +655,14 @@ func TestGetPort(t *testing.T) {
 func TestVmessCipherTypes(t *testing.T) {
 	tests := []struct {
 		cipher   string
-		expected proxy.SecurityType
+		expected configs.SecurityType
 	}{
-		{"auto", proxy.SecurityType_SecurityType_AUTO},
-		{"aes-128-gcm", proxy.SecurityType_SecurityType_AES128_GCM},
-		{"chacha20-poly1305", proxy.SecurityType_SecurityType_CHACHA20_POLY1305},
-		{"none", proxy.SecurityType_SecurityType_NONE},
-		{"zero", proxy.SecurityType_SecurityType_ZERO},
-		{"unknown", proxy.SecurityType_SecurityType_AUTO}, // defaults to AUTO
+		{"auto", configs.SecurityType_SecurityType_AUTO},
+		{"aes-128-gcm", configs.SecurityType_SecurityType_AES128_GCM},
+		{"chacha20-poly1305", configs.SecurityType_SecurityType_CHACHA20_POLY1305},
+		{"none", configs.SecurityType_SecurityType_NONE},
+		{"zero", configs.SecurityType_SecurityType_ZERO},
+		{"unknown", configs.SecurityType_SecurityType_AUTO}, // defaults to AUTO
 	}
 
 	for _, tt := range tests {
@@ -681,7 +681,7 @@ func TestVmessCipherTypes(t *testing.T) {
 				t.Fatalf("Failed to parse vmess: %v", err)
 			}
 
-			vmessConfig := &proxy.VmessClientConfig{}
+			vmessConfig := &configs.VmessClientConfig{}
 			if err := config.Protocol.UnmarshalTo(vmessConfig); err != nil {
 				t.Fatalf("Failed to unmarshal vmess config: %v", err)
 			}
@@ -722,7 +722,7 @@ func TestVmessAlterID(t *testing.T) {
 				t.Fatalf("Failed to parse vmess: %v", err)
 			}
 
-			vmessConfig := &proxy.VmessClientConfig{}
+			vmessConfig := &configs.VmessClientConfig{}
 			if err := config.Protocol.UnmarshalTo(vmessConfig); err != nil {
 				t.Fatalf("Failed to unmarshal vmess config: %v", err)
 			}
@@ -738,18 +738,18 @@ func TestVmessAlterID(t *testing.T) {
 func TestShadowsocksCipherTypes(t *testing.T) {
 	tests := []struct {
 		cipher   string
-		expected proxy.ShadowsocksCipherType
+		expected configs.ShadowsocksCipherType
 		wantErr  bool
 	}{
-		{"aes-128-gcm", proxy.ShadowsocksCipherType_AES_128_GCM, false},
-		{"AEAD_AES_128_GCM", proxy.ShadowsocksCipherType_AES_128_GCM, false},
-		{"aes-256-gcm", proxy.ShadowsocksCipherType_AES_256_GCM, false},
-		{"AEAD_AES_256_GCM", proxy.ShadowsocksCipherType_AES_256_GCM, false},
-		{"chacha20-poly1305", proxy.ShadowsocksCipherType_CHACHA20_POLY1305, false},
-		{"chacha20-ietf-poly1305", proxy.ShadowsocksCipherType_CHACHA20_POLY1305, false},
-		{"AEAD_CHACHA20_POLY1305", proxy.ShadowsocksCipherType_CHACHA20_POLY1305, false},
-		{"none", proxy.ShadowsocksCipherType_NONE, false},
-		{"plain", proxy.ShadowsocksCipherType_NONE, false},
+		{"aes-128-gcm", configs.ShadowsocksCipherType_AES_128_GCM, false},
+		{"AEAD_AES_128_GCM", configs.ShadowsocksCipherType_AES_128_GCM, false},
+		{"aes-256-gcm", configs.ShadowsocksCipherType_AES_256_GCM, false},
+		{"AEAD_AES_256_GCM", configs.ShadowsocksCipherType_AES_256_GCM, false},
+		{"chacha20-poly1305", configs.ShadowsocksCipherType_CHACHA20_POLY1305, false},
+		{"chacha20-ietf-poly1305", configs.ShadowsocksCipherType_CHACHA20_POLY1305, false},
+		{"AEAD_CHACHA20_POLY1305", configs.ShadowsocksCipherType_CHACHA20_POLY1305, false},
+		{"none", configs.ShadowsocksCipherType_NONE, false},
+		{"plain", configs.ShadowsocksCipherType_NONE, false},
 		{"unsupported-cipher", 0, true},
 	}
 
@@ -771,7 +771,7 @@ func TestShadowsocksCipherTypes(t *testing.T) {
 			}
 
 			if !tt.wantErr {
-				ssConfig := &proxy.ShadowsocksClientConfig{}
+				ssConfig := &configs.ShadowsocksClientConfig{}
 				if err := config.Protocol.UnmarshalTo(ssConfig); err != nil {
 					t.Fatalf("Failed to unmarshal ss config: %v", err)
 				}
@@ -892,7 +892,7 @@ func TestVlessEncryptionDefault(t *testing.T) {
 		t.Fatalf("Failed to parse vless: %v", err)
 	}
 
-	vlessConfig := &proxy.VlessClientConfig{}
+	vlessConfig := &configs.VlessClientConfig{}
 	if err := config.Protocol.UnmarshalTo(vlessConfig); err != nil {
 		t.Fatalf("Failed to unmarshal vless config: %v", err)
 	}
@@ -920,7 +920,7 @@ func TestAnytlsSessionParameters(t *testing.T) {
 		t.Fatalf("Failed to parse anytls: %v", err)
 	}
 
-	anytlsConfig := &proxy.AnytlsClientConfig{}
+	anytlsConfig := &configs.AnytlsClientConfig{}
 	if err := config.Protocol.UnmarshalTo(anytlsConfig); err != nil {
 		t.Fatalf("Failed to unmarshal anytls config: %v", err)
 	}

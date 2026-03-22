@@ -16,8 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	proxyconfigs "github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/i"
@@ -159,10 +158,10 @@ func NewInboundServer(config *configs.ProxyInboundConfig, ha i.Handler,
 
 func GetServers(users []*configs.UserConfig, protocols []*anypb.Any, ha i.Handler,
 	tp i.TimeoutSetting, onUnauth i.UnauthorizedReport) ([]proxy.ProxyServer,
-	*proxyconfigs.Hysteria2ServerConfig, error) {
+	*configs.Hysteria2ServerConfig, error) {
 
 	var servers []proxy.ProxyServer
-	var hysteriaConfig *proxyconfigs.Hysteria2ServerConfig
+	var hysteriaConfig *configs.Hysteria2ServerConfig
 	for _, protocol := range protocols {
 		var server proxy.ProxyServer
 		serverConfig, err := serial.GetInstanceOf(protocol)
@@ -171,7 +170,7 @@ func GetServers(users []*configs.UserConfig, protocols []*anypb.Any, ha i.Handle
 		}
 
 		switch c := serverConfig.(type) {
-		case *proxyconfigs.DokodemoConfig:
+		case *configs.DokodemoConfig:
 			server = dokodemo.New(
 				dokodemo.DoorSettings{
 					Address:  net.ParseAddress(c.Address),
@@ -180,11 +179,11 @@ func GetServers(users []*configs.UserConfig, protocols []*anypb.Any, ha i.Handle
 					Handler:  ha,
 				},
 			)
-		case *proxyconfigs.SocksServerConfig:
+		case *configs.SocksServerConfig:
 			server = socks.NewServer(&socks.SocksServerConfig{
 				Address:    net.ParseAddress(c.Address),
 				UdpEnabled: c.UdpEnabled,
-				AuthType:   proxyconfigs.AuthType(c.AuthType),
+				AuthType:   configs.AuthType(c.AuthType),
 				Policy:     tp,
 				Handler:    ha,
 			})
@@ -195,12 +194,12 @@ func GetServers(users []*configs.UserConfig, protocols []*anypb.Any, ha i.Handle
 				}
 				server.(*socks.Server).AddUser(user)
 			}
-		case *proxyconfigs.HttpServerConfig:
+		case *configs.HttpServerConfig:
 			server = http.NewServer(http.ServerSettings{
 				PolicyManager: tp,
 				Handler:       ha,
 			})
-		case *proxyconfigs.ShadowsocksServerConfig:
+		case *configs.ShadowsocksServerConfig:
 			server = shadowsocks.NewServer(
 				shadowsocks.ServerSettings{
 					Cipher:           shadowsocks.CipherType(c.CipherType),
@@ -216,7 +215,7 @@ func GetServers(users []*configs.UserConfig, protocols []*anypb.Any, ha i.Handle
 				}
 				server.(*shadowsocks.Server).AddUser(user)
 			}
-		case *proxyconfigs.VlessServerConfig:
+		case *configs.VlessServerConfig:
 			server, err = vless_server.New(vless_server.HandlerSettings{
 				PolicyManager: tp,
 				Handler:       ha,
@@ -231,7 +230,7 @@ func GetServers(users []*configs.UserConfig, protocols []*anypb.Any, ha i.Handle
 				}
 				server.(*vless_server.Handler).AddUser(user)
 			}
-		case *proxyconfigs.VmessServerConfig:
+		case *configs.VmessServerConfig:
 			server = vmess_server.New(
 				vmess_server.ServerSettings{
 					Secure:                c.SecureEncryptionOnly,
@@ -247,7 +246,7 @@ func GetServers(users []*configs.UserConfig, protocols []*anypb.Any, ha i.Handle
 				}
 				server.(*vmess_server.Server).AddUser(user)
 			}
-		case *proxyconfigs.TrojanServerConfig:
+		case *configs.TrojanServerConfig:
 			server = trojan.NewServer(
 				trojan.ServerSettings{
 					Handler:               ha,
@@ -263,10 +262,10 @@ func GetServers(users []*configs.UserConfig, protocols []*anypb.Any, ha i.Handle
 				}
 				server.(*trojan.Server).AddUser(user)
 			}
-		case *proxyconfigs.Hysteria2ServerConfig:
+		case *configs.Hysteria2ServerConfig:
 			hysteriaConfig = c
 			continue
-		case *proxyconfigs.AnytlsServerConfig:
+		case *configs.AnytlsServerConfig:
 			server = anytls.NewServer(
 				anytls.ServerSettings{
 					Handler:               ha,
@@ -280,7 +279,7 @@ func GetServers(users []*configs.UserConfig, protocols []*anypb.Any, ha i.Handle
 				}
 				server.(*anytls.Server).AddUser(user)
 			}
-		case *proxyconfigs.Shadowsocks2022ServerConfig:
+		case *configs.Shadowsocks2022ServerConfig:
 			user, err := UserConfigToUser(c.User)
 			if err != nil {
 				return nil, nil, err

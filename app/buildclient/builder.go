@@ -12,8 +12,9 @@ import (
 	"sync"
 	"time"
 
+	"buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx"
+	vxlog "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/log"
 	"github.com/5vnetwork/vx-core/app/client"
-	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
@@ -60,7 +61,7 @@ func WithComponents(components ...interface{}) Option {
 	}
 }
 
-func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
+func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 	builder := New()
 	for _, opt := range opts {
 		if err := opt(builder); err != nil {
@@ -79,8 +80,8 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 
 	// logger
 	if config.GetLog() == nil {
-		config.Log = &configs.LoggerConfig{
-			LogLevel: configs.Level_DISABLED,
+		config.Log = &vxlog.LoggerConfig{
+			LogLevel: vxlog.Level_DISABLED,
 		}
 	}
 	l, err := logger.SetLog(config.Log)
@@ -98,7 +99,7 @@ func NewX(config *configs.TmConfig, opts ...Option) (*client.Client, error) {
 	}
 
 	// monitor
-	if config.GetLog().GetLogLevel() == configs.Level_DEBUG {
+	if config.GetLog().GetLogLevel() == vxlog.Level_DEBUG {
 		interval := time.Second * 1
 		dir := path.Dir(config.RedirectStdErr)
 		monitor := memmon.NewMonitor(&memmon.MonitorConfig{

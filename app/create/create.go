@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	proxyconfigs "github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
@@ -117,7 +116,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 		return nil, fmt.Errorf("failed to create proxy client config: %w", err)
 	}
 
-	if _, ok := m.(*proxyconfigs.FreedomConfig); ok {
+	if _, ok := m.(*configs.FreedomConfig); ok {
 		dialer, err := df.GetDialer(
 			TransportConfigToMemoryConfig(config.Transport, nil, nil, config.ECHResolver))
 		if err != nil {
@@ -151,7 +150,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 
 	var pc i.Handler
 	switch m := m.(type) {
-	case *proxyconfigs.HttpClientConfig:
+	case *configs.HttpClientConfig:
 		pc = http.NewClient(http.ClientSettings{
 			Address:            address,
 			PortPicker:         sp,
@@ -159,7 +158,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 			H1SkipWaitForReply: m.H1SkipWaitForReply,
 			Dialer:             dialer,
 		})
-	case *proxyconfigs.ShadowsocksClientConfig:
+	case *configs.ShadowsocksClientConfig:
 		account, err := shadowsocks.NewMemoryAccount(
 			user.NewUser("", m.Password),
 			shadowsocks.CipherType(m.CipherType),
@@ -175,7 +174,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 			Account:    account,
 			Dialer:     dialer,
 		})
-	case *proxyconfigs.SocksClientConfig:
+	case *configs.SocksClientConfig:
 		pc = socks.NewClient(&socks.ClientSettings{
 			ServerDest: net.TCPDestination(address,
 				net.Port(getSinglePort(config.OutboundHandlerConfig))),
@@ -186,7 +185,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 			Policy:         policy,
 			Dialer:         dialer,
 		})
-	case *proxyconfigs.TrojanClientConfig:
+	case *configs.TrojanClientConfig:
 		account := trojan.NewMemoryAccount(user.NewUser("", m.Password))
 		pc = trojan.NewClient(
 			trojan.ClientSettings{
@@ -196,7 +195,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 				Dialer:     dialer,
 				Vision:     m.Vision,
 			})
-	case *proxyconfigs.VmessClientConfig:
+	case *configs.VmessClientConfig:
 		account := vmess.NewMemoryAccount(user.NewUser("", uuid.StringToUUID(m.Id).String()),
 			uint16(m.AlterId), protocol.SecurityType(m.Security), false, false)
 		sp, err := getServerPicker(account, config.Address, config.Port, config.Ports)
@@ -207,7 +206,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 			ServerPicker: sp,
 			Dialer:       dialer,
 		})
-	case *proxyconfigs.VlessClientConfig:
+	case *configs.VlessClientConfig:
 		uid, err := uuid.ParseString(m.Id)
 		if err != nil {
 			return nil, err
@@ -226,7 +225,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 				Dialer:         dialer,
 			},
 		)
-	case *proxyconfigs.Hysteria2ClientConfig:
+	case *configs.Hysteria2ClientConfig:
 		var rootCAs *x509.CertPool
 		if len(m.GetTlsConfig().RootCas) > 0 {
 			rootCAs, err = tls.CertsToCertPool(m.GetTlsConfig().RootCas)
@@ -292,10 +291,10 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 				Auth: m.Auth,
 				TLSConfig: client.TLSConfig{
 					ServerName:                     serverName,
-					InsecureSkipVerify:             m.GetTlsConfig().AllowInsecure,
-					VerifyPeerCertificate:          m.GetTlsConfig().VerifyPeerCert,
+					InsecureSkipVerify:             m.GetTlsConfig().GetAllowInsecure(),
+					VerifyPeerCertificate:          tls.VerifyPeerCert(m.GetTlsConfig()),
 					RootCAs:                        rootCAs,
-					EncryptedClientHelloConfigList: m.GetTlsConfig().EchConfig,
+					EncryptedClientHelloConfigList: m.GetTlsConfig().GetEchConfig(),
 				},
 				QUICConfig: client.QUICConfig{
 					DisablePathMTUDiscovery:        m.Quic.GetDisablePathMtuDiscovery(),
@@ -318,7 +317,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 			return nil, err
 		}
 		return hys, nil
-	case *proxyconfigs.AnytlsClientConfig:
+	case *configs.AnytlsClientConfig:
 		pc = anytls.NewClient(
 			&anytls.ClientConfig{
 				Address:                  address,
@@ -329,7 +328,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 				IdleSessionTimeout:       time.Duration(m.IdleSessionTimeout) * time.Second,
 				MinIdleSession:           int(m.MinIdleSession),
 			})
-	case *proxyconfigs.Shadowsocks2022ClientConfig:
+	case *configs.Shadowsocks2022ClientConfig:
 		pc, err = shadowsocks_2022.NewClient(
 			&shadowsocks_2022.ClientSettings{
 				Address:    address,

@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	configs "github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/net"

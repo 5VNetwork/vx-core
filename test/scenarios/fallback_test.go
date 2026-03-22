@@ -4,13 +4,9 @@ package scenarios
 
 import (
 	"context"
-	"testing"
-
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
@@ -18,12 +14,13 @@ import (
 	"github.com/5vnetwork/vx-core/test/servers/udp"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/anypb"
+	"testing"
 )
 
 func TestFallbackSocksHttp(t *testing.T) {
 	serverPort := tcp.PickPort()
 	t.Log("http,socks server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Users: []*configs.UserConfig{
 			{
 				Secret: secret.String(),
@@ -36,28 +33,28 @@ func TestFallbackSocksHttp(t *testing.T) {
 				Port:    uint32(serverPort),
 				Protocols: []*anypb.Any{
 					serial.ToTypedMessage(
-						&proxyconfig.HttpServerConfig{},
+						&configs.HttpServerConfig{},
 					),
 					serial.ToTypedMessage(
-						&proxyconfig.TrojanServerConfig{},
+						&configs.TrojanServerConfig{},
 					),
 					serial.ToTypedMessage(
-						&proxyconfig.SocksServerConfig{
+						&configs.SocksServerConfig{
 							UdpEnabled: true,
 							Address:    "127.0.0.1",
-							AuthType:   proxyconfig.AuthType_NO_AUTH,
+							AuthType:   configs.AuthType_NO_AUTH,
 						},
 					),
 					serial.ToTypedMessage(
-						&proxyconfig.ShadowsocksServerConfig{
+						&configs.ShadowsocksServerConfig{
 							User: &configs.UserConfig{
 								Secret: secret.String(),
 							},
-							CipherType: proxyconfig.ShadowsocksCipherType_CHACHA20_POLY1305,
+							CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 						},
 					),
 					serial.ToTypedMessage(
-						&proxyconfig.VmessServerConfig{},
+						&configs.VmessServerConfig{},
 					),
 				},
 			},
@@ -85,7 +82,7 @@ func TestFallbackSocksHttp(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPortTCPHttp),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  "127.0.0.1",
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -97,7 +94,7 @@ func TestFallbackSocksHttp(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPortTCPSocks),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  "127.0.0.1",
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -109,7 +106,7 @@ func TestFallbackSocksHttp(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPortVmess),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  "127.0.0.1",
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -121,7 +118,7 @@ func TestFallbackSocksHttp(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPortTrojan),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  "127.0.0.1",
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -133,7 +130,7 @@ func TestFallbackSocksHttp(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPortShadowsocks),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  "127.0.0.1",
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -145,7 +142,7 @@ func TestFallbackSocksHttp(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPortUDP),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  "127.0.0.1",
 							Port:     uint32(udpDest.Port),
 							Networks: []net.Network{net.Network_UDP},
@@ -190,19 +187,19 @@ func TestFallbackSocksHttp(t *testing.T) {
 					Tag:      "http",
 					Address:  net.LocalHostIP.String(),
 					Port:     uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.HttpClientConfig{}),
+					Protocol: serial.ToTypedMessage(&configs.HttpClientConfig{}),
 				},
 				{
 					Tag:      "socks",
 					Address:  net.LocalHostIP.String(),
 					Port:     uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.SocksClientConfig{}),
+					Protocol: serial.ToTypedMessage(&configs.SocksClientConfig{}),
 				},
 				{
 					Tag:     "vmess",
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 						Id: secret.String(),
 					}),
 				},
@@ -210,7 +207,7 @@ func TestFallbackSocksHttp(t *testing.T) {
 					Tag:     "trojan",
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: secret.String(),
 					}),
 				},
@@ -218,9 +215,9 @@ func TestFallbackSocksHttp(t *testing.T) {
 					Tag:     "shadowsocks",
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.ShadowsocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 						Password:   secret.String(),
-						CipherType: proxyconfig.ShadowsocksCipherType_CHACHA20_POLY1305,
+						CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 					}),
 				},
 			},

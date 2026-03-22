@@ -77,10 +77,10 @@ func Listen(ctx context.Context, addr net.Destination,
 			return
 		}
 		log.Debug().Msg("gRPC listen for service name `" +
-			grpcSettings.getServiceName() + "` tun `" + grpcSettings.getTunStreamName() +
-			"` multi tun `" + grpcSettings.getTunMultiStreamName() + "`")
-		encoding.RegisterGRPCServiceServerX(s, listener, grpcSettings.getServiceName(),
-			grpcSettings.getTunStreamName(), grpcSettings.getTunMultiStreamName())
+			getServiceName(grpcSettings) + "` tun `" + getTunStreamName(grpcSettings) +
+			"` multi tun `" + getTunMultiStreamName(grpcSettings) + "`")
+		encoding.RegisterGRPCServiceServerX(s, listener, getServiceName(grpcSettings),
+			getTunStreamName(grpcSettings), getTunMultiStreamName(grpcSettings))
 
 		if err = s.Serve(streamListener); err != nil {
 			log.Error().Err(err).Msg("failed to serve")

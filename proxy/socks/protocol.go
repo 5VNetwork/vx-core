@@ -5,7 +5,7 @@ import (
 	"io"
 	gonet "net"
 
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/errors"
@@ -48,7 +48,7 @@ type ServerSession struct {
 }
 
 func (s *ServerSession) handshake4(cmd byte, reader io.Reader, writer io.Writer) (*protocol.RequestHeader, error) {
-	if s.serverConfig.authType == proxy.AuthType_PASSWORD {
+	if s.serverConfig.authType == configs.AuthType_PASSWORD {
 		writeSocks4Response(writer, socks4RequestRejected, net.AnyIP, net.Port(0))
 		return nil, errors.New("socks 4 is not allowed when auth is required.")
 	}
@@ -106,7 +106,7 @@ func (s *ServerSession) auth5(nMethod byte, reader io.Reader, writer io.Writer) 
 	}
 
 	var expectedAuth byte = authNotRequired
-	if s.serverConfig.authType == proxy.AuthType_PASSWORD {
+	if s.serverConfig.authType == configs.AuthType_PASSWORD {
 		expectedAuth = authPassword
 	}
 

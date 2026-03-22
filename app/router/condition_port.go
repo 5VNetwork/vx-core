@@ -30,7 +30,7 @@ func (m *PortMatcher) Apply(c context.Context, info *session.Info, rw interface{
 		portToMatch = info.GetTargetPort()
 	}
 	for _, pr := range m.portRanges {
-		if pr.Contains(portToMatch) {
+		if net.Contains(pr, portToMatch) {
 			return rw, true
 		}
 	}

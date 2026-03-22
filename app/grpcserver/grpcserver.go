@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	vxgrpc "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/grpc"
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -19,10 +19,10 @@ import (
 
 type GrpcServer struct {
 	Server *grpc.Server
-	Config *configs.GrpcConfig
+	Config *vxgrpc.GrpcConfig
 }
 
-func NewGrpcServer(config *configs.GrpcConfig) (*GrpcServer, error) {
+func NewGrpcServer(config *vxgrpc.GrpcConfig) (*GrpcServer, error) {
 	var opts []grpc.ServerOption
 
 	if config.Port != 0 {

@@ -136,6 +136,9 @@ func (s *Selector) Load() {
 	handlers, err := s.filter.Load().(Filter).GetHandlers()
 	if err != nil {
 		log.Error().Err(err).Msg("get filtered handlers")
+		// if strings.Contains(err.Error(), "no such file or directory") {
+		// 	log.Fatal().Err(err).Msg("no such file or directory")
+		// }
 		return
 	}
 	log.Debug().Int("len", len(handlers)).Msg("filtered handlers")

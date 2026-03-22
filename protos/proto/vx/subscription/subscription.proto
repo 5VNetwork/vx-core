@@ -1,0 +1,8 @@
+syntax = "proto3";
+package vx.subscription;
+
+message SubscriptionConfig {
+    uint32 last_update_time = 21;
+    uint32 interval = 22;
+    bool periodic_update = 23;
+  }

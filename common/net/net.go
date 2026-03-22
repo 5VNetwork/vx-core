@@ -14,7 +14,20 @@ import (
 	"strings"
 	"time"
 
+	pbnet "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/net"
 	"gvisor.dev/gvisor/pkg/tcpip"
+)
+
+type (
+	PortRange = pbnet.PortRange
+	Network   = pbnet.Network
+)
+
+const (
+	Network_Unknown Network = 0
+	Network_TCP     Network = 2
+	Network_UDP     Network = 3
+	Network_UNIX    Network = 4
 )
 
 // pickPort returns an unused UDP port of the system.
@@ -35,7 +48,7 @@ func PickUDPPort() uint16 {
 	return uint16(addr.Port)
 }
 
-func (n Network) SystemString() string {
+func SystemString(n Network) string {
 	switch n {
 	case Network_TCP:
 		return "tcp"
@@ -52,7 +65,7 @@ func NetworkFromAddr(addr net.Addr) Network {
 	return DestinationFromAddr(addr).Network
 }
 
-func (n *Network) UnmarshalJSON(b []byte) error {
+func UnmarshalJSON(n *Network, b []byte) error {
 	var s string
 	err := json.Unmarshal(b, &s)
 	if err != nil {
@@ -298,50 +311,6 @@ func AddressestoNetIPs(addrs []Address) ([]net.IP, error) {
 	}
 	return ips, nil
 }
-
-// // AsAddress translates IPOrDomain to Address.
-func (d *IPOrDomain) AsAddress() Address {
-	if d == nil {
-		return nil
-	}
-	switch addr := d.Address.(type) {
-	case *IPOrDomain_Ip:
-		return IPAddress(addr.Ip)
-	case *IPOrDomain_Domain:
-		return DomainAddress(addr.Domain)
-	}
-	panic("Common|Net: Invalid address.")
-}
-
-// // NewIPOrDomain translates Address to IPOrDomain
-func NewIPOrDomain(addr Address) *IPOrDomain {
-	switch addr.Family() {
-	case AddressFamilyDomain:
-		return &IPOrDomain{
-			Address: &IPOrDomain_Domain{
-				Domain: addr.Domain(),
-			},
-		}
-	case AddressFamilyIPv4, AddressFamilyIPv6:
-		return &IPOrDomain{
-			Address: &IPOrDomain_Ip{
-				Ip: addr.IP(),
-			},
-		}
-	default:
-		panic("Unknown Address type.")
-	}
-}
-
-// func (d *IPOrDomain) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
-// 	var ipOrDomain string
-// 	if err := json.Unmarshal(bytes, &ipOrDomain); err != nil {
-// 		return err
-// 	}
-// 	result := NewIPOrDomain(ParseAddress(ipOrDomain))
-// 	d.Address = result.Address
-// 	return nil
-// }
 
 func IsDomainTooLong(domain string) bool {
 	return len(domain) > 256

@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/util/sub"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/transport/security/tls"
@@ -75,7 +74,7 @@ func (v *VmessConfig) ToProxyHandlerConfig() (*configs.OutboundHandlerConfig, er
 	}
 
 	// Create Vmess config
-	vmessConfig := &proxy.VmessClientConfig{
+	vmessConfig := &configs.VmessClientConfig{
 		Id: v.ID,
 	}
 
@@ -91,17 +90,17 @@ func (v *VmessConfig) ToProxyHandlerConfig() (*configs.OutboundHandlerConfig, er
 	// Set security type
 	switch v.Scy {
 	case "auto":
-		vmessConfig.Security = proxy.SecurityType_SecurityType_AUTO
+		vmessConfig.Security = configs.SecurityType_SecurityType_AUTO
 	case "aes-128-gcm":
-		vmessConfig.Security = proxy.SecurityType_SecurityType_AES128_GCM
+		vmessConfig.Security = configs.SecurityType_SecurityType_AES128_GCM
 	case "chacha20-poly1305":
-		vmessConfig.Security = proxy.SecurityType_SecurityType_CHACHA20_POLY1305
+		vmessConfig.Security = configs.SecurityType_SecurityType_CHACHA20_POLY1305
 	case "none":
-		vmessConfig.Security = proxy.SecurityType_SecurityType_NONE
+		vmessConfig.Security = configs.SecurityType_SecurityType_NONE
 	case "zero":
-		vmessConfig.Security = proxy.SecurityType_SecurityType_ZERO
+		vmessConfig.Security = configs.SecurityType_SecurityType_ZERO
 	default:
-		vmessConfig.Security = proxy.SecurityType_SecurityType_AUTO
+		vmessConfig.Security = configs.SecurityType_SecurityType_AUTO
 	}
 
 	// Pack the Vmess config into Any

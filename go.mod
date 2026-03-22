@@ -4,6 +4,7 @@ go 1.25.1
 
 require (
 	anytls v0.0.0-00010101000000-000000000000
+	buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260321192112-19f7223a7f5c.1
 	github.com/apernet/hysteria/core/v2 v2.0.0-00010101000000-000000000000
 	github.com/apernet/hysteria/extras/v2 v2.6.5
 	github.com/apernet/quic-go v0.57.2-0.20260111184307-eec823306178
@@ -44,7 +45,7 @@ require (
 	golang.zx2c4.com/wireguard v0.0.0-20231211153847-12269c276173
 	golang.zx2c4.com/wireguard/windows v0.5.3
 	google.golang.org/grpc v1.75.1
-	google.golang.org/protobuf v1.36.10
+	google.golang.org/protobuf v1.36.11
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.0
 	gvisor.dev/gvisor v0.0.0-20250428193742-2d800c3129d5
@@ -86,7 +87,6 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20240314144324-c7f7c6466f7f // indirect
-	golang.org/x/mobile v0.0.0-20260217195705-b56b3793a9c4 // indirect
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.42.0 // indirect

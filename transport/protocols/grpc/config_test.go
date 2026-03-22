@@ -41,7 +41,7 @@ func TestConfig_GetServiceName(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.TestName, func(t *testing.T) {
 			config := GrpcConfig{ServiceName: test.ServiceName}
-			assert.Equal(t, test.Expected, config.getServiceName())
+			assert.Equal(t, test.Expected, getServiceName(&config))
 		})
 	}
 }
@@ -76,7 +76,7 @@ func TestConfig_GetTunStreamName(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.TestName, func(t *testing.T) {
 			config := GrpcConfig{ServiceName: test.ServiceName}
-			assert.Equal(t, test.Expected, config.getTunStreamName())
+			assert.Equal(t, test.Expected, getTunStreamName(&config))
 		})
 	}
 }
@@ -111,7 +111,7 @@ func TestConfig_GetTunMultiStreamName(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.TestName, func(t *testing.T) {
 			config := GrpcConfig{ServiceName: test.ServiceName}
-			assert.Equal(t, test.Expected, config.getTunMultiStreamName())
+			assert.Equal(t, test.Expected, getTunMultiStreamName(&config))
 		})
 	}
 }

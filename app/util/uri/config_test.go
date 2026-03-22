@@ -4,8 +4,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+		"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/transport/protocols/websocket"
 	"github.com/5vnetwork/vx-core/transport/security/tls"
@@ -21,7 +20,7 @@ func TestVmess(t *testing.T) {
 		Port:    47845,
 		Address: "localhost",
 		Protocol: serial.ToTypedMessage(
-			&proxy.VmessClientConfig{
+			&configs.VmessClientConfig{
 				Id: id,
 			},
 		),
@@ -53,9 +52,9 @@ func TestShadowsocks(t *testing.T) {
 		Port:    12345,
 		Address: "a.b.com",
 		Protocol: serial.ToTypedMessage(
-			&proxy.ShadowsocksClientConfig{
+			&configs.ShadowsocksClientConfig{
 				Password:   id,
-				CipherType: proxy.ShadowsocksCipherType_AES_128_GCM,
+				CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 			},
 		),
 	}
@@ -76,7 +75,7 @@ func TestShadowsocks0(t *testing.T) {
 		Port:    443,
 		Address: "1.1.1.1",
 		Protocol: serial.ToTypedMessage(
-			&proxy.VlessClientConfig{
+			&configs.VlessClientConfig{
 				Id:         id,
 				Flow:       "xtls-rprx-vision",
 				Encryption: "none",
@@ -104,7 +103,7 @@ func TestTrojan(t *testing.T) {
 		Port:    12345,
 		Address: "a.b.com",
 		Protocol: serial.ToTypedMessage(
-			&proxy.TrojanClientConfig{
+			&configs.TrojanClientConfig{
 				Password: id,
 			},
 		),
@@ -145,7 +144,7 @@ func TestVless(t *testing.T) {
 		Port:    12345,
 		Address: "a.b.com",
 		Protocol: serial.ToTypedMessage(
-			&proxy.VlessClientConfig{
+			&configs.VlessClientConfig{
 				Id:         id,
 				Flow:       "xtls-rprx-vision",
 				Encryption: "none",
@@ -179,14 +178,14 @@ func TestHysteria(t *testing.T) {
 		Port:    12345,
 		Address: "a.b.com",
 		Protocol: serial.ToTypedMessage(
-			&proxy.Hysteria2ClientConfig{
+			&configs.Hysteria2ClientConfig{
 				Auth: id,
 				TlsConfig: &tls.TlsConfig{
 					ServerName: "a.b.com",
 				},
-				Obfs: &proxy.ObfsConfig{
-					Obfs: &proxy.ObfsConfig_Salamander{
-						Salamander: &proxy.SalamanderConfig{
+				Obfs: &configs.ObfsConfig{
+					Obfs: &configs.ObfsConfig_Salamander{
+						Salamander: &configs.SalamanderConfig{
 							Password: "asdfwqr",
 						},
 					},

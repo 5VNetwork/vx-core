@@ -8,7 +8,6 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/client"
 	"github.com/5vnetwork/vx-core/app/configs"
-	proxyconfigs "github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/outbound"
@@ -48,7 +47,7 @@ func buildOutbound(config *configs.TmConfig, builder *Builder, client *client.Cl
 			singleHandlers = append(singleHandlers, &configs.HandlerConfig{
 				Type: &configs.HandlerConfig_Outbound{
 					Outbound: &configs.OutboundHandlerConfig{
-						Protocol: serial.ToTypedMessage(&proxyconfigs.FreedomConfig{}),
+						Protocol: serial.ToTypedMessage(&configs.FreedomConfig{}),
 					},
 				},
 			})

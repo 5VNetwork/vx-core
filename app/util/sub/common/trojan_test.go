@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/serial"
 )
 
@@ -23,7 +23,7 @@ func TestParseTrojanFromLink(t *testing.T) {
 		t.Fatalf("failed to get trojan client config: %v", err)
 	}
 
-	trojanConfig := trojanConfig0.(*proxy.TrojanClientConfig)
+	trojanConfig := trojanConfig0.(*configs.TrojanClientConfig)
 
 	if trojanConfig.Password != "12345678-1234-1234-1234-123456789012" {
 		t.Fatal("secret is not 12345678-1234-1234-1234-123456789012")

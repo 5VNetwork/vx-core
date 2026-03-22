@@ -1,0 +1,77 @@
+syntax = "proto3";
+package vx.inbound;
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
+
+import "vx/transport/transport.proto";
+import "google/protobuf/any.proto";
+
+import "vx/transport/security/tls/tls.proto";
+import "vx/transport/security/reality/config.proto";
+import "vx/transport/protocols/websocket/config.proto";
+import "vx/transport/protocols/http/config.proto";
+import "vx/transport/protocols/grpc/config.proto";
+import "vx/transport/protocols/httpupgrade/config.proto";
+import "vx/transport/protocols/splithttp/config.proto";
+import "vx/transport/protocols/tcp/config.proto";
+import "vx/transport/dlhelper.proto";
+import "vx/user/user.proto";
+
+message ProxyInboundConfig {
+  string address = 1;
+  string tag = 2;
+  // if both port and ports are null, 5 random ports will be used
+  uint32 port = 3;
+  repeated uint32 ports = 4;
+  vx.transport.TransportConfig transport = 6;
+  google.protobuf.Any protocol = 7;
+  repeated google.protobuf.Any protocols = 8;
+  repeated vx.user.UserConfig users = 9;
+}
+
+message InboundManagerConfig {
+  repeated ProxyInboundConfig handlers = 1;
+  repeated MultiProxyInboundConfig multi_inbounds = 2;
+}
+
+message MultiProxyInboundConfig {
+  string address = 1;
+  string tag = 2;
+  repeated uint32 ports = 3;
+  repeated google.protobuf.Any protocols = 4;
+
+  message Security {
+    oneof security {
+      vx.transport.security.tls.TlsConfig tls = 20;
+      vx.transport.security.reality.RealityConfig reality = 21;
+    }
+    repeated string domains = 1;
+    string regular_expression = 2;
+    bool always = 3;
+  }
+  repeated Security security_configs = 5;
+
+  message Protocol {
+    oneof protocol {
+      vx.transport.protocols.websocket.WebsocketConfig websocket = 7;
+      vx.transport.protocols.http.HttpConfig http = 8;
+      vx.transport.protocols.grpc.GrpcConfig grpc = 10;
+      vx.transport.protocols.httpupgrade.HttpUpgradeConfig httpupgrade = 11;
+      vx.transport.protocols.splithttp.SplitHttpConfig splithttp = 12;
+      vx.transport.protocols.tcp.TcpConfig tcp = 13;
+    }
+    string alpn = 1;
+    string sni = 2;
+    string path = 3;
+    bool h2 = 4;
+    bool always = 5;
+  }
+  repeated Protocol transport_protocols = 6;
+  vx.transport.SocketConfig socket = 8;
+  repeated vx.user.UserConfig users = 9;
+}
+
+message WfpConfig {
+   uint32 tcp_port = 1;
+   uint32 udp_port = 2;
+}
+

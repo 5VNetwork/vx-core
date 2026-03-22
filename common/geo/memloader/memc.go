@@ -5,10 +5,10 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	commongeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/5vnetwork/vx-core/common/clashconfig"
 	"github.com/5vnetwork/vx-core/common/errors"
-	"github.com/5vnetwork/vx-core/common/geo"
+	vxrouter "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -19,12 +19,12 @@ var (
 type MemLoader struct {
 }
 
-func (m *MemLoader) LoadIP(filePath, code string) (*geo.GeoIP, error) {
+func (m *MemLoader) LoadIP(filePath, code string) (*commongeo.GeoIP, error) {
 	defer runtime.GC()
 	geoipBytes, err := Decode(filePath, code)
 	switch err {
 	case nil:
-		var geoip geo.GeoIP
+		var geoip commongeo.GeoIP
 		if err := proto.Unmarshal(geoipBytes, &geoip); err != nil {
 			return nil, err
 		}
@@ -40,7 +40,7 @@ func (m *MemLoader) LoadIP(filePath, code string) (*geo.GeoIP, error) {
 		if err != nil {
 			return nil, err
 		}
-		var geoipList geo.GeoIPList
+		var geoipList commongeo.GeoIPList
 		if err := proto.Unmarshal(geoipBytes, &geoipList); err != nil {
 			return nil, err
 		}
@@ -57,13 +57,13 @@ func (m *MemLoader) LoadIP(filePath, code string) (*geo.GeoIP, error) {
 	return nil, errors.New("country code ", code, " not found in ", filePath)
 }
 
-func (m *MemLoader) LoadSite(filepath, code string) (*geo.GeoSite, error) {
+func (m *MemLoader) LoadSite(filepath, code string) (*commongeo.GeoSite, error) {
 	defer runtime.GC()
 
 	geositeBytes, err := Decode(filepath, code)
 	switch err {
 	case nil:
-		var geosite geo.GeoSite
+		var geosite commongeo.GeoSite
 		if err := proto.Unmarshal(geositeBytes, &geosite); err != nil {
 			return nil, err
 		}
@@ -79,7 +79,7 @@ func (m *MemLoader) LoadSite(filepath, code string) (*geo.GeoSite, error) {
 		if err != nil {
 			return nil, err
 		}
-		var geositeList geo.GeoSiteList
+		var geositeList commongeo.GeoSiteList
 		if err := proto.Unmarshal(geositeBytes, &geositeList); err != nil {
 			return nil, err
 		}
@@ -96,7 +96,7 @@ func (m *MemLoader) LoadSite(filepath, code string) (*geo.GeoSite, error) {
 	return nil, errors.New("list ", code, " not found in ", filepath)
 }
 
-func (s *MemLoader) LoadDomainsClash(filepath string) ([]*geo.Domain, error) {
+func (s *MemLoader) LoadDomainsClash(filepath string) ([]*commongeo.Domain, error) {
 	defer runtime.GC()
 
 	file, err := os.Open(filepath)
@@ -108,7 +108,7 @@ func (s *MemLoader) LoadDomainsClash(filepath string) ([]*geo.Domain, error) {
 	return clashconfig.ExtractDomainsFromClashRules(file)
 }
 
-func (s *MemLoader) LoadCidrsClash(filepath string) ([]*geo.CIDR, error) {
+func (s *MemLoader) LoadCidrsClash(filepath string) ([]*commongeo.CIDR, error) {
 	defer runtime.GC()
 
 	file, err := os.Open(filepath)
@@ -120,7 +120,7 @@ func (s *MemLoader) LoadCidrsClash(filepath string) ([]*geo.CIDR, error) {
 	return clashconfig.ExtractCidrFromClashRules(file)
 }
 
-func (s *MemLoader) LoadAppsClash(filepath string) ([]*configs.AppId, error) {
+func (s *MemLoader) LoadAppsClash(filepath string) ([]*vxrouter.AppId, error) {
 	defer runtime.GC()
 
 	file, err := os.Open(filepath)

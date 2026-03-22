@@ -20,7 +20,6 @@ import (
 	"github.com/5vnetwork/vx-core/proxy/freedom"
 	"github.com/5vnetwork/vx-core/transport/dlhelper"
 
-	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/logger"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/subscription"
@@ -36,6 +35,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	vxlog "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/log"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 	grpc "google.golang.org/grpc"
@@ -242,7 +242,7 @@ func (a *Api) Stop() {
 	a.log.Close()
 }
 
-func (a *Api) SetLog(ctx context.Context, req *configs.LoggerConfig) (*Receipt, error) {
+func (a *Api) SetLog(ctx context.Context, req *vxlog.LoggerConfig) (*Receipt, error) {
 	if a.log != nil {
 		a.log.Close()
 	}
@@ -294,7 +294,7 @@ func (a *Api) Download(ctx context.Context, req *DownloadRequest) (*DownloadResp
 }
 
 func (a *Api) HandlerUsable(ctx context.Context, req *HandlerUsableRequest) (*HandlerUsableResponse, error) {
-	log.Debug().Msgf("HandlerUsable for: %v", req.Handler.GetTag())
+	log.Debug().Msgf("HandlerUsable for: %v", util.GetTag(req.Handler))
 	for i := 0; i < 3; i++ {
 		rsp := a.HandlerTest(ctx, req)
 		if rsp.Ping > 0 {
@@ -315,10 +315,10 @@ func (a *Api) SpeedTest(req *SpeedTestRequest, in Api_SpeedTestServer) error {
 	// }
 	for _, t := range req.GetHandlers() {
 		wg.Go(func() error {
-			log.Debug().Msgf("SpeedTest for: %v", t.GetTag())
+			log.Debug().Msgf("SpeedTest for: %v", util.GetTag(t))
 
 			rsp := &SpeedTestResponse{
-				Tag: t.GetTag(),
+				Tag: util.GetTag(t),
 			}
 			h, err := create.NewHandler(&create.HandlerConfig{
 				HandlerConfig: t,
@@ -328,7 +328,7 @@ func (a *Api) SpeedTest(req *SpeedTestRequest, in Api_SpeedTestServer) error {
 				EchResolver:   a.echResolver,
 			})
 			if err != nil {
-				log.Debug().Err(err).Str("tag", t.GetTag()).Msg("failed to create outbound handler")
+				log.Debug().Err(err).Str("tag", util.GetTag(t)).Msg("failed to create outbound handler")
 				rsp.Down = -1
 			} else {
 				rst := util.Speedtest(in.Context(), url, h)

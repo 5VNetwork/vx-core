@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	router "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	. "github.com/5vnetwork/vx-core/app/router"
 	"github.com/5vnetwork/vx-core/common"
@@ -50,21 +50,21 @@ func TestAppIdRouter(t *testing.T) {
 	om.AddHandlers(h)
 
 	router, err := NewRouter(&RouterConfig{
-		RouterConfig: &configs.RouterConfig{
-			Rules: []*configs.RuleConfig{
+		RouterConfig: &router.RouterConfig{
+			Rules: []*router.RuleConfig{
 				{
 					OutboundTag: "test",
-					AppIds: []*configs.AppId{
+					AppIds: []*router.AppId{
 						{
-							Type:  configs.AppId_Prefix,
+							Type:  router.AppId_Prefix,
 							Value: "C:\\abc",
 						},
 						{
-							Type:  configs.AppId_Exact,
+							Type:  router.AppId_Exact,
 							Value: "C:\\aasdfc\\b.exe",
 						},
 						{
-							Type:  configs.AppId_Keyword,
+							Type:  router.AppId_Keyword,
 							Value: "bbbb",
 						},
 					},

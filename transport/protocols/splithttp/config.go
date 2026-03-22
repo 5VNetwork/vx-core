@@ -8,7 +8,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/crypto"
 )
 
-func (m *XmuxConfig) Init() {
+func Init(m *XmuxConfig) {
 	if m.MaxConcurrency == nil {
 		m.MaxConcurrency = &RangeConfig{}
 	}
@@ -32,7 +32,7 @@ func (m *XmuxConfig) Init() {
 	}
 }
 
-func (c *SplitHttpConfig) GetNormalizedPath() string {
+func GetNormalizedPath(c *SplitHttpConfig) string {
 	pathAndQuery := strings.SplitN(c.Path, "?", 2)
 	path := pathAndQuery[0]
 
@@ -47,7 +47,7 @@ func (c *SplitHttpConfig) GetNormalizedPath() string {
 	return path
 }
 
-func (c *SplitHttpConfig) GetNormalizedQuery() string {
+func GetNormalizedQuery(c *SplitHttpConfig) string {
 	pathAndQuery := strings.SplitN(c.Path, "?", 2)
 	query := ""
 
@@ -65,7 +65,7 @@ func (c *SplitHttpConfig) GetNormalizedQuery() string {
 	return query
 }
 
-func (c *SplitHttpConfig) GetRequestHeader(rawURL string) (http.Header, error) {
+func GetRequestHeader(c *SplitHttpConfig, rawURL string) (http.Header, error) {
 	header := http.Header{}
 	for k, v := range c.Headers {
 		header.Add(k, v)
@@ -80,21 +80,21 @@ func (c *SplitHttpConfig) GetRequestHeader(rawURL string) (http.Header, error) {
 	// 'X' is assigned an 8 bit code, so HPACK compression won't change actual padding length on the wire.
 	// https://www.rfc-editor.org/rfc/rfc9204.html#section-4.1.2-2
 	// h3's similar QPACK feature uses the same huffman table.
-	u.RawQuery = "x_padding=" + strings.Repeat("X", int(c.GetNormalizedXPaddingBytes().rand()))
+	u.RawQuery = "x_padding=" + strings.Repeat("X", int(Rand(GetNormalizedXPaddingBytes(c))))
 	header.Set("Referer", u.String())
 
 	return header, nil
 }
 
-func (c *SplitHttpConfig) WriteResponseHeader(writer http.ResponseWriter) {
+func WriteResponseHeader(c *SplitHttpConfig, writer http.ResponseWriter) {
 	// CORS headers for the browser dialer
 	writer.Header().Set("Access-Control-Allow-Origin", "*")
 	writer.Header().Set("Access-Control-Allow-Methods", "GET, POST")
 	// writer.Header().Set("X-Version", core.Version())
-	writer.Header().Set("X-Padding", strings.Repeat("X", int(c.GetNormalizedXPaddingBytes().rand())))
+	writer.Header().Set("X-Padding", strings.Repeat("X", int(Rand(GetNormalizedXPaddingBytes(c)))))
 }
 
-func (c *SplitHttpConfig) GetNormalizedXPaddingBytes() RangeConfig {
+func GetNormalizedXPaddingBytes(c *SplitHttpConfig) RangeConfig {
 	if c.XPaddingBytes == nil || c.XPaddingBytes.To == 0 {
 		return RangeConfig{
 			From: 100,
@@ -105,7 +105,7 @@ func (c *SplitHttpConfig) GetNormalizedXPaddingBytes() RangeConfig {
 	return *c.XPaddingBytes
 }
 
-func (c *SplitHttpConfig) GetNormalizedScMaxEachPostBytes() RangeConfig {
+func GetNormalizedScMaxEachPostBytes(c *SplitHttpConfig) RangeConfig {
 	if c.ScMaxEachPostBytes == nil || c.ScMaxEachPostBytes.To == 0 {
 		return RangeConfig{
 			From: 1000000,
@@ -116,7 +116,7 @@ func (c *SplitHttpConfig) GetNormalizedScMaxEachPostBytes() RangeConfig {
 	return *c.ScMaxEachPostBytes
 }
 
-func (c *SplitHttpConfig) GetNormalizedScMinPostsIntervalMs() RangeConfig {
+func GetNormalizedScMinPostsIntervalMs(c *SplitHttpConfig) RangeConfig {
 	if c.ScMinPostsIntervalMs == nil || c.ScMinPostsIntervalMs.To == 0 {
 		return RangeConfig{
 			From: 30,
@@ -127,7 +127,7 @@ func (c *SplitHttpConfig) GetNormalizedScMinPostsIntervalMs() RangeConfig {
 	return *c.ScMinPostsIntervalMs
 }
 
-func (c *SplitHttpConfig) GetNormalizedScMaxBufferedPosts() int {
+func GetNormalizedScMaxBufferedPosts(c *SplitHttpConfig) int {
 	if c.ScMaxBufferedPosts == 0 {
 		return 30
 	}
@@ -135,7 +135,7 @@ func (c *SplitHttpConfig) GetNormalizedScMaxBufferedPosts() int {
 	return int(c.ScMaxBufferedPosts)
 }
 
-func (c *SplitHttpConfig) GetNormalizedScStreamUpServerSecs() RangeConfig {
+func GetNormalizedScStreamUpServerSecs(c *SplitHttpConfig) RangeConfig {
 	if c.ScStreamUpServerSecs == nil || c.ScStreamUpServerSecs.To == 0 {
 		return RangeConfig{
 			From: 20,
@@ -146,7 +146,7 @@ func (c *SplitHttpConfig) GetNormalizedScStreamUpServerSecs() RangeConfig {
 	return *c.ScMinPostsIntervalMs
 }
 
-func (m *XmuxConfig) GetNormalizedMaxConcurrency() RangeConfig {
+func GetNormalizedMaxConcurrency(m *XmuxConfig) RangeConfig {
 	if m.MaxConcurrency == nil {
 		return RangeConfig{
 			From: 0,
@@ -157,7 +157,7 @@ func (m *XmuxConfig) GetNormalizedMaxConcurrency() RangeConfig {
 	return *m.MaxConcurrency
 }
 
-func (m *XmuxConfig) GetNormalizedMaxConnections() RangeConfig {
+func GetNormalizedMaxConnections(m *XmuxConfig) RangeConfig {
 	if m.MaxConnections == nil {
 		return RangeConfig{
 			From: 0,
@@ -168,7 +168,7 @@ func (m *XmuxConfig) GetNormalizedMaxConnections() RangeConfig {
 	return *m.MaxConnections
 }
 
-func (m *XmuxConfig) GetNormalizedCMaxReuseTimes() RangeConfig {
+func GetNormalizedCMaxReuseTimes(m *XmuxConfig) RangeConfig {
 	if m.CMaxReuseTimes == nil {
 		return RangeConfig{
 			From: 0,
@@ -179,7 +179,7 @@ func (m *XmuxConfig) GetNormalizedCMaxReuseTimes() RangeConfig {
 	return *m.CMaxReuseTimes
 }
 
-func (m *XmuxConfig) GetNormalizedHMaxRequestTimes() RangeConfig {
+func GetNormalizedHMaxRequestTimes(m *XmuxConfig) RangeConfig {
 	if m.HMaxRequestTimes == nil {
 		return RangeConfig{
 			From: 0,
@@ -190,7 +190,7 @@ func (m *XmuxConfig) GetNormalizedHMaxRequestTimes() RangeConfig {
 	return *m.HMaxRequestTimes
 }
 
-func (m *XmuxConfig) GetNormalizedHMaxReusableSecs() RangeConfig {
+func GetNormalizedHMaxReusableSecs(m *XmuxConfig) RangeConfig {
 	if m.HMaxReusableSecs == nil {
 		return RangeConfig{
 			From: 0,
@@ -201,6 +201,6 @@ func (m *XmuxConfig) GetNormalizedHMaxReusableSecs() RangeConfig {
 	return *m.HMaxReusableSecs
 }
 
-func (c RangeConfig) rand() int32 {
+func Rand(c RangeConfig) int32 {
 	return int32(crypto.RandBetween(int64(c.From), int64(c.To)))
 }

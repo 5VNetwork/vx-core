@@ -5,29 +5,29 @@ import (
 	"os"
 	"strings"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	commongeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
+	vxrouter "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
 	"github.com/5vnetwork/vx-core/common/clashconfig"
-	"github.com/5vnetwork/vx-core/common/geo"
 	"github.com/golang/protobuf/proto"
 	"github.com/rs/zerolog/log"
 )
 
 type StandartLoader struct {
-	ipCache   map[string]*geo.GeoIPList
-	siteCache map[string]*geo.GeoSiteList
+	ipCache   map[string]*commongeo.GeoIPList
+	siteCache map[string]*commongeo.GeoSiteList
 }
 
 func NewStandartLoader() *StandartLoader {
 	return &StandartLoader{
-		ipCache:   make(map[string]*geo.GeoIPList),
-		siteCache: make(map[string]*geo.GeoSiteList),
+		ipCache:   make(map[string]*commongeo.GeoIPList),
+		siteCache: make(map[string]*commongeo.GeoSiteList),
 	}
 }
 
-func (s *StandartLoader) LoadIP(filepath, countryCode string) (*geo.GeoIP, error) {
+func (s *StandartLoader) LoadIP(filepath, countryCode string) (*commongeo.GeoIP, error) {
 	geoipList := s.ipCache[filepath]
 	if geoipList == nil {
-		geoipList = &geo.GeoIPList{}
+		geoipList = &commongeo.GeoIPList{}
 		geoipBytes, err := os.ReadFile(filepath)
 		if err != nil {
 			return nil, errors.New("failed to open file: " + filepath)
@@ -48,11 +48,11 @@ func (s *StandartLoader) LoadIP(filepath, countryCode string) (*geo.GeoIP, error
 	return nil, errors.New("country not found in " + filepath + ": " + countryCode)
 }
 
-func (s *StandartLoader) LoadSite(filepath, siteName string) (*geo.GeoSite, error) {
+func (s *StandartLoader) LoadSite(filepath, siteName string) (*commongeo.GeoSite, error) {
 	geositeList := s.siteCache[filepath]
 
 	if geositeList == nil {
-		geositeList = &geo.GeoSiteList{}
+		geositeList = &commongeo.GeoSiteList{}
 		geositebytes, err := os.ReadFile(filepath)
 		if err != nil {
 			return nil, errors.New("failed to open file: " + filepath)
@@ -72,7 +72,7 @@ func (s *StandartLoader) LoadSite(filepath, siteName string) (*geo.GeoSite, erro
 	return nil, errors.New("list not found in " + filepath + ": " + siteName)
 }
 
-func (s *StandartLoader) LoadDomainsClash(filepath string) ([]*geo.Domain, error) {
+func (s *StandartLoader) LoadDomainsClash(filepath string) ([]*commongeo.Domain, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (s *StandartLoader) LoadDomainsClash(filepath string) ([]*geo.Domain, error
 	return clashconfig.ExtractDomainsFromClashRules(file)
 }
 
-func (s *StandartLoader) LoadCidrsClash(filepath string) ([]*geo.CIDR, error) {
+func (s *StandartLoader) LoadCidrsClash(filepath string) ([]*commongeo.CIDR, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func (s *StandartLoader) LoadCidrsClash(filepath string) ([]*geo.CIDR, error) {
 	return clashconfig.ExtractCidrFromClashRules(file)
 }
 
-func (s *StandartLoader) LoadAppsClash(filepath string) ([]*configs.AppId, error) {
+func (s *StandartLoader) LoadAppsClash(filepath string) ([]*vxrouter.AppId, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err

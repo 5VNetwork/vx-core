@@ -31,12 +31,12 @@ func (s *RandomPortSelector) SelectPort() uint16 {
 	}
 	portRangeIndex := dice.Roll(len(s.ranges))
 	portRange := s.ranges[portRangeIndex]
-	ports := portRange.ToPort() - portRange.FromPort()
+	ports := portRange.To - portRange.From
 	if ports == 0 {
-		return uint16(portRange.FromPort())
+		return uint16(portRange.From)
 	}
 
-	port := uint16(portRange.FromPort()) + uint16(dice.Roll(int(ports+1)))
+	port := uint16(portRange.From) + uint16(dice.Roll(int(ports+1)))
 	return port
 }
 

@@ -12,6 +12,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/inbound/monitor"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
@@ -25,7 +26,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/xtls/reality"
 
-	configs "github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/buf"
 	protocolHttp "github.com/5vnetwork/vx-core/common/protocol/http"
 	"github.com/5vnetwork/vx-core/common/strmatcher"
@@ -110,7 +110,7 @@ func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler
 				if err != nil {
 					return nil, err
 				}
-				c, err := s.Tls.GetTLSConfig(securitytls.WithNextProtocol([]string{"h2", "http/1.1"}))
+				c, err := securitytls.GetTLSConfig(s.Tls, securitytls.WithNextProtocol([]string{"h2", "http/1.1"}))
 				if err != nil {
 					return nil, err
 				}
@@ -130,7 +130,7 @@ func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler
 					indexMatcher: indexMatcher,
 					always:       security.Always,
 					security: &realityConfig{
-						realityConfig: s.Reality.GetREALITYConfig(),
+						realityConfig: securityreality.GetREALITYConfig(s.Reality),
 					},
 				})
 			}

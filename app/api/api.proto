@@ -1,15 +1,15 @@
 syntax = "proto3";
 
-package x.api;
+package vx.api;
 option go_package = "github.com/5vnetwork/vx-core/app/api";
 
-import "protos/outbound.proto";
-import "protos/inbound.proto";
-import "protos/router.proto";
-import "common/geo/geo.proto";
-import "protos/geo.proto";
-import "protos/server/server.proto";
-import "protos/logger.proto";
+import "vx/outbound/outbound.proto";
+import "vx/inbound/inbound.proto";
+import "vx/router/router.proto";
+import "vx/common/geo/geo.proto";
+import "vx/geo/geo.proto";
+import "vx/server.proto";
+import "vx/log/logger.proto";
 
 message ApiServerConfig {
   string listen_addr = 1;
@@ -23,7 +23,7 @@ message ApiServerConfig {
   uint32 interval = 7;
   bool bind_to_default_nic = 8;
   bytes client_cert = 9;
-  x.LoggerConfig log_config = 10;
+  vx.log.LoggerConfig log_config = 10;
 }
 
 service Api {
@@ -64,7 +64,7 @@ service Api {
   rpc OpenDb(OpenDbRequest) returns (Receipt);
   rpc InboundConfigToOutboundConfig(InboundConfigToOutboundConfigRequest) returns (InboundConfigToOutboundConfigResponse);
   rpc ToUrl(ToUrlRequest) returns (ToUrlResponse);
-  rpc SetLog(x.LoggerConfig) returns (Receipt);
+  rpc SetLog(vx.log.LoggerConfig) returns (Receipt);
 }
 
 message XStatusChangeNotifyRequest {
@@ -90,7 +90,7 @@ message SetSubscriptionIntervalResponse {
 message UpdateSubscriptionRequest {
   int64 id = 1;
   bool all = 2;
-  repeated x.HandlerConfig handlers = 3;
+  repeated vx.outbound.HandlerConfig handlers = 3;
 }
 message UpdateSubscriptionResponse {
   int32 success = 1;
@@ -108,7 +108,7 @@ message SetTunNameResponse {
 
 message DownloadRequest {
   string url = 1;
-  repeated x.HandlerConfig handlers = 2;
+  repeated vx.outbound.HandlerConfig handlers = 2;
   // if nil, download to memory
   string dest = 3;
 }
@@ -120,7 +120,7 @@ message DownloadResponse {
 }
 
 message HandlerIpRequest {
-  x.OutboundHandlerConfig handler = 1;
+  vx.outbound.OutboundHandlerConfig handler = 1;
 }
 
 message RttTestRequest {
@@ -140,7 +140,7 @@ message HandlerIpResponse {
 }
 
 message HandlerUsableRequest {
-  x.HandlerConfig handler = 1;
+  vx.outbound.HandlerConfig handler = 1;
 }
 
 message HandlerUsableResponse {
@@ -151,7 +151,7 @@ message HandlerUsableResponse {
 
 // speed test
 message SpeedTestRequest {
-  repeated x.HandlerConfig handlers = 1;
+  repeated vx.outbound.HandlerConfig handlers = 1;
   // 1 or 10
   uint32 size = 2;
 }
@@ -205,7 +205,7 @@ message DeployRequest {
   bytes hysteria_config = 2;
   bytes xray_config = 3;
   map<string, bytes> files = 4;
-  x.ServerConfig vx_config = 5;
+  vx.ServerConfig vx_config = 5;
   bool disable_firewall = 6;
 }
 message DeployResponse {
@@ -247,11 +247,11 @@ message ServerConfigRequest {
   ServerSshConfig ssh_config = 1;
 }
 message ServerConfigResponse {
-  x.ServerConfig config = 1;
+  vx.ServerConfig config = 1;
 }
 message UpdateServerConfigRequest {
   ServerSshConfig ssh_config = 1;
-  x.ServerConfig config = 2;
+  vx.ServerConfig config = 2;
 }
 message UpdateServerConfigResponse {
 }
@@ -270,7 +270,7 @@ message DecodeRequest {
   string data = 1;
 }
 message DecodeResponse {
-  repeated x.OutboundHandlerConfig handlers = 1;
+  repeated vx.outbound.OutboundHandlerConfig handlers = 1;
   repeated string failed_nodes = 2;
 }
 
@@ -301,7 +301,7 @@ message GetCertDomainResponse {
 }
 
 message AddInboundRequest {
-  x.ProxyInboundConfig inbound = 1;
+  vx.inbound.ProxyInboundConfig inbound = 1;
 }
 message AddInboundResponse{
 }
@@ -332,21 +332,21 @@ message ParseClashRuleFileRequest {
   bytes content = 1;
 }
 message ParseClashRuleFileResponse {
-  repeated x.common.geo.Domain domains = 1;
-  repeated x.common.geo.CIDR cidrs = 2;
-  repeated x.AppId app_ids = 3;
+  repeated vx.common.geo.Domain domains = 1;
+  repeated vx.common.geo.CIDR cidrs = 2;
+  repeated vx.router.AppId app_ids = 3;
 }
 message ParseGeositeConfigRequest {
-  x.GeositeConfig config = 1;
+  vx.geo.GeositeConfig config = 1;
 }
 message ParseGeositeConfigResponse {
-  repeated x.common.geo.Domain domains = 1;
+  repeated vx.common.geo.Domain domains = 1;
 }
 message ParseGeoIPConfigRequest {
-  x.GeoIPConfig config = 1;
+  vx.geo.GeoIPConfig config = 1;
 }
 message ParseGeoIPConfigResponse {
-  repeated x.common.geo.CIDR cidrs = 1;
+  repeated vx.common.geo.CIDR cidrs = 1;
 }
 
 message GenerateX25519KeyPairRequest {}
@@ -379,17 +379,17 @@ message OpenDbRequest {
 }
 
 message InboundConfigToOutboundConfigRequest {
-  x.ProxyInboundConfig inbound = 1;
-  x.MultiProxyInboundConfig multi_inbound = 2;
+  vx.inbound.ProxyInboundConfig inbound = 1;
+  vx.inbound.MultiProxyInboundConfig multi_inbound = 2;
   string server_address = 3;
   string server_name = 4;
 }
 message InboundConfigToOutboundConfigResponse {
-  repeated x.OutboundHandlerConfig outbound_configs = 1;
+  repeated vx.outbound.OutboundHandlerConfig outbound_configs = 1;
 }
 
 message ToUrlRequest {
-  repeated x.OutboundHandlerConfig outbound_confogs = 1;
+  repeated vx.outbound.OutboundHandlerConfig outbound_confogs = 1;
 }
 message ToUrlResponse {
   repeated string urls = 1;

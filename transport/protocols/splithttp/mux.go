@@ -32,8 +32,8 @@ type XmuxManager struct {
 func NewXmuxManager(xmuxConfig XmuxConfig, newConnFunc func() XmuxConn) *XmuxManager {
 	return &XmuxManager{
 		xmuxConfig:  xmuxConfig,
-		concurrency: xmuxConfig.GetNormalizedMaxConcurrency().rand(),
-		connections: xmuxConfig.GetNormalizedMaxConnections().rand(),
+		concurrency: Rand(GetNormalizedMaxConcurrency(&xmuxConfig)),
+		connections: Rand(GetNormalizedMaxConnections(&xmuxConfig)),
 		newConnFunc: newConnFunc,
 		xmuxClients: make([]*XmuxClient, 0),
 	}
@@ -44,14 +44,14 @@ func (m *XmuxManager) newXmuxClient() *XmuxClient {
 		XmuxConn:  m.newConnFunc(),
 		leftUsage: -1,
 	}
-	if x := m.xmuxConfig.GetNormalizedCMaxReuseTimes().rand(); x > 0 {
+	if x := Rand(GetNormalizedCMaxReuseTimes(&m.xmuxConfig)); x > 0 {
 		xmuxClient.leftUsage = x - 1
 	}
 	xmuxClient.LeftRequests.Store(math.MaxInt32)
-	if x := m.xmuxConfig.GetNormalizedHMaxRequestTimes().rand(); x > 0 {
+	if x := Rand(GetNormalizedHMaxRequestTimes(&m.xmuxConfig)); x > 0 {
 		xmuxClient.LeftRequests.Store(x)
 	}
-	if x := m.xmuxConfig.GetNormalizedHMaxReusableSecs().rand(); x > 0 {
+	if x := Rand(GetNormalizedHMaxReusableSecs(&m.xmuxConfig)); x > 0 {
 		xmuxClient.UnreusableAt = time.Now().Add(time.Duration(x) * time.Second)
 	}
 	m.xmuxClients = append(m.xmuxClients, xmuxClient)

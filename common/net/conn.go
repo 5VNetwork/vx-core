@@ -185,7 +185,7 @@ type NetDialer struct {
 
 func (d *NetDialer) Dial(ctx context.Context, dst Destination) (net.Conn, error) {
 	addr := dst.NetAddr()
-	return d.Dialer.DialContext(ctx, dst.Network.SystemString(), addr)
+	return d.Dialer.DialContext(ctx, SystemString(dst.Network), addr)
 }
 
 type NetPacketListener struct {

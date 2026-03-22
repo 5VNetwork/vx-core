@@ -9,7 +9,6 @@ import (
 	"net/url"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/util/sub"
 	"github.com/5vnetwork/vx-core/common/serial"
 )
@@ -25,7 +24,7 @@ func ParseVlessFromLink(link string) (*configs.OutboundHandlerConfig, error) {
 	}
 	query := u.Query()
 
-	vlessConfig := &proxy.VlessClientConfig{
+	vlessConfig := &configs.VlessClientConfig{
 		Id:         u.User.Username(),
 		Encryption: "none",
 		Flow:       query.Get("flow"),

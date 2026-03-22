@@ -6,15 +6,13 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"log"
 	"testing"
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/common"
@@ -42,17 +40,17 @@ func TestShadowsocksChaCha20Poly1305TCP(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: secret.String(),
 						},
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_128_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 					},
 				),
 			},
@@ -67,7 +65,7 @@ func TestShadowsocksChaCha20Poly1305TCP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -81,9 +79,9 @@ func TestShadowsocksChaCha20Poly1305TCP(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.ShadowsocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 						Password:   secret.String(),
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_128_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 					}),
 				},
 			},
@@ -122,18 +120,18 @@ func TestShadowsocksAES256GCMTCP(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Id:     protocol.NewID(uuid.New()).String(),
 							Secret: secret.String(),
 						},
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_256_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_256_GCM,
 					},
 				),
 			},
@@ -148,7 +146,7 @@ func TestShadowsocksAES256GCMTCP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -162,9 +160,9 @@ func TestShadowsocksAES256GCMTCP(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.ShadowsocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 						Password:   secret.String(),
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_256_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_256_GCM,
 					}),
 				},
 			},
@@ -202,17 +200,17 @@ func TestShadowsocksAES128GCMUDP(t *testing.T) {
 	serverPort := 13245
 
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: secret.String(),
 						},
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_128_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 					},
 				),
 			},
@@ -228,7 +226,7 @@ func TestShadowsocksAES128GCMUDP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_UDP},
@@ -242,9 +240,9 @@ func TestShadowsocksAES128GCMUDP(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.ShadowsocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 						Password:   secret.String(),
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_128_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 					}),
 				},
 			},
@@ -273,17 +271,17 @@ func TestShadowsocksAES128GCMUDP(t *testing.T) {
 func TestShadowsocksAES128GCMUDPMux(t *testing.T) {
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: secret.String(),
 						},
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_128_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 					},
 				),
 			},
@@ -305,7 +303,7 @@ func TestShadowsocksAES128GCMUDPMux(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  udpDest.Address.String(),
 							Port:     uint32(udpDest.Port),
 							Networks: []net.Network{net.Network_UDP},
@@ -320,9 +318,9 @@ func TestShadowsocksAES128GCMUDPMux(t *testing.T) {
 					EnableMux: true,
 					Address:   net.LocalHostIP.String(),
 					Port:      uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.ShadowsocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 						Password:   secret.String(),
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_128_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 					}),
 				},
 			},
@@ -360,17 +358,17 @@ func TestShadowsocksNone(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: secret.String(),
 						},
-						CipherType: proxyconfig.ShadowsocksCipherType_NONE,
+						CipherType: configs.ShadowsocksCipherType_NONE,
 					},
 				),
 			},
@@ -385,7 +383,7 @@ func TestShadowsocksNone(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -399,9 +397,9 @@ func TestShadowsocksNone(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.ShadowsocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 						Password:   secret.String(),
-						CipherType: proxyconfig.ShadowsocksCipherType_NONE,
+						CipherType: configs.ShadowsocksCipherType_NONE,
 					}),
 				},
 			},
@@ -434,17 +432,17 @@ func TestSsFullCone(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: userID.String(),
 						},
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_128_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 					},
 				),
 			},
@@ -463,9 +461,9 @@ func TestSsFullCone(t *testing.T) {
 				Outbound: &configs.OutboundHandlerConfig{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.ShadowsocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 						Password:   userID.String(),
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_128_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 					}),
 				},
 			},

@@ -96,7 +96,7 @@ func Listen(ctx context.Context, address net.Address, port net.Port, c *QuicConf
 		mt := &mytls.TlsConfig{
 			Certificates: []*mytls.Certificate{mytls.ParseCertificate(cert.MustGenerate(nil, cert.DNSNames(internalDomain), cert.CommonName(internalDomain)))},
 		}
-		tlsConfig, err = mt.GetTLSConfig()
+		tlsConfig, err = mytls.GetTLSConfig(mt)
 		if err != nil {
 			return nil, err
 		}

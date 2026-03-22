@@ -5,7 +5,7 @@ import (
 	"net"
 	"testing"
 
-	configs "github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/configs"
 	d "github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/common"
 	mynet "github.com/5vnetwork/vx-core/common/net"

@@ -1,0 +1,5 @@
+syntax = "proto3";
+package vx.proxy.blackhole;
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/proxy";
+
+message BlackholeConfig {}

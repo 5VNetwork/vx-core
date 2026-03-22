@@ -53,12 +53,12 @@ func NewXhttpDialer(config *SplitHttpConfig, sc security.Engine,
 	if d.config.GetXmux() == nil {
 		d.config.Xmux = &XmuxConfig{}
 	}
-	d.config.Xmux.Init()
+	Init(d.config.Xmux)
 	if d.downConfig != nil {
 		if d.downConfig.Xmux == nil {
 			d.downConfig.Xmux = &XmuxConfig{}
 		}
-		d.downConfig.Xmux.Init()
+		Init(d.downConfig.Xmux)
 	}
 
 	var securityEngine security.Engine
@@ -124,8 +124,8 @@ func (x *XhttpDialer) Dial(ctx context.Context, dest net.Destination) (net.Conn,
 	log.Ctx(ctx).Debug().Msgf("requestURL.Host: %s", requestURL.Host)
 
 	sessionIdUuid := uuid.New()
-	requestURL.Path = config.GetNormalizedPath() + sessionIdUuid.String()
-	requestURL.RawQuery = config.GetNormalizedQuery()
+	requestURL.Path = GetNormalizedPath(config) + sessionIdUuid.String()
+	requestURL.RawQuery = GetNormalizedQuery(config)
 
 	httpClient, xmuxClient := getHTTPClient(ctx, dest, x.config, x.sc, x.dialer)
 
@@ -174,8 +174,8 @@ func (x *XhttpDialer) Dial(ctx context.Context, dest net.Destination) (net.Conn,
 		if requestURL2.Host == "" {
 			requestURL2.Host = dest2.Address.String()
 		}
-		requestURL2.Path = config2.GetNormalizedPath() + sessionIdUuid.String()
-		requestURL2.RawQuery = config2.GetNormalizedQuery()
+		requestURL2.Path = GetNormalizedPath(config2) + sessionIdUuid.String()
+		requestURL2.RawQuery = GetNormalizedQuery(config2)
 		httpClient2, xmuxClient2 = getHTTPClient(ctx, dest2, x.downConfig, x.downSc, x.dialer)
 	}
 
@@ -213,7 +213,7 @@ func (x *XhttpDialer) Dial(ctx context.Context, dest net.Destination) (net.Conn,
 
 	var err error
 	if mode == "stream-one" {
-		requestURL.Path = config.GetNormalizedPath()
+		requestURL.Path = GetNormalizedPath(config)
 		if xmuxClient != nil {
 			xmuxClient.LeftRequests.Add(-1)
 		}
@@ -242,14 +242,14 @@ func (x *XhttpDialer) Dial(ctx context.Context, dest net.Destination) (net.Conn,
 		return &conn, nil
 	}
 
-	scMaxEachPostBytes := config.GetNormalizedScMaxEachPostBytes()
-	scMinPostsIntervalMs := config.GetNormalizedScMinPostsIntervalMs()
+	scMaxEachPostBytes := GetNormalizedScMaxEachPostBytes(config)
+	scMinPostsIntervalMs := GetNormalizedScMinPostsIntervalMs(config)
 
 	if scMaxEachPostBytes.From <= buf.Size {
 		panic("`scMaxEachPostBytes` should be bigger than " + strconv.Itoa(buf.Size))
 	}
 
-	maxUploadSize := scMaxEachPostBytes.rand()
+	maxUploadSize := Rand(scMaxEachPostBytes)
 	// WithSizeLimit(0) will still allow single bytes to pass, and a lot of
 	// code relies on this behavior. Subtract 1 so that together with
 	// uploadWriter wrapper, exact size limits can be enforced
@@ -282,7 +282,7 @@ func (x *XhttpDialer) Dial(ctx context.Context, dest net.Destination) (net.Conn,
 			seq += 1
 
 			if scMinPostsIntervalMs.From > 0 {
-				time.Sleep(time.Duration(scMinPostsIntervalMs.rand())*time.Millisecond - time.Since(lastWrite))
+				time.Sleep(time.Duration(Rand(scMinPostsIntervalMs))*time.Millisecond - time.Since(lastWrite))
 			}
 
 			// by offloading the uploads into a buffered pipe, multiple conn.Write

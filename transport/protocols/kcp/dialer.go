@@ -70,11 +70,11 @@ func Dial(ctx context.Context, dest net.Destination, kcpConfig *KcpConfig, secur
 		return nil, fmt.Errorf("failed to dial system connection: %w", err)
 	}
 
-	header, err := kcpConfig.GetPackerHeader()
+	header, err := GetPackerHeader(kcpConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create packet header: %w", err)
 	}
-	s, err := kcpConfig.GetSecurity()
+	s, err := GetSecurity(kcpConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get security: %w", err)
 	}

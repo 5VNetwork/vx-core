@@ -6,15 +6,13 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"log"
 	"testing"
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/common"
@@ -42,13 +40,13 @@ func TestShadowsocks2022ChaCha20Poly1305TCP(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.Shadowsocks2022ServerConfig{
+					&configs.Shadowsocks2022ServerConfig{
 						User: &configs.UserConfig{
 							Id:     protocol.NewID(uuid.New()).String(),
 							Secret: secret.String(),
@@ -69,7 +67,7 @@ func TestShadowsocks2022ChaCha20Poly1305TCP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -83,7 +81,7 @@ func TestShadowsocks2022ChaCha20Poly1305TCP(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.Shadowsocks2022ClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.Shadowsocks2022ClientConfig{
 						Method: "2022-blake3-chacha20-poly1305",
 						Key:    secret.String(),
 					}),
@@ -122,13 +120,13 @@ func TestShadowsocks2022AES256GCMTCP(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.Shadowsocks2022ServerConfig{
+					&configs.Shadowsocks2022ServerConfig{
 						User: &configs.UserConfig{
 							Id:     protocol.NewID(uuid.New()).String(),
 							Secret: secret.String(),
@@ -148,7 +146,7 @@ func TestShadowsocks2022AES256GCMTCP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -162,7 +160,7 @@ func TestShadowsocks2022AES256GCMTCP(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.Shadowsocks2022ClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.Shadowsocks2022ClientConfig{
 						Method: "2022-blake3-aes-256-gcm",
 						Key:    secret.String(),
 					}),
@@ -202,13 +200,13 @@ func TestShadowsocks2022AES128GCMUDP(t *testing.T) {
 	serverPort := 13245
 
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.Shadowsocks2022ServerConfig{
+					&configs.Shadowsocks2022ServerConfig{
 						User: &configs.UserConfig{
 							Id:     protocol.NewID(uuid.New()).String(),
 							Secret: secret.String(),
@@ -230,7 +228,7 @@ func TestShadowsocks2022AES128GCMUDP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_UDP},
@@ -244,7 +242,7 @@ func TestShadowsocks2022AES128GCMUDP(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.Shadowsocks2022ClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.Shadowsocks2022ClientConfig{
 						Method: "2022-blake3-aes-128-gcm",
 						Key:    secret.String(),
 					}),
@@ -278,13 +276,13 @@ func TestShadowsocks2022FullCone(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.Shadowsocks2022ServerConfig{
+					&configs.Shadowsocks2022ServerConfig{
 						User: &configs.UserConfig{
 							Id:     protocol.NewID(uuid.New()).String(),
 							Secret: userID.String(),
@@ -309,7 +307,7 @@ func TestShadowsocks2022FullCone(t *testing.T) {
 				Outbound: &configs.OutboundHandlerConfig{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.Shadowsocks2022ClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.Shadowsocks2022ClientConfig{
 						Method: "2022-blake3-aes-128-gcm",
 						Key:    userID.String(),
 					}),

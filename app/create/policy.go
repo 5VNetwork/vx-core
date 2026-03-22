@@ -6,7 +6,7 @@ package create
 import (
 	"time"
 
-	configs "github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/policy"
 )
 

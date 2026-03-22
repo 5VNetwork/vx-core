@@ -5,11 +5,9 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/buildclient"
+			"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
 	"github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
@@ -43,14 +41,14 @@ func TestMultiInbound(t *testing.T) {
 
 	shortId := [8]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		MultiInbounds: []*configs.MultiProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Ports:   []uint32{uint32(serverPort)},
 				Protocols: []*anypb.Any{
 					serial.ToTypedMessage(
-						&proxyconfig.TrojanServerConfig{
+						&configs.TrojanServerConfig{
 							Users: []*configs.UserConfig{
 								{
 									Id:     userID.String(),
@@ -60,7 +58,7 @@ func TestMultiInbound(t *testing.T) {
 						},
 					),
 					serial.ToTypedMessage(
-						&proxyconfig.VmessServerConfig{
+						&configs.VmessServerConfig{
 							Accounts: []*configs.UserConfig{
 								{
 									Id:     userID.String(),
@@ -125,11 +123,11 @@ func TestMultiInbound(t *testing.T) {
 	common.Must(server.Start(context.Background()))
 	defer server.Stop(context.Background())
 
-	testServer(t, uint32(serverPort), serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+	testServer(t, uint32(serverPort), serial.ToTypedMessage(&configs.VmessClientConfig{
 		Id: userID.String(),
 	}), nil)
 
-	testServer(t, uint32(serverPort), serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+	testServer(t, uint32(serverPort), serial.ToTypedMessage(&configs.TrojanClientConfig{
 		Password: userID.String(),
 	}), &configs.TransportConfig{
 		Security: &configs.TransportConfig_Reality{
@@ -140,7 +138,7 @@ func TestMultiInbound(t *testing.T) {
 		},
 	})
 
-	testServer(t, uint32(serverPort), serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+	testServer(t, uint32(serverPort), serial.ToTypedMessage(&configs.TrojanClientConfig{
 		Password: userID.String(),
 	}), &configs.TransportConfig{
 		Protocol: &configs.TransportConfig_Grpc{
@@ -157,7 +155,7 @@ func TestMultiInbound(t *testing.T) {
 		},
 	})
 
-	testServer(t, uint32(serverPort), serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+	testServer(t, uint32(serverPort), serial.ToTypedMessage(&configs.TrojanClientConfig{
 		Password: userID.String(),
 	}), &configs.TransportConfig{
 		Protocol: &configs.TransportConfig_Websocket{
@@ -186,7 +184,7 @@ func testServer(t *testing.T, serverPort uint32,
 					Address: net.LocalHostIP.String(),
 					Ports:   []uint32{uint32(clientPort)},
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},

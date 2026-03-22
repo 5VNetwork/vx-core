@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/configs"
-	cgeo "github.com/5vnetwork/vx-core/common/geo"
+	configs "github.com/5vnetwork/vx-core/app/configs"
+	cgeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

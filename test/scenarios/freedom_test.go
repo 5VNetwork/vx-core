@@ -5,9 +5,8 @@ package scenarios
 import (
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/buildclient"
+		"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
@@ -25,7 +24,7 @@ func TestFreedomUDP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  "127.0.0.1",
 							Port:     uint32(udpDest.Port),
 							Networks: []net.Network{net.Network_UDP},

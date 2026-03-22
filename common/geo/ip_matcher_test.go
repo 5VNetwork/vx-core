@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	vxgeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/platform/file"
@@ -30,13 +31,13 @@ func init() {
 	// }
 }
 
-func loadGeoIP(country string) ([]*CIDR, error) {
+func loadGeoIP(country string) ([]*vxgeo.CIDR, error) {
 	path, _ := os.LookupEnv("x.location.asset")
 	bytes, err := file.ReadFile(filepath.Join(path, "geoip.dat"))
 	if err != nil {
 		return nil, err
 	}
-	var geoipList GeoIPList
+	var geoipList vxgeo.GeoIPList
 	if err := proto.Unmarshal(bytes, &geoipList); err != nil {
 		return nil, err
 	}
@@ -64,7 +65,7 @@ func loadGeoIP(country string) ([]*CIDR, error) {
 // }
 
 func TestIPMatcher(t *testing.T) {
-	cidrList := []*CIDR{
+	cidrList := []*vxgeo.CIDR{
 		{Ip: []byte{0, 0, 0, 0}, Prefix: 8},
 		{Ip: []byte{10, 0, 0, 0}, Prefix: 8},
 		{Ip: []byte{100, 64, 0, 0}, Prefix: 10},
@@ -138,7 +139,7 @@ func TestIPMatcher(t *testing.T) {
 }
 
 func TestIPReverseMatcher(t *testing.T) {
-	cidrList := []*CIDR{
+	cidrList := []*vxgeo.CIDR{
 		{Ip: []byte{8, 8, 8, 8}, Prefix: 32},
 		{Ip: []byte{91, 108, 4, 0}, Prefix: 16},
 	}

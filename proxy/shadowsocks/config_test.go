@@ -6,8 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/buf"
@@ -15,8 +14,8 @@ import (
 )
 
 func TestAEADCipherUDP(t *testing.T) {
-	rawAccount := &proxy.ShadowsocksAccount{
-		CipherType: proxy.ShadowsocksCipherType_AES_128_GCM,
+	rawAccount := &configs.ShadowsocksAccount{
+		CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 		User: &configs.UserConfig{
 			Secret: uuid.New().String(),
 		},

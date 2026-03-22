@@ -1,0 +1,36 @@
+syntax = "proto3";
+package vx.transport;
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
+
+import "vx/transport/security/tls/tls.proto";
+import "vx/transport/security/reality/config.proto";
+import "vx/transport/protocols/tcp/config.proto";
+import "vx/transport/protocols/kcp/config.proto";
+import "vx/transport/protocols/websocket/config.proto";
+import "vx/transport/protocols/http/config.proto";
+import "vx/transport/protocols/grpc/config.proto";
+import "vx/transport/protocols/httpupgrade/config.proto";
+import "vx/transport/protocols/splithttp/config.proto";
+
+import "vx/transport/dlhelper.proto";
+import "google/protobuf/any.proto";
+
+message TransportConfig {
+  vx.transport.SocketConfig socket = 3;
+  oneof protocol {
+    vx.transport.protocols.tcp.TcpConfig tcp = 5;
+    vx.transport.protocols.kcp.KcpConfig kcp = 6;
+    vx.transport.protocols.websocket.WebsocketConfig websocket = 7;
+    vx.transport.protocols.http.HttpConfig http = 8;
+    // re = 9;
+    vx.transport.protocols.grpc.GrpcConfig grpc = 10;
+    vx.transport.protocols.httpupgrade.HttpUpgradeConfig httpupgrade = 11;
+    vx.transport.protocols.splithttp.SplitHttpConfig splithttp = 12;
+  }
+  oneof security {
+    vx.transport.security.tls.TlsConfig tls = 20;
+    vx.transport.security.reality.RealityConfig reality = 21;
+  }
+
+  google.protobuf.Any transport_protocol = 30;
+}

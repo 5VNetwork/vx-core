@@ -20,7 +20,7 @@ package scenarios
 // 				serial.ToTypedMessage(&configs.ProxyInboundConfig{
 // 					Address: net.LocalHostIP.String(),
 // 					Port:    uint32(serverPort),
-// 					Protocol: serial.ToTypedMessage(&proxyconfig.SocksServerConfig{
+// 					Protocol: serial.ToTypedMessage(&configs.SocksServerConfig{
 // 						AuthType: socks.AuthType_NO_AUTH,
 // 						Accounts: []*user.User{
 // 							{
@@ -36,11 +36,11 @@ package scenarios
 // 		 &configs.OutboundManagerConfig{
 // 			OutboundHandlers: []*configs.OutboundHandlerConfig{
 // 				{
-// 					Protocol: serial.ToTypedMessage(&proxyconfig.BlackholeConfig{}),
+// 					Protocol: serial.ToTypedMessage(&configs.BlackholeConfig{}),
 // 				},
 // 				{
 // 					Tag:            "direct",
-// 					Protocol:    serial.ToTypedMessage(&proxyconfig.FreedomConfig{}),
+// 					Protocol:    serial.ToTypedMessage(&configs.FreedomConfig{}),
 // 					DomainStrategy: domain.DomainStrategy_UseIp,
 // 				},
 // 			},

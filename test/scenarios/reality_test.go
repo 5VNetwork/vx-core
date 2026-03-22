@@ -7,11 +7,9 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/buildclient"
+			"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
 	"github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
@@ -39,13 +37,13 @@ func TestTrojanReality(t *testing.T) {
 
 	shortId := [8]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -78,7 +76,7 @@ func TestTrojanReality(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -92,7 +90,7 @@ func TestTrojanReality(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: userID.String(),
 					}),
 					Transport: &configs.TransportConfig{

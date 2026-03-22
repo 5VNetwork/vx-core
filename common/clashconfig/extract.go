@@ -7,8 +7,8 @@ import (
 	"net/netip"
 	"strings"
 
-	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/common/geo"
+	commongeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
+	vxrouter "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
 	"gopkg.in/yaml.v3"
 )
 
@@ -16,9 +16,9 @@ type PayloadConfig struct {
 	Payload []string `yaml:"payload"`
 }
 
-// ExtractDomainsFromClashRules parses files containing domain rules and extracts geo.Domain entries.
+// ExtractDomainsFromClashRules parses files containing domain rules and extracts commongeo.Domain entries.
 // It supports both plain text format (DOMAIN and DOMAIN-SUFFIX rules) and YAML format with payload array.
-func ExtractDomainsFromClashRules(reader io.Reader) ([]*geo.Domain, error) {
+func ExtractDomainsFromClashRules(reader io.Reader) ([]*commongeo.Domain, error) {
 	content, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
@@ -33,8 +33,8 @@ func ExtractDomainsFromClashRules(reader io.Reader) ([]*geo.Domain, error) {
 	return parsePlainTextDomainFormat(content)
 }
 
-// parseDomainRule parses a single domain rule string and returns a geo.Domain if valid
-func parseDomainRule(rule string) *geo.Domain {
+// parseDomainRule parses a single domain rule string and returns a commongeo.Domain if valid
+func parseDomainRule(rule string) *commongeo.Domain {
 	rule = strings.TrimSpace(rule)
 
 	// Skip comments and empty lines
@@ -45,42 +45,42 @@ func parseDomainRule(rule string) *geo.Domain {
 	// Parse DOMAIN rules
 	if strings.HasPrefix(rule, "DOMAIN,") {
 		value := strings.TrimPrefix(rule, "DOMAIN,")
-		return &geo.Domain{
-			Type:  geo.Domain_Full,
+		return &commongeo.Domain{
+			Type:  commongeo.Domain_Full,
 			Value: value,
 		}
 	} else if strings.HasPrefix(rule, "DOMAIN-SUFFIX,") {
 		value := strings.TrimPrefix(rule, "DOMAIN-SUFFIX,")
-		return &geo.Domain{
-			Type:  geo.Domain_RootDomain,
+		return &commongeo.Domain{
+			Type:  commongeo.Domain_RootDomain,
 			Value: value,
 		}
 	} else if strings.HasPrefix(rule, "DOMAIN-KEYWORD,") {
 		value := strings.TrimPrefix(rule, "DOMAIN-KEYWORD,")
-		return &geo.Domain{
-			Type:  geo.Domain_Plain,
+		return &commongeo.Domain{
+			Type:  commongeo.Domain_Plain,
 			Value: value,
 		}
 	} else if strings.HasPrefix(rule, ".") {
-		return &geo.Domain{
-			Type:  geo.Domain_Plain,
+		return &commongeo.Domain{
+			Type:  commongeo.Domain_Plain,
 			Value: rule,
 		}
 	} else if strings.HasPrefix(rule, "+") {
-		return &geo.Domain{
-			Type:  geo.Domain_RootDomain,
+		return &commongeo.Domain{
+			Type:  commongeo.Domain_RootDomain,
 			Value: strings.TrimPrefix(rule, "+."),
 		}
 	} else if strings.Contains(rule, "*") {
 		// Handle any wildcard pattern like *.domain.com, *.*.domain.com, a.*.domain.com
 		regexPattern := "^" + strings.ReplaceAll(strings.ReplaceAll(rule, ".", "\\."), "*", "[^.]+") + "$"
-		return &geo.Domain{
-			Type:  geo.Domain_Regex,
+		return &commongeo.Domain{
+			Type:  commongeo.Domain_Regex,
 			Value: regexPattern,
 		}
 	} else if !strings.Contains(rule, ",") && !strings.Contains(rule, "/") {
-		return &geo.Domain{
-			Type:  geo.Domain_Plain,
+		return &commongeo.Domain{
+			Type:  commongeo.Domain_Plain,
 			Value: rule,
 		}
 	}
@@ -88,13 +88,13 @@ func parseDomainRule(rule string) *geo.Domain {
 }
 
 // parseYAMLDomainFormat parses YAML content with payload array
-func parseYAMLDomainFormat(content []byte) ([]*geo.Domain, error) {
+func parseYAMLDomainFormat(content []byte) ([]*commongeo.Domain, error) {
 	var config PayloadConfig
 	if err := yaml.Unmarshal(content, &config); err != nil {
 		return nil, err
 	}
 
-	var domains []*geo.Domain
+	var domains []*commongeo.Domain
 	for _, rule := range config.Payload {
 		if domain := parseDomainRule(rule); domain != nil {
 			domains = append(domains, domain)
@@ -105,8 +105,8 @@ func parseYAMLDomainFormat(content []byte) ([]*geo.Domain, error) {
 }
 
 // parsePlainTextDomainFormat parses plain text format with line-by-line rules
-func parsePlainTextDomainFormat(content []byte) ([]*geo.Domain, error) {
-	var domains []*geo.Domain
+func parsePlainTextDomainFormat(content []byte) ([]*commongeo.Domain, error) {
+	var domains []*commongeo.Domain
 	scanner := bufio.NewScanner(bytes.NewReader(content))
 
 	for scanner.Scan() {
@@ -119,7 +119,7 @@ func parsePlainTextDomainFormat(content []byte) ([]*geo.Domain, error) {
 }
 
 // parseCidrRule parses a single CIDR rule string
-func parseCidrRule(rule string) (*geo.CIDR, error) {
+func parseCidrRule(rule string) (*commongeo.CIDR, error) {
 	rule = strings.TrimSpace(rule)
 
 	// Skip comments and empty lines
@@ -143,7 +143,7 @@ func parseCidrRule(rule string) (*geo.CIDR, error) {
 			if err != nil {
 				return nil, err
 			}
-			return &geo.CIDR{
+			return &commongeo.CIDR{
 				Ip:     prefix.Addr().AsSlice(),
 				Prefix: uint32(prefix.Bits()),
 			}, nil
@@ -153,7 +153,7 @@ func parseCidrRule(rule string) (*geo.CIDR, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &geo.CIDR{
+		return &commongeo.CIDR{
 			Ip:     prefix.Addr().AsSlice(),
 			Prefix: uint32(prefix.Bits()),
 		}, nil
@@ -163,13 +163,13 @@ func parseCidrRule(rule string) (*geo.CIDR, error) {
 }
 
 // parseYAMLCidrFormat parses YAML content with payload array
-func parseYAMLCidrFormat(content []byte) ([]*geo.CIDR, error) {
+func parseYAMLCidrFormat(content []byte) ([]*commongeo.CIDR, error) {
 	var config PayloadConfig
 	if err := yaml.Unmarshal(content, &config); err != nil {
 		return nil, err
 	}
 
-	var cidrs []*geo.CIDR
+	var cidrs []*commongeo.CIDR
 	for _, rule := range config.Payload {
 		cidr, err := parseCidrRule(rule)
 		if err != nil {
@@ -184,8 +184,8 @@ func parseYAMLCidrFormat(content []byte) ([]*geo.CIDR, error) {
 }
 
 // parsePlainTextCidrFormat parses plain text format with line-by-line rules
-func parsePlainTextCidrFormat(content []byte) ([]*geo.CIDR, error) {
-	var cidrs []*geo.CIDR
+func parsePlainTextCidrFormat(content []byte) ([]*commongeo.CIDR, error) {
+	var cidrs []*commongeo.CIDR
 	scanner := bufio.NewScanner(bytes.NewReader(content))
 
 	for scanner.Scan() {
@@ -201,9 +201,9 @@ func parsePlainTextCidrFormat(content []byte) ([]*geo.CIDR, error) {
 	return cidrs, scanner.Err()
 }
 
-// ExtractCidrFromClashRules parses files containing CIDR rules and extracts geo.CIDR entries.
+// ExtractCidrFromClashRules parses files containing CIDR rules and extracts commongeo.CIDR entries.
 // It supports both plain text format (IP-CIDR and IP-CIDR6 rules) and YAML format with payload array.
-func ExtractCidrFromClashRules(reader io.Reader) ([]*geo.CIDR, error) {
+func ExtractCidrFromClashRules(reader io.Reader) ([]*commongeo.CIDR, error) {
 	content, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
@@ -219,7 +219,7 @@ func ExtractCidrFromClashRules(reader io.Reader) ([]*geo.CIDR, error) {
 }
 
 // parseAppRule parses a single app rule string and returns a configs.AppId if valid
-func parseAppRule(rule string) *configs.AppId {
+func parseAppRule(rule string) *vxrouter.AppId {
 	rule = strings.TrimSpace(rule)
 
 	// Skip comments and empty lines
@@ -234,14 +234,14 @@ func parseAppRule(rule string) *configs.AppId {
 
 	app := parts[1]
 	if parts[0] == "PROCESS-NAME" {
-		return &configs.AppId{
+		return &vxrouter.AppId{
 			Value: app,
-			Type:  configs.AppId_Keyword,
+			Type:  vxrouter.AppId_Keyword,
 		}
 	} else if parts[0] == "PROCESS-PATH" {
-		return &configs.AppId{
+		return &vxrouter.AppId{
 			Value: app,
-			Type:  configs.AppId_Prefix,
+			Type:  vxrouter.AppId_Prefix,
 		}
 	}
 
@@ -249,13 +249,13 @@ func parseAppRule(rule string) *configs.AppId {
 }
 
 // parseYAMLAppFormat parses YAML content with payload array
-func parseYAMLAppFormat(content []byte) ([]*configs.AppId, error) {
+func parseYAMLAppFormat(content []byte) ([]*vxrouter.AppId, error) {
 	var config PayloadConfig
 	if err := yaml.Unmarshal(content, &config); err != nil {
 		return nil, err
 	}
 
-	var apps []*configs.AppId
+	var apps []*vxrouter.AppId
 	for _, rule := range config.Payload {
 		if app := parseAppRule(rule); app != nil {
 			apps = append(apps, app)
@@ -266,8 +266,8 @@ func parseYAMLAppFormat(content []byte) ([]*configs.AppId, error) {
 }
 
 // parsePlainTextAppFormat parses plain text format with line-by-line rules
-func parsePlainTextAppFormat(content []byte) ([]*configs.AppId, error) {
-	var apps []*configs.AppId
+func parsePlainTextAppFormat(content []byte) ([]*vxrouter.AppId, error) {
+	var apps []*vxrouter.AppId
 	scanner := bufio.NewScanner(bytes.NewReader(content))
 
 	for scanner.Scan() {
@@ -281,7 +281,7 @@ func parsePlainTextAppFormat(content []byte) ([]*configs.AppId, error) {
 
 // ExtractAppsFromClashRules parses files containing app rules and extracts configs.AppId entries.
 // It supports both plain text format (PROCESS-NAME and PROCESS-PATH rules) and YAML format with payload array.
-func ExtractAppsFromClashRules(reader io.Reader) ([]*configs.AppId, error) {
+func ExtractAppsFromClashRules(reader io.Reader) ([]*vxrouter.AppId, error) {
 	content, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err

@@ -46,7 +46,7 @@ func dialhttpUpgrade(ctx context.Context, dest net.Destination, config *HttpUpgr
 			}
 		}
 
-		req, err := http.NewRequest("GET", config.GetNormalizedPath(), nil)
+		req, err := http.NewRequest("GET", normalizedPath(config), nil)
 		if err != nil {
 			return nil, nil, err
 		}

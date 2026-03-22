@@ -129,7 +129,7 @@ func (c *Client) CreateHandlerWithLandHandlers(h *configs.HandlerConfig, landHan
 			}
 		}
 
-		tag := h.GetTag()
+		tag := configs.HandlerTag(h)
 		for _, id := range landHandlerIds {
 			tag = tag + "-" + strconv.Itoa(id.ID)
 		}

@@ -11,10 +11,8 @@ import (
 
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/net"
-	nethelper "github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/pipe"
 	"github.com/5vnetwork/vx-core/common/signal/done"
-
 	"github.com/rs/zerolog/log"
 )
 
@@ -30,10 +28,10 @@ type client struct {
 }
 
 var (
-	muxCoolAddressSrc = nethelper.DomainAddress("cool.mux.cool")
-	muxCoolPortSrc    = nethelper.Port(7259)
-	MuxCoolAddressDst = nethelper.DomainAddress("v1.mux.cool")
-	MuxCoolPortDst    = nethelper.Port(9527)
+	muxCoolAddressSrc = net.DomainAddress("cool.mux.cool")
+	muxCoolPortSrc    = net.Port(7259)
+	MuxCoolAddressDst = net.DomainAddress("v1.mux.cool")
+	MuxCoolPortDst    = net.Port(9527)
 )
 
 // NewClient creates a new mux.Client.
@@ -117,7 +115,7 @@ func (m *client) merge(ctx context.Context, dest net.Destination, s *clientSessi
 	}
 
 	transferType := TransferTypeStream
-	if dest.Network == nethelper.Network_UDP {
+	if dest.Network == net.Network_UDP {
 		transferType = TransferTypePacket
 	}
 

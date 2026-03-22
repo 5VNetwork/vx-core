@@ -37,7 +37,7 @@ type EngineConfig struct {
 
 // TODO: prebuild tls.Config
 func NewEngine(config EngineConfig) (*Engine, error) {
-	tlsConfig, err := config.Config.GetTLSConfig()
+	tlsConfig, err := GetTLSConfig(config.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -91,14 +91,13 @@ func (c *Engine) GetClientConn(conn net.Conn, opts ...security.Option) (net.Conn
 	if c.config.Imitate == "" {
 		tlsConn := tls.Client(conn, tlsConfig)
 		return &Conn{tlsConn}, nil
-	} else { //utls
-		return c.config.GetUClient(conn, tlsConfig)
 	}
+	return GetUClient(c.config, conn, tlsConfig)
 }
 
 // GetTLSConfig converts this Config into tls.Config.
-func (c *TlsConfig) GetTLSConfig(opts ...Option) (*tls.Config, error) {
-	rootCA, err := c.getRootCA()
+func GetTLSConfig(c *TlsConfig, opts ...Option) (*tls.Config, error) {
+	rootCA, err := getRootCA(c)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +123,7 @@ func (c *TlsConfig) GetTLSConfig(opts ...Option) (*tls.Config, error) {
 		InsecureSkipVerify:     c.AllowInsecure,
 		NextProtos:             c.NextProtocol,
 		SessionTicketsDisabled: !c.EnableSessionResumption,
-		VerifyPeerCertificate:  c.VerifyPeerCert,
+		VerifyPeerCertificate:  VerifyPeerCert(c),
 		ClientCAs:              clientCA,
 	}
 
@@ -150,7 +149,7 @@ func (c *TlsConfig) GetTLSConfig(opts ...Option) (*tls.Config, error) {
 		config.GetCertificate = getGetCertificateFunc(config, c.IssueCas)
 	}
 
-	if sn := c.parseServerName(); len(sn) > 0 {
+	if sn := parseServerName(c); len(sn) > 0 {
 		config.ServerName = sn
 	}
 
@@ -174,31 +173,33 @@ func (c *TlsConfig) GetTLSConfig(opts ...Option) (*tls.Config, error) {
 	return config, nil
 }
 
-func (c *TlsConfig) parseServerName() string {
-	if c.IsExperiment8357() {
-		return c.ServerName[len(exp8357):]
+func parseServerName(c *TlsConfig) string {
+	if isExperiment8357(c) {
+		return c.GetServerName()[len(exp8357):]
 	}
 
-	return c.ServerName
+	return c.GetServerName()
 }
 
 const exp8357 = "experiment:8357"
 
-func (c *TlsConfig) IsExperiment8357() bool {
-	return strings.HasPrefix(c.ServerName, exp8357)
+func isExperiment8357(c *TlsConfig) bool {
+	return strings.HasPrefix(c.GetServerName(), exp8357)
 }
 
-func (c *TlsConfig) VerifyPeerCert(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-	if c.PinnedPeerCertificateChainSha256 != nil {
-		hashValue := GenerateCertChainHash(rawCerts)
-		for _, v := range c.PinnedPeerCertificateChainSha256 {
-			if hmac.Equal(hashValue, v) {
-				return nil
+func VerifyPeerCert(c *TlsConfig) func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+	return func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+		if c.PinnedPeerCertificateChainSha256 != nil {
+			hashValue := GenerateCertChainHash(rawCerts)
+			for _, v := range c.PinnedPeerCertificateChainSha256 {
+				if hmac.Equal(hashValue, v) {
+					return nil
+				}
 			}
+			return fmt.Errorf("peer cert is unrecognized: %v", base64.StdEncoding.EncodeToString(hashValue))
 		}
-		return fmt.Errorf("peer cert is unrecognized: %v", base64.StdEncoding.EncodeToString(hashValue))
+		return nil
 	}
-	return nil
 }
 
 func isCertificateExpired(c *tls.Certificate) bool {

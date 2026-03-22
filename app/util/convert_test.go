@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/transport/protocols/grpc"
@@ -42,7 +41,7 @@ func TestInboundConfigToOutboundConfig_VmessWithTLS(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create TLS config
@@ -101,7 +100,7 @@ func TestInboundConfigToOutboundConfig_ShadowsocksWithTLS(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create Shadowsocks server config
-	ssServerConfig := &proxy.ShadowsocksServerConfig{}
+	ssServerConfig := &configs.ShadowsocksServerConfig{}
 	ssProtocol := serial.ToTypedMessage(ssServerConfig)
 
 	// Create TLS config
@@ -167,7 +166,7 @@ func TestInboundConfigToOutboundConfig_TrojanWithReality(t *testing.T) {
 	}
 
 	// Create Trojan server config
-	trojanServerConfig := &proxy.TrojanServerConfig{}
+	trojanServerConfig := &configs.TrojanServerConfig{}
 	trojanProtocol := serial.ToTypedMessage(trojanServerConfig)
 
 	// Create transport config with Reality
@@ -217,7 +216,7 @@ func TestInboundConfigToOutboundConfig_MultiplePorts(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create TLS config
@@ -275,7 +274,7 @@ func TestInboundConfigToOutboundConfig_WebsocketTransport(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create TLS config
@@ -337,7 +336,7 @@ func TestInboundConfigToOutboundConfig_HttpTransport(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create TLS config
@@ -396,7 +395,7 @@ func TestInboundConfigToOutboundConfig_GrpcTransport(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create TLS config
@@ -455,7 +454,7 @@ func TestInboundConfigToOutboundConfig_TagGeneration(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create TLS config
@@ -505,7 +504,7 @@ func TestInboundConfigToOutboundConfig_TagGeneration(t *testing.T) {
 
 func TestInboundConfigToOutboundConfig_AnytlsProtocol(t *testing.T) {
 	// Create Anytls server config
-	anytlsServerConfig := &proxy.AnytlsServerConfig{}
+	anytlsServerConfig := &configs.AnytlsServerConfig{}
 	anytlsProtocol := serial.ToTypedMessage(anytlsServerConfig)
 
 	// Create transport config without security (Anytls handles its own)
@@ -552,7 +551,7 @@ func TestInboundConfigToOutboundConfig_SocksProtocol(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create SOCKS server config
-	socksServerConfig := &proxy.SocksServerConfig{}
+	socksServerConfig := &configs.SocksServerConfig{}
 	socksProtocol := serial.ToTypedMessage(socksServerConfig)
 
 	// Create TLS config
@@ -610,7 +609,7 @@ func TestInboundConfigToOutboundConfig_ZeroPort(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create TLS config
@@ -688,7 +687,7 @@ func TestMultiInboundConfigToOutboundConfig_VmessWithTLS(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create TLS config
@@ -754,7 +753,7 @@ func TestMultiInboundConfigToOutboundConfig_MultipleTransportProtocols(t *testin
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	trojanServerConfig := &proxy.TrojanServerConfig{}
+	trojanServerConfig := &configs.TrojanServerConfig{}
 	trojanProtocol := serial.ToTypedMessage(trojanServerConfig)
 
 	// Create TLS config
@@ -836,7 +835,7 @@ func TestMultiInboundConfigToOutboundConfig_MultipleSecurityConfigs(t *testing.T
 	certPEM2, _ := cert2.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create multiple TLS security configs
@@ -906,7 +905,7 @@ func TestMultiInboundConfigToOutboundConfig_SecurityConfigAlwaysFlag(t *testing.
 	certPEM2, _ := cert2.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create security configs - one with Always=true
@@ -976,7 +975,7 @@ func TestMultiInboundConfigToOutboundConfig_RealitySecurity(t *testing.T) {
 	}
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create security config with Reality
@@ -1029,7 +1028,7 @@ func TestMultiInboundConfigToOutboundConfig_HttpUpgradeTransport(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create TLS config
@@ -1095,7 +1094,7 @@ func TestMultiInboundConfigToOutboundConfig_MultiplePorts(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create TLS config
@@ -1150,7 +1149,7 @@ func TestMultiInboundConfigToOutboundConfig_MultiplePorts(t *testing.T) {
 
 func TestMultiInboundConfigToOutboundConfig_InvalidSecurityConfig(t *testing.T) {
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create invalid security config (no security type set)
@@ -1196,7 +1195,7 @@ func TestMultiInboundConfigToOutboundConfig_ShadowsocksProtocol(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create Shadowsocks server config
-	ssServerConfig := &proxy.ShadowsocksServerConfig{}
+	ssServerConfig := &configs.ShadowsocksServerConfig{}
 	ssProtocol := serial.ToTypedMessage(ssServerConfig)
 
 	// Create TLS config
@@ -1259,7 +1258,7 @@ func TestMultiInboundConfigToOutboundConfig_TrojanProtocol(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create Trojan server config
-	trojanServerConfig := &proxy.TrojanServerConfig{}
+	trojanServerConfig := &configs.TrojanServerConfig{}
 	trojanProtocol := serial.ToTypedMessage(trojanServerConfig)
 
 	// Create TLS config
@@ -1322,7 +1321,7 @@ func TestMultiInboundConfigToOutboundConfig_TagGeneration(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create TLS config
@@ -1384,7 +1383,7 @@ func TestMultiInboundConfigToOutboundConfig_EmptyPorts(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create TLS config
@@ -1447,7 +1446,7 @@ func TestMultiInboundConfigToOutboundConfig_ZeroPortsFiltered(t *testing.T) {
 	certPEM, _ := testCert.ToPEM()
 
 	// Create VMess server config
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
 	// Create TLS config
@@ -1513,10 +1512,10 @@ func TestMultiInboundConfigToOutboundConfig_MultipleProtocolsAndTransports(t *te
 	certPEM, _ := testCert.ToPEM()
 
 	// Create multiple proxy protocols
-	vmessServerConfig := &proxy.VmessServerConfig{}
+	vmessServerConfig := &configs.VmessServerConfig{}
 	vmessProtocol := serial.ToTypedMessage(vmessServerConfig)
 
-	ssServerConfig := &proxy.ShadowsocksServerConfig{}
+	ssServerConfig := &configs.ShadowsocksServerConfig{}
 	ssProtocol := serial.ToTypedMessage(ssServerConfig)
 
 	// Create TLS config

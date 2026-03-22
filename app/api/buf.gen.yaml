@@ -1,0 +1,23 @@
+version: v2
+
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      path: vx
+      value: buf.build/gen/go/vvvvv/vx/protocolbuffers/go
+
+plugins:
+  - remote: buf.build/protocolbuffers/go
+    out: .
+    opt:
+      - paths=source_relative
+  - remote: buf.build/grpc/go
+    out: .
+    opt:
+      - paths=source_relative
+      - require_unimplemented_servers=false
+  - remote: buf.build/protocolbuffers/dart
+    out: ../tm-plugin/tm/lib/protos
+    opt:
+      - grpc

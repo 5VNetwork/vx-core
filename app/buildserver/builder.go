@@ -11,8 +11,7 @@ import (
 	"net"
 	"time"
 
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/server"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
@@ -31,7 +30,7 @@ import (
 	"go.uber.org/fx/fxevent"
 )
 
-func NewX(config *server.ServerConfig) (*fx.App, error) {
+func NewX(config *configs.ServerConfig) (*fx.App, error) {
 	var fxOptions []fx.Option
 	fxOptions = append(fxOptions, fx.Supply(config.Inbounds))
 	fxOptions = append(fxOptions, fx.Supply(config.MultiInbounds))

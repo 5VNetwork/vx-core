@@ -4,6 +4,7 @@ package scenarios
 
 import (
 	"context"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"log"
 	"os"
 	"testing"
@@ -11,9 +12,6 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/protocol"
@@ -29,17 +27,17 @@ import (
 
 var clientPort = tcp.PickPort()
 
-func getConfigs(security proxyconfig.SecurityType) (serverConfig *server.ServerConfig, clientConfig *configs.TmConfig) {
+func getConfigs(security configs.SecurityType) (serverConfig *configs.ServerConfig, clientConfig *configs.TmConfig) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	log.Printf("server port: %d", serverPort)
-	serverConfig = &server.ServerConfig{
+	serverConfig = &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -62,7 +60,7 @@ func getConfigs(security proxyconfig.SecurityType) (serverConfig *server.ServerC
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -76,7 +74,7 @@ func getConfigs(security proxyconfig.SecurityType) (serverConfig *server.ServerC
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 						Id:       userID.String(),
 						Security: security,
 					}),
@@ -88,7 +86,7 @@ func getConfigs(security proxyconfig.SecurityType) (serverConfig *server.ServerC
 }
 
 func TestVMessGCM(t *testing.T) {
-	serverConfig, clientConfig := getConfigs(proxyconfig.SecurityType_SecurityType_AES128_GCM)
+	serverConfig, clientConfig := getConfigs(configs.SecurityType_SecurityType_AES128_GCM)
 
 	server, err := buildserver.NewX(serverConfig)
 	common.Must(err)
@@ -110,7 +108,7 @@ func TestVMessGCM(t *testing.T) {
 }
 
 func TestVMessGCMReady(t *testing.T) {
-	serverConfig, clientConfig := getConfigs(proxyconfig.SecurityType_SecurityType_AES128_GCM)
+	serverConfig, clientConfig := getConfigs(configs.SecurityType_SecurityType_AES128_GCM)
 
 	server, err := buildserver.NewX(serverConfig)
 	common.Must(err)
@@ -142,13 +140,13 @@ func TestVMessGCMUDP(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -172,7 +170,7 @@ func TestVMessGCMUDP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  udpDest.Address.String(),
 							Port:     uint32(udpDest.Port),
 							Networks: []net.Network{net.Network_UDP},
@@ -186,10 +184,10 @@ func TestVMessGCMUDP(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 						Special:  true,
 						Id:       userID.String(),
-						Security: proxyconfig.SecurityType_SecurityType_AES128_GCM,
+						Security: configs.SecurityType_SecurityType_AES128_GCM,
 					}),
 				},
 			},
@@ -227,13 +225,13 @@ func TestVMessChacha20(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -254,7 +252,7 @@ func TestVMessChacha20(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -268,10 +266,10 @@ func TestVMessChacha20(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 						Special:  true,
 						Id:       userID.String(),
-						Security: proxyconfig.SecurityType_SecurityType_CHACHA20_POLY1305,
+						Security: configs.SecurityType_SecurityType_CHACHA20_POLY1305,
 					}),
 				},
 			},
@@ -309,13 +307,13 @@ func TestVMessNone(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -336,7 +334,7 @@ func TestVMessNone(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -350,10 +348,10 @@ func TestVMessNone(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 						Special:  true,
 						Id:       userID.String(),
-						Security: proxyconfig.SecurityType_SecurityType_NONE,
+						Security: configs.SecurityType_SecurityType_NONE,
 					}),
 				},
 			},
@@ -391,7 +389,7 @@ func TestVMessKCP(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := udp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
@@ -402,7 +400,7 @@ func TestVMessKCP(t *testing.T) {
 					},
 				},
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -429,7 +427,7 @@ func TestVMessKCP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -443,10 +441,10 @@ func TestVMessKCP(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 						Special:  true,
 						Id:       userID.String(),
-						Security: proxyconfig.SecurityType_SecurityType_NONE,
+						Security: configs.SecurityType_SecurityType_NONE,
 					}),
 					Transport: &configs.TransportConfig{
 						Protocol: &configs.TransportConfig_Kcp{
@@ -489,7 +487,7 @@ func TestVMessKCPLarge(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := udp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
@@ -505,7 +503,7 @@ func TestVMessKCPLarge(t *testing.T) {
 					},
 				},
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -526,7 +524,7 @@ func TestVMessKCPLarge(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -540,11 +538,11 @@ func TestVMessKCPLarge(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 
 						Special:  true,
 						Id:       userID.String(),
-						Security: proxyconfig.SecurityType_SecurityType_NONE,
+						Security: configs.SecurityType_SecurityType_NONE,
 					}),
 					Transport: &configs.TransportConfig{
 						Protocol: &configs.TransportConfig_Kcp{
@@ -599,13 +597,13 @@ func TestVMessGCMMux(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -629,7 +627,7 @@ func TestVMessGCMMux(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -641,7 +639,7 @@ func TestVMessGCMMux(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientUDPPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  udpDest.Address.String(),
 							Port:     uint32(udpDest.Port),
 							Networks: []net.Network{net.Network_UDP},
@@ -656,11 +654,11 @@ func TestVMessGCMMux(t *testing.T) {
 					Address:   net.LocalHostIP.String(),
 					Port:      uint32(serverPort),
 					EnableMux: true,
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 
 						Special:  true,
 						Id:       userID.String(),
-						Security: proxyconfig.SecurityType_SecurityType_AES128_GCM,
+						Security: configs.SecurityType_SecurityType_AES128_GCM,
 					}),
 				},
 			},
@@ -702,13 +700,13 @@ func TestVMessZero(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -729,7 +727,7 @@ func TestVMessZero(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -743,11 +741,11 @@ func TestVMessZero(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 
 						Special:  true,
 						Id:       userID.String(),
-						Security: proxyconfig.SecurityType_SecurityType_ZERO,
+						Security: configs.SecurityType_SecurityType_ZERO,
 					}),
 				},
 			},
@@ -786,13 +784,13 @@ func TestVMessGCMLengthAuth(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Port:    uint32(serverPort),
 				Address: net.LocalHostIP.String(),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -814,7 +812,7 @@ func TestVMessGCMLengthAuth(t *testing.T) {
 					Port:    uint32(clientPort),
 					Address: net.LocalHostIP.String(),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -828,10 +826,10 @@ func TestVMessGCMLengthAuth(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 						Special:  true,
 						Id:       userID.String(),
-						Security: proxyconfig.SecurityType_SecurityType_AES128_GCM,
+						Security: configs.SecurityType_SecurityType_AES128_GCM,
 						// TestsEnabled: "AuthenticatedLength|NoTerminationSignal",
 					}),
 				},

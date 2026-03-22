@@ -9,11 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/5vnetwork/vx-core/app/buildclient"
+			"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
 	"github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/app/user"
 	"github.com/5vnetwork/vx-core/common"
 	nethelper "github.com/5vnetwork/vx-core/common/net"
@@ -120,7 +118,7 @@ func TestVMessUserManagement(t *testing.T) {
 	userID1 := protocol.NewID(uuid.New())
 	userID2 := protocol.NewID(uuid.New())
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Users: []*configs.UserConfig{
 			{
 				Id:     "user1",
@@ -132,7 +130,7 @@ func TestVMessUserManagement(t *testing.T) {
 				Address: nethelper.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{},
+					&configs.VmessServerConfig{},
 				),
 			},
 		},
@@ -153,7 +151,7 @@ func TestVMessUserManagement(t *testing.T) {
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(clientPort1),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -167,10 +165,10 @@ func TestVMessUserManagement(t *testing.T) {
 				{
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 						Special:  true,
 						Id:       userID1.String(),
-						Security: proxyconfig.SecurityType_SecurityType_AES128_GCM,
+						Security: configs.SecurityType_SecurityType_AES128_GCM,
 					}),
 				},
 			},
@@ -203,7 +201,7 @@ func TestVMessUserManagement(t *testing.T) {
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(clientPort2),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -217,10 +215,10 @@ func TestVMessUserManagement(t *testing.T) {
 				{
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 						Special:  true,
 						Id:       userID2.String(),
-						Security: proxyconfig.SecurityType_SecurityType_AES128_GCM,
+						Security: configs.SecurityType_SecurityType_AES128_GCM,
 					}),
 				},
 			},
@@ -262,13 +260,13 @@ func TestTrojanUserManagement(t *testing.T) {
 	userID1 := protocol.NewID(uuid.New())
 	userID2 := protocol.NewID(uuid.New())
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: nethelper.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID1.String(),
@@ -296,7 +294,7 @@ func TestTrojanUserManagement(t *testing.T) {
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(clientPort1),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -310,7 +308,7 @@ func TestTrojanUserManagement(t *testing.T) {
 				{
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: userID1.String(),
 					}),
 				},
@@ -341,7 +339,7 @@ func TestTrojanUserManagement(t *testing.T) {
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(clientPort2),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -355,7 +353,7 @@ func TestTrojanUserManagement(t *testing.T) {
 				{
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: userID2.String(), // Unauthorized user
 					}),
 				},
@@ -396,17 +394,17 @@ func TestShadowsocksUserManagement(t *testing.T) {
 	password1 := uuid.New().String()
 	password2 := uuid.New().String()
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: nethelper.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: password1,
 						},
-						CipherType: proxyconfig.ShadowsocksCipherType_CHACHA20_POLY1305,
+						CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 					},
 				),
 			},
@@ -428,7 +426,7 @@ func TestShadowsocksUserManagement(t *testing.T) {
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(clientPort1),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -442,9 +440,9 @@ func TestShadowsocksUserManagement(t *testing.T) {
 				{
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.ShadowsocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 						Password:   password1,
-						CipherType: proxyconfig.ShadowsocksCipherType_CHACHA20_POLY1305,
+						CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 					}),
 				},
 			},
@@ -474,7 +472,7 @@ func TestShadowsocksUserManagement(t *testing.T) {
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(clientPort2),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -488,9 +486,9 @@ func TestShadowsocksUserManagement(t *testing.T) {
 				{
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.ShadowsocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 						Password:   password2, // Wrong password
-						CipherType: proxyconfig.ShadowsocksCipherType_CHACHA20_POLY1305,
+						CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 					}),
 				},
 			},
@@ -532,14 +530,14 @@ func TestSOCKSUserManagement(t *testing.T) {
 	userID2 := uuid.New().String()
 	password2 := uuid.New().String()
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: nethelper.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.SocksServerConfig{
-						AuthType: proxyconfig.AuthType_PASSWORD,
+					&configs.SocksServerConfig{
+						AuthType: configs.AuthType_PASSWORD,
 						Accounts: []*configs.UserConfig{
 							{
 								Id:     userID1,
@@ -567,7 +565,7 @@ func TestSOCKSUserManagement(t *testing.T) {
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(clientPort1),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -581,7 +579,7 @@ func TestSOCKSUserManagement(t *testing.T) {
 				{
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.SocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.SocksClientConfig{
 						Name:     userID1,
 						Password: password1,
 					}),
@@ -613,7 +611,7 @@ func TestSOCKSUserManagement(t *testing.T) {
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(clientPort2),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -627,7 +625,7 @@ func TestSOCKSUserManagement(t *testing.T) {
 				{
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.SocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.SocksClientConfig{
 						Name:     userID2,
 						Password: password2, // Wrong credentials
 					}),
@@ -677,14 +675,14 @@ func TestMultipleUsersVMess(t *testing.T) {
 		})
 	}
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Users: userConfigs,
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: nethelper.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{},
+					&configs.VmessServerConfig{},
 				),
 			},
 		},
@@ -709,7 +707,7 @@ func TestMultipleUsersVMess(t *testing.T) {
 						Address: nethelper.LocalHostIP.String(),
 						Port:    uint32(clientPort),
 						Protocol: serial.ToTypedMessage(
-							&proxyconfig.DokodemoConfig{
+							&configs.DokodemoConfig{
 								Address:  dest.Address.String(),
 								Port:     uint32(dest.Port),
 								Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -723,10 +721,10 @@ func TestMultipleUsersVMess(t *testing.T) {
 					{
 						Address: nethelper.LocalHostIP.String(),
 						Port:    uint32(serverPort),
-						Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+						Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 							Special:  true,
 							Id:       userID.String(),
-							Security: proxyconfig.SecurityType_SecurityType_AES128_GCM,
+							Security: configs.SecurityType_SecurityType_AES128_GCM,
 						}),
 					},
 				},
@@ -862,10 +860,10 @@ func TestVMessMultipleCipherTypes(t *testing.T) {
 	common.Must(err)
 	defer tcpServer.Close()
 
-	cipherTypes := []proxyconfig.SecurityType{
-		proxyconfig.SecurityType_SecurityType_AES128_GCM,
-		proxyconfig.SecurityType_SecurityType_CHACHA20_POLY1305,
-		proxyconfig.SecurityType_SecurityType_NONE,
+	cipherTypes := []configs.SecurityType{
+		configs.SecurityType_SecurityType_AES128_GCM,
+		configs.SecurityType_SecurityType_CHACHA20_POLY1305,
+		configs.SecurityType_SecurityType_NONE,
 	}
 
 	for _, cipherType := range cipherTypes {
@@ -873,13 +871,13 @@ func TestVMessMultipleCipherTypes(t *testing.T) {
 			serverPort := tcp.PickPort()
 			userID := protocol.NewID(uuid.New())
 
-			serverConfig := &server.ServerConfig{
+			serverConfig := &configs.ServerConfig{
 				Inbounds: []*configs.ProxyInboundConfig{
 					{
 						Address: nethelper.LocalHostIP.String(),
 						Port:    uint32(serverPort),
 						Protocol: serial.ToTypedMessage(
-							&proxyconfig.VmessServerConfig{
+							&configs.VmessServerConfig{
 								Accounts: []*configs.UserConfig{
 									{
 										Secret: userID.String(),
@@ -904,7 +902,7 @@ func TestVMessMultipleCipherTypes(t *testing.T) {
 							Address: nethelper.LocalHostIP.String(),
 							Port:    uint32(clientPort),
 							Protocol: serial.ToTypedMessage(
-								&proxyconfig.DokodemoConfig{
+								&configs.DokodemoConfig{
 									Address:  dest.Address.String(),
 									Port:     uint32(dest.Port),
 									Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -918,7 +916,7 @@ func TestVMessMultipleCipherTypes(t *testing.T) {
 						{
 							Address: nethelper.LocalHostIP.String(),
 							Port:    uint32(serverPort),
-							Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 								Special:  true,
 								Id:       userID.String(),
 								Security: cipherType,
@@ -1024,7 +1022,7 @@ func TestHysteria2UserManagement(t *testing.T) {
 	userID1 := uuid.New()
 	userID2 := uuid.New()
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Users: []*configs.UserConfig{
 			{
 				Id:     userID1.String(),
@@ -1036,7 +1034,7 @@ func TestHysteria2UserManagement(t *testing.T) {
 				Address: nethelper.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.Hysteria2ServerConfig{
+					&configs.Hysteria2ServerConfig{
 
 						IgnoreClientBandwidth: true,
 						TlsConfig: &tls.TlsConfig{
@@ -1065,7 +1063,7 @@ func TestHysteria2UserManagement(t *testing.T) {
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(clientPort1),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -1079,7 +1077,7 @@ func TestHysteria2UserManagement(t *testing.T) {
 				{
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.Hysteria2ClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
 						Auth: userID1.String(),
 						TlsConfig: &tls.TlsConfig{
 							AllowInsecure: true,
@@ -1114,7 +1112,7 @@ func TestHysteria2UserManagement(t *testing.T) {
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(clientPort2),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -1128,7 +1126,7 @@ func TestHysteria2UserManagement(t *testing.T) {
 				{
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.Hysteria2ClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
 						Auth: userID2.String(), // Unauthorized user
 						TlsConfig: &tls.TlsConfig{
 							AllowInsecure: true,
@@ -1182,14 +1180,14 @@ func TestMultipleUsersHysteria2(t *testing.T) {
 		})
 	}
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Users: userConfigs,
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: nethelper.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.Hysteria2ServerConfig{
+					&configs.Hysteria2ServerConfig{
 						IgnoreClientBandwidth: true,
 						TlsConfig: &tls.TlsConfig{
 							Certificates: []*tls.Certificate{
@@ -1221,7 +1219,7 @@ func TestMultipleUsersHysteria2(t *testing.T) {
 						Address: nethelper.LocalHostIP.String(),
 						Port:    uint32(clientPort),
 						Protocol: serial.ToTypedMessage(
-							&proxyconfig.DokodemoConfig{
+							&configs.DokodemoConfig{
 								Address:  dest.Address.String(),
 								Port:     uint32(dest.Port),
 								Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -1235,7 +1233,7 @@ func TestMultipleUsersHysteria2(t *testing.T) {
 					{
 						Address: nethelper.LocalHostIP.String(),
 						Port:    uint32(serverPort),
-						Protocol: serial.ToTypedMessage(&proxyconfig.Hysteria2ClientConfig{
+						Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
 							Auth: userID.String(),
 							TlsConfig: &tls.TlsConfig{
 								AllowInsecure: true,
@@ -1280,13 +1278,13 @@ func TestHysteria2WithObfuscation(t *testing.T) {
 	userID := uuid.New()
 	obfsPassword := "test-obfs-password"
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: nethelper.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.Hysteria2ServerConfig{
+					&configs.Hysteria2ServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -1299,9 +1297,9 @@ func TestHysteria2WithObfuscation(t *testing.T) {
 								tls.ParseCertificate(cert.MustGenerate(nil)),
 							},
 						},
-						Obfs: &proxyconfig.ObfsConfig{
-							Obfs: &proxyconfig.ObfsConfig_Salamander{
-								Salamander: &proxyconfig.SalamanderConfig{
+						Obfs: &configs.ObfsConfig{
+							Obfs: &configs.ObfsConfig_Salamander{
+								Salamander: &configs.SalamanderConfig{
 									Password: obfsPassword,
 								},
 							},
@@ -1327,7 +1325,7 @@ func TestHysteria2WithObfuscation(t *testing.T) {
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []nethelper.Network{nethelper.Network_TCP},
@@ -1341,15 +1339,15 @@ func TestHysteria2WithObfuscation(t *testing.T) {
 				{
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.Hysteria2ClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
 						Auth: userID.String(),
 						TlsConfig: &tls.TlsConfig{
 							AllowInsecure: true,
 							ServerName:    "example.com",
 						},
-						Obfs: &proxyconfig.ObfsConfig{
-							Obfs: &proxyconfig.ObfsConfig_Salamander{
-								Salamander: &proxyconfig.SalamanderConfig{
+						Obfs: &configs.ObfsConfig{
+							Obfs: &configs.ObfsConfig_Salamander{
+								Salamander: &configs.SalamanderConfig{
 									Password: obfsPassword,
 								},
 							},

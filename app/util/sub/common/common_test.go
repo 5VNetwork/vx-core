@@ -270,5 +270,3 @@ func TestSetProtocolWebsocketEdgeCases(t *testing.T) {
 		}
 	})
 }
-
-

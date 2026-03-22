@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	pc "github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/errors"
 	nethelper "github.com/5vnetwork/vx-core/common/net"
@@ -24,7 +24,7 @@ import (
 type Server struct {
 	address    nethelper.Address
 	udpEnabled bool
-	authType   pc.AuthType
+	authType   configs.AuthType
 	policy     i.TimeoutSetting
 
 	usersLock sync.RWMutex
@@ -48,7 +48,7 @@ func NewServer(config *SocksServerConfig) *Server {
 type SocksServerConfig struct {
 	Address    nethelper.Address
 	UdpEnabled bool
-	AuthType   pc.AuthType
+	AuthType   configs.AuthType
 	Policy     i.TimeoutSetting
 	Handler    i.Handler
 }

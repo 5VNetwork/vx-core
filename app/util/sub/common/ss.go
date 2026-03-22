@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/util/sub"
 	"github.com/5vnetwork/vx-core/common/serial"
 	// Add required imports for transport protocols and headers
@@ -72,20 +71,20 @@ func ParseSsFromLink(link string) (*configs.OutboundHandlerConfig, error) {
 		return nil, errors.New("port invalid: " + portStr)
 	}
 
-	ssConfig := &proxy.ShadowsocksClientConfig{
+	ssConfig := &configs.ShadowsocksClientConfig{
 		Password: password,
 	}
 	switch cipher {
 	case "aes-128-gcm":
-		ssConfig.CipherType = proxy.ShadowsocksCipherType_AES_128_GCM
+		ssConfig.CipherType = configs.ShadowsocksCipherType_AES_128_GCM
 	case "aes-256-gcm":
-		ssConfig.CipherType = proxy.ShadowsocksCipherType_AES_256_GCM
+		ssConfig.CipherType = configs.ShadowsocksCipherType_AES_256_GCM
 	case "chacha20-ietf-poly1305":
-		ssConfig.CipherType = proxy.ShadowsocksCipherType_CHACHA20_POLY1305
+		ssConfig.CipherType = configs.ShadowsocksCipherType_CHACHA20_POLY1305
 	case "none":
-		ssConfig.CipherType = proxy.ShadowsocksCipherType_NONE
+		ssConfig.CipherType = configs.ShadowsocksCipherType_NONE
 	default:
-		ss2022Config := &proxy.Shadowsocks2022ClientConfig{
+		ss2022Config := &configs.Shadowsocks2022ClientConfig{
 			Key: password,
 		}
 		switch cipher {

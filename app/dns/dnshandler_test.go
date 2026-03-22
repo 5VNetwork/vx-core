@@ -10,12 +10,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/miekg/dns"
 
+	"buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/common"
-
-	"github.com/5vnetwork/vx-core/common/geo"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/test/nameserver"
@@ -62,7 +60,7 @@ func TestDNSUDPTunnel(t *testing.T) {
 					Tag:     "dd",
 					Address: "127.0.0.1",
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxy.DokodemoConfig{
+					Protocol: serial.ToTypedMessage(&configs.DokodemoConfig{
 						Address:  "114.114.114.114",
 						Port:     53,
 						Networks: []net.Network{net.Network_UDP},
@@ -106,7 +104,7 @@ func TestDNSUDPTunnel(t *testing.T) {
 			OutboundHandlers: []*configs.OutboundHandlerConfig{
 				{
 					Tag:      "direct",
-					Protocol: serial.ToTypedMessage(&proxy.FreedomConfig{}),
+					Protocol: serial.ToTypedMessage(&configs.FreedomConfig{}),
 				},
 			},
 		},
@@ -217,7 +215,7 @@ func TestDNSTCPTunnel(t *testing.T) {
 					Tag:     "tun",
 					Address: "127.0.0.1",
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxy.DokodemoConfig{
+					Protocol: serial.ToTypedMessage(&configs.DokodemoConfig{
 						Address:  "114.114.114.114",
 						Port:     53,
 						Networks: []net.Network{net.Network_TCP},
@@ -241,7 +239,7 @@ func TestDNSTCPTunnel(t *testing.T) {
 			OutboundHandlers: []*configs.OutboundHandlerConfig{
 				{
 					Tag:      "direct",
-					Protocol: serial.ToTypedMessage(&proxy.FreedomConfig{}),
+					Protocol: serial.ToTypedMessage(&configs.FreedomConfig{}),
 				},
 			},
 		},

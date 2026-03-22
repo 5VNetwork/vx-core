@@ -8,8 +8,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+		"github.com/5vnetwork/vx-core/app/configs"
 )
 
 func toTrojan(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
@@ -17,7 +16,7 @@ func toTrojan(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	trojanConfig, _ := config.(*proxy.TrojanClientConfig)
+	trojanConfig, _ := config.(*configs.TrojanClientConfig)
 
 	queryParameters := url.Values{}
 	addQueryParameters(queryParameters, outboundConfig)

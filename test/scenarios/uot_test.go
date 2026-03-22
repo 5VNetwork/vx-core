@@ -8,11 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/5vnetwork/vx-core/app/buildclient"
+			"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
 	"github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/common"
@@ -40,17 +38,17 @@ func TestUDPUot(t *testing.T) {
 	serverPort := 13245
 
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: secret.String(),
 						},
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_128_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 					},
 				),
 			},
@@ -66,7 +64,7 @@ func TestUDPUot(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_UDP},
@@ -81,9 +79,9 @@ func TestUDPUot(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
 					Uot:     true,
-					Protocol: serial.ToTypedMessage(&proxyconfig.ShadowsocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 						Password:   secret.String(),
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_128_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 					}),
 				},
 			},
@@ -114,17 +112,17 @@ func TestUDPUotCone(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: userID.String(),
 						},
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_128_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 					},
 				),
 			},
@@ -145,9 +143,9 @@ func TestUDPUotCone(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
 					Uot:     true,
-					Protocol: serial.ToTypedMessage(&proxyconfig.ShadowsocksClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 						Password:   userID.String(),
-						CipherType: proxyconfig.ShadowsocksCipherType_AES_128_GCM,
+						CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
 					}),
 				},
 			},

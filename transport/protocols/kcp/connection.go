@@ -218,10 +218,10 @@ func NewConnection(meta ConnMetadata, writer PacketWriter, closer io.Closer, con
 		dataOutput: signal.NewNotifier(),
 		Config:     config,
 		output:     NewRetryableWriter(NewSegmentWriter(writer)),
-		mss:        config.GetMTUValue() - uint32(writer.Overhead()) - DataSegmentOverhead,
+		mss:        GetMTUValue(config) - uint32(writer.Overhead()) - DataSegmentOverhead,
 		roundTrip: &RoundTripInfo{
 			rto:    100,
-			minRtt: config.GetTTIValue(),
+			minRtt: GetTTIValue(config),
 		},
 	}
 
@@ -235,7 +235,7 @@ func NewConnection(meta ConnMetadata, writer PacketWriter, closer io.Closer, con
 		return conn.State() == StateTerminated
 	}
 	conn.dataUpdater = NewUpdater(
-		config.GetTTIValue(),
+		GetTTIValue(config),
 		func() bool {
 			return !isTerminating() && (conn.sendingWorker.UpdateNecessary() || conn.receivingWorker.UpdateNecessary())
 		},

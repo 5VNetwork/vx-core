@@ -1,0 +1,17 @@
+syntax = "proto3";
+package vx.proxy.shadowsocks2022;
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/proxy";
+
+import "vx/user/user.proto";
+import "vx/common/net/net.proto";
+
+message Shadowsocks2022ServerConfig {
+  string method = 1;
+  vx.user.UserConfig user = 2;
+  repeated vx.common.net.Network networks = 5;
+}
+
+message Shadowsocks2022ClientConfig {
+  string method = 3;
+  string key = 4;
+}

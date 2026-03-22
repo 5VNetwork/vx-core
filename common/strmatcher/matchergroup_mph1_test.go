@@ -4,7 +4,7 @@ package strmatcher_test
 // 	"runtime"
 // 	"testing"
 
-// 	"github.com/5vnetwork/vx-core/app/configs"
+// 	"buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx"
 // 	appgeo "github.com/5vnetwork/vx-core/app/geo"
 // 	"github.com/5vnetwork/vx-core/common"
 // 	"github.com/5vnetwork/vx-core/common/geo/stdloader"

@@ -53,11 +53,11 @@ func (fw flushWriter) Write(p []byte) (n int, err error) {
 
 func (l *Listener) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	host := request.Host
-	if len(l.config.Host) != 0 && !l.config.isValidHost(host) {
+	if len(l.config.GetHost()) != 0 && !isValidHTTPHost(l.config, host) {
 		writer.WriteHeader(404)
 		return
 	}
-	path := l.config.getNormalizedPath()
+	path := normalizedHTTPPath(l.config)
 	if !strings.HasPrefix(request.URL.Path, path) {
 		writer.WriteHeader(404)
 		return

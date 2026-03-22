@@ -11,9 +11,10 @@ import (
 	"os"
 	"time"
 
-	ag "github.com/5vnetwork/vx-core/app/geo"
+	vxgeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
+	appgeo "github.com/5vnetwork/vx-core/app/geo"
 	"github.com/5vnetwork/vx-core/common/clashconfig"
-	"github.com/5vnetwork/vx-core/common/geo"
+	cgeo "github.com/5vnetwork/vx-core/common/geo"
 	"github.com/5vnetwork/vx-core/common/geo/memconservative"
 	"github.com/5vnetwork/vx-core/common/geo/memloader"
 	"github.com/5vnetwork/vx-core/common/signal"
@@ -38,20 +39,20 @@ func (a *Api) GeoIP(ctx context.Context, req *GeoIPRequest) (*GeoIPResponse, err
 			a.geoLock.Unlock()
 			return nil, fmt.Errorf("failed to open geo ip file: %w", err)
 		}
-		var geositeList geo.GeoIPList
+		var geositeList vxgeo.GeoIPList
 		if err := proto.Unmarshal(geositebytes, &geositeList); err != nil {
 			a.geoLock.Unlock()
 			return nil, err
 		}
 
 		ipMatcher = &geoIpMatcher{
-			matchersmap: make(map[string]*geo.IPMatcher),
+			matchersmap: make(map[string]*cgeo.IPMatcher),
 		}
 		for _, geoip := range geositeList.Entry {
 			if geoip.CountryCode == "private" || len(geoip.CountryCode) != 2 {
 				continue
 			}
-			ipMatcher.matchersmap[geoip.CountryCode], err = geo.NewIPMatcherFromGeoCidrs(
+			ipMatcher.matchersmap[geoip.CountryCode], err = cgeo.NewIPMatcherFromGeoCidrs(
 				geoip.Cidr, false)
 			if err != nil {
 				a.geoLock.Unlock()
@@ -90,7 +91,7 @@ func (a *Api) GeoIP(ctx context.Context, req *GeoIPRequest) (*GeoIPResponse, err
 }
 
 type geoIpMatcher struct {
-	matchersmap map[string]*geo.IPMatcher
+	matchersmap map[string]*cgeo.IPMatcher
 }
 
 func (g *geoIpMatcher) Match(ip net.IP) (string, bool) {
@@ -104,11 +105,11 @@ func (g *geoIpMatcher) Match(ip net.IP) (string, bool) {
 
 func (a *Api) ProcessGeoFiles(ctx context.Context, req *ProcessGeoFilesRequest) (*ProcessGeoFilesResponse, error) {
 	l := memconservative.NewMemConservativeLoader()
-	geositeList := &geo.GeoSiteList{
-		Entry: []*geo.GeoSite{},
+	geositeList := &vxgeo.GeoSiteList{
+		Entry: []*vxgeo.GeoSite{},
 	}
-	geoIpList := &geo.GeoIPList{
-		Entry: []*geo.GeoIP{},
+	geoIpList := &vxgeo.GeoIPList{
+		Entry: []*vxgeo.GeoIP{},
 	}
 	for _, code := range req.GeositeCodes {
 		site, err := l.LoadSite(req.GeositePath, code)
@@ -168,9 +169,9 @@ func (a *Api) ProcessGeoFiles(ctx context.Context, req *ProcessGeoFilesRequest) 
 
 func (a *Api) ParseGeositeConfig(ctx context.Context, req *ParseGeositeConfigRequest) (*ParseGeositeConfigResponse, error) {
 	l := memloader.New()
-	var domains []*geo.Domain
+	var domains []*vxgeo.Domain
 	var err error
-	domains, err = ag.GeositeConfigToGeoDomains(req.Config, l)
+	domains, err = appgeo.GeositeConfigToGeoDomains(req.Config, l)
 	if err != nil {
 		return nil, err
 	}
@@ -182,9 +183,9 @@ func (a *Api) ParseGeositeConfig(ctx context.Context, req *ParseGeositeConfigReq
 
 func (a *Api) ParseGeoIPConfig(ctx context.Context, req *ParseGeoIPConfigRequest) (*ParseGeoIPConfigResponse, error) {
 	l := memloader.New()
-	var cidrs []*geo.CIDR
+	var cidrs []*vxgeo.CIDR
 	var err error
-	cidrs, err = ag.GeoIpConfigToCidrs(req.Config, l)
+	cidrs, err = appgeo.GeoIpConfigToCidrs(req.Config, l)
 	if err != nil {
 		return nil, err
 	}

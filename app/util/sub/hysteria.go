@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	mynet "github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/transport/security/tls"
@@ -82,12 +81,12 @@ func ParseHysteriaFromLink(link string) (*configs.OutboundHandlerConfig, error) 
 		serverName = u.Hostname()
 	}
 
-	hysteriaConfig := &proxy.Hysteria2ClientConfig{
+	hysteriaConfig := &configs.Hysteria2ClientConfig{
 		Auth: u.User.String(),
 		TlsConfig: &tls.TlsConfig{
 			ServerName: serverName,
 		},
-		Bandwidth: &proxy.BandwidthConfig{},
+		Bandwidth: &configs.BandwidthConfig{},
 	}
 	if query.Get("echConfig") != "" {
 		echConfig, err := base64.StdEncoding.DecodeString(query.Get("echConfig"))
@@ -100,9 +99,9 @@ func ParseHysteriaFromLink(link string) (*configs.OutboundHandlerConfig, error) 
 		hysteriaConfig.TlsConfig.AllowInsecure = true
 	}
 	if query.Get("obfs") != "" {
-		hysteriaConfig.Obfs = &proxy.ObfsConfig{
-			Obfs: &proxy.ObfsConfig_Salamander{
-				Salamander: &proxy.SalamanderConfig{
+		hysteriaConfig.Obfs = &configs.ObfsConfig{
+			Obfs: &configs.ObfsConfig_Salamander{
+				Salamander: &configs.SalamanderConfig{
 					Password: query.Get("obfs-password"),
 				},
 			},

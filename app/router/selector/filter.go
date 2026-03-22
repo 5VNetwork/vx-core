@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	router "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/xsqlite"
 	"github.com/5vnetwork/vx-core/common/units"
@@ -24,7 +24,7 @@ type Filter interface {
 }
 
 type FilterUpdate interface {
-	UpdateFilterConfig(filterConfig *configs.SelectorConfig_Filter)
+	UpdateFilterConfig(filterConfig *router.SelectorConfig_Filter)
 }
 
 type omFilter struct {
@@ -32,7 +32,7 @@ type omFilter struct {
 	filterConfig atomic.Value
 }
 
-func NewOmFilter(filterConfig *configs.SelectorConfig_Filter, om *outbound.Manager) *omFilter {
+func NewOmFilter(filterConfig *router.SelectorConfig_Filter, om *outbound.Manager) *omFilter {
 	o := &omFilter{
 		om: om,
 	}
@@ -40,7 +40,7 @@ func NewOmFilter(filterConfig *configs.SelectorConfig_Filter, om *outbound.Manag
 	return o
 }
 
-func (f *omFilter) UpdateFilterConfig(filterConfig *configs.SelectorConfig_Filter) {
+func (f *omFilter) UpdateFilterConfig(filterConfig *router.SelectorConfig_Filter) {
 	f.filterConfig.Store(filterConfig)
 }
 
@@ -60,7 +60,7 @@ func (h *handlerWithStats) Name() string {
 func (f *omFilter) GetHandlers() ([]outHandler, error) {
 	handlers := f.om.GetAllHandlers()
 	var ret []outHandler
-	filterConfig := f.filterConfig.Load().(*configs.SelectorConfig_Filter)
+	filterConfig := f.filterConfig.Load().(*router.SelectorConfig_Filter)
 	for _, h := range handlers {
 		if !inSubset(h, filterConfig) {
 			continue
@@ -82,7 +82,7 @@ func (f *omFilter) GetHandlers() ([]outHandler, error) {
 	return ret, nil
 }
 
-func inSubset(h i.Outbound, filterConfig *configs.SelectorConfig_Filter) bool {
+func inSubset(h i.Outbound, filterConfig *router.SelectorConfig_Filter) bool {
 	for _, prefix := range filterConfig.Prefixes {
 		if strings.HasPrefix(h.Tag(), prefix) {
 			return !filterConfig.Inverse
@@ -103,7 +103,7 @@ type dbFilter struct {
 	createHandler CreateHandlerFunc
 }
 
-func NewDbFilter(db Db, filterConfig *configs.SelectorConfig_Filter,
+func NewDbFilter(db Db, filterConfig *router.SelectorConfig_Filter,
 	landHandlers []*xsqlite.OutboundHandler, createHandler CreateHandlerFunc) *dbFilter {
 	f := &dbFilter{
 		db:            db,
@@ -114,7 +114,7 @@ func NewDbFilter(db Db, filterConfig *configs.SelectorConfig_Filter,
 	return f
 }
 
-func (f *dbFilter) UpdateFilterConfig(filterConfig *configs.SelectorConfig_Filter) {
+func (f *dbFilter) UpdateFilterConfig(filterConfig *router.SelectorConfig_Filter) {
 	f.filterConfig.Store(filterConfig)
 }
 
@@ -194,7 +194,7 @@ func (f *dbFilter) getHandlersRetry() ([]*xsqlite.OutboundHandler, error) {
 func (f *dbFilter) getHandlers() ([]*xsqlite.OutboundHandler, error) {
 	handlers := make(map[int]*xsqlite.OutboundHandler)
 
-	filterConfig := f.filterConfig.Load().(*configs.SelectorConfig_Filter)
+	filterConfig := f.filterConfig.Load().(*router.SelectorConfig_Filter)
 
 	if filterConfig.All {
 		// var handlers []*xsqlite.OutboundHandler

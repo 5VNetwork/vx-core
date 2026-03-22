@@ -6,8 +6,8 @@ import (
 
 const protocolName = "websocket"
 
-func (c *WebsocketConfig) GetNormalizedPath() string {
-	path := c.Path
+func normalizedWebsocketPath(c *WebsocketConfig) string {
+	path := c.GetPath()
 	if path == "" {
 		return "/"
 	}
@@ -17,11 +17,11 @@ func (c *WebsocketConfig) GetNormalizedPath() string {
 	return path
 }
 
-func (c *WebsocketConfig) GetRequestHeader() http.Header {
+func websocketRequestHeader(c *WebsocketConfig) http.Header {
 	header := http.Header{}
-	for _, h := range c.Header {
-		header.Add(h.Key, h.Value)
+	for _, h := range c.GetHeader() {
+		header.Add(h.GetKey(), h.GetValue())
 	}
-	header.Add("Host", c.Host)
+	header.Add("Host", c.GetHost())
 	return header
 }

@@ -6,11 +6,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/buildclient"
+			"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
 	"github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/protocol"
@@ -27,13 +25,13 @@ func TestTrojanGrpcTls(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -69,7 +67,7 @@ func TestTrojanGrpcTls(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -83,7 +81,7 @@ func TestTrojanGrpcTls(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: userID.String(),
 					}),
 					Transport: &configs.TransportConfig{
@@ -127,13 +125,13 @@ func TestTrojanGrpc(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -162,7 +160,7 @@ func TestTrojanGrpc(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -177,7 +175,7 @@ func TestTrojanGrpc(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: userID.String(),
 					}),
 					Transport: &configs.TransportConfig{

@@ -137,12 +137,12 @@ func Dial(ctx context.Context, dest net.Destination, c *HttpConfig, se security.
 
 	request := &http.Request{
 		Method: httpMethod,
-		Host:   c.getRandomHost(),
+		Host:   randomHTTPHost(c),
 		Body:   breader,
 		URL: &url.URL{
 			Scheme: "https",
 			Host:   dest.NetAddr(),
-			Path:   c.getNormalizedPath(),
+			Path:   normalizedHTTPPath(c),
 		},
 		Proto:      "HTTP/2",
 		ProtoMajor: 2,

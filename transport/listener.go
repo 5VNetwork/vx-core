@@ -96,8 +96,8 @@ func Listen(addr net1.Destination, config *Config) (net.Listener, error) {
 		}
 		return listener, nil
 	case *kcp.KcpConfig:
-		if tls, ok := config.Security.(*tls.TlsConfig); ok {
-			tlsConfig, err1 := tls.GetTLSConfig()
+		if tcfg, ok := config.Security.(*tls.TlsConfig); ok {
+			tlsConfig, err1 := tls.GetTLSConfig(tcfg)
 			if err1 != nil {
 				return nil, err1
 			}
@@ -204,13 +204,13 @@ func (l *ListenerImpl) Listen(ctx context.Context, addr net.Addr) (net.Listener,
 		} else {
 			opts = append(opts, tls.WithNextProtocol([]string{"h2", "http/1.1"}))
 		}
-		tlsConfig, err := t.GetTLSConfig(opts...)
+		tlsConfig, err := tls.GetTLSConfig(t, opts...)
 		if err != nil {
 			return nil, err
 		}
 		return gotls.NewListener(listener, tlsConfig), nil
-	} else if reality, ok := l.SecurityConfig.(*reality.RealityConfig); ok {
-		return goreality.NewListener(listener, reality.GetREALITYConfig()), nil
+	} else if rcfg, ok := l.SecurityConfig.(*reality.RealityConfig); ok {
+		return goreality.NewListener(listener, reality.GetREALITYConfig(rcfg)), nil
 	}
 	return listener, nil
 }

@@ -30,12 +30,12 @@ func (c *rootCertsCache) load() (*x509.CertPool, error) {
 
 var rootCerts rootCertsCache
 
-func (c *TlsConfig) getRootCA() (*x509.CertPool, error) {
-	if c.DisableSystemRoot {
-		return CertsToCertPool(c.RootCas)
+func getRootCA(c *TlsConfig) (*x509.CertPool, error) {
+	if c.GetDisableSystemRoot() {
+		return CertsToCertPool(c.GetRootCas())
 	}
 
-	if len(c.RootCas) == 0 {
+	if len(c.GetRootCas()) == 0 {
 		return rootCerts.load()
 	}
 
@@ -43,7 +43,7 @@ func (c *TlsConfig) getRootCA() (*x509.CertPool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("system root %w", err)
 	}
-	for _, cert := range c.RootCas {
+	for _, cert := range c.GetRootCas() {
 		if !pool.AppendCertsFromPEM(cert) {
 			return nil, errors.New("failed to append cert to root")
 		}

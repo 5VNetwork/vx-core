@@ -1,0 +1,15 @@
+version: v2
+
+modules:
+  - path: .
+    includes:
+      - app/grpcservice
+      - app/userlogger
+  - path: protos/proto
+
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE

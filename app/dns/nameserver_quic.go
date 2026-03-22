@@ -230,7 +230,7 @@ func (s *QUICNameServer) openConnection(ctx context.Context) (*quic.Conn, error)
 		HandshakeIdleTimeout: handshakeIdleTimeout,
 	}
 
-	tlsCfg, err := tlsConfig.GetTLSConfig(tls.WithNextProtocol([]string{NextProtoDQ}))
+	tlsCfg, err := tls.GetTLSConfig(&tlsConfig, tls.WithNextProtocol([]string{NextProtoDQ}))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get TLS config: %w", err)
 	}

@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package x;
-
-option go_package = "github.com/5vnetwork/vx-core/app/configs";
-
-message GrpcServiceConfig {
-    bool update_latency = 1;
-}

@@ -119,7 +119,7 @@ func (h *HeaderReader) Read(reader io.Reader) (*buf.Buffer, error) {
 	// Check req
 	path := h.req.URL.Path
 	hasThisURI := false
-	for _, u := range h.expectedHeader.Uri {
+	for _, u := range h.expectedHeader.GetUri() {
 		if u == path {
 			hasThisURI = true
 		}
@@ -238,15 +238,16 @@ func (c *Conn) Close() error {
 
 func formResponseHeader(config *ResponseConfig) *HeaderWriter {
 	header := buf.New()
-	common.Must2(header.WriteString(strings.Join([]string{config.GetFullVersion(), config.GetStatusValue().Code, config.GetStatusValue().Reason}, " ")))
+	st := responseStatusOrDefault(config)
+	common.Must2(header.WriteString(strings.Join([]string{responseFullVersion(config), st.GetCode(), st.GetReason()}, " ")))
 	common.Must2(header.WriteString(CRLF))
 
-	headers := config.PickHeaders()
+	headers := pickResponseHeaders(config)
 	for _, h := range headers {
 		common.Must2(header.WriteString(h))
 		common.Must2(header.WriteString(CRLF))
 	}
-	if !config.HasHeader("Date") {
+	if !responseHasHeader(config, "Date") {
 		common.Must2(header.WriteString("Date: "))
 		common.Must2(header.WriteString(time.Now().Format(http.TimeFormat)))
 		common.Must2(header.WriteString(CRLF))
@@ -263,11 +264,11 @@ type Authenticator struct {
 
 func (a Authenticator) GetClientWriter() *HeaderWriter {
 	header := buf.New()
-	config := a.config.Request
-	common.Must2(header.WriteString(strings.Join([]string{config.GetMethodValue(), config.PickURI(), config.GetFullVersion()}, " ")))
+	config := a.config.GetRequest()
+	common.Must2(header.WriteString(strings.Join([]string{requestMethodValue(config), pickRequestURI(config), requestFullVersion(config)}, " ")))
 	common.Must2(header.WriteString(CRLF))
 
-	headers := config.PickHeaders()
+	headers := pickRequestHeaders(config)
 	for _, h := range headers {
 		common.Must2(header.WriteString(h))
 		common.Must2(header.WriteString(CRLF))
@@ -279,30 +280,30 @@ func (a Authenticator) GetClientWriter() *HeaderWriter {
 }
 
 func (a Authenticator) GetServerWriter() *HeaderWriter {
-	return formResponseHeader(a.config.Response)
+	return formResponseHeader(a.config.GetResponse())
 }
 
 func (a Authenticator) Client(conn net.Conn) net.Conn {
-	if a.config.Request == nil && a.config.Response == nil {
+	if a.config.GetRequest() == nil && a.config.GetResponse() == nil {
 		return conn
 	}
 	var reader Reader = NoOpReader{}
-	if a.config.Request != nil {
+	if a.config.GetRequest() != nil {
 		reader = new(HeaderReader)
 	}
 
 	var writer Writer = NoOpWriter{}
-	if a.config.Request != nil {
+	if a.config.GetRequest() != nil {
 		writer = a.GetClientWriter()
 	}
 	return NewConn(conn, reader, writer, NoOpWriter{}, NoOpWriter{}, NoOpWriter{})
 }
 
 func (a Authenticator) Server(conn net.Conn) net.Conn {
-	if a.config.Request == nil && a.config.Response == nil {
+	if a.config.GetRequest() == nil && a.config.GetResponse() == nil {
 		return conn
 	}
-	return NewConn(conn, new(HeaderReader).ExpectThisRequest(a.config.Request), a.GetServerWriter(),
+	return NewConn(conn, new(HeaderReader).ExpectThisRequest(a.config.GetRequest()), a.GetServerWriter(),
 		formResponseHeader(resp400),
 		formResponseHeader(resp404),
 		formResponseHeader(resp400))

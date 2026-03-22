@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package x.userlogger;
+package vx.userlogger;
 option go_package = "github.com/5vnetwork/vx-core/app/userlogger";
 
 message UserLogMessage {

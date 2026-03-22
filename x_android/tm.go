@@ -12,9 +12,9 @@ import (
 	"net/netip"
 	"reflect"
 
+	configs "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx"
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/client"
-	configs "github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/inbound/gvisor"
 	"github.com/5vnetwork/vx-core/app/inbound/reject"

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	outbound "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/outbound"
+	router "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
 	"github.com/5vnetwork/vx-core/app/xsqlite"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -39,9 +40,9 @@ func (m *MockDb) GetHandler(id int) *xsqlite.OutboundHandler {
 // createTestHandler creates a test handler with the given parameters
 func createTestHandler(id int, tag string, subId *int, support6 int, selected bool) *xsqlite.OutboundHandler {
 	// Create a simple config with the tag
-	config := &configs.HandlerConfig{
-		Type: &configs.HandlerConfig_Outbound{
-			Outbound: &configs.OutboundHandlerConfig{
+	config := &outbound.HandlerConfig{
+		Type: &outbound.HandlerConfig_Outbound{
+			Outbound: &outbound.OutboundHandlerConfig{
 				Tag: tag,
 			},
 		},
@@ -78,7 +79,7 @@ func TestFilter_GetHandlers_All(t *testing.T) {
 
 	mockDb.On("GetAllHandlers").Return(allHandlers, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		All: true,
 	}
 	filter := NewDbFilter(mockDb, filterConfig, nil, nil)
@@ -107,7 +108,7 @@ func TestFilter_GetHandlers_PrefixFilter(t *testing.T) {
 	mockDb.On("GetBatchedHandlers", 100, 0).Return(batchHandlers, nil)
 	mockDb.On("GetBatchedHandlers", 100, 100).Return([]*xsqlite.OutboundHandler{}, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		Prefixes: []string{"proxy_", "direct_"},
 	}
 	filter := NewDbFilter(mockDb, filterConfig, nil, nil)
@@ -144,7 +145,7 @@ func TestFilter_GetHandlers_TagFilter(t *testing.T) {
 	mockDb.On("GetBatchedHandlers", 100, 0).Return(batchHandlers, nil)
 	mockDb.On("GetBatchedHandlers", 100, 100).Return([]*xsqlite.OutboundHandler{}, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		Tags: []string{"handler1", "handler3"},
 	}
 	filter := NewDbFilter(mockDb, filterConfig, nil, nil)
@@ -180,7 +181,7 @@ func TestFilter_GetHandlers_GroupFilter(t *testing.T) {
 	mockDb.On("GetHandlersByGroup", "group1").Return(group1Handlers, nil)
 	mockDb.On("GetBatchedHandlers", 100, 0).Return([]*xsqlite.OutboundHandler{}, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		GroupTags: []string{"group1"},
 	}
 	filter := NewDbFilter(mockDb, filterConfig, nil, nil)
@@ -219,7 +220,7 @@ func TestFilter_GetHandlers_MultipleGroups(t *testing.T) {
 	mockDb.On("GetHandlersByGroup", "group2").Return(group2Handlers, nil)
 	mockDb.On("GetBatchedHandlers", 100, 0).Return([]*xsqlite.OutboundHandler{}, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		GroupTags: []string{"group1", "group2"},
 	}
 	filter := NewDbFilter(mockDb, filterConfig, nil, nil)
@@ -256,7 +257,7 @@ func TestFilter_GetHandlers_HandlerIdsFilter(t *testing.T) {
 	mockDb.On("GetBatchedHandlers", 100, 0).Return(batchHandlers, nil)
 	mockDb.On("GetBatchedHandlers", 100, 100).Return([]*xsqlite.OutboundHandler{}, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		HandlerIds: []int64{1, 3},
 	}
 	filter := NewDbFilter(mockDb, filterConfig, nil, nil)
@@ -296,7 +297,7 @@ func TestFilter_GetHandlers_SubIdFilter(t *testing.T) {
 	mockDb.On("GetBatchedHandlers", 100, 0).Return(batchHandlers, nil)
 	mockDb.On("GetBatchedHandlers", 100, 100).Return([]*xsqlite.OutboundHandler{}, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		SubIds: []int64{100, 200},
 	}
 	filter := NewDbFilter(mockDb, filterConfig, nil, nil)
@@ -333,7 +334,7 @@ func TestFilter_GetHandlers_SelectedFilter(t *testing.T) {
 	mockDb.On("GetBatchedHandlers", 100, 0).Return(batchHandlers, nil)
 	mockDb.On("GetBatchedHandlers", 100, 100).Return([]*xsqlite.OutboundHandler{}, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		Selected: true,
 	}
 	filter := NewDbFilter(mockDb, filterConfig, nil, nil)
@@ -381,7 +382,7 @@ func TestFilter_GetHandlers_CombinedFilters(t *testing.T) {
 	mockDb.On("GetBatchedHandlers", 100, 0).Return(batchHandlers, nil)
 	mockDb.On("GetBatchedHandlers", 100, 100).Return([]*xsqlite.OutboundHandler{}, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		Prefixes:   []string{"proxy_"},
 		Tags:       []string{"direct_handler1"},
 		GroupTags:  []string{"group1"},
@@ -428,7 +429,7 @@ func TestFilter_GetHandlers_BatchProcessing(t *testing.T) {
 	mockDb.On("GetBatchedHandlers", 100, 100).Return(secondBatch, nil)
 	mockDb.On("GetBatchedHandlers", 100, 200).Return([]*xsqlite.OutboundHandler{}, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		Prefixes: []string{"handler"},
 	}
 	filter := NewDbFilter(mockDb, filterConfig, nil, nil)
@@ -462,7 +463,7 @@ func TestFilter_GetHandlers_NoMatchingHandlers(t *testing.T) {
 	mockDb.On("GetBatchedHandlers", 100, 0).Return(batchHandlers, nil)
 	mockDb.On("GetBatchedHandlers", 100, 100).Return([]*xsqlite.OutboundHandler{}, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		Prefixes: []string{"nonexistent_"},
 		Tags:     []string{"nonexistent_tag"},
 	}
@@ -482,7 +483,7 @@ func TestFilter_GetHandlers_EmptyBatches(t *testing.T) {
 
 	mockDb.On("GetBatchedHandlers", 100, 0).Return([]*xsqlite.OutboundHandler{}, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		Prefixes: []string{"handler"},
 	}
 	filter := NewDbFilter(mockDb, filterConfig, nil, nil)
@@ -516,7 +517,7 @@ func TestFilter_GetHandlers_DuplicateHandlers(t *testing.T) {
 	mockDb.On("GetBatchedHandlers", 100, 0).Return(batchHandlers, nil)
 	mockDb.On("GetBatchedHandlers", 100, 100).Return([]*xsqlite.OutboundHandler{}, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		GroupTags: []string{"group1"},
 		Prefixes:  []string{"handler"},
 	}
@@ -550,7 +551,7 @@ func TestFilter_GetHandlers_ErrorRetry(t *testing.T) {
 	}, nil).Once()
 	mockDb.On("GetBatchedHandlers", 100, 100).Return([]*xsqlite.OutboundHandler{}, nil)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		Prefixes: []string{"handler"},
 	}
 	filter := NewDbFilter(mockDb, filterConfig, nil, nil)
@@ -570,7 +571,7 @@ func TestFilter_GetHandlers_ErrorExhaustion(t *testing.T) {
 	// All calls fail
 	mockDb.On("GetBatchedHandlers", 100, 0).Return([]*xsqlite.OutboundHandler{}, fmt.Errorf("database error")).Times(3)
 
-	filterConfig := &configs.SelectorConfig_Filter{
+	filterConfig := &router.SelectorConfig_Filter{
 		Prefixes: []string{"handler"},
 	}
 	filter := NewDbFilter(mockDb, filterConfig, nil, nil)

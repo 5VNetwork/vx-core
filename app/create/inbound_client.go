@@ -11,8 +11,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	proxyconfigs "github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
@@ -35,7 +34,7 @@ func NewInbound(config *configs.ProxyInboundConfig, ha i.Handler, tp i.TimeoutSe
 			return nil, fmt.Errorf("failed to get instance of ProxyServerConfig: %w", err)
 		}
 		switch c := serverConfig.(type) {
-		case *proxyconfigs.DokodemoConfig:
+		case *configs.DokodemoConfig:
 			server = dokodemo.New(
 				dokodemo.DoorSettings{
 					Address:  net.ParseAddress(c.Address),
@@ -45,7 +44,7 @@ func NewInbound(config *configs.ProxyInboundConfig, ha i.Handler, tp i.TimeoutSe
 				},
 			)
 			servers = append(servers, server)
-		case *proxyconfigs.SocksServerConfig:
+		case *configs.SocksServerConfig:
 			config := &socks.SocksServerConfig{
 				UdpEnabled: c.UdpEnabled,
 				AuthType:   c.AuthType,
@@ -64,7 +63,7 @@ func NewInbound(config *configs.ProxyInboundConfig, ha i.Handler, tp i.TimeoutSe
 				server.(*socks.Server).AddUser(user)
 			}
 			servers = append(servers, server)
-		case *proxyconfigs.HttpServerConfig:
+		case *configs.HttpServerConfig:
 			server = http.NewServer(http.ServerSettings{
 				PolicyManager: tp,
 				Handler:       ha,

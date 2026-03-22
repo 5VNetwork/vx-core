@@ -10,7 +10,7 @@ import (
 	utls "github.com/refraction-networking/utls"
 )
 
-func (c *TlsConfig) GetUClient(conn net.Conn, tlsConfig *tls.Config) (net.Conn, error) {
+func GetUClient(c *TlsConfig, conn net.Conn, tlsConfig *tls.Config) (net.Conn, error) {
 	utlsConfig, err := uTLSConfigFromTLSConfig(tlsConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate utls config from tls config %w", err)

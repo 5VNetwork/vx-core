@@ -1,0 +1,6 @@
+syntax = "proto3";
+package vx.dialerfactory;
+
+message DialerFactoryConfig {
+    uint32 dial_timeout = 1;
+}

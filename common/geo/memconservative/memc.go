@@ -3,8 +3,8 @@ package memconservative
 import (
 	"runtime"
 
+	commongeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/5vnetwork/vx-core/common/errors"
-	"github.com/5vnetwork/vx-core/common/geo"
 )
 
 var (
@@ -16,7 +16,7 @@ type MemConservativeLoader struct {
 	geositecache GeoSiteCache
 }
 
-func (m *MemConservativeLoader) LoadIP(filepath, country string) (*geo.GeoIP, error) {
+func (m *MemConservativeLoader) LoadIP(filepath, country string) (*commongeo.GeoIP, error) {
 	defer runtime.GC()
 	geoip, err := m.geoipcache.Unmarshal(filepath, country)
 	if err != nil {
@@ -25,7 +25,7 @@ func (m *MemConservativeLoader) LoadIP(filepath, country string) (*geo.GeoIP, er
 	return geoip, nil
 }
 
-func (m *MemConservativeLoader) LoadSite(filepath, list string) (*geo.GeoSite, error) {
+func (m *MemConservativeLoader) LoadSite(filepath, list string) (*commongeo.GeoSite, error) {
 	defer runtime.GC()
 	geosite, err := m.geositecache.Unmarshal(filepath, list)
 	if err != nil {
@@ -35,5 +35,5 @@ func (m *MemConservativeLoader) LoadSite(filepath, list string) (*geo.GeoSite, e
 }
 
 func NewMemConservativeLoader() *MemConservativeLoader {
-	return &MemConservativeLoader{make(map[string]*geo.GeoIP), make(map[string]*geo.GeoSite)}
+	return &MemConservativeLoader{make(map[string]*commongeo.GeoIP), make(map[string]*commongeo.GeoSite)}
 }

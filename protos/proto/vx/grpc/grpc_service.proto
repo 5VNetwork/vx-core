@@ -1,0 +1,7 @@
+syntax = "proto3";
+package vx.grpc;
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
+
+message GrpcServiceConfig {
+    bool update_latency = 1;
+}

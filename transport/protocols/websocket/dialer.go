@@ -74,9 +74,9 @@ func Dial(ctx context.Context, dest net.Destination, config *WebsocketConfig,
 	if (protocol == "ws" && dest.Port == 80) || (protocol == "wss" && dest.Port == 443) {
 		host = dest.Address.String()
 	}
-	uri := protocol + "://" + host + config.GetNormalizedPath()
+	uri := protocol + "://" + host + normalizedWebsocketPath(config)
 
-	if config.MaxEarlyData != 0 {
+	if config.GetMaxEarlyData() != 0 {
 		return newConnectionWithDelayedDial(&dialerWithEarlyData{
 			dialer:  dialer,
 			uriBase: uri,
@@ -84,7 +84,7 @@ func Dial(ctx context.Context, dest net.Destination, config *WebsocketConfig,
 		}), nil
 	}
 
-	conn, resp, err := dialer.Dial(uri, config.GetRequestHeader()) // nolint: bodyclose
+	conn, resp, err := dialer.Dial(uri, websocketRequestHeader(config)) // nolint: bodyclose
 	if err != nil {
 		var reason string
 		if resp != nil {
@@ -107,7 +107,7 @@ func (d dialerWithEarlyData) Dial(earlyData []byte) (*websocket.Conn, error) {
 	base64EarlyDataEncoder := base64.NewEncoder(base64.RawURLEncoding, earlyDataBuf)
 
 	earlydata := bytes.NewReader(earlyData)
-	limitedEarlyDatareader := io.LimitReader(earlydata, int64(d.config.MaxEarlyData))
+	limitedEarlyDatareader := io.LimitReader(earlydata, int64(d.config.GetMaxEarlyData()))
 	n, encerr := io.Copy(base64EarlyDataEncoder, limitedEarlyDatareader)
 	if encerr != nil {
 		return nil, errors.New("websocket delayed dialer cannot encode early data").Base(encerr)
@@ -118,14 +118,14 @@ func (d dialerWithEarlyData) Dial(earlyData []byte) (*websocket.Conn, error) {
 	}
 
 	dialFunction := func() (*websocket.Conn, *http.Response, error) {
-		return d.dialer.Dial(d.uriBase+earlyDataBuf.String(), d.config.GetRequestHeader())
+		return d.dialer.Dial(d.uriBase+earlyDataBuf.String(), websocketRequestHeader(d.config))
 	}
 
-	if d.config.EarlyDataHeaderName != "" {
+	if d.config.GetEarlyDataHeaderName() != "" {
 		dialFunction = func() (*websocket.Conn, *http.Response, error) {
 			earlyDataStr := earlyDataBuf.String()
-			currentHeader := d.config.GetRequestHeader()
-			currentHeader.Set(d.config.EarlyDataHeaderName, earlyDataStr)
+			currentHeader := websocketRequestHeader(d.config)
+			currentHeader.Set(d.config.GetEarlyDataHeaderName(), earlyDataStr)
 			return d.dialer.Dial(d.uriBase, currentHeader)
 		}
 	}

@@ -46,18 +46,18 @@ func (p Port) String() string {
 }
 
 // FromPort returns the beginning port of this PortRange.
-func (p *PortRange) FromPort() Port {
+func FromPort(p *PortRange) Port {
 	return Port(p.From)
 }
 
 // ToPort returns the end port of this PortRange.
-func (p *PortRange) ToPort() Port {
+func ToPort(p *PortRange) Port {
 	return Port(p.To)
 }
 
 // Contains returns true if the given port is within the range of a PortRange.
-func (p *PortRange) Contains(port Port) bool {
-	return p.FromPort() <= port && port <= p.ToPort()
+func Contains(p *PortRange, port Port) bool {
+	return FromPort(p) <= port && port <= ToPort(p)
 }
 
 // SinglePortRange returns a PortRange contains a single port.

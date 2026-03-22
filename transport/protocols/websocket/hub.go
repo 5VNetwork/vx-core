@@ -119,7 +119,7 @@ func Listen(ctx context.Context, addr net.Destination,
 
 	l.server = http.Server{
 		Handler: &requestHandler{
-			path:                config.GetNormalizedPath(),
+			path:                normalizedWebsocketPath(config),
 			ln:                  l,
 			earlyDataEnabled:    useEarlyData,
 			earlyDataHeaderName: earlyDataHeaderName,

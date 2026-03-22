@@ -1,0 +1,19 @@
+version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/5vnetwork/vx-core
+plugins:
+  # - remote: buf.build/protocolbuffers/go
+  #   out: gen
+  #   opt: module=github.com/5vnetwork/vx-core
+  # - remote: buf.build/grpc/go
+  #   out: gen
+  #   opt: module=github.com/5vnetwork/vx-core
+  - remote: buf.build/protocolbuffers/dart
+    out: ../../tm-plugin/tm/lib/protos
+    opt: grpc
+
+inputs:
+  - directory: proto

@@ -99,7 +99,7 @@ func (d *Dialer) dialgRPC(ctx context.Context, dest net.Destination) (net.Conn, 
 	client := encoding.NewGRPCServiceClient(conn)
 
 	if d.config.MultiMode {
-		grpcService, err := client.(encoding.GRPCServiceClientX).TunMultiCustomName(ctx, d.config.getServiceName(), d.config.getTunMultiStreamName())
+		grpcService, err := client.(encoding.GRPCServiceClientX).TunMultiCustomName(ctx, getServiceName(d.config), getTunMultiStreamName(d.config))
 		if err != nil {
 			d.decrementConnCount(conn)
 			return nil, errors.New("Cannot dial gRPC").Base(err)
@@ -112,7 +112,7 @@ func (d *Dialer) dialgRPC(ctx context.Context, dest net.Destination) (net.Conn, 
 	}
 
 	grpcService, err := client.(encoding.GRPCServiceClientX).TunCustomName(ctx,
-		d.config.getServiceName(), d.config.getTunStreamName())
+		getServiceName(d.config), getTunStreamName(d.config))
 	if err != nil {
 		d.decrementConnCount(conn)
 		return nil, errors.New("Cannot dial gRPC").Base(err)

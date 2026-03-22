@@ -1,0 +1,43 @@
+syntax = "proto3";
+package vx.log;
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
+
+message LoggerConfig {
+  Level log_level = 1;
+  // Where to write logs
+  string file_path = 2;
+  // Whether use console writer which makes logs more human-readable
+  bool console_writer = 3;
+  // Whether use color logging
+  bool show_color = 4;
+  // Wehther show caller
+  bool show_caller = 5;
+  // If specified and file_path is not set, logs will be written to the directory. 
+  // Log file name will be the current timestamp: 2006-01-02T15:04:05.txt
+  string log_file_dir = 9;
+  // Whether redact domain and ip address in logs
+  bool redact = 10;
+  reserved 6;
+  reserved 7;
+}
+
+enum Level {
+  DEBUG = 0;
+  INFO = 1;
+  WARN = 2;
+  ERROR = 3;
+  FATAL = 4;
+  DISABLED = 5;
+}
+
+message UserLoggerConfig {
+    // user logger
+  // Whether output logs for VX client. Client only
+  bool enable = 1;
+  // Whether log app id, specified by users in the app. Client only
+  bool log_app_id = 2;
+  // Whether log a SessionEnd message for every session.
+  bool log_session_end = 3;
+  // Whether log realtime per-session usage (approx. every second).
+  bool log_realtime_usage = 4;
+}

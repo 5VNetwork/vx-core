@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	vxrouter "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
 	"github.com/5vnetwork/vx-core/app/router"
 	"github.com/5vnetwork/vx-core/app/router/selector"
 	"github.com/5vnetwork/vx-core/app/xsqlite"
@@ -41,7 +41,7 @@ func (s *GrpcService) ChangeRoutingMode(ctx context.Context, in *ChangeRoutingMo
 	log.Debug().Msg("routing mode changed")
 	return &ChangeRoutingModeResponse{}, nil
 }
-func (s *GrpcService) updateRouter(config *configs.RouterConfig) error {
+func (s *GrpcService) updateRouter(config *vxrouter.RouterConfig) error {
 	newRouter, err := router.NewRouter(&router.RouterConfig{
 		RouterConfig:    config,
 		OutboundManager: s.Client.OutboundManager,
@@ -136,9 +136,9 @@ func (s *GrpcService) UpdateSelectorBalancer(ctx context.Context, in *UpdateSele
 
 	var balancer selector.Balancer
 	switch in.BalanceStrategy {
-	case configs.SelectorConfig_RANDOM:
+	case vxrouter.SelectorConfig_RANDOM:
 		balancer = selector.NewRandomBanlancer()
-	case configs.SelectorConfig_MEMORY:
+	case vxrouter.SelectorConfig_MEMORY:
 		balancer = selector.NewMemoryBalancer()
 	}
 	se := s.Client.Selectors.GetSelector(in.Tag)

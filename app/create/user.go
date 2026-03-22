@@ -4,8 +4,7 @@
 package create
 
 import (
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	proxyconfigs "github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/user"
 	"github.com/5vnetwork/vx-core/proxy/shadowsocks"
 )
@@ -14,7 +13,7 @@ func UserConfigToUser(config *configs.UserConfig) (*user.User, error) {
 	return user.NewUser(config.Id, config.Secret), nil
 }
 
-func ShadowsocksAccountToMemoryAccount(account *proxyconfigs.ShadowsocksAccount) (*shadowsocks.MemoryAccount, error) {
+func ShadowsocksAccountToMemoryAccount(account *configs.ShadowsocksAccount) (*shadowsocks.MemoryAccount, error) {
 	return shadowsocks.NewMemoryAccount(
 		user.NewUser(account.User.Id, account.User.Secret),
 		shadowsocks.CipherType(account.CipherType),

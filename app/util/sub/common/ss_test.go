@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/serial"
 )
 
@@ -20,10 +20,10 @@ func TestParseSsFromLink(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get ss config: %v", err)
 	}
-	ssConfig := ssConfig0.(*proxy.ShadowsocksClientConfig)
+	ssConfig := ssConfig0.(*configs.ShadowsocksClientConfig)
 
 	fmt.Println(ssConfig)
-	if ssConfig.CipherType != proxy.ShadowsocksCipherType_CHACHA20_POLY1305 {
+	if ssConfig.CipherType != configs.ShadowsocksCipherType_CHACHA20_POLY1305 {
 		t.Fatalf("cipher is not chacha20-ietf-poly1305")
 	}
 	if ssConfig.Password != "test" {

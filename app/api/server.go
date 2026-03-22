@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/5vnetwork/vx-core/app/configs/server"
+	vx "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx"
 	"github.com/5vnetwork/vx-core/app/util"
 	mynet "github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/signal/done"
@@ -398,7 +398,7 @@ func (a *Api) ServerConfig(ctx context.Context, req *ServerConfigRequest) (*Serv
 	if err != nil {
 		return nil, err
 	}
-	var config server.ServerConfig
+	var config vx.ServerConfig
 	err = protojson.Unmarshal(configBytes, &config)
 	if err != nil {
 		return nil, err
@@ -424,7 +424,7 @@ func (a *Api) UpdateServerConfig(ctx context.Context, req *UpdateServerConfigReq
 	return &UpdateServerConfigResponse{}, nil
 }
 
-func updateVXConfig(sshClient *sshhelper.Client, config *server.ServerConfig) error {
+func updateVXConfig(sshClient *sshhelper.Client, config *vx.ServerConfig) error {
 	jsonMarshaler := protojson.MarshalOptions{
 		Indent: "  ",
 	}

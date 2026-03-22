@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	router "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
 	"github.com/5vnetwork/vx-core/common/buf"
 	mynet "github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/net/udp"
@@ -37,7 +37,7 @@ func (f *MockFilter) GetHandlers() ([]outHandler, error) {
 	return f.handlers, nil
 }
 
-func (f *MockFilter) UpdateFilterConfig(filterConfig *configs.SelectorConfig_Filter) {
+func (f *MockFilter) UpdateFilterConfig(filterConfig *router.SelectorConfig_Filter) {
 }
 
 func (f *MockFilter) AddMockHandler(name string, speed, ping, support6, ok int) {
@@ -623,7 +623,7 @@ func TestTopPingStrategy_Select(t *testing.T) {
 	handlers := []outHandler{
 		&testOutHandler{name: "handler1", oStats: oStats{ping: 100, ok: 1}}, // best, in
 		&testOutHandler{name: "handler2", oStats: oStats{ping: 120, ok: 1}}, // in
-		&testOutHandler{name: "handler3", oStats: oStats{ping: 130, ok: 1}},  // in (boundary)
+		&testOutHandler{name: "handler3", oStats: oStats{ping: 130, ok: 1}}, // in (boundary)
 		&testOutHandler{name: "handler4", oStats: oStats{ping: 140, ok: 1}}, // out (> 130)
 	}
 

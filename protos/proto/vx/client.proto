@@ -1,0 +1,51 @@
+syntax = "proto3";
+package vx;
+import "vx/inbound/inbound.proto";
+import "vx/outbound/outbound.proto";
+import "vx/dns/dns.proto";
+import "vx/router/router.proto";
+import "vx/policy.proto";
+import "vx/log/logger.proto";
+import "vx/geo/geo.proto";
+import "vx/dispatcher/dispatcher.proto";
+import "vx/tun/tun.proto";
+import "vx/sysproxy/sysproxy.proto";
+import "vx/grpc/grpc_service.proto";
+import "vx/grpc/grpc_server.proto";
+import "vx/dialerfactory/dialerfactory.proto";
+import "vx/subscription/subscription.proto";
+import "vx/fallbackmon/fallbackmon.proto";
+
+message TmConfig {
+  vx.inbound.InboundManagerConfig inbound_manager = 1;
+  vx.dns.DnsConfig dns = 3;
+  vx.PolicyConfig policy = 4;
+  vx.router.SelectorsConfig selectors = 5;
+  vx.router.RouterConfig router = 6;
+  vx.log.LoggerConfig log = 7;
+  vx.dispatcher.DispatcherConfig dispatcher = 8;
+  vx.geo.GeoConfig geo = 13;
+  vx.grpc.GrpcConfig grpc = 15;
+  vx.tun.TunConfig tun = 17;
+  vx.sysproxy.SysProxyConfig sys_proxy = 18;
+  string db_path = 19;
+  // used by system extension to communicate with its containing app
+  string service_secret = 22;
+  uint32 service_port = 23;
+  // if true, a component for monitoring default nic will be added
+  bool default_nic_monitor = 20;
+  // subscription
+  vx.subscription.SubscriptionConfig subscription = 21;
+  bool hysteria2_reject_quic = 24;
+
+  // outbound
+  vx.outbound.OutboundConfig outbound = 30;
+  string redirect_std_err = 31;
+  vx.inbound.WfpConfig wfp = 33;
+  reserved 34;
+  vx.log.UserLoggerConfig user_log = 35;
+  vx.grpc.GrpcServiceConfig grpc_service = 36;
+  vx.fallbackmon.FallbackMonConfig fallback_mon = 37;
+  vx.dialerfactory.DialerFactoryConfig dialer_factory = 38;
+}
+

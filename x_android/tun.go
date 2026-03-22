@@ -5,7 +5,7 @@
 
 package x_android
 
-import "github.com/5vnetwork/vx-core/app/configs"
+import configs "github.com/5vnetwork/vx-core/app/configs"
 
 type TunConfig interface {
 	GetName() string

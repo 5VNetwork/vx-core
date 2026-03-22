@@ -8,8 +8,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+		"github.com/5vnetwork/vx-core/app/configs"
 )
 
 func toAnytls(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
@@ -17,7 +16,7 @@ func toAnytls(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	anytlsConfig, _ := config.(*proxy.AnytlsClientConfig)
+	anytlsConfig, _ := config.(*configs.AnytlsClientConfig)
 
 	queryParameters := url.Values{}
 	addQueryParameters(queryParameters, outboundConfig)

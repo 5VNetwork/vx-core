@@ -9,8 +9,6 @@ import (
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
@@ -28,21 +26,21 @@ func TestChainHanler(t *testing.T) {
 	trojanPort := net.PickTCPPort()
 	t.Log("socksPort", socksPort, "ssPort", ssPort, "trojanPort", trojanPort)
 	secret := uuid.New()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Tag:     "socks",
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(socksPort),
-				Protocol: serial.ToTypedMessage(&proxy.SocksServerConfig{
-					AuthType: proxy.AuthType_NO_AUTH,
+				Protocol: serial.ToTypedMessage(&configs.SocksServerConfig{
+					AuthType: configs.AuthType_NO_AUTH,
 				}),
 			},
 			{
 				Tag:     "trojan",
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(trojanPort),
-				Protocol: serial.ToTypedMessage(&proxy.TrojanServerConfig{
+				Protocol: serial.ToTypedMessage(&configs.TrojanServerConfig{
 					Users: []*configs.UserConfig{
 						{
 							Id:     secret.String(),
@@ -56,11 +54,11 @@ func TestChainHanler(t *testing.T) {
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(ssPort),
 				Protocol: serial.ToTypedMessage(
-					&proxy.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: secret.String(),
 						},
-						CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+						CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 					},
 				),
 			},
@@ -82,7 +80,7 @@ func TestChainHanler(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -98,22 +96,22 @@ func TestChainHanler(t *testing.T) {
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(ssPort),
-							Protocol: serial.ToTypedMessage(&proxy.ShadowsocksClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 								Password:   secret.String(),
-								CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+								CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 							}),
 						},
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(trojanPort),
-							Protocol: serial.ToTypedMessage(&proxy.TrojanClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 								Password: secret.String(),
 							}),
 						},
 						{
 							Address:  net.LocalHostIP.String(),
 							Port:     uint32(socksPort),
-							Protocol: serial.ToTypedMessage(&proxy.SocksClientConfig{}),
+							Protocol: serial.ToTypedMessage(&configs.SocksClientConfig{}),
 						},
 					},
 				},
@@ -147,13 +145,13 @@ func TestChainHanlerTrojanTlsTrojanTls(t *testing.T) {
 	trojanPort := net.PickTCPPort()
 	t.Log("trojan1", trojan1, "trojan2", trojanPort)
 	secret := uuid.New()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Tag:     "trojan1",
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(trojan1),
-				Protocol: serial.ToTypedMessage(&proxy.TrojanServerConfig{
+				Protocol: serial.ToTypedMessage(&configs.TrojanServerConfig{
 					Users: []*configs.UserConfig{
 						{
 							Id:     secret.String(),
@@ -175,7 +173,7 @@ func TestChainHanlerTrojanTlsTrojanTls(t *testing.T) {
 				Tag:     "trojan2",
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(trojan2),
-				Protocol: serial.ToTypedMessage(&proxy.TrojanServerConfig{
+				Protocol: serial.ToTypedMessage(&configs.TrojanServerConfig{
 					Users: []*configs.UserConfig{
 						{
 							Id:     secret.String(),
@@ -211,7 +209,7 @@ func TestChainHanlerTrojanTlsTrojanTls(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -227,7 +225,7 @@ func TestChainHanlerTrojanTlsTrojanTls(t *testing.T) {
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(trojan1),
-							Protocol: serial.ToTypedMessage(&proxy.TrojanClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 								Password: secret.String(),
 							}),
 							Transport: &configs.TransportConfig{
@@ -241,7 +239,7 @@ func TestChainHanlerTrojanTlsTrojanTls(t *testing.T) {
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(trojan2),
-							Protocol: serial.ToTypedMessage(&proxy.TrojanClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 								Password: secret.String(),
 							}),
 							Transport: &configs.TransportConfig{
@@ -284,21 +282,21 @@ func TestChainHanler1(t *testing.T) {
 	trojanPort := net.PickTCPPort()
 	t.Log("socksPort", socksPort, "ssPort", ssPort, "trojanPort", trojanPort)
 	secret := uuid.New()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Tag:     "socks",
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(socksPort),
-				Protocol: serial.ToTypedMessage(&proxy.SocksServerConfig{
-					AuthType: proxy.AuthType_NO_AUTH,
+				Protocol: serial.ToTypedMessage(&configs.SocksServerConfig{
+					AuthType: configs.AuthType_NO_AUTH,
 				}),
 			},
 			{
 				Tag:     "trojan",
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(trojanPort),
-				Protocol: serial.ToTypedMessage(&proxy.TrojanServerConfig{
+				Protocol: serial.ToTypedMessage(&configs.TrojanServerConfig{
 					Users: []*configs.UserConfig{
 						{
 							Id:     secret.String(),
@@ -312,11 +310,11 @@ func TestChainHanler1(t *testing.T) {
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(ssPort),
 				Protocol: serial.ToTypedMessage(
-					&proxy.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: secret.String(),
 						},
-						CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+						CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 					},
 				),
 			},
@@ -338,7 +336,7 @@ func TestChainHanler1(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -354,12 +352,12 @@ func TestChainHanler1(t *testing.T) {
 						{
 							Address:  net.LocalHostIP.String(),
 							Port:     uint32(socksPort),
-							Protocol: serial.ToTypedMessage(&proxy.SocksClientConfig{}),
+							Protocol: serial.ToTypedMessage(&configs.SocksClientConfig{}),
 						},
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(trojanPort),
-							Protocol: serial.ToTypedMessage(&proxy.TrojanClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 								Password: secret.String(),
 							}),
 						},
@@ -367,9 +365,9 @@ func TestChainHanler1(t *testing.T) {
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(ssPort),
-							Protocol: serial.ToTypedMessage(&proxy.ShadowsocksClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 								Password:   secret.String(),
-								CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+								CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 							}),
 						},
 					},
@@ -404,14 +402,14 @@ func TestChainHanlerTransport(t *testing.T) {
 	trojanPort := net.PickTCPPort()
 	t.Log("socksPort", socksPort, "ssPort", ssPort, "trojanPort", trojanPort)
 	secret := uuid.New()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Tag:     "socks",
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(socksPort),
-				Protocol: serial.ToTypedMessage(&proxy.SocksServerConfig{
-					AuthType: proxy.AuthType_NO_AUTH,
+				Protocol: serial.ToTypedMessage(&configs.SocksServerConfig{
+					AuthType: configs.AuthType_NO_AUTH,
 				}),
 			},
 			{
@@ -426,11 +424,11 @@ func TestChainHanlerTransport(t *testing.T) {
 					},
 				},
 				Protocol: serial.ToTypedMessage(
-					&proxy.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: secret.String(),
 						},
-						CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+						CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 					},
 				),
 			},
@@ -452,7 +450,7 @@ func TestChainHanlerTransport(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -468,9 +466,9 @@ func TestChainHanlerTransport(t *testing.T) {
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(ssPort),
-							Protocol: serial.ToTypedMessage(&proxy.ShadowsocksClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 								Password:   secret.String(),
-								CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+								CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 							}),
 							Transport: &configs.TransportConfig{
 								Protocol: &configs.TransportConfig_Websocket{
@@ -483,7 +481,7 @@ func TestChainHanlerTransport(t *testing.T) {
 						{
 							Address:  net.LocalHostIP.String(),
 							Port:     uint32(socksPort),
-							Protocol: serial.ToTypedMessage(&proxy.SocksClientConfig{}),
+							Protocol: serial.ToTypedMessage(&configs.SocksClientConfig{}),
 						},
 					},
 				},
@@ -517,7 +515,7 @@ func TestChainHanlerTransport1(t *testing.T) {
 	trojanPort := net.PickTCPPort()
 	t.Log("socksPort", socksPort, "ssPort", ssPort, "trojanPort", trojanPort)
 	secret := uuid.New()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Policy: &configs.PolicyConfig{
 			HandshakeTimeout:      10000,
 			ConnectionIdleTimeout: 10000,
@@ -527,8 +525,8 @@ func TestChainHanlerTransport1(t *testing.T) {
 				Tag:     "socks",
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(socksPort),
-				Protocol: serial.ToTypedMessage(&proxy.SocksServerConfig{
-					AuthType: proxy.AuthType_NO_AUTH,
+				Protocol: serial.ToTypedMessage(&configs.SocksServerConfig{
+					AuthType: configs.AuthType_NO_AUTH,
 				}),
 			},
 			{
@@ -543,11 +541,11 @@ func TestChainHanlerTransport1(t *testing.T) {
 					},
 				},
 				Protocol: serial.ToTypedMessage(
-					&proxy.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: secret.String(),
 						},
-						CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+						CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 					},
 				),
 			},
@@ -573,7 +571,7 @@ func TestChainHanlerTransport1(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -589,14 +587,14 @@ func TestChainHanlerTransport1(t *testing.T) {
 						{
 							Address:  net.LocalHostIP.String(),
 							Port:     uint32(socksPort),
-							Protocol: serial.ToTypedMessage(&proxy.SocksClientConfig{}),
+							Protocol: serial.ToTypedMessage(&configs.SocksClientConfig{}),
 						},
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(ssPort),
-							Protocol: serial.ToTypedMessage(&proxy.ShadowsocksClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 								Password:   secret.String(),
-								CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+								CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 							}),
 							Transport: &configs.TransportConfig{
 								Protocol: &configs.TransportConfig_Websocket{
@@ -637,14 +635,14 @@ func TestChainHanlerTransportTls(t *testing.T) {
 	ssPort := net.PickTCPPort()
 	t.Log("socksPort", socksPort, "ssPort", ssPort)
 	secret := uuid.New()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Tag:     "socks",
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(socksPort),
-				Protocol: serial.ToTypedMessage(&proxy.SocksServerConfig{
-					AuthType: proxy.AuthType_NO_AUTH,
+				Protocol: serial.ToTypedMessage(&configs.SocksServerConfig{
+					AuthType: configs.AuthType_NO_AUTH,
 				}),
 			},
 			{
@@ -666,11 +664,11 @@ func TestChainHanlerTransportTls(t *testing.T) {
 					},
 				},
 				Protocol: serial.ToTypedMessage(
-					&proxy.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: secret.String(),
 						},
-						CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+						CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 					},
 				),
 			},
@@ -692,7 +690,7 @@ func TestChainHanlerTransportTls(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -709,14 +707,14 @@ func TestChainHanlerTransportTls(t *testing.T) {
 						{
 							Address:  net.LocalHostIP.String(),
 							Port:     uint32(socksPort),
-							Protocol: serial.ToTypedMessage(&proxy.SocksClientConfig{}),
+							Protocol: serial.ToTypedMessage(&configs.SocksClientConfig{}),
 						},
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(ssPort),
-							Protocol: serial.ToTypedMessage(&proxy.ShadowsocksClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 								Password:   secret.String(),
-								CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+								CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 							}),
 							Transport: &configs.TransportConfig{
 								Protocol: &configs.TransportConfig_Websocket{
@@ -764,7 +762,7 @@ func TestChainHanlerSSHys(t *testing.T) {
 	secret := uuid.New()
 	userID := uuid.New()
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Users: []*configs.UserConfig{
 			{
 				Id:     userID.String(),
@@ -776,7 +774,7 @@ func TestChainHanlerSSHys(t *testing.T) {
 				Tag:     "hysteria",
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(hysPort),
-				Protocol: serial.ToTypedMessage(&proxy.Hysteria2ServerConfig{
+				Protocol: serial.ToTypedMessage(&configs.Hysteria2ServerConfig{
 					IgnoreClientBandwidth: true,
 					TlsConfig: &tls.TlsConfig{
 						Certificates: []*tls.Certificate{
@@ -790,11 +788,11 @@ func TestChainHanlerSSHys(t *testing.T) {
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(ssPort),
 				Protocol: serial.ToTypedMessage(
-					&proxy.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: secret.String(),
 						},
-						CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+						CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 					},
 				),
 			},
@@ -816,7 +814,7 @@ func TestChainHanlerSSHys(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -833,7 +831,7 @@ func TestChainHanlerSSHys(t *testing.T) {
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(hysPort),
-							Protocol: serial.ToTypedMessage(&proxy.Hysteria2ClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
 								Auth: userID.String(),
 								TlsConfig: &tls.TlsConfig{
 									AllowInsecure: true,
@@ -843,9 +841,9 @@ func TestChainHanlerSSHys(t *testing.T) {
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(ssPort),
-							Protocol: serial.ToTypedMessage(&proxy.ShadowsocksClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 								Password:   secret.String(),
-								CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+								CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 							}),
 						},
 					},
@@ -882,7 +880,7 @@ func TestChainHanlerHysSS(t *testing.T) {
 	secret := uuid.New()
 	userID := uuid.New()
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Users: []*configs.UserConfig{
 			{
 				Id:     userID.String(),
@@ -894,7 +892,7 @@ func TestChainHanlerHysSS(t *testing.T) {
 				Tag:     "hysteria",
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(hysPort),
-				Protocol: serial.ToTypedMessage(&proxy.Hysteria2ServerConfig{
+				Protocol: serial.ToTypedMessage(&configs.Hysteria2ServerConfig{
 					IgnoreClientBandwidth: true,
 					TlsConfig: &tls.TlsConfig{
 						Certificates: []*tls.Certificate{
@@ -908,11 +906,11 @@ func TestChainHanlerHysSS(t *testing.T) {
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(ssPort),
 				Protocol: serial.ToTypedMessage(
-					&proxy.ShadowsocksServerConfig{
+					&configs.ShadowsocksServerConfig{
 						User: &configs.UserConfig{
 							Secret: secret.String(),
 						},
-						CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+						CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 					},
 				),
 			},
@@ -934,7 +932,7 @@ func TestChainHanlerHysSS(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -951,15 +949,15 @@ func TestChainHanlerHysSS(t *testing.T) {
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(ssPort),
-							Protocol: serial.ToTypedMessage(&proxy.ShadowsocksClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.ShadowsocksClientConfig{
 								Password:   secret.String(),
-								CipherType: proxy.ShadowsocksCipherType_CHACHA20_POLY1305,
+								CipherType: configs.ShadowsocksCipherType_CHACHA20_POLY1305,
 							}),
 						},
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(hysPort),
-							Protocol: serial.ToTypedMessage(&proxy.Hysteria2ClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
 								Auth: userID.String(),
 								TlsConfig: &tls.TlsConfig{
 									AllowInsecure: true,
@@ -998,7 +996,7 @@ func TestChainHanlerTrojanHys(t *testing.T) {
 	t.Log("hysPort", hysPort, "trojanPort", trojanPort)
 	secret := uuid.New()
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Users: []*configs.UserConfig{
 			{
 				Id:     secret.String(),
@@ -1010,7 +1008,7 @@ func TestChainHanlerTrojanHys(t *testing.T) {
 				Tag:     "hysteria",
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(hysPort),
-				Protocol: serial.ToTypedMessage(&proxy.Hysteria2ServerConfig{
+				Protocol: serial.ToTypedMessage(&configs.Hysteria2ServerConfig{
 					IgnoreClientBandwidth: true,
 					TlsConfig: &tls.TlsConfig{
 						Certificates: []*tls.Certificate{
@@ -1024,7 +1022,7 @@ func TestChainHanlerTrojanHys(t *testing.T) {
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(trojanPort),
 				Protocol: serial.ToTypedMessage(
-					&proxy.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     secret.String(),
@@ -1052,7 +1050,7 @@ func TestChainHanlerTrojanHys(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -1069,14 +1067,14 @@ func TestChainHanlerTrojanHys(t *testing.T) {
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(trojanPort),
-							Protocol: serial.ToTypedMessage(&proxy.TrojanClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 								Password: secret.String(),
 							}),
 						},
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(hysPort),
-							Protocol: serial.ToTypedMessage(&proxy.Hysteria2ClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
 								Auth: secret.String(),
 								TlsConfig: &tls.TlsConfig{
 									AllowInsecure: true,
@@ -1115,7 +1113,7 @@ func TestChainHanlerTrojanTlsHys(t *testing.T) {
 	t.Log("hysPort", hysPort, "trojanPort", trojanPort)
 	secret := uuid.New()
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Users: []*configs.UserConfig{
 			{
 				Id:     secret.String(),
@@ -1127,7 +1125,7 @@ func TestChainHanlerTrojanTlsHys(t *testing.T) {
 				Tag:     "hysteria",
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(hysPort),
-				Protocol: serial.ToTypedMessage(&proxy.Hysteria2ServerConfig{
+				Protocol: serial.ToTypedMessage(&configs.Hysteria2ServerConfig{
 					IgnoreClientBandwidth: true,
 					TlsConfig: &tls.TlsConfig{
 						Certificates: []*tls.Certificate{
@@ -1150,7 +1148,7 @@ func TestChainHanlerTrojanTlsHys(t *testing.T) {
 					},
 				},
 				Protocol: serial.ToTypedMessage(
-					&proxy.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     secret.String(),
@@ -1178,7 +1176,7 @@ func TestChainHanlerTrojanTlsHys(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -1195,7 +1193,7 @@ func TestChainHanlerTrojanTlsHys(t *testing.T) {
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(trojanPort),
-							Protocol: serial.ToTypedMessage(&proxy.TrojanClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 								Password: secret.String(),
 							}),
 							Transport: &configs.TransportConfig{
@@ -1209,7 +1207,7 @@ func TestChainHanlerTrojanTlsHys(t *testing.T) {
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(hysPort),
-							Protocol: serial.ToTypedMessage(&proxy.Hysteria2ClientConfig{
+							Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
 								Auth: secret.String(),
 								TlsConfig: &tls.TlsConfig{
 									AllowInsecure: true,

@@ -10,8 +10,6 @@ import (
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
@@ -30,11 +28,11 @@ func TestHysteriaTCP(t *testing.T) {
 	serverPort := net.PickUDPPort()
 	t.Logf("server port: %d", serverPort)
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Port: uint32(serverPort),
-				Protocol: serial.ToTypedMessage(&proxy.Hysteria2ServerConfig{
+				Protocol: serial.ToTypedMessage(&configs.Hysteria2ServerConfig{
 					IgnoreClientBandwidth: true,
 					TlsConfig: &tls.TlsConfig{
 						Certificates: []*tls.Certificate{
@@ -74,7 +72,7 @@ func TestHysteriaTCP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -88,7 +86,7 @@ func TestHysteriaTCP(t *testing.T) {
 				{
 					Address: "127.0.0.1",
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxy.Hysteria2ClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
 						Auth: userID.String(),
 						TlsConfig: &tls.TlsConfig{
 							AllowInsecure: true,
@@ -123,11 +121,11 @@ func TestHysteriaTCP(t *testing.T) {
 func TestHysteriaUDP(t *testing.T) {
 	userID := uuid.New()
 	serverPort := net.PickUDPPort()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Port: uint32(serverPort),
-				Protocol: serial.ToTypedMessage(&proxy.Hysteria2ServerConfig{
+				Protocol: serial.ToTypedMessage(&configs.Hysteria2ServerConfig{
 					IgnoreClientBandwidth: true,
 					TlsConfig: &tls.TlsConfig{
 						Certificates: []*tls.Certificate{
@@ -155,7 +153,7 @@ func TestHysteriaUDP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  udpDest.Address.String(),
 							Port:     uint32(udpDest.Port),
 							Networks: []net.Network{net.Network_UDP},
@@ -169,7 +167,7 @@ func TestHysteriaUDP(t *testing.T) {
 				{
 					Address: "127.0.0.1",
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxy.Hysteria2ClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
 						Auth: userID.String(),
 						TlsConfig: &tls.TlsConfig{
 							AllowInsecure: true,
@@ -204,20 +202,20 @@ func TestHysteriaTCPSalamander(t *testing.T) {
 	userID := uuid.New()
 	serverPort := net.PickUDPPort()
 	secret := "1234567890"
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Port: uint32(serverPort),
-				Protocol: serial.ToTypedMessage(&proxy.Hysteria2ServerConfig{
+				Protocol: serial.ToTypedMessage(&configs.Hysteria2ServerConfig{
 					IgnoreClientBandwidth: true,
 					TlsConfig: &tls.TlsConfig{
 						Certificates: []*tls.Certificate{
 							tls.ParseCertificate(cert.MustGenerate(nil)),
 						},
 					},
-					Obfs: &proxy.ObfsConfig{
-						Obfs: &proxy.ObfsConfig_Salamander{
-							Salamander: &proxy.SalamanderConfig{
+					Obfs: &configs.ObfsConfig{
+						Obfs: &configs.ObfsConfig_Salamander{
+							Salamander: &configs.SalamanderConfig{
 								Password: secret,
 							},
 						},
@@ -255,7 +253,7 @@ func TestHysteriaTCPSalamander(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -269,14 +267,14 @@ func TestHysteriaTCPSalamander(t *testing.T) {
 				{
 					Address: "127.0.0.1",
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxy.Hysteria2ClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
 						Auth: userID.String(),
 						TlsConfig: &tls.TlsConfig{
 							AllowInsecure: true,
 						},
-						Obfs: &proxy.ObfsConfig{
-							Obfs: &proxy.ObfsConfig_Salamander{
-								Salamander: &proxy.SalamanderConfig{
+						Obfs: &configs.ObfsConfig{
+							Obfs: &configs.ObfsConfig_Salamander{
+								Salamander: &configs.SalamanderConfig{
 									Password: secret,
 								},
 							},
@@ -316,11 +314,11 @@ func TestHysteriaECH(t *testing.T) {
 	echConfig, echKey, err := util.ExecuteECH("asdf.a")
 	common.Must(err)
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Port: uint32(serverPort),
-				Protocol: serial.ToTypedMessage(&proxy.Hysteria2ServerConfig{
+				Protocol: serial.ToTypedMessage(&configs.Hysteria2ServerConfig{
 					IgnoreClientBandwidth: true,
 					TlsConfig: &tls.TlsConfig{
 						Certificates: []*tls.Certificate{
@@ -348,7 +346,7 @@ func TestHysteriaECH(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxy.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -362,7 +360,7 @@ func TestHysteriaECH(t *testing.T) {
 				{
 					Address: "127.0.0.1",
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxy.Hysteria2ClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
 						Auth: userID.String(),
 						TlsConfig: &tls.TlsConfig{
 							AllowInsecure: true,

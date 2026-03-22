@@ -11,8 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+		"github.com/5vnetwork/vx-core/app/configs"
 )
 
 // ss://ciper:password@addr:port#name\r\n
@@ -22,19 +21,19 @@ func toShadowSocks0(outboundConfig *configs.OutboundHandlerConfig) (string, erro
 	if err != nil {
 		return "", err
 	}
-	ssConfig, _ := config.(*proxy.ShadowsocksClientConfig)
+	ssConfig, _ := config.(*configs.ShadowsocksClientConfig)
 
 	ret := "ss://"
 	// ciper+password
 	var ciper string
 	switch ssConfig.CipherType {
-	case proxy.ShadowsocksCipherType_AES_128_GCM:
+	case configs.ShadowsocksCipherType_AES_128_GCM:
 		ciper = "aes-128-gcm"
-	case proxy.ShadowsocksCipherType_AES_256_GCM:
+	case configs.ShadowsocksCipherType_AES_256_GCM:
 		ciper = "aes-256-gcm"
-	case proxy.ShadowsocksCipherType_CHACHA20_POLY1305:
+	case configs.ShadowsocksCipherType_CHACHA20_POLY1305:
 		ciper = "chacha20-ietf-poly1305"
-	case proxy.ShadowsocksCipherType_NONE:
+	case configs.ShadowsocksCipherType_NONE:
 		ciper = "none"
 	default:
 		return "", fmt.Errorf("unknown ciper type: %v", ssConfig.CipherType)
@@ -53,16 +52,16 @@ func toShadowSocks(outboundConfig *configs.OutboundHandlerConfig) (string, error
 	if err != nil {
 		return "", err
 	}
-	ssConfig, _ := config.(*proxy.ShadowsocksClientConfig)
+	ssConfig, _ := config.(*configs.ShadowsocksClientConfig)
 	var ciper string
 	switch ssConfig.CipherType {
-	case proxy.ShadowsocksCipherType_AES_128_GCM:
+	case configs.ShadowsocksCipherType_AES_128_GCM:
 		ciper = "aes-128-gcm"
-	case proxy.ShadowsocksCipherType_AES_256_GCM:
+	case configs.ShadowsocksCipherType_AES_256_GCM:
 		ciper = "aes-256-gcm"
-	case proxy.ShadowsocksCipherType_CHACHA20_POLY1305:
+	case configs.ShadowsocksCipherType_CHACHA20_POLY1305:
 		ciper = "chacha20-ietf-poly1305"
-	case proxy.ShadowsocksCipherType_NONE:
+	case configs.ShadowsocksCipherType_NONE:
 		ciper = "none"
 	default:
 		return "", fmt.Errorf("unknown ciper type: %v", ssConfig.CipherType)

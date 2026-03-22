@@ -12,9 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	bufnet "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/net"
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
-	xnet "github.com/5vnetwork/vx-core/common/net"
 )
 
 func toHysteria(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
@@ -22,7 +21,7 @@ func toHysteria(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	hysteriaConfig, _ := config.(*proxy.Hysteria2ClientConfig)
+	hysteriaConfig, _ := config.(*configs.Hysteria2ClientConfig)
 
 	queryParameters := url.Values{}
 	if tlsConfig := hysteriaConfig.GetTlsConfig(); tlsConfig != nil {
@@ -57,31 +56,30 @@ func toHysteria(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
 		Scheme:   "hysteria2",
 		User:     url.User(hysteriaConfig.GetAuth()),
 		RawQuery: queryParameters.Encode(),
-		Fragment: outboundConfig.Tag,
+		Fragment: outboundConfig.GetTag(),
 	}
-	if len(outboundConfig.Ports) > 0 {
-		u.Host = net.JoinHostPort(outboundConfig.Address, PortRangesToString(outboundConfig.Ports))
+	if ports := outboundConfig.GetPorts(); len(ports) > 0 {
+		u.Host = net.JoinHostPort(outboundConfig.GetAddress(), PortRangesToString(ports))
 	} else {
-		u.Host = net.JoinHostPort(outboundConfig.Address, strconv.Itoa(int(outboundConfig.Port)))
+		u.Host = net.JoinHostPort(outboundConfig.GetAddress(), strconv.Itoa(int(outboundConfig.GetPort())))
 	}
 	return u.String(), nil
 }
 
 // PortRangesToString converts a slice of PortRange back to string format
 // This is the reverse of TryParsePorts function
-func PortRangesToString(portRanges []*xnet.PortRange) string {
+func PortRangesToString(portRanges []*bufnet.PortRange) string {
 	if len(portRanges) == 0 {
 		return ""
 	}
 
 	var parts []string
 	for _, pr := range portRanges {
-		if pr.From == pr.To {
-			// Single port
-			parts = append(parts, strconv.Itoa(int(pr.From)))
+		from, to := pr.GetFrom(), pr.GetTo()
+		if from == to {
+			parts = append(parts, strconv.Itoa(int(from)))
 		} else {
-			// Port range
-			parts = append(parts, fmt.Sprintf("%d-%d", pr.From, pr.To))
+			parts = append(parts, fmt.Sprintf("%d-%d", from, to))
 		}
 	}
 

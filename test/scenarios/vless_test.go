@@ -7,11 +7,9 @@ import (
 	gotls "crypto/tls"
 	"testing"
 
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/protocol"
@@ -29,13 +27,13 @@ func TestVlessTCP(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VlessServerConfig{
+					&configs.VlessServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -66,7 +64,7 @@ func TestVlessTCP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -80,7 +78,7 @@ func TestVlessTCP(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VlessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VlessClientConfig{
 						Id:         userID.String(),
 						Flow:       "xtls-rprx-vision",
 						Encryption: "none",
@@ -121,13 +119,13 @@ func TestVlessUdpFlow(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VlessServerConfig{
+					&configs.VlessServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -161,7 +159,7 @@ func TestVlessUdpFlow(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  udpDest.Address.String(),
 							Port:     uint32(udpDest.Port),
 							Networks: []net.Network{net.Network_UDP},
@@ -175,7 +173,7 @@ func TestVlessUdpFlow(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VlessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VlessClientConfig{
 						Id:         userID.String(),
 						Flow:       "xtls-rprx-vision",
 						Encryption: "none",
@@ -234,13 +232,13 @@ func TestVlessTCPTls(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VlessServerConfig{
+					&configs.VlessServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -271,7 +269,7 @@ func TestVlessTCPTls(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -285,7 +283,7 @@ func TestVlessTCPTls(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VlessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VlessClientConfig{
 						Id:         userID.String(),
 						Flow:       "xtls-rprx-vision",
 						Encryption: "none",

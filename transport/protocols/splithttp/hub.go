@@ -57,7 +57,7 @@ func (h *requestHandler) upsertSession(sessionId string) *httpSession {
 	}
 
 	s := &httpSession{
-		uploadQueue:      NewUploadQueue(h.ln.config.GetNormalizedScMaxBufferedPosts()),
+		uploadQueue:      NewUploadQueue(GetNormalizedScMaxBufferedPosts(h.ln.config)),
 		isFullyConnected: done.New(),
 	}
 
@@ -103,7 +103,7 @@ func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		return
 	}
 
-	h.config.WriteResponseHeader(writer)
+	WriteResponseHeader(h.config, writer)
 
 	/*
 		clientVer := []int{0, 0, 0}
@@ -113,7 +113,7 @@ func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		}
 	*/
 
-	validRange := h.config.GetNormalizedXPaddingBytes()
+	validRange := GetNormalizedXPaddingBytes(h.config)
 	paddingLength := 0
 
 	referrer := request.Header.Get("Referer")
@@ -171,7 +171,7 @@ func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 	if sessionId != "" {
 		currentSession = h.upsertSession(sessionId)
 	}
-	scMaxEachPostBytes := int(h.ln.config.GetNormalizedScMaxEachPostBytes().To)
+	scMaxEachPostBytes := int(GetNormalizedScMaxEachPostBytes(h.ln.config).To)
 
 	if request.Method == "POST" && sessionId != "" { // stream-up, packet-up
 		seq := ""
@@ -200,15 +200,15 @@ func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 				writer.Header().Set("X-Accel-Buffering", "no")
 				writer.Header().Set("Cache-Control", "no-store")
 				writer.WriteHeader(http.StatusOK)
-				scStreamUpServerSecs := h.config.GetNormalizedScStreamUpServerSecs()
+				scStreamUpServerSecs := GetNormalizedScStreamUpServerSecs(h.config)
 				if referrer != "" && scStreamUpServerSecs.To > 0 {
 					go func() {
 						for {
-							_, err := httpSC.Write(bytes.Repeat([]byte{'X'}, int(h.config.GetNormalizedXPaddingBytes().rand())))
+							_, err := httpSC.Write(bytes.Repeat([]byte{'X'}, int(Rand(GetNormalizedXPaddingBytes(h.config)))))
 							if err != nil {
 								break
 							}
-							time.Sleep(time.Duration(scStreamUpServerSecs.rand()) * time.Second)
+							time.Sleep(time.Duration(Rand(scStreamUpServerSecs)) * time.Second)
 						}
 					}()
 				}
@@ -360,7 +360,7 @@ func ListenXH(ctx context.Context, addr net.Destination,
 	handler := &requestHandler{
 		config:    l.config,
 		host:      l.config.Host,
-		path:      l.config.GetNormalizedPath(),
+		path:      GetNormalizedPath(l.config),
 		ln:        l,
 		sessionMu: &sync.Mutex{},
 		sessions:  sync.Map{},

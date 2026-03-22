@@ -13,11 +13,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	proxyConfig "github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/inbound/monitor"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/proxy/hysteria2/internal/server"
+	tlssec "github.com/5vnetwork/vx-core/transport/security/tls"
 
 	"github.com/apernet/hysteria/extras/v2/obfs"
 	"github.com/rs/zerolog/log"
@@ -53,7 +54,7 @@ func NewInbound(config *InboundConfig) (*Inbound, error) {
 }
 
 type InboundConfig struct {
-	*proxyConfig.Hysteria2ServerConfig
+	*configs.Hysteria2ServerConfig
 	Ports                 []uint16
 	Tag                   string
 	InStats               *monitor.Stats
@@ -84,7 +85,7 @@ func (in *Inbound) WithOnUnauthorizedRequest(f i.UnauthorizedReport) {
 func (in *Inbound) Start() error {
 	config := in.config
 
-	tlsConfig, err := config.Hysteria2ServerConfig.TlsConfig.GetTLSConfig()
+	tlsConfig, err := tlssec.GetTLSConfig(config.Hysteria2ServerConfig.TlsConfig)
 	if err != nil {
 		return err
 	}

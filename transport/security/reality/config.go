@@ -10,7 +10,7 @@ import (
 	"github.com/xtls/reality"
 )
 
-func (c *RealityConfig) GetREALITYConfig() *reality.Config {
+func GetREALITYConfig(c *RealityConfig) *reality.Config {
 	var dialer net.Dialer
 	config := &reality.Config{
 		DialContext:  dialer.DialContext,

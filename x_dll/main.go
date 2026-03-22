@@ -21,10 +21,10 @@ import (
 	"time"
 	"unsafe"
 
+	configs "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx"
 	"github.com/5vnetwork/vx-core/app/api"
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/client"
-	configs "github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
 	"github.com/5vnetwork/vx-core/common/redirect"
 	"github.com/5vnetwork/vx-core/common/service"

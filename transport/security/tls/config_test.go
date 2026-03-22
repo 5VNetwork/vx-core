@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	tlspb "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/transport/security/tls"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
 
@@ -15,13 +16,11 @@ import (
 func TestCertificateIssuing(t *testing.T) {
 	certificate := ParseCertificate(cert.MustGenerate(nil, cert.Authority(true), cert.KeyUsage(x509.KeyUsageCertSign)))
 
-	c := &TlsConfig{
-		IssueCas: []*Certificate{
-			certificate,
-		},
-	}
+	c := (&tlspb.TlsConfig_builder{
+		IssueCas: []*Certificate{certificate},
+	}).Build()
 
-	tlsConfig, err := c.GetTLSConfig()
+	tlsConfig, err := GetTLSConfig(c)
 	common.Must(err)
 	v2rayCert, err := tlsConfig.GetCertificate(&gotls.ClientHelloInfo{
 		ServerName: "www.v2fly.org",
@@ -43,14 +42,11 @@ func TestExpiredCertificate(t *testing.T) {
 
 	certificate2 := ParseCertificate(expiredCert)
 
-	c := &TlsConfig{
-		IssueCas: []*Certificate{
-			certificate,
-			certificate2,
-		},
-	}
+	c := (&tlspb.TlsConfig_builder{
+		IssueCas: []*Certificate{certificate, certificate2},
+	}).Build()
 
-	tlsConfig, err := c.GetTLSConfig()
+	tlsConfig, err := GetTLSConfig(c)
 	common.Must(err)
 	v2rayCert, err := tlsConfig.GetCertificate(&gotls.ClientHelloInfo{
 		ServerName: "www.v2fly.org",
@@ -65,9 +61,9 @@ func TestExpiredCertificate(t *testing.T) {
 }
 
 func TestInsecureCertificates(t *testing.T) {
-	c := &TlsConfig{}
+	c := (&tlspb.TlsConfig_builder{}).Build()
 
-	tlsConfig, err := c.GetTLSConfig()
+	tlsConfig, err := GetTLSConfig(c)
 	common.Must(err)
 	if len(tlsConfig.CipherSuites) > 0 {
 		t.Fatal("Unexpected tls cipher suites list: ", tlsConfig.CipherSuites)
@@ -77,13 +73,11 @@ func TestInsecureCertificates(t *testing.T) {
 func BenchmarkCertificateIssuing(b *testing.B) {
 	certificate := ParseCertificate(cert.MustGenerate(nil, cert.Authority(true), cert.KeyUsage(x509.KeyUsageCertSign)))
 
-	c := &TlsConfig{
-		IssueCas: []*Certificate{
-			certificate,
-		},
-	}
+	c := (&tlspb.TlsConfig_builder{
+		IssueCas: []*Certificate{certificate},
+	}).Build()
 
-	tlsConfig, err := c.GetTLSConfig()
+	tlsConfig, err := GetTLSConfig(c)
 	common.Must(err)
 	lenCerts := len(tlsConfig.Certificates)
 

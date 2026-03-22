@@ -8,7 +8,6 @@ import (
 	"net/url"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/util/sub"
 	"github.com/5vnetwork/vx-core/common/serial"
 )
@@ -23,7 +22,7 @@ func ParseAnytls(link string) (*configs.OutboundHandlerConfig, error) {
 		return nil, fmt.Errorf("not a valid anytls link")
 	}
 
-	anytlsConfig := &proxy.AnytlsClientConfig{
+	anytlsConfig := &configs.AnytlsClientConfig{
 		Password: u.User.Username(),
 	}
 

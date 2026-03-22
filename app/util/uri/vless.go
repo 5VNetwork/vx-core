@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+		"github.com/5vnetwork/vx-core/app/configs"
 )
 
 func toVless0(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
@@ -16,7 +15,7 @@ func toVless0(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	vlessConfig, _ := config.(*proxy.VlessClientConfig)
+	vlessConfig, _ := config.(*configs.VlessClientConfig)
 
 	uuidAddrPort := fmt.Sprintf("%s@%s:%d", vlessConfig.Id,
 		outboundConfig.Address, getSinglePort(outboundConfig))

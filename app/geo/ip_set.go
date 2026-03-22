@@ -6,6 +6,7 @@ package geo
 import (
 	"net"
 
+	commongeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/5vnetwork/vx-core/common/geo"
 	"github.com/5vnetwork/vx-core/i"
 )
@@ -46,7 +47,7 @@ type IpSet struct {
 	m    *geo.IPMatcher
 }
 
-func NewIPSet(tags []string, h i.GeoHelper, cidrs ...*geo.CIDR) (*IpSet, error) {
+func NewIPSet(tags []string, h i.GeoHelper, cidrs ...*commongeo.CIDR) (*IpSet, error) {
 	i := &IpSet{
 		tags: tags,
 		h:    h,

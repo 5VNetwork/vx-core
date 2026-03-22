@@ -7,7 +7,7 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	router "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/rs/zerolog/log"
@@ -118,7 +118,7 @@ func (s *Selectors) OnHandlerSpeedChanged(tag string, speed int32) {
 type HandlersBeingUsedUpdate func([]string)
 
 type SelectorConfig struct {
-	*configs.SelectorConfig
+	*router.SelectorConfig
 	CreateHandler             CreateHandlerFunc
 	HandlerErrorChangeSubject HandlerErrorChangeSubject
 	Tester                    Tester
@@ -136,25 +136,25 @@ func NewSelector(config SelectorConfig) *Selector {
 
 	var balancer Balancer
 	switch sc.BalanceStrategy {
-	case configs.SelectorConfig_RANDOM:
+	case router.SelectorConfig_RANDOM:
 		balancer = NewRandomBanlancer()
-	case configs.SelectorConfig_MEMORY:
+	case router.SelectorConfig_MEMORY:
 		balancer = NewMemoryBalancer()
 	}
 
 	var se selectStrategy
 	switch sc.Strategy {
-	case configs.SelectorConfig_ALL:
+	case router.SelectorConfig_ALL:
 		se = &allStrategy{}
-	case configs.SelectorConfig_ALL_OK:
+	case router.SelectorConfig_ALL_OK:
 		se = &allOkStrategy{}
-	case configs.SelectorConfig_MOST_THROUGHPUT:
+	case router.SelectorConfig_MOST_THROUGHPUT:
 		se = &highestThroughputStrategy{}
-	case configs.SelectorConfig_LEAST_PING:
+	case router.SelectorConfig_LEAST_PING:
 		se = &leastPingStrategy{}
-	case configs.SelectorConfig_TOP_PING:
+	case router.SelectorConfig_TOP_PING:
 		se = &topPingStrategy{}
-	case configs.SelectorConfig_TOP_THROUGHPUT:
+	case router.SelectorConfig_TOP_THROUGHPUT:
 		se = &topThroughputStrategy{}
 	}
 	selector0 := newSelector(selectorConfig{

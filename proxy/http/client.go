@@ -13,7 +13,7 @@ import (
 
 	"golang.org/x/net/http2"
 
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/bytespool"
 	"github.com/5vnetwork/vx-core/common/errors"
@@ -44,7 +44,7 @@ var (
 type ClientSettings struct {
 	Address            net.Address
 	PortPicker         i.PortSelector
-	Account            *proxyconfig.Account
+	Account            *configs.Account
 	H1SkipWaitForReply bool
 	Dialer             i.Dialer
 }
@@ -70,7 +70,7 @@ func (c *Client) HandleFlow(ctx context.Context, dst net.Destination, rw buf.Rea
 		return proxy.ErrUDPNotSupport
 	}
 
-	var user *proxyconfig.Account
+	var user *configs.Account
 	var conn net.Conn
 
 	var firstPayload []byte
@@ -139,7 +139,7 @@ func (c *Client) ProxyDial(ctx context.Context, dst net.Destination, initialData
 		return nil, errors.New("UDP is not supported by HTTP outbound")
 	}
 
-	var user *proxyconfig.Account
+	var user *configs.Account
 	var conn net.Conn
 
 	if err := retry.ExponentialBackoff(5, 100).On(func() error {
@@ -184,7 +184,7 @@ func (c *Client) ListenPacket(ctx context.Context, dst net.Destination) (udp.Udp
 }
 
 // setUpHTTPTunnel will create a socket tunnel via HTTP CONNECT method
-func setUpHTTPTunnel(ctx context.Context, dest net.Destination, target string, user *proxyconfig.Account, dialer i.Dialer, firstPayload []byte, writeFirstPayloadInH1 bool,
+func setUpHTTPTunnel(ctx context.Context, dest net.Destination, target string, user *configs.Account, dialer i.Dialer, firstPayload []byte, writeFirstPayloadInH1 bool,
 ) (net.Conn, buf.MultiBuffer, error) {
 	req := &http.Request{
 		Method: http.MethodConnect,

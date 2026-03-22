@@ -218,7 +218,7 @@ func Dial(ctx context.Context, dest net.Destination, c *QuicConfig, e security.E
 			ServerName:    internalDomain,
 			AllowInsecure: true,
 		}
-		tlsConfig, err = c.GetTLSConfig(mytls.WithDestination(dest))
+		tlsConfig, err = mytls.GetTLSConfig(c, mytls.WithDestination(dest))
 		if err != nil {
 			return nil, err
 		}

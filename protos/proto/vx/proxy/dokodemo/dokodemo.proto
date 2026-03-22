@@ -1,0 +1,10 @@
+syntax = "proto3";
+package vx.proxy.dokodemo;
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/proxy";
+import "vx/common/net/net.proto";
+
+message DokodemoConfig {
+  string address = 1;
+  uint32 port = 2;
+  repeated vx.common.net.Network networks = 7;
+}

@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	configs "github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/transport"
@@ -28,8 +28,6 @@ func TransportProtocolConfig(tc *configs.TransportConfig) interface{} {
 		protocolConfig = c.Websocket
 	case *configs.TransportConfig_Http:
 		protocolConfig = c.Http
-	case *configs.TransportConfig_Quic:
-		protocolConfig = c.Quic
 	case *configs.TransportConfig_Kcp:
 		protocolConfig = c.Kcp
 	case *configs.TransportConfig_Splithttp:

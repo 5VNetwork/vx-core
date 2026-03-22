@@ -5,8 +5,9 @@ import (
 	"os"
 	"sync"
 
+	commongeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
+
 	"github.com/5vnetwork/vx-core/app/geo"
-	cgeo "github.com/5vnetwork/vx-core/common/geo"
 	"github.com/5vnetwork/vx-core/common/session"
 	"github.com/rs/zerolog/log"
 )
@@ -39,9 +40,11 @@ func NewFallbackMon(setting *FallbackMonSetting) *FallbackMon {
 
 func (r *FallbackMon) Start() error {
 	var err error
-	r.localFile, err = os.OpenFile(r.LocalFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		return err
+	if r.LocalFile != "" {
+		r.localFile, err = os.OpenFile(r.LocalFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -101,10 +104,10 @@ func (r *FallbackMon) FlowSessionEnd(ctx context.Context, info *session.Info, er
 
 		// add to set
 		if r.Geo != nil {
-			err = r.Geo.GetGeo().AddDomain(r.DomainSetName, &cgeo.Domain{
+			err = r.Geo.GetGeo().AddDomain(r.DomainSetName, commongeo.Domain_builder{
 				Value: s.GetTargetDomain(),
-				Type:  cgeo.Domain_RootDomain,
-			})
+				Type:  commongeo.Domain_RootDomain,
+			}.Build())
 			if err != nil {
 				log.Ctx(ctx).Err(err).Msg("failed to add geo domain to fallback set")
 			}

@@ -3,30 +3,34 @@ package geo
 import (
 	"errors"
 
+	commongeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/5vnetwork/vx-core/common/strmatcher"
 )
 
-// type loader interface {
-// 	LoadIP(filename, country string) ([]*CIDR, error)
-// 	LoadSite(filename, list string) ([]*Domain, error)
-// }
+type (
+	GeoIP   = commongeo.GeoIP
+	GeoSite = commongeo.GeoSite
+	Domain  = commongeo.Domain
+	CIDR    = commongeo.CIDR
+)
 
-func ToStrMatcher(d *Domain) (strmatcher.Matcher, error) {
+func ToStrMatcher(d *commongeo.Domain) (strmatcher.Matcher, error) {
 	switch d.Type {
-	case Domain_Full:
+	case commongeo.Domain_Full:
 		return strmatcher.Full.New(d.Value)
-	case Domain_RootDomain:
+	case commongeo.Domain_RootDomain:
 		return strmatcher.Domain.New(d.Value)
-	case Domain_Plain:
+	case commongeo.Domain_Plain:
 		return strmatcher.Substr.New(d.Value)
-	case Domain_Regex:
+	case commongeo.Domain_Regex:
 		return strmatcher.Regex.New(d.Value)
 	default:
 		return nil, errors.New("unknown domain type")
 	}
 }
 
-func ToMphIndexMatcher(domainMatchings []*Domain, opts ...strmatcher.MphIndexMatcherOption) (strmatcher.IndexMatcher, error) {
+func ToMphIndexMatcher(domainMatchings []*commongeo.Domain,
+	opts ...strmatcher.MphIndexMatcherOption) (strmatcher.IndexMatcher, error) {
 	indexMatcher := strmatcher.NewMphIndexMatcher(opts...)
 	for _, d := range domainMatchings {
 		matcher, err := ToStrMatcher(d)

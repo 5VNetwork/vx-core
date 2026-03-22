@@ -8,7 +8,6 @@ import (
 	"net/url"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/util/sub"
 	"github.com/5vnetwork/vx-core/common/serial"
 )
@@ -29,7 +28,7 @@ func ParseSocks5FromLink(link string) (*configs.OutboundHandlerConfig, error) {
 		Address: u.Hostname(),
 		Tag:     u.Fragment,
 		Ports:   sub.TryParsePorts(u.Port()),
-		Protocol: serial.ToTypedMessage(&proxy.SocksClientConfig{
+		Protocol: serial.ToTypedMessage(&configs.SocksClientConfig{
 			Name:     u.User.Username(),
 			Password: password,
 		}),

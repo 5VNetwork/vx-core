@@ -1,0 +1,18 @@
+syntax = "proto3";
+package vx.proxy.http;
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/proxy";
+
+// Config for HTTP proxy server.
+message HttpServerConfig {
+}
+
+// ClientConfig is the protobuf config for HTTP proxy client.
+message HttpClientConfig { 
+    bool h1_skip_wait_for_reply = 2; 
+    Account account = 1;
+}
+
+message Account {
+      string username = 1;
+  string password = 2;
+}

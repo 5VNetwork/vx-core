@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/netip"
 
+	vxgeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/rs/zerolog/log"
 	"go4.org/netipx"
 )
@@ -16,7 +17,7 @@ type IPMatcher struct {
 	ipSetv6      *netipx.IPSet
 }
 
-func NewIPMatcherFromGeoCidrs(cidrs []*CIDR, inverse bool) (*IPMatcher, error) {
+func NewIPMatcherFromGeoCidrs(cidrs []*vxgeo.CIDR, inverse bool) (*IPMatcher, error) {
 	pMatcher := &IPMatcher{
 		ReverseMatch: inverse,
 	}
@@ -55,7 +56,7 @@ func (m *IPMatcher) match6(ip net.IP) bool {
 	return m.ipSetv6.Contains(nip)
 }
 
-func (m *IPMatcher) init(cidrs []*CIDR) error {
+func (m *IPMatcher) init(cidrs []*vxgeo.CIDR) error {
 	var builder4, builder6 netipx.IPSetBuilder
 	for _, cidr := range cidrs {
 		netaddrIP, ok := netip.AddrFromSlice(cidr.GetIp())

@@ -4,12 +4,10 @@ package scenarios
 
 import (
 	"context"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"testing"
 
 	"github.com/5vnetwork/vx-core/app/buildserver"
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
@@ -28,13 +26,13 @@ func TestPassiveConnection(t *testing.T) {
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
 
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.DokodemoConfig{
+					&configs.DokodemoConfig{
 						Address:  dest.Address.String(),
 						Port:     uint32(dest.Port),
 						Networks: []net.Network{net.Network_TCP},

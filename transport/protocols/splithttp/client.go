@@ -65,7 +65,7 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url string, body i
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	req.Header, err = c.transportConfig.GetRequestHeader(url)
+	req.Header, err = GetRequestHeader(c.transportConfig, url)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -108,7 +108,7 @@ func (c *DefaultDialerClient) PostPacket(ctx context.Context, url string, body i
 		return err
 	}
 	req.ContentLength = contentLength
-	req.Header, err = c.transportConfig.GetRequestHeader(url)
+	req.Header, err = GetRequestHeader(c.transportConfig, url)
 	if err != nil {
 		return err
 	}

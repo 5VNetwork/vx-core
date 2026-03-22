@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/serial"
 )
 
@@ -48,14 +48,14 @@ func TestParseVmessFromLink(t *testing.T) {
 	if handlerConfig.Transport == nil {
 		t.Fatalf("transport is nil")
 	}
-	if handlerConfig.Protocol.TypeUrl != "type.googleapis.com/x.proxy.VmessClientConfig" {
+	if handlerConfig.Protocol.TypeUrl != "type.googleapis.com/vx.proxy.vmess.VmessClientConfig" {
 		t.Fatalf("protocol is not VmessClientConfig")
 	}
 	pm, err := serial.GetInstanceOf(handlerConfig.Protocol)
 	if err != nil {
 		t.Fatalf("failed to get vmess client config: %v", err)
 	}
-	vmessClientConfig, ok := pm.(*proxy.VmessClientConfig)
+	vmessClientConfig, ok := pm.(*configs.VmessClientConfig)
 	if !ok {
 		t.Fatalf("vmessClientConfig is not VmessClientConfig")
 	}

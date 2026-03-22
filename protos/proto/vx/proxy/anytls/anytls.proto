@@ -1,0 +1,15 @@
+syntax = "proto3";
+package vx.proxy.anytls;
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/proxy";
+import "vx/user/user.proto";
+
+message AnytlsClientConfig {
+  string password = 2;
+  uint32 idle_session_check_interval = 3;
+  uint32 idle_session_timeout = 4;
+  uint32 min_idle_session = 5;
+}
+
+message AnytlsServerConfig {
+  repeated vx.user.UserConfig users = 1;
+}

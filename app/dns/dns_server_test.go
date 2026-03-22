@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	configs "github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/common/dispatcher"
 	"github.com/5vnetwork/vx-core/common/net"

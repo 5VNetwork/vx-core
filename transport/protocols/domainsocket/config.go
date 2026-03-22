@@ -13,7 +13,7 @@ const (
 	sizeofSunPath = 108
 )
 
-func (c *DomainSocketConfig) GetUnixAddr() (*net.UnixAddr, error) {
+func GetUnixAddr(c *DomainSocketConfig) (*net.UnixAddr, error) {
 	path := c.Path
 	if path == "" {
 		return nil, errors.New("empty domain socket path")

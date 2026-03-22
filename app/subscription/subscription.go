@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	outbound "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/outbound"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/app/util/sub"
 	"github.com/5vnetwork/vx-core/app/xsqlite"
@@ -263,7 +263,7 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 			// 	existing = true
 			// 	break
 			// }
-			var existingConfig configs.HandlerConfig
+			var existingConfig outbound.HandlerConfig
 			err := proto.Unmarshal(existingHandler.Config, &existingConfig)
 			if err == nil && existingConfig.GetOutbound().GetTag() == config.Tag {
 				logger.Debug().Str("existing_handler", existingConfig.GetOutbound().GetTag()).
@@ -272,8 +272,8 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 				config.EnableMux = existingConfig.GetOutbound().EnableMux
 				config.Uot = existingConfig.GetOutbound().Uot
 				config.DomainStrategy = existingConfig.GetOutbound().DomainStrategy
-				configBytes, err := proto.Marshal(&configs.HandlerConfig{
-					Type: &configs.HandlerConfig_Outbound{
+				configBytes, err := proto.Marshal(&outbound.HandlerConfig{
+					Type: &outbound.HandlerConfig_Outbound{
 						Outbound: config,
 					},
 				})
@@ -288,8 +288,8 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 			}
 		}
 		if !existing {
-			configBytes, err := proto.Marshal(&configs.HandlerConfig{
-				Type: &configs.HandlerConfig_Outbound{
+			configBytes, err := proto.Marshal(&outbound.HandlerConfig{
+				Type: &outbound.HandlerConfig_Outbound{
 					Outbound: config,
 				},
 			})

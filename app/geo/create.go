@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	configs "github.com/5vnetwork/vx-core/app/configs"
-
 	cgeo "github.com/5vnetwork/vx-core/common/geo"
 	"github.com/5vnetwork/vx-core/common/geo/memloader"
 	"github.com/5vnetwork/vx-core/common/geo/stdloader"
@@ -148,7 +147,7 @@ func AtomicDomainSetToIndexMatcher(atomicSet *configs.AtomicDomainSetConfig, l l
 	if atomicSet.Domains != nil {
 		for _, domain := range atomicSet.Domains {
 			domains = append(domains, &cgeo.Domain{
-				Type:  cgeo.Domain_Type(domain.Type),
+				Type:  domain.Type,
 				Value: domain.Value,
 			})
 		}
@@ -244,6 +243,7 @@ func AtomicIpSetToIPMatcher(c *configs.AtomicIPSetConfig, l loader) (*cgeo.IPMat
 			}
 			cidrs = append(cidrs, l.Cidr...)
 		}
+
 	}
 	if c.Cidrs != nil {
 		for _, cidr := range c.Cidrs {

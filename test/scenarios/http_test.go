@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"io"
 	"net/http"
 	"net/url"
@@ -14,9 +15,6 @@ import (
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/buildserver"
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/serial"
@@ -37,14 +35,14 @@ func TestHttpConformance(t *testing.T) {
 	defer httpServer.Close()
 
 	serverPort := tcp.PickPort()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Log: &configs.LoggerConfig{
 			LogLevel: configs.Level_DEBUG,
 		},
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Port:     uint32(serverPort),
-				Protocol: serial.ToTypedMessage(&proxyconfig.HttpServerConfig{}),
+				Protocol: serial.ToTypedMessage(&configs.HttpServerConfig{}),
 			},
 		},
 	}
@@ -96,11 +94,11 @@ func TestHttpError(t *testing.T) {
 	})
 
 	serverPort := tcp.PickPort()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Port:     uint32(serverPort),
-				Protocol: serial.ToTypedMessage(&proxyconfig.HttpServerConfig{}),
+				Protocol: serial.ToTypedMessage(&configs.HttpServerConfig{}),
 			},
 		},
 	}
@@ -156,11 +154,11 @@ func TestHttpPost(t *testing.T) {
 	defer httpServer.Close()
 
 	serverPort := tcp.PickPort()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Port:     uint32(serverPort),
-				Protocol: serial.ToTypedMessage(&proxyconfig.HttpServerConfig{}),
+				Protocol: serial.ToTypedMessage(&configs.HttpServerConfig{}),
 			},
 		},
 	}
@@ -222,7 +220,7 @@ func setProxyBasicAuth(req *http.Request, user, pass string) {
 // 			Handlers: []*anypb.Any{
 // 				serial.ToTypedMessage(&configs.ProxyInboundConfig{
 // 					Port:     uint32(serverPort),
-// 					Protocol: serial.ToTypedMessage(&proxyconfig.HttpServerConfig{}),
+// 					Protocol: serial.ToTypedMessage(&configs.HttpServerConfig{}),
 // 				}),
 // 			},
 // 		},

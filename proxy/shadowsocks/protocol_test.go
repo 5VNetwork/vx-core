@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/user"
 	"github.com/5vnetwork/vx-core/common"
@@ -16,7 +16,7 @@ import (
 	. "github.com/5vnetwork/vx-core/proxy/shadowsocks"
 )
 
-func toAccount(a *proxy.ShadowsocksAccount) protocol.Account {
+func toAccount(a *configs.ShadowsocksAccount) protocol.Account {
 	account, err := create.ShadowsocksAccountToMemoryAccount(a)
 	common.Must(err)
 	return account

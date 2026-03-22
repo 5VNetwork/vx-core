@@ -110,7 +110,7 @@ func (d *DefaultSystemDialer) DialConn(ctx context.Context, raddr net1.Destinati
 		}
 	}
 
-	conn, err := dialer.DialContext(ctx, raddr.Network.SystemString(), raddr.NetAddr())
+	conn, err := dialer.DialContext(ctx, net1.SystemString(raddr.Network), raddr.NetAddr())
 	if err != nil {
 		return nil, &DialError{
 			error: err,

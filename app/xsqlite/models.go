@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	outbound "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/outbound"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -110,7 +110,7 @@ func (h *OutboundHandler) IsSupport6DataOld() bool {
 }
 
 func (h *OutboundHandler) GetTag() string {
-	var config configs.HandlerConfig
+	var config outbound.HandlerConfig
 	err := proto.Unmarshal(h.Config, &config)
 	if err != nil {
 		return ""
@@ -123,8 +123,8 @@ func (h *OutboundHandler) GetTag() string {
 	return ""
 }
 
-func (h *OutboundHandler) ToConfig() *configs.HandlerConfig {
-	var config configs.HandlerConfig
+func (h *OutboundHandler) ToConfig() *outbound.HandlerConfig {
+	var config outbound.HandlerConfig
 	err := proto.Unmarshal(h.Config, &config)
 	if err != nil {
 		return nil

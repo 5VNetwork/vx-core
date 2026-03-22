@@ -171,7 +171,7 @@ func NewInfoInbound(options ...Option) (*Info, context.Context, context.CancelCa
 	event := logger.Debug()
 	if info.Source.IsValid() {
 		event = event.Str("src", info.Source.String())
-		event = event.Str("network", info.Source.Network.String())
+		event = event.Str("network", net.SystemString(info.Source.Network))
 	}
 	if info.Target.IsValid() {
 		event = event.Str("dst", info.Target.String())

@@ -3,8 +3,7 @@ package common
 import (
 	"testing"
 
-	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+		"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/serial"
 )
 
@@ -18,7 +17,7 @@ func TestParseVlessFromLink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vless := vlessConfig.(*proxy.VlessClientConfig)
+	vless := vlessConfig.(*configs.VlessClientConfig)
 	if vless.Id != "12345678-1234-1234-1234-123456789012" {
 		t.Fatal("id mismatch")
 	}
@@ -58,7 +57,7 @@ func TestDecodeVless(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vless := vlessConfig.(*proxy.VlessClientConfig)
+	vless := vlessConfig.(*configs.VlessClientConfig)
 	if vless.Id != "12345678-1234-1234-1234-123456789012" {
 		t.Fatal("id wrong")
 	}

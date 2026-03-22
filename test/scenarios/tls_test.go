@@ -5,13 +5,11 @@ package scenarios
 import (
 	"context"
 	"crypto/x509"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"testing"
 
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
@@ -35,7 +33,7 @@ func TestSimpleTLSConnection(t *testing.T) {
 
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
@@ -50,7 +48,7 @@ func TestSimpleTLSConnection(t *testing.T) {
 					},
 				},
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -71,7 +69,7 @@ func TestSimpleTLSConnection(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -85,7 +83,7 @@ func TestSimpleTLSConnection(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 
 						Id: userID.String(),
 					}),
@@ -121,7 +119,7 @@ func TestSimpleTLSConnectionPinned(t *testing.T) {
 
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Port:    uint32(serverPort),
@@ -137,7 +135,7 @@ func TestSimpleTLSConnectionPinned(t *testing.T) {
 					},
 				},
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -158,7 +156,7 @@ func TestSimpleTLSConnectionPinned(t *testing.T) {
 					Port:    uint32(clientPort),
 					Address: net.LocalHostIP.String(),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -172,7 +170,7 @@ func TestSimpleTLSConnectionPinned(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 						Id: userID.String(),
 					}),
 					Transport: &configs.TransportConfig{
@@ -214,7 +212,7 @@ func TestTlsUtls(t *testing.T) {
 
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
@@ -229,7 +227,7 @@ func TestTlsUtls(t *testing.T) {
 					},
 				},
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -250,7 +248,7 @@ func TestTlsUtls(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -264,7 +262,7 @@ func TestTlsUtls(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 						Id: userID.String(),
 					}),
 					Transport: &configs.TransportConfig{
@@ -308,7 +306,7 @@ func TestTlsEch(t *testing.T) {
 	serverPort := tcp.PickPort()
 
 	t.Logf("server port: %d", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
@@ -324,7 +322,7 @@ func TestTlsEch(t *testing.T) {
 					},
 				},
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -345,7 +343,7 @@ func TestTlsEch(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -359,7 +357,7 @@ func TestTlsEch(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 
 						Id: userID.String(),
 					}),
@@ -416,7 +414,7 @@ func TestTlsRootCA(t *testing.T) {
 
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
@@ -431,7 +429,7 @@ func TestTlsRootCA(t *testing.T) {
 					},
 				},
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.VmessServerConfig{
+					&configs.VmessServerConfig{
 						Accounts: []*configs.UserConfig{
 							{
 								Secret: userID.String(),
@@ -452,7 +450,7 @@ func TestTlsRootCA(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -466,7 +464,7 @@ func TestTlsRootCA(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.VmessClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
 						Id: userID.String(),
 					}),
 					Transport: &configs.TransportConfig{

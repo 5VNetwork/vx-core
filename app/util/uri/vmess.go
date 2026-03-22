@@ -10,8 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
+		"github.com/5vnetwork/vx-core/app/configs"
 )
 
 type vmessConfig struct {
@@ -37,7 +36,7 @@ func toVmess(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	vmessClientConfig, _ := config.(*proxy.VmessClientConfig)
+	vmessClientConfig, _ := config.(*configs.VmessClientConfig)
 
 	vc := &vmessConfig{
 		V:    "2",

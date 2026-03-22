@@ -1,0 +1,9 @@
+syntax = "proto3";
+package vx.transport.protocols.httpupgrade;
+option go_package = "github.com/5vnetwork/vx-core/transport/protocols/httpupgrade";
+
+import "vx/transport/protocols/websocket/config.proto";
+
+message HttpUpgradeConfig {
+  vx.transport.protocols.websocket.WebsocketConfig config = 1;
+}

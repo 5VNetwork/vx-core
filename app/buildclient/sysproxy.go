@@ -4,7 +4,7 @@
 package buildclient
 
 import (
-	configs "github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/sysproxy"
 	"github.com/5vnetwork/vx-core/i"
 )

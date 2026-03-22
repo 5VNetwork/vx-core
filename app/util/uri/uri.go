@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/common/serial"
 )
 
@@ -17,17 +16,17 @@ func ToUrl(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
 		return "", fmt.Errorf("failed to get proxy client config: %w", err)
 	}
 	switch pc := proxyClientConfig.(type) {
-	case *proxy.VmessClientConfig:
+	case *configs.VmessClientConfig:
 		return toVmess(outboundConfig)
-	case *proxy.ShadowsocksClientConfig:
+	case *configs.ShadowsocksClientConfig:
 		return toShadowSocks(outboundConfig)
-	case *proxy.TrojanClientConfig:
+	case *configs.TrojanClientConfig:
 		return toTrojan(outboundConfig)
-	case *proxy.AnytlsClientConfig:
+	case *configs.AnytlsClientConfig:
 		return toAnytls(outboundConfig)
-	case *proxy.VlessClientConfig:
+	case *configs.VlessClientConfig:
 		return toVless0(outboundConfig)
-	case *proxy.Hysteria2ClientConfig:
+	case *configs.Hysteria2ClientConfig:
 		return toHysteria(outboundConfig)
 	default:
 		return "", fmt.Errorf("unsupported proxy client config: %T", pc)

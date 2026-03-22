@@ -142,7 +142,7 @@ func NewReceivingWorker(kcp *Connection) *ReceivingWorker {
 	worker := &ReceivingWorker{
 		conn:       kcp,
 		window:     NewReceivingWindow(),
-		windowSize: kcp.Config.GetReceivingInFlightSize(),
+		windowSize: GetReceivingInFlightSize(kcp.Config),
 	}
 	worker.acklist = NewAckList(worker)
 	return worker

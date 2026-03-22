@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (c *GrpcConfig) getServiceName() string {
+func getServiceName(c *GrpcConfig) string {
 	// Normal old school config
 	if !strings.HasPrefix(c.ServiceName, "/") {
 		return url.PathEscape(c.ServiceName)
@@ -24,7 +24,7 @@ func (c *GrpcConfig) getServiceName() string {
 	return strings.Join(serviceNameParts, "/")
 }
 
-func (c *GrpcConfig) getTunStreamName() string {
+func getTunStreamName(c *GrpcConfig) string {
 	// Normal old school config
 	if !strings.HasPrefix(c.ServiceName, "/") {
 		return "Tun"
@@ -34,7 +34,7 @@ func (c *GrpcConfig) getTunStreamName() string {
 	return url.PathEscape(strings.Split(endingPath, "|")[0])
 }
 
-func (c *GrpcConfig) getTunMultiStreamName() string {
+func getTunMultiStreamName(c *GrpcConfig) string {
 	// Normal old school config
 	if !strings.HasPrefix(c.ServiceName, "/") {
 		return "TunMulti"

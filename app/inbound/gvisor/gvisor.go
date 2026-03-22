@@ -8,7 +8,7 @@ import (
 
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/errors"
-	"github.com/5vnetwork/vx-core/common/geo"
+	vxgeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/uuid"
 	"github.com/5vnetwork/vx-core/i"
@@ -213,14 +213,14 @@ func SetSpoofing(id tcpip.NICID) StackOption {
 	}
 }
 
-func AddProtocolAddress(id tcpip.NICID, ips []*geo.CIDR) StackOption {
+func AddProtocolAddress(id tcpip.NICID, ips []*vxgeo.CIDR) StackOption {
 	return func(s *stack.Stack) error {
 		for _, ip := range ips {
-			tcpIPAddr := tcpip.AddrFrom4Slice(ip.Ip)
+			tcpIPAddr := tcpip.AddrFrom4Slice(ip.GetIp())
 			protocolAddress := tcpip.ProtocolAddress{
 				AddressWithPrefix: tcpip.AddressWithPrefix{
 					Address:   tcpIPAddr,
-					PrefixLen: int(ip.Prefix),
+					PrefixLen: int(ip.GetPrefix()),
 				},
 			}
 

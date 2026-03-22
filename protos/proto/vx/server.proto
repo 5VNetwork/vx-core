@@ -1,0 +1,23 @@
+syntax = "proto3";
+package vx;
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/server";
+
+import "vx/inbound/inbound.proto";
+import "vx/outbound/outbound.proto";
+import "vx/router/router.proto";
+import "vx/policy.proto";
+import "vx/log/logger.proto";
+import "vx/geo/geo.proto";
+import "vx/user/user.proto";
+
+message ServerConfig {
+  uint32 id = 1;
+  repeated vx.inbound.ProxyInboundConfig inbounds = 3;
+  repeated vx.inbound.MultiProxyInboundConfig multi_inbounds = 11;
+  vx.PolicyConfig policy = 4;
+  vx.router.RouterConfig router = 5;
+  vx.log.LoggerConfig log = 6;
+  repeated vx.user.UserConfig users = 7;
+  repeated vx.outbound.OutboundHandlerConfig outbounds = 9;
+  vx.geo.GeoConfig geo = 10;
+}

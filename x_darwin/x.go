@@ -12,9 +12,9 @@ import (
 	"runtime"
 	"time"
 
+	configs "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx"
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/client"
-	configs "github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/tunset"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"

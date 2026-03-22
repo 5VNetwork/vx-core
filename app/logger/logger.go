@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	vxlog "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/log"
 	mystrings "github.com/5vnetwork/vx-core/common/strings"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -32,10 +32,10 @@ type Logger struct {
 	redactionRegex *regexp.Regexp
 }
 
-func SetLog(config *configs.LoggerConfig) (*Logger, error) {
+func SetLog(config *vxlog.LoggerConfig) (*Logger, error) {
 	if config == nil {
-		config = &configs.LoggerConfig{
-			LogLevel: configs.Level_DISABLED,
+		config = &vxlog.LoggerConfig{
+			LogLevel: vxlog.Level_DISABLED,
 		}
 	}
 

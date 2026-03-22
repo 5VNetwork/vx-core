@@ -38,11 +38,11 @@ type Listener struct {
 func Listen(ctx context.Context, addr net.Destination,
 	config *KcpConfig, tlsConfig *tls.Config,
 	so *dlhelper.SocketSetting, h func(net.Conn)) (*Listener, error) {
-	header, err := config.GetPackerHeader()
+	header, err := GetPackerHeader(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create header: %w", err)
 	}
-	security, err := config.GetSecurity()
+	security, err := GetSecurity(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create security: %w", err)
 	}

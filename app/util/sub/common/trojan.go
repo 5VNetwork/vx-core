@@ -8,7 +8,6 @@ import (
 	"net/url"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/util/sub"
 	"github.com/5vnetwork/vx-core/common/serial"
 )
@@ -23,7 +22,7 @@ func ParseTrojan(link string) (*configs.OutboundHandlerConfig, error) {
 		return nil, fmt.Errorf("not a valid trojan link")
 	}
 
-	trojanConfig := &proxy.TrojanClientConfig{
+	trojanConfig := &configs.TrojanClientConfig{
 		Password: u.User.Username(),
 	}
 
@@ -131,7 +130,7 @@ func ParseTrojan(link string) (*configs.OutboundHandlerConfig, error) {
 
 // // ToProxyHandlerConfig converts TrojanConfig to OutboundHandlerConfig
 // func (t *TrojanConfig) ToProxyHandlerConfig() (*configs.OutboundHandlerConfig, error) {
-// 	trojanConfig := &proxy.TrojanClientConfig{
+// 	trojanConfig := &configs.TrojanClientConfig{
 // 		Password: t.Secret,
 // 	}
 

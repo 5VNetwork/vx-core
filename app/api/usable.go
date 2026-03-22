@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/util"
@@ -28,7 +29,7 @@ func (a *Api) HandlerTest(ctx context.Context, req *HandlerUsableRequest) (ret H
 	ctx = logger.WithContext(ctx)
 
 	url := util.TraceList[0]
-	logger.Debug().Str("handler", req.Handler.GetTag()).Str("test", "usable").Str("url", url).Send()
+	logger.Debug().Str("handler", configs.HandlerTag(req.Handler)).Str("test", "usable").Str("url", url).Send()
 
 	var dest net.Address
 	if req.Handler.GetOutbound() != nil {
@@ -52,7 +53,7 @@ func (a *Api) HandlerTest(ctx context.Context, req *HandlerUsableRequest) (ret H
 		EchResolver:   a.echResolver,
 	})
 	if err != nil {
-		logger.Debug().Msgf("Handler %s create handler err: %v", req.Handler.GetTag(), err)
+		logger.Debug().Msgf("Handler %s create handler err: %v", configs.HandlerTag(req.Handler), err)
 		return
 	}
 
@@ -69,14 +70,14 @@ func (a *Api) HandlerTest(ctx context.Context, req *HandlerUsableRequest) (ret H
 	httpClient.Timeout = 4 * time.Second
 	rsp, err := httpClient.Do(request)
 	if err != nil {
-		logger.Debug().Msgf("Handler %s get url err: %v", req.Handler.GetTag(), err)
+		logger.Debug().Msgf("Handler %s get url err: %v", configs.HandlerTag(req.Handler), err)
 		return
 	}
 	logger.Debug().Msg("response got")
 	ping := time.Since(start).Milliseconds()
 	data, err := io.ReadAll(rsp.Body)
 	if err != nil {
-		logger.Debug().Msgf("Handler %s read body err: %v", req.Handler.GetTag(), err)
+		logger.Debug().Msgf("Handler %s read body err: %v", configs.HandlerTag(req.Handler), err)
 		return
 	}
 	logger.Debug().Msg("body read")

@@ -169,8 +169,8 @@ func NewSendingWorker(kcp *Connection) *SendingWorker {
 		conn:             kcp,
 		fastResend:       2,
 		remoteNextNumber: 32,
-		controlWindow:    kcp.Config.GetSendingInFlightSize(),
-		windowSize:       kcp.Config.GetSendingBufferSize(),
+		controlWindow:    GetSendingInFlightSize(kcp.Config),
+		windowSize:       GetSendingBufferSize(kcp.Config),
 	}
 	worker.window = NewSendingWindow(worker, worker.OnPacketLoss)
 	return worker
@@ -300,8 +300,8 @@ func (w *SendingWorker) OnPacketLoss(lossRate uint32) {
 	if w.controlWindow < 16 {
 		w.controlWindow = 16
 	}
-	if w.controlWindow > 2*w.conn.Config.GetSendingInFlightSize() {
-		w.controlWindow = 2 * w.conn.Config.GetSendingInFlightSize()
+	if w.controlWindow > 2*GetSendingInFlightSize(w.conn.Config) {
+		w.controlWindow = 2 * GetSendingInFlightSize(w.conn.Config)
 	}
 }
 
@@ -313,7 +313,7 @@ func (w *SendingWorker) Flush(current uint32) {
 		return
 	}
 
-	cwnd := w.conn.Config.GetSendingInFlightSize()
+	cwnd := GetSendingInFlightSize(w.conn.Config)
 	if cwnd > w.remoteNextNumber-w.firstUnacknowledged {
 		cwnd = w.remoteNextNumber - w.firstUnacknowledged
 	}

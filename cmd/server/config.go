@@ -6,7 +6,7 @@ import (
 	"errors"
 	"os"
 
-	configs "github.com/5vnetwork/vx-core/app/configs/server"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/buf"
 
 	"google.golang.org/protobuf/encoding/protojson"

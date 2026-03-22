@@ -10,8 +10,10 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/5vnetwork/vx-core/app/configs"
+	configs "github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common"
+
+	commongeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	cgeo "github.com/5vnetwork/vx-core/common/geo"
 	"github.com/5vnetwork/vx-core/i"
 
@@ -90,7 +92,7 @@ type Geo struct {
 }
 
 // if the domain set is not found, do nothing
-func (g *Geo) AddDomain(name string, domain *cgeo.Domain) error {
+func (g *Geo) AddDomain(name string, domain *commongeo.Domain) error {
 	matcher, err := cgeo.ToStrMatcher(domain)
 	if err != nil {
 		return err
@@ -107,7 +109,7 @@ func (g *Geo) AddDomain(name string, domain *cgeo.Domain) error {
 	return nil
 }
 
-func (g *Geo) RemoveDomain(name string, domain *cgeo.Domain) error {
+func (g *Geo) RemoveDomain(name string, domain *commongeo.Domain) error {
 	matcher, err := cgeo.ToStrMatcher(domain)
 	if err != nil {
 		return err

@@ -7,15 +7,13 @@ import (
 	"context"
 	"crypto/rand"
 	gotls "crypto/tls"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"log"
 	"testing"
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
-	configs "github.com/5vnetwork/vx-core/app/configs"
-	proxyconfig "github.com/5vnetwork/vx-core/app/configs/proxy"
-	"github.com/5vnetwork/vx-core/app/configs/server"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/common"
@@ -42,13 +40,13 @@ func TestTrojanTCP(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -70,7 +68,7 @@ func TestTrojanTCP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -84,7 +82,7 @@ func TestTrojanTCP(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: userID.String(),
 					}),
 				},
@@ -116,13 +114,13 @@ func TestTrojanUdpFlow(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -152,7 +150,7 @@ func TestTrojanUdpFlow(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  udpDest.Address.String(),
 							Port:     uint32(udpDest.Port),
 							Networks: []net.Network{net.Network_UDP},
@@ -166,7 +164,7 @@ func TestTrojanUdpFlow(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: userID.String(),
 					}),
 				},
@@ -199,13 +197,13 @@ func TestTrojanFullCone(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -230,7 +228,7 @@ func TestTrojanFullCone(t *testing.T) {
 				Outbound: &configs.OutboundHandlerConfig{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: userID.String(),
 					}),
 				},
@@ -352,13 +350,13 @@ func TestTrojanTCPTlsVision(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -390,7 +388,7 @@ func TestTrojanTCPTlsVision(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  dest.Address.String(),
 							Port:     uint32(dest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -404,7 +402,7 @@ func TestTrojanTCPTlsVision(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: userID.String(),
 						Vision:   true,
 					}),
@@ -444,13 +442,13 @@ func TestTrojanUdpFlowVision(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -476,7 +474,7 @@ func TestTrojanUdpFlowVision(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  udpDest.Address.String(),
 							Port:     uint32(udpDest.Port),
 							Networks: []net.Network{net.Network_UDP},
@@ -490,7 +488,7 @@ func TestTrojanUdpFlowVision(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: userID.String(),
 						Vision:   true,
 					}),
@@ -525,13 +523,13 @@ func TestTrojanFullConeVision(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -557,7 +555,7 @@ func TestTrojanFullConeVision(t *testing.T) {
 				Outbound: &configs.OutboundHandlerConfig{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: userID.String(),
 						Vision:   true,
 					}),
@@ -662,13 +660,13 @@ func TestTrojanWebsocketTCP(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -697,7 +695,7 @@ func TestTrojanWebsocketTCP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -711,7 +709,7 @@ func TestTrojanWebsocketTCP(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: userID.String(),
 					}),
 					Transport: &configs.TransportConfig{
@@ -750,13 +748,13 @@ func TestTrojanHttpUpgradeTCP(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 	serverPort := tcp.PickPort()
 	t.Log("server port", serverPort)
-	serverConfig := &server.ServerConfig{
+	serverConfig := &configs.ServerConfig{
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Address: net.LocalHostIP.String(),
 				Port:    uint32(serverPort),
 				Protocol: serial.ToTypedMessage(
-					&proxyconfig.TrojanServerConfig{
+					&configs.TrojanServerConfig{
 						Users: []*configs.UserConfig{
 							{
 								Id:     userID.String(),
@@ -787,7 +785,7 @@ func TestTrojanHttpUpgradeTCP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(clientPort),
 					Protocol: serial.ToTypedMessage(
-						&proxyconfig.DokodemoConfig{
+						&configs.DokodemoConfig{
 							Address:  tcpDest.Address.String(),
 							Port:     uint32(tcpDest.Port),
 							Networks: []net.Network{net.Network_TCP},
@@ -801,7 +799,7 @@ func TestTrojanHttpUpgradeTCP(t *testing.T) {
 				{
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
-					Protocol: serial.ToTypedMessage(&proxyconfig.TrojanClientConfig{
+					Protocol: serial.ToTypedMessage(&configs.TrojanClientConfig{
 						Password: userID.String(),
 					}),
 					Transport: &configs.TransportConfig{

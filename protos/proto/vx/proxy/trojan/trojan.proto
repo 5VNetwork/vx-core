@@ -1,0 +1,16 @@
+syntax = "proto3";
+package vx.proxy.trojan;
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/proxy";
+import "vx/user/user.proto";
+
+message TrojanClientConfig {
+  string password = 2;
+  bool special = 3;
+  bool vision = 4;
+}
+
+message TrojanServerConfig {
+  repeated vx.user.UserConfig users = 1;
+  bool vision = 2;
+  reserved 3;
+}
