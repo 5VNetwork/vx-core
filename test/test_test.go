@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/configs/proxy"
 	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/geo"
@@ -66,7 +65,7 @@ func TestUsable(t *testing.T) {
 		OutboundHandlerConfig: &configs.OutboundHandlerConfig{
 			Address: "",
 			Port:    0,
-			Protocol: serial.ToTypedMessage(&proxy.VlessClientConfig{
+			Protocol: serial.ToTypedMessage(&configs.VlessClientConfig{
 				Id:         "",
 				Encryption: "none",
 			}),
