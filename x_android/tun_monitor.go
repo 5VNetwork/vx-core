@@ -29,14 +29,12 @@ type nicMonitor struct {
 }
 
 func (n *nicMonitor) Start() error {
+	log.Info().Str("name", n.name).Int("index", n.index).Any("defaultDns", n.defaultDns).
+		Any("addresses", n.addresses).Int("supportIpv6", n.supportIpv6).Msg("start nic monitor")
 	return nil
 }
 
 func (n *nicMonitor) Close() error {
-	n.Lock()
-	defer n.Unlock()
-	n.defaultDns = nil
-	n.DefaultInterfaceChangeNotifier = nic.DefaultInterfaceChangeNotifier{}
 	return nil
 }
 
