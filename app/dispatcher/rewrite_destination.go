@@ -68,12 +68,19 @@ func (p *RewriteDestinationHook) BeforeHandlerSelection(ctx context.Context, si 
 	}
 
 	if pc, ok := rw.(udp.PacketReaderWriter); ok && fd != nil && p.Dns != nil {
+		var addressFamily mynet.AddressFamily
+		if si.Source.Address != nil {
+			addressFamily = si.Source.Address.Family()
+		} else {
+			addressFamily = mynet.AddressFamilyIPv4
+		}
 		rw = &RealIpPacketConn{
 			m:                  map[mynet.Address]mynet.Address{},
 			PacketReaderWriter: pc,
 			fakeDns:            fd,
 			dns:                p.Dns,
 			ctx:                ctx,
+			addressFamily:      addressFamily,
 		}
 	}
 	return ctx, rw, nil

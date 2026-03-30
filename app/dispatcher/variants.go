@@ -307,6 +307,8 @@ type RealIpPacketConn struct {
 	fakeDns i.FakeDnsPool
 	dns     i.IPResolver
 	ctx     context.Context
+	// either ipv4 or ipv6
+	addressFamily net.AddressFamily
 }
 
 // should be called sequentially
@@ -323,7 +325,12 @@ func (p *RealIpPacketConn) ReadPacket() (*udp.Packet, error) {
 		}
 		if p.fakeDns.IsIPInIPPool(originalTarget) {
 			if d := p.fakeDns.GetDomainFromFakeDNS(originalTarget); d != "" {
-				ips, err := p.dns.LookupIP(p.ctx, d)
+				var ips []net.IP
+				if p.addressFamily == net.AddressFamilyIPv4 {
+					ips, err = p.dns.LookupIPv4(p.ctx, d)
+				} else {
+					ips, err = p.dns.LookupIPv6(p.ctx, d)
+				}
 				if err != nil {
 					return nil, err
 				}
@@ -351,7 +358,13 @@ func (p *RealIpPacketConn) WritePacket(packet *udp.Packet) error {
 		if v, ok := p.domainToRealIp.Load(packet.Source.Address); ok {
 			packet.Source.Address = v.(net.Address)
 		} else {
-			ips, err := p.dns.LookupIP(p.ctx, packet.Source.Address.Domain())
+			var ips []net.IP
+			var err error
+			if p.addressFamily == net.AddressFamilyIPv4 {
+				ips, err = p.dns.LookupIPv4(p.ctx, packet.Source.Address.Domain())
+			} else {
+				ips, err = p.dns.LookupIPv6(p.ctx, packet.Source.Address.Domain())
+			}
 			if err != nil && len(ips) == 0 {
 				packet.Release()
 				log.Warn().Ctx(p.ctx).Err(err).
