@@ -14,6 +14,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/inbound/monitor"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/5vnetwork/vx-core/app/configs"
@@ -156,6 +157,14 @@ func NewInboundServer(config *configs.ProxyInboundConfig, ha i.Handler,
 	return h, nil
 }
 
+func getInstance(protocol *anypb.Any) (proto.Message, error) {
+	newTypeUrl := OldTypeUrlToNewTypeUrl[protocol.TypeUrl]
+	if newTypeUrl != "" {
+		protocol.TypeUrl = newTypeUrl
+	}
+	return serial.GetInstanceOf(protocol)
+}
+
 func GetServers(users []*configs.UserConfig, protocols []*anypb.Any, ha i.Handler,
 	tp i.TimeoutSetting, onUnauth i.UnauthorizedReport) ([]proxy.ProxyServer,
 	*configs.Hysteria2ServerConfig, error) {
@@ -164,7 +173,7 @@ func GetServers(users []*configs.UserConfig, protocols []*anypb.Any, ha i.Handle
 	var hysteriaConfig *configs.Hysteria2ServerConfig
 	for _, protocol := range protocols {
 		var server proxy.ProxyServer
-		serverConfig, err := serial.GetInstanceOf(protocol)
+		serverConfig, err := getInstance(protocol)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to get instance of ProxyServerConfig: %w", err)
 		}

@@ -16,6 +16,28 @@ import (
 	"github.com/sagernet/sing/common"
 )
 
+var OldTypeUrlToNewTypeUrl = map[string]string{
+	"type.googleapis.com/x.proxy.Shadowsocks2022ClientConfig": "type.googleapis.com/vx.proxy.shadowsocks2022.Shadowsocks2022ClientConfig",
+	"type.googleapis.com/x.proxy.Shadowsocks2022ServerConfig": "type.googleapis.com/vx.proxy.shadowsocks2022.Shadowsocks2022ServerConfig",
+	"type.googleapis.com/x.proxy.ShadowsocksClientConfig":     "type.googleapis.com/vx.proxy.shadowsocks.ShadowsocksClientConfig",
+	"type.googleapis.com/x.proxy.ShadowsocksServerConfig":     "type.googleapis.com/vx.proxy.shadowsocks.ShadowsocksServerConfig",
+	"type.googleapis.com/x.proxy.VmessClientConfig":           "type.googleapis.com/vx.proxy.vmess.VmessClientConfig",
+	"type.googleapis.com/x.proxy.VmessServerConfig":           "type.googleapis.com/vx.proxy.vmess.VmessServerConfig",
+	"type.googleapis.com/x.proxy.TrojanClientConfig":          "type.googleapis.com/vx.proxy.trojan.TrojanClientConfig",
+	"type.googleapis.com/x.proxy.TrojanServerConfig":          "type.googleapis.com/vx.proxy.trojan.TrojanServerConfig",
+	"type.googleapis.com/x.proxy.SocksClientConfig":           "type.googleapis.com/vx.proxy.socks.SocksClientConfig",
+	"type.googleapis.com/x.proxy.SocksServerConfig":           "type.googleapis.com/vx.proxy.socks.SocksServerConfig",
+	"type.googleapis.com/x.proxy.VlessClientConfig":           "type.googleapis.com/vx.proxy.vless.VlessClientConfig",
+	"type.googleapis.com/x.proxy.VlessServerConfig":           "type.googleapis.com/vx.proxy.vless.VlessServerConfig",
+	"type.googleapis.com/x.proxy.Hysteria2ClientConfig":       "type.googleapis.com/vx.proxy.hysteria.Hysteria2ClientConfig",
+	"type.googleapis.com/x.proxy.Hysteria2ServerConfig":       "type.googleapis.com/vx.proxy.hysteria.Hysteria2ServerConfig",
+	"type.googleapis.com/x.proxy.AnytlsClientConfig":          "type.googleapis.com/vx.proxy.anytls.AnytlsClientConfig",
+	"type.googleapis.com/x.proxy.AnytlsServerConfig":          "type.googleapis.com/vx.proxy.anytls.AnytlsServerConfig",
+	"type.googleapis.com/x.proxy.DokodemoConfig":              "type.googleapis.com/vx.proxy.dokodemo.DokodemoConfig",
+	"type.googleapis.com/x.proxy.HttpClientConfig":            "type.googleapis.com/vx.proxy.http.HttpClientConfig",
+	"type.googleapis.com/x.proxy.HttpServerConfig":            "type.googleapis.com/vx.proxy.http.HttpServerConfig",
+}
+
 func TransportProtocolConfig(tc *configs.TransportConfig) interface{} {
 
 	var protocolConfig interface{}
