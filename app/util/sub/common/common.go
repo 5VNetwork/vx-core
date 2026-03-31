@@ -307,6 +307,8 @@ func getTransportConfig(query url.Values) (*configs.TransportConfig, error) {
 				allowInsecure = true
 			} else if query.Get("insecure") == "1" {
 				allowInsecure = true
+			} else if query.Get("allow_insecure") == "1" {
+				allowInsecure = true
 			}
 			var nextProtocol []string
 			if alpn := query.Get("alpn"); alpn != "" {
@@ -350,7 +352,10 @@ func getTransportConfig(query url.Values) (*configs.TransportConfig, error) {
 			}
 			key, err := base64.RawURLEncoding.DecodeString(query.Get("pbk"))
 			if err != nil {
-				return nil, err
+				key, err = base64.URLEncoding.DecodeString(query.Get("pbk"))
+				if err != nil {
+					return nil, err
+				}
 			}
 			realityConfig.PublicKey = key
 			realityConfig.ShortId = make([]byte, 8)
