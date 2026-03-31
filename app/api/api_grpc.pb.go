@@ -34,6 +34,7 @@ const (
 	Api_ServerConfig_FullMethodName                  = "/vx.api.Api/ServerConfig"
 	Api_UpdateServerConfig_FullMethodName            = "/vx.api.Api/UpdateServerConfig"
 	Api_UpdateSubscription_FullMethodName            = "/vx.api.Api/UpdateSubscription"
+	Api_FetchSubscriptionContent_FullMethodName      = "/vx.api.Api/FetchSubscriptionContent"
 	Api_ProcessGeoFiles_FullMethodName               = "/vx.api.Api/ProcessGeoFiles"
 	Api_Decode_FullMethodName                        = "/vx.api.Api/Decode"
 	Api_Deploy_FullMethodName                        = "/vx.api.Api/Deploy"
@@ -78,6 +79,7 @@ type ApiClient interface {
 	// rpc XStatusChangeNotify(XStatusChangeNotifyRequest) returns (XStatusChangeNotifyResponse);
 	// rpc SetSubscriptionInterval(SetSubscriptionIntervalRequest) returns (SetSubscriptionIntervalResponse);
 	UpdateSubscription(ctx context.Context, in *UpdateSubscriptionRequest, opts ...grpc.CallOption) (*UpdateSubscriptionResponse, error)
+	FetchSubscriptionContent(ctx context.Context, in *FetchSubscriptionContentRequest, opts ...grpc.CallOption) (*FetchSubscriptionContentResponse, error)
 	ProcessGeoFiles(ctx context.Context, in *ProcessGeoFilesRequest, opts ...grpc.CallOption) (*ProcessGeoFilesResponse, error)
 	Decode(ctx context.Context, in *DecodeRequest, opts ...grpc.CallOption) (*DecodeResponse, error)
 	Deploy(ctx context.Context, in *DeployRequest, opts ...grpc.CallOption) (*DeployResponse, error)
@@ -260,6 +262,16 @@ func (c *apiClient) UpdateSubscription(ctx context.Context, in *UpdateSubscripti
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateSubscriptionResponse)
 	err := c.cc.Invoke(ctx, Api_UpdateSubscription_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *apiClient) FetchSubscriptionContent(ctx context.Context, in *FetchSubscriptionContentRequest, opts ...grpc.CallOption) (*FetchSubscriptionContentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FetchSubscriptionContentResponse)
+	err := c.cc.Invoke(ctx, Api_FetchSubscriptionContent_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -488,6 +500,7 @@ type ApiServer interface {
 	// rpc XStatusChangeNotify(XStatusChangeNotifyRequest) returns (XStatusChangeNotifyResponse);
 	// rpc SetSubscriptionInterval(SetSubscriptionIntervalRequest) returns (SetSubscriptionIntervalResponse);
 	UpdateSubscription(context.Context, *UpdateSubscriptionRequest) (*UpdateSubscriptionResponse, error)
+	FetchSubscriptionContent(context.Context, *FetchSubscriptionContentRequest) (*FetchSubscriptionContentResponse, error)
 	ProcessGeoFiles(context.Context, *ProcessGeoFilesRequest) (*ProcessGeoFilesResponse, error)
 	Decode(context.Context, *DecodeRequest) (*DecodeResponse, error)
 	Deploy(context.Context, *DeployRequest) (*DeployResponse, error)
@@ -558,6 +571,9 @@ func (UnimplementedApiServer) UpdateServerConfig(context.Context, *UpdateServerC
 }
 func (UnimplementedApiServer) UpdateSubscription(context.Context, *UpdateSubscriptionRequest) (*UpdateSubscriptionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateSubscription not implemented")
+}
+func (UnimplementedApiServer) FetchSubscriptionContent(context.Context, *FetchSubscriptionContentRequest) (*FetchSubscriptionContentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method FetchSubscriptionContent not implemented")
 }
 func (UnimplementedApiServer) ProcessGeoFiles(context.Context, *ProcessGeoFilesRequest) (*ProcessGeoFilesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ProcessGeoFiles not implemented")
@@ -873,6 +889,24 @@ func _Api_UpdateSubscription_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ApiServer).UpdateSubscription(ctx, req.(*UpdateSubscriptionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Api_FetchSubscriptionContent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FetchSubscriptionContentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApiServer).FetchSubscriptionContent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Api_FetchSubscriptionContent_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApiServer).FetchSubscriptionContent(ctx, req.(*FetchSubscriptionContentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1291,6 +1325,10 @@ var Api_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateSubscription",
 			Handler:    _Api_UpdateSubscription_Handler,
+		},
+		{
+			MethodName: "FetchSubscriptionContent",
+			Handler:    _Api_FetchSubscriptionContent_Handler,
 		},
 		{
 			MethodName: "ProcessGeoFiles",

@@ -202,6 +202,62 @@ func UpdateSubscriptions(db *gorm.DB, downloader downloader) UpdateSubscriptionR
 	return result
 }
 
+type FetchSubscriptionResult struct {
+	Configs     []*outbound.OutboundHandlerConfig
+	FailedNodes []string
+	Description string
+}
+
+func FetchSubscription(ctx context.Context, link string, downloader downloader) (*FetchSubscriptionResult, error) {
+	var uriContent *sub.DecodeResult
+	// try no user agent first
+	body, header, err := downloader.Download(ctx, link, map[string]string{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to download subscription: %v", err)
+	}
+	uriContent, err = util.Decode(string(body))
+	// if failed to decode, try again with user agent
+	if err != nil || len(uriContent.Configs) == 0 {
+		body, header, err = downloader.Download(ctx, link, map[string]string{
+			"User-Agent": "v2ray-core",
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to download subscription: %v", err)
+		}
+		uriContent, err = util.Decode(string(body))
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode subscription: %v", err)
+		}
+	}
+
+	description := header.Get("subscription-userinfo")
+	if description == "" {
+		description = uriContent.Description
+	}
+	// get description
+	if description == "" {
+		if parsedUrl1, err := url.Parse(link); err == nil {
+			q := parsedUrl1.Query()
+			q.Set("flag", "shadowrocket")
+			parsedUrl1.RawQuery = q.Encode()
+			content1, _, err := downloader.Download(ctx, parsedUrl1.String(),
+				map[string]string{})
+			if err == nil {
+				uriContent1, err := util.Decode(string(content1))
+				if err == nil {
+					description = uriContent1.Description
+				}
+			}
+		}
+	}
+
+	return &FetchSubscriptionResult{
+		Configs:     uriContent.Configs,
+		FailedNodes: uriContent.FailedNodes,
+		Description: description,
+	}, nil
+}
+
 // return success parsed nodes, failed parsed nodes, error
 // error means cannot get data from server
 func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloader downloader) (int, []string, error) {

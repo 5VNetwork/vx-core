@@ -17,7 +17,7 @@ type Pref struct {
 }
 
 type Subscription struct {
-	ID                int
+	ID                int `gorm:"primaryKey"`
 	Name              string
 	Link              string
 	RemainingData     float64
@@ -33,8 +33,11 @@ type OutboundHandlerGroup struct {
 }
 
 type OutboundHandlerGroupRelation struct {
-	GroupName string `gorm:"not null;foreignKey:Name;references:OutboundHandlerGroup"`
-	HandlerId int    `gorm:"not null;foreignKey:ID;references:OutboundHandler"`
+	GroupName string `gorm:"primaryKey;not null;column:group_name"`
+	HandlerId int    `gorm:"primaryKey;not null;column:handler_id"`
+
+	Group   OutboundHandlerGroup `gorm:"foreignKey:GroupName;references:Name;constraint:OnDelete:CASCADE;"`
+	Handler OutboundHandler      `gorm:"foreignKey:HandlerId;references:ID;constraint:OnDelete:CASCADE;"`
 }
 
 // type SelectorHandlerRelation struct {
@@ -44,8 +47,10 @@ type OutboundHandlerGroupRelation struct {
 
 type GeoDomain struct {
 	ID            int    `gorm:"primaryKey;autoIncrement"`
-	GeoDomain     []byte `gorm:"not null"`
-	DomainSetName string `gorm:"not null;foreignKey:Name;references:AtomicDomainSet"`
+	GeoDomain     []byte `gorm:"not null;column:geo_domain;uniqueIndex:idx_geo_domains_domain_set"`
+	DomainSetName string `gorm:"not null;column:domain_set_name;uniqueIndex:idx_geo_domains_domain_set"`
+
+	DomainSet AtomicDomainSet `gorm:"foreignKey:DomainSetName;references:Name;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 type AtomicDomainSet struct {
@@ -57,7 +62,7 @@ type AtomicDomainSet struct {
 }
 
 type OutboundHandler struct {
-	ID          int
+	ID          int `gorm:"primaryKey"`
 	Selected    bool
 	CountryCode string
 	Ok          int
@@ -66,12 +71,14 @@ type OutboundHandler struct {
 	SpeedTestTime    int
 	Ping             int
 	PingTestTime     int
-	SubId            *int
+	SubId            *int `gorm:"column:sub_id"`
 	Config           []byte
 	Sni              string
 	ServerIp         string
 	Support6         int
 	Support6TestTime int
+
+	Subscription *Subscription `gorm:"foreignKey:SubId;references:ID;constraint:OnDelete:CASCADE;"`
 }
 
 // if last test time is more than 10 minutes ago, return true

@@ -45,6 +45,7 @@ service Api {
   // rpc XStatusChangeNotify(XStatusChangeNotifyRequest) returns (XStatusChangeNotifyResponse);
   // rpc SetSubscriptionInterval(SetSubscriptionIntervalRequest) returns (SetSubscriptionIntervalResponse);
   rpc UpdateSubscription(UpdateSubscriptionRequest) returns (UpdateSubscriptionResponse);
+  rpc FetchSubscriptionContent(FetchSubscriptionContentRequest) returns (FetchSubscriptionContentResponse);
   rpc ProcessGeoFiles(ProcessGeoFilesRequest) returns (ProcessGeoFilesResponse);
   rpc Decode(DecodeRequest) returns (DecodeResponse);
   rpc Deploy(DeployRequest) returns (DeployResponse);
@@ -98,6 +99,17 @@ message UpdateSubscriptionResponse {
   int32 success_nodes = 3;
   map<string, string> error_reasons = 5;
   repeated string failed_nodes = 6;
+}
+
+message FetchSubscriptionContentRequest {
+  string link = 1;
+  repeated vx.outbound.HandlerConfig handlers = 2;
+}
+
+message FetchSubscriptionContentResponse {
+  repeated vx.outbound.OutboundHandlerConfig handlers = 1;
+  repeated string failed_nodes = 2;
+  string description = 3;
 }
 
 message SetTunNameRequest {

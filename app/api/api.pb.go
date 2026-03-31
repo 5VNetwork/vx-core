@@ -123,7 +123,7 @@ func (x ServerActionRequest_Action) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ServerActionRequest_Action.Descriptor instead.
 func (ServerActionRequest_Action) EnumDescriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{26, 0}
+	return file_app_api_api_proto_rawDescGZIP(), []int{28, 0}
 }
 
 type ApiServerConfig struct {
@@ -534,6 +534,118 @@ func (x *UpdateSubscriptionResponse) GetFailedNodes() []string {
 	return nil
 }
 
+type FetchSubscriptionContentRequest struct {
+	state         protoimpl.MessageState    `protogen:"open.v1"`
+	Link          string                    `protobuf:"bytes,1,opt,name=link,proto3" json:"link,omitempty"`
+	Handlers      []*outbound.HandlerConfig `protobuf:"bytes,2,rep,name=handlers,proto3" json:"handlers,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FetchSubscriptionContentRequest) Reset() {
+	*x = FetchSubscriptionContentRequest{}
+	mi := &file_app_api_api_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FetchSubscriptionContentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FetchSubscriptionContentRequest) ProtoMessage() {}
+
+func (x *FetchSubscriptionContentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_api_api_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FetchSubscriptionContentRequest.ProtoReflect.Descriptor instead.
+func (*FetchSubscriptionContentRequest) Descriptor() ([]byte, []int) {
+	return file_app_api_api_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *FetchSubscriptionContentRequest) GetLink() string {
+	if x != nil {
+		return x.Link
+	}
+	return ""
+}
+
+func (x *FetchSubscriptionContentRequest) GetHandlers() []*outbound.HandlerConfig {
+	if x != nil {
+		return x.Handlers
+	}
+	return nil
+}
+
+type FetchSubscriptionContentResponse struct {
+	state         protoimpl.MessageState            `protogen:"open.v1"`
+	Handlers      []*outbound.OutboundHandlerConfig `protobuf:"bytes,1,rep,name=handlers,proto3" json:"handlers,omitempty"`
+	FailedNodes   []string                          `protobuf:"bytes,2,rep,name=failed_nodes,json=failedNodes,proto3" json:"failed_nodes,omitempty"`
+	Description   string                            `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FetchSubscriptionContentResponse) Reset() {
+	*x = FetchSubscriptionContentResponse{}
+	mi := &file_app_api_api_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FetchSubscriptionContentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FetchSubscriptionContentResponse) ProtoMessage() {}
+
+func (x *FetchSubscriptionContentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_app_api_api_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FetchSubscriptionContentResponse.ProtoReflect.Descriptor instead.
+func (*FetchSubscriptionContentResponse) Descriptor() ([]byte, []int) {
+	return file_app_api_api_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *FetchSubscriptionContentResponse) GetHandlers() []*outbound.OutboundHandlerConfig {
+	if x != nil {
+		return x.Handlers
+	}
+	return nil
+}
+
+func (x *FetchSubscriptionContentResponse) GetFailedNodes() []string {
+	if x != nil {
+		return x.FailedNodes
+	}
+	return nil
+}
+
+func (x *FetchSubscriptionContentResponse) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
 type SetTunNameRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TunName       string                 `protobuf:"bytes,1,opt,name=tun_name,json=tunName,proto3" json:"tun_name,omitempty"`
@@ -543,7 +655,7 @@ type SetTunNameRequest struct {
 
 func (x *SetTunNameRequest) Reset() {
 	*x = SetTunNameRequest{}
-	mi := &file_app_api_api_proto_msgTypes[7]
+	mi := &file_app_api_api_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -555,7 +667,7 @@ func (x *SetTunNameRequest) String() string {
 func (*SetTunNameRequest) ProtoMessage() {}
 
 func (x *SetTunNameRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[7]
+	mi := &file_app_api_api_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -568,7 +680,7 @@ func (x *SetTunNameRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetTunNameRequest.ProtoReflect.Descriptor instead.
 func (*SetTunNameRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{7}
+	return file_app_api_api_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *SetTunNameRequest) GetTunName() string {
@@ -586,7 +698,7 @@ type SetTunNameResponse struct {
 
 func (x *SetTunNameResponse) Reset() {
 	*x = SetTunNameResponse{}
-	mi := &file_app_api_api_proto_msgTypes[8]
+	mi := &file_app_api_api_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -598,7 +710,7 @@ func (x *SetTunNameResponse) String() string {
 func (*SetTunNameResponse) ProtoMessage() {}
 
 func (x *SetTunNameResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[8]
+	mi := &file_app_api_api_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -611,7 +723,7 @@ func (x *SetTunNameResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetTunNameResponse.ProtoReflect.Descriptor instead.
 func (*SetTunNameResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{8}
+	return file_app_api_api_proto_rawDescGZIP(), []int{10}
 }
 
 type DownloadRequest struct {
@@ -626,7 +738,7 @@ type DownloadRequest struct {
 
 func (x *DownloadRequest) Reset() {
 	*x = DownloadRequest{}
-	mi := &file_app_api_api_proto_msgTypes[9]
+	mi := &file_app_api_api_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -638,7 +750,7 @@ func (x *DownloadRequest) String() string {
 func (*DownloadRequest) ProtoMessage() {}
 
 func (x *DownloadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[9]
+	mi := &file_app_api_api_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -651,7 +763,7 @@ func (x *DownloadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DownloadRequest.ProtoReflect.Descriptor instead.
 func (*DownloadRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{9}
+	return file_app_api_api_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *DownloadRequest) GetUrl() string {
@@ -687,7 +799,7 @@ type DownloadResponse struct {
 
 func (x *DownloadResponse) Reset() {
 	*x = DownloadResponse{}
-	mi := &file_app_api_api_proto_msgTypes[10]
+	mi := &file_app_api_api_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -699,7 +811,7 @@ func (x *DownloadResponse) String() string {
 func (*DownloadResponse) ProtoMessage() {}
 
 func (x *DownloadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[10]
+	mi := &file_app_api_api_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -712,7 +824,7 @@ func (x *DownloadResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DownloadResponse.ProtoReflect.Descriptor instead.
 func (*DownloadResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{10}
+	return file_app_api_api_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *DownloadResponse) GetUsage() map[string]uint32 {
@@ -738,7 +850,7 @@ type HandlerIpRequest struct {
 
 func (x *HandlerIpRequest) Reset() {
 	*x = HandlerIpRequest{}
-	mi := &file_app_api_api_proto_msgTypes[11]
+	mi := &file_app_api_api_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -750,7 +862,7 @@ func (x *HandlerIpRequest) String() string {
 func (*HandlerIpRequest) ProtoMessage() {}
 
 func (x *HandlerIpRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[11]
+	mi := &file_app_api_api_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -763,7 +875,7 @@ func (x *HandlerIpRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HandlerIpRequest.ProtoReflect.Descriptor instead.
 func (*HandlerIpRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{11}
+	return file_app_api_api_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *HandlerIpRequest) GetHandler() *outbound.OutboundHandlerConfig {
@@ -783,7 +895,7 @@ type RttTestRequest struct {
 
 func (x *RttTestRequest) Reset() {
 	*x = RttTestRequest{}
-	mi := &file_app_api_api_proto_msgTypes[12]
+	mi := &file_app_api_api_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -795,7 +907,7 @@ func (x *RttTestRequest) String() string {
 func (*RttTestRequest) ProtoMessage() {}
 
 func (x *RttTestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[12]
+	mi := &file_app_api_api_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -808,7 +920,7 @@ func (x *RttTestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RttTestRequest.ProtoReflect.Descriptor instead.
 func (*RttTestRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{12}
+	return file_app_api_api_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *RttTestRequest) GetAddr() string {
@@ -834,7 +946,7 @@ type RttTestResponse struct {
 
 func (x *RttTestResponse) Reset() {
 	*x = RttTestResponse{}
-	mi := &file_app_api_api_proto_msgTypes[13]
+	mi := &file_app_api_api_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -846,7 +958,7 @@ func (x *RttTestResponse) String() string {
 func (*RttTestResponse) ProtoMessage() {}
 
 func (x *RttTestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[13]
+	mi := &file_app_api_api_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -859,7 +971,7 @@ func (x *RttTestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RttTestResponse.ProtoReflect.Descriptor instead.
 func (*RttTestResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{13}
+	return file_app_api_api_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *RttTestResponse) GetPing() uint32 {
@@ -881,7 +993,7 @@ type HandlerIpResponse struct {
 
 func (x *HandlerIpResponse) Reset() {
 	*x = HandlerIpResponse{}
-	mi := &file_app_api_api_proto_msgTypes[14]
+	mi := &file_app_api_api_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -893,7 +1005,7 @@ func (x *HandlerIpResponse) String() string {
 func (*HandlerIpResponse) ProtoMessage() {}
 
 func (x *HandlerIpResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[14]
+	mi := &file_app_api_api_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -906,7 +1018,7 @@ func (x *HandlerIpResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HandlerIpResponse.ProtoReflect.Descriptor instead.
 func (*HandlerIpResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{14}
+	return file_app_api_api_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *HandlerIpResponse) GetIp6() string {
@@ -932,7 +1044,7 @@ type HandlerUsableRequest struct {
 
 func (x *HandlerUsableRequest) Reset() {
 	*x = HandlerUsableRequest{}
-	mi := &file_app_api_api_proto_msgTypes[15]
+	mi := &file_app_api_api_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -944,7 +1056,7 @@ func (x *HandlerUsableRequest) String() string {
 func (*HandlerUsableRequest) ProtoMessage() {}
 
 func (x *HandlerUsableRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[15]
+	mi := &file_app_api_api_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -957,7 +1069,7 @@ func (x *HandlerUsableRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HandlerUsableRequest.ProtoReflect.Descriptor instead.
 func (*HandlerUsableRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{15}
+	return file_app_api_api_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *HandlerUsableRequest) GetHandler() *outbound.HandlerConfig {
@@ -978,7 +1090,7 @@ type HandlerUsableResponse struct {
 
 func (x *HandlerUsableResponse) Reset() {
 	*x = HandlerUsableResponse{}
-	mi := &file_app_api_api_proto_msgTypes[16]
+	mi := &file_app_api_api_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -990,7 +1102,7 @@ func (x *HandlerUsableResponse) String() string {
 func (*HandlerUsableResponse) ProtoMessage() {}
 
 func (x *HandlerUsableResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[16]
+	mi := &file_app_api_api_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1003,7 +1115,7 @@ func (x *HandlerUsableResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HandlerUsableResponse.ProtoReflect.Descriptor instead.
 func (*HandlerUsableResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{16}
+	return file_app_api_api_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *HandlerUsableResponse) GetPing() int32 {
@@ -1039,7 +1151,7 @@ type SpeedTestRequest struct {
 
 func (x *SpeedTestRequest) Reset() {
 	*x = SpeedTestRequest{}
-	mi := &file_app_api_api_proto_msgTypes[17]
+	mi := &file_app_api_api_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1051,7 +1163,7 @@ func (x *SpeedTestRequest) String() string {
 func (*SpeedTestRequest) ProtoMessage() {}
 
 func (x *SpeedTestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[17]
+	mi := &file_app_api_api_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1064,7 +1176,7 @@ func (x *SpeedTestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SpeedTestRequest.ProtoReflect.Descriptor instead.
 func (*SpeedTestRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{17}
+	return file_app_api_api_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *SpeedTestRequest) GetHandlers() []*outbound.HandlerConfig {
@@ -1096,7 +1208,7 @@ type SpeedTestResponse struct {
 
 func (x *SpeedTestResponse) Reset() {
 	*x = SpeedTestResponse{}
-	mi := &file_app_api_api_proto_msgTypes[18]
+	mi := &file_app_api_api_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1108,7 +1220,7 @@ func (x *SpeedTestResponse) String() string {
 func (*SpeedTestResponse) ProtoMessage() {}
 
 func (x *SpeedTestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[18]
+	mi := &file_app_api_api_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1121,7 +1233,7 @@ func (x *SpeedTestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SpeedTestResponse.ProtoReflect.Descriptor instead.
 func (*SpeedTestResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{18}
+	return file_app_api_api_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *SpeedTestResponse) GetDown() int32 {
@@ -1154,7 +1266,7 @@ type GeoIPRequest struct {
 
 func (x *GeoIPRequest) Reset() {
 	*x = GeoIPRequest{}
-	mi := &file_app_api_api_proto_msgTypes[19]
+	mi := &file_app_api_api_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1166,7 +1278,7 @@ func (x *GeoIPRequest) String() string {
 func (*GeoIPRequest) ProtoMessage() {}
 
 func (x *GeoIPRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[19]
+	mi := &file_app_api_api_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1179,7 +1291,7 @@ func (x *GeoIPRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GeoIPRequest.ProtoReflect.Descriptor instead.
 func (*GeoIPRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{19}
+	return file_app_api_api_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GeoIPRequest) GetIps() []string {
@@ -1200,7 +1312,7 @@ type GeoIPResponse struct {
 
 func (x *GeoIPResponse) Reset() {
 	*x = GeoIPResponse{}
-	mi := &file_app_api_api_proto_msgTypes[20]
+	mi := &file_app_api_api_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1212,7 +1324,7 @@ func (x *GeoIPResponse) String() string {
 func (*GeoIPResponse) ProtoMessage() {}
 
 func (x *GeoIPResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[20]
+	mi := &file_app_api_api_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1225,7 +1337,7 @@ func (x *GeoIPResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GeoIPResponse.ProtoReflect.Descriptor instead.
 func (*GeoIPResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{20}
+	return file_app_api_api_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *GeoIPResponse) GetCountries() []string {
@@ -1252,7 +1364,7 @@ type ServerSshConfig struct {
 
 func (x *ServerSshConfig) Reset() {
 	*x = ServerSshConfig{}
-	mi := &file_app_api_api_proto_msgTypes[21]
+	mi := &file_app_api_api_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1264,7 +1376,7 @@ func (x *ServerSshConfig) String() string {
 func (*ServerSshConfig) ProtoMessage() {}
 
 func (x *ServerSshConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[21]
+	mi := &file_app_api_api_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1277,7 +1389,7 @@ func (x *ServerSshConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerSshConfig.ProtoReflect.Descriptor instead.
 func (*ServerSshConfig) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{21}
+	return file_app_api_api_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ServerSshConfig) GetAddress() string {
@@ -1346,7 +1458,7 @@ type MonitorServerRequest struct {
 
 func (x *MonitorServerRequest) Reset() {
 	*x = MonitorServerRequest{}
-	mi := &file_app_api_api_proto_msgTypes[22]
+	mi := &file_app_api_api_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1358,7 +1470,7 @@ func (x *MonitorServerRequest) String() string {
 func (*MonitorServerRequest) ProtoMessage() {}
 
 func (x *MonitorServerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[22]
+	mi := &file_app_api_api_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1371,7 +1483,7 @@ func (x *MonitorServerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MonitorServerRequest.ProtoReflect.Descriptor instead.
 func (*MonitorServerRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{22}
+	return file_app_api_api_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *MonitorServerRequest) GetSshConfig() *ServerSshConfig {
@@ -1405,7 +1517,7 @@ type MonitorServerResponse struct {
 
 func (x *MonitorServerResponse) Reset() {
 	*x = MonitorServerResponse{}
-	mi := &file_app_api_api_proto_msgTypes[23]
+	mi := &file_app_api_api_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1417,7 +1529,7 @@ func (x *MonitorServerResponse) String() string {
 func (*MonitorServerResponse) ProtoMessage() {}
 
 func (x *MonitorServerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[23]
+	mi := &file_app_api_api_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1430,7 +1542,7 @@ func (x *MonitorServerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MonitorServerResponse.ProtoReflect.Descriptor instead.
 func (*MonitorServerResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{23}
+	return file_app_api_api_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *MonitorServerResponse) GetCpu() uint32 {
@@ -1510,7 +1622,7 @@ type DeployRequest struct {
 
 func (x *DeployRequest) Reset() {
 	*x = DeployRequest{}
-	mi := &file_app_api_api_proto_msgTypes[24]
+	mi := &file_app_api_api_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1522,7 +1634,7 @@ func (x *DeployRequest) String() string {
 func (*DeployRequest) ProtoMessage() {}
 
 func (x *DeployRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[24]
+	mi := &file_app_api_api_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1535,7 +1647,7 @@ func (x *DeployRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeployRequest.ProtoReflect.Descriptor instead.
 func (*DeployRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{24}
+	return file_app_api_api_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *DeployRequest) GetSshConfig() *ServerSshConfig {
@@ -1592,7 +1704,7 @@ type DeployResponse struct {
 
 func (x *DeployResponse) Reset() {
 	*x = DeployResponse{}
-	mi := &file_app_api_api_proto_msgTypes[25]
+	mi := &file_app_api_api_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1604,7 +1716,7 @@ func (x *DeployResponse) String() string {
 func (*DeployResponse) ProtoMessage() {}
 
 func (x *DeployResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[25]
+	mi := &file_app_api_api_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1617,7 +1729,7 @@ func (x *DeployResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeployResponse.ProtoReflect.Descriptor instead.
 func (*DeployResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{25}
+	return file_app_api_api_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *DeployResponse) GetBbrError() string {
@@ -1644,7 +1756,7 @@ type ServerActionRequest struct {
 
 func (x *ServerActionRequest) Reset() {
 	*x = ServerActionRequest{}
-	mi := &file_app_api_api_proto_msgTypes[26]
+	mi := &file_app_api_api_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1656,7 +1768,7 @@ func (x *ServerActionRequest) String() string {
 func (*ServerActionRequest) ProtoMessage() {}
 
 func (x *ServerActionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[26]
+	mi := &file_app_api_api_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1669,7 +1781,7 @@ func (x *ServerActionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerActionRequest.ProtoReflect.Descriptor instead.
 func (*ServerActionRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{26}
+	return file_app_api_api_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *ServerActionRequest) GetAction() ServerActionRequest_Action {
@@ -1694,7 +1806,7 @@ type ServerActionResponse struct {
 
 func (x *ServerActionResponse) Reset() {
 	*x = ServerActionResponse{}
-	mi := &file_app_api_api_proto_msgTypes[27]
+	mi := &file_app_api_api_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1706,7 +1818,7 @@ func (x *ServerActionResponse) String() string {
 func (*ServerActionResponse) ProtoMessage() {}
 
 func (x *ServerActionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[27]
+	mi := &file_app_api_api_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1719,7 +1831,7 @@ func (x *ServerActionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerActionResponse.ProtoReflect.Descriptor instead.
 func (*ServerActionResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{27}
+	return file_app_api_api_proto_rawDescGZIP(), []int{29}
 }
 
 type VproxyStatusRequest struct {
@@ -1731,7 +1843,7 @@ type VproxyStatusRequest struct {
 
 func (x *VproxyStatusRequest) Reset() {
 	*x = VproxyStatusRequest{}
-	mi := &file_app_api_api_proto_msgTypes[28]
+	mi := &file_app_api_api_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1743,7 +1855,7 @@ func (x *VproxyStatusRequest) String() string {
 func (*VproxyStatusRequest) ProtoMessage() {}
 
 func (x *VproxyStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[28]
+	mi := &file_app_api_api_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1756,7 +1868,7 @@ func (x *VproxyStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VproxyStatusRequest.ProtoReflect.Descriptor instead.
 func (*VproxyStatusRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{28}
+	return file_app_api_api_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *VproxyStatusRequest) GetSshConfig() *ServerSshConfig {
@@ -1778,7 +1890,7 @@ type VproxyStatusResponse struct {
 
 func (x *VproxyStatusResponse) Reset() {
 	*x = VproxyStatusResponse{}
-	mi := &file_app_api_api_proto_msgTypes[29]
+	mi := &file_app_api_api_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1790,7 +1902,7 @@ func (x *VproxyStatusResponse) String() string {
 func (*VproxyStatusResponse) ProtoMessage() {}
 
 func (x *VproxyStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[29]
+	mi := &file_app_api_api_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1803,7 +1915,7 @@ func (x *VproxyStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VproxyStatusResponse.ProtoReflect.Descriptor instead.
 func (*VproxyStatusResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{29}
+	return file_app_api_api_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *VproxyStatusResponse) GetInstalled() bool {
@@ -1849,7 +1961,7 @@ type VXRequest struct {
 
 func (x *VXRequest) Reset() {
 	*x = VXRequest{}
-	mi := &file_app_api_api_proto_msgTypes[30]
+	mi := &file_app_api_api_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1861,7 +1973,7 @@ func (x *VXRequest) String() string {
 func (*VXRequest) ProtoMessage() {}
 
 func (x *VXRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[30]
+	mi := &file_app_api_api_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1874,7 +1986,7 @@ func (x *VXRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VXRequest.ProtoReflect.Descriptor instead.
 func (*VXRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{30}
+	return file_app_api_api_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *VXRequest) GetSshConfig() *ServerSshConfig {
@@ -1935,7 +2047,7 @@ type ServerConfigRequest struct {
 
 func (x *ServerConfigRequest) Reset() {
 	*x = ServerConfigRequest{}
-	mi := &file_app_api_api_proto_msgTypes[31]
+	mi := &file_app_api_api_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1947,7 +2059,7 @@ func (x *ServerConfigRequest) String() string {
 func (*ServerConfigRequest) ProtoMessage() {}
 
 func (x *ServerConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[31]
+	mi := &file_app_api_api_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1960,7 +2072,7 @@ func (x *ServerConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerConfigRequest.ProtoReflect.Descriptor instead.
 func (*ServerConfigRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{31}
+	return file_app_api_api_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *ServerConfigRequest) GetSshConfig() *ServerSshConfig {
@@ -1979,7 +2091,7 @@ type ServerConfigResponse struct {
 
 func (x *ServerConfigResponse) Reset() {
 	*x = ServerConfigResponse{}
-	mi := &file_app_api_api_proto_msgTypes[32]
+	mi := &file_app_api_api_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1991,7 +2103,7 @@ func (x *ServerConfigResponse) String() string {
 func (*ServerConfigResponse) ProtoMessage() {}
 
 func (x *ServerConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[32]
+	mi := &file_app_api_api_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2004,7 +2116,7 @@ func (x *ServerConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerConfigResponse.ProtoReflect.Descriptor instead.
 func (*ServerConfigResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{32}
+	return file_app_api_api_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *ServerConfigResponse) GetConfig() *vx.ServerConfig {
@@ -2024,7 +2136,7 @@ type UpdateServerConfigRequest struct {
 
 func (x *UpdateServerConfigRequest) Reset() {
 	*x = UpdateServerConfigRequest{}
-	mi := &file_app_api_api_proto_msgTypes[33]
+	mi := &file_app_api_api_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2036,7 +2148,7 @@ func (x *UpdateServerConfigRequest) String() string {
 func (*UpdateServerConfigRequest) ProtoMessage() {}
 
 func (x *UpdateServerConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[33]
+	mi := &file_app_api_api_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2049,7 +2161,7 @@ func (x *UpdateServerConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateServerConfigRequest.ProtoReflect.Descriptor instead.
 func (*UpdateServerConfigRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{33}
+	return file_app_api_api_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *UpdateServerConfigRequest) GetSshConfig() *ServerSshConfig {
@@ -2074,7 +2186,7 @@ type UpdateServerConfigResponse struct {
 
 func (x *UpdateServerConfigResponse) Reset() {
 	*x = UpdateServerConfigResponse{}
-	mi := &file_app_api_api_proto_msgTypes[34]
+	mi := &file_app_api_api_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2086,7 +2198,7 @@ func (x *UpdateServerConfigResponse) String() string {
 func (*UpdateServerConfigResponse) ProtoMessage() {}
 
 func (x *UpdateServerConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[34]
+	mi := &file_app_api_api_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2099,7 +2211,7 @@ func (x *UpdateServerConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateServerConfigResponse.ProtoReflect.Descriptor instead.
 func (*UpdateServerConfigResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{34}
+	return file_app_api_api_proto_rawDescGZIP(), []int{36}
 }
 
 type ProcessGeoFilesRequest struct {
@@ -2116,7 +2228,7 @@ type ProcessGeoFilesRequest struct {
 
 func (x *ProcessGeoFilesRequest) Reset() {
 	*x = ProcessGeoFilesRequest{}
-	mi := &file_app_api_api_proto_msgTypes[35]
+	mi := &file_app_api_api_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2128,7 +2240,7 @@ func (x *ProcessGeoFilesRequest) String() string {
 func (*ProcessGeoFilesRequest) ProtoMessage() {}
 
 func (x *ProcessGeoFilesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[35]
+	mi := &file_app_api_api_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2141,7 +2253,7 @@ func (x *ProcessGeoFilesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProcessGeoFilesRequest.ProtoReflect.Descriptor instead.
 func (*ProcessGeoFilesRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{35}
+	return file_app_api_api_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ProcessGeoFilesRequest) GetGeositeCodes() []string {
@@ -2194,7 +2306,7 @@ type ProcessGeoFilesResponse struct {
 
 func (x *ProcessGeoFilesResponse) Reset() {
 	*x = ProcessGeoFilesResponse{}
-	mi := &file_app_api_api_proto_msgTypes[36]
+	mi := &file_app_api_api_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2206,7 +2318,7 @@ func (x *ProcessGeoFilesResponse) String() string {
 func (*ProcessGeoFilesResponse) ProtoMessage() {}
 
 func (x *ProcessGeoFilesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[36]
+	mi := &file_app_api_api_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2219,7 +2331,7 @@ func (x *ProcessGeoFilesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProcessGeoFilesResponse.ProtoReflect.Descriptor instead.
 func (*ProcessGeoFilesResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{36}
+	return file_app_api_api_proto_rawDescGZIP(), []int{38}
 }
 
 type DecodeRequest struct {
@@ -2231,7 +2343,7 @@ type DecodeRequest struct {
 
 func (x *DecodeRequest) Reset() {
 	*x = DecodeRequest{}
-	mi := &file_app_api_api_proto_msgTypes[37]
+	mi := &file_app_api_api_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2243,7 +2355,7 @@ func (x *DecodeRequest) String() string {
 func (*DecodeRequest) ProtoMessage() {}
 
 func (x *DecodeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[37]
+	mi := &file_app_api_api_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2256,7 +2368,7 @@ func (x *DecodeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecodeRequest.ProtoReflect.Descriptor instead.
 func (*DecodeRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{37}
+	return file_app_api_api_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *DecodeRequest) GetData() string {
@@ -2276,7 +2388,7 @@ type DecodeResponse struct {
 
 func (x *DecodeResponse) Reset() {
 	*x = DecodeResponse{}
-	mi := &file_app_api_api_proto_msgTypes[38]
+	mi := &file_app_api_api_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2288,7 +2400,7 @@ func (x *DecodeResponse) String() string {
 func (*DecodeResponse) ProtoMessage() {}
 
 func (x *DecodeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[38]
+	mi := &file_app_api_api_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2301,7 +2413,7 @@ func (x *DecodeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecodeResponse.ProtoReflect.Descriptor instead.
 func (*DecodeResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{38}
+	return file_app_api_api_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *DecodeResponse) GetHandlers() []*outbound.OutboundHandlerConfig {
@@ -2327,7 +2439,7 @@ type GetServerPublicKeyRequest struct {
 
 func (x *GetServerPublicKeyRequest) Reset() {
 	*x = GetServerPublicKeyRequest{}
-	mi := &file_app_api_api_proto_msgTypes[39]
+	mi := &file_app_api_api_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2339,7 +2451,7 @@ func (x *GetServerPublicKeyRequest) String() string {
 func (*GetServerPublicKeyRequest) ProtoMessage() {}
 
 func (x *GetServerPublicKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[39]
+	mi := &file_app_api_api_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2352,7 +2464,7 @@ func (x *GetServerPublicKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServerPublicKeyRequest.ProtoReflect.Descriptor instead.
 func (*GetServerPublicKeyRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{39}
+	return file_app_api_api_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *GetServerPublicKeyRequest) GetSshConfig() *ServerSshConfig {
@@ -2371,7 +2483,7 @@ type GetServerPublicKeyResponse struct {
 
 func (x *GetServerPublicKeyResponse) Reset() {
 	*x = GetServerPublicKeyResponse{}
-	mi := &file_app_api_api_proto_msgTypes[40]
+	mi := &file_app_api_api_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2383,7 +2495,7 @@ func (x *GetServerPublicKeyResponse) String() string {
 func (*GetServerPublicKeyResponse) ProtoMessage() {}
 
 func (x *GetServerPublicKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[40]
+	mi := &file_app_api_api_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2396,7 +2508,7 @@ func (x *GetServerPublicKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServerPublicKeyResponse.ProtoReflect.Descriptor instead.
 func (*GetServerPublicKeyResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{40}
+	return file_app_api_api_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *GetServerPublicKeyResponse) GetPublicKey() []byte {
@@ -2415,7 +2527,7 @@ type GenerateCertRequest struct {
 
 func (x *GenerateCertRequest) Reset() {
 	*x = GenerateCertRequest{}
-	mi := &file_app_api_api_proto_msgTypes[41]
+	mi := &file_app_api_api_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2427,7 +2539,7 @@ func (x *GenerateCertRequest) String() string {
 func (*GenerateCertRequest) ProtoMessage() {}
 
 func (x *GenerateCertRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[41]
+	mi := &file_app_api_api_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2440,7 +2552,7 @@ func (x *GenerateCertRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateCertRequest.ProtoReflect.Descriptor instead.
 func (*GenerateCertRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{41}
+	return file_app_api_api_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *GenerateCertRequest) GetDomain() string {
@@ -2463,7 +2575,7 @@ type GenerateCertResponse struct {
 
 func (x *GenerateCertResponse) Reset() {
 	*x = GenerateCertResponse{}
-	mi := &file_app_api_api_proto_msgTypes[42]
+	mi := &file_app_api_api_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2475,7 +2587,7 @@ func (x *GenerateCertResponse) String() string {
 func (*GenerateCertResponse) ProtoMessage() {}
 
 func (x *GenerateCertResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[42]
+	mi := &file_app_api_api_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2488,7 +2600,7 @@ func (x *GenerateCertResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateCertResponse.ProtoReflect.Descriptor instead.
 func (*GenerateCertResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{42}
+	return file_app_api_api_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *GenerateCertResponse) GetCert() []byte {
@@ -2521,7 +2633,7 @@ type GetCertDomainRequest struct {
 
 func (x *GetCertDomainRequest) Reset() {
 	*x = GetCertDomainRequest{}
-	mi := &file_app_api_api_proto_msgTypes[43]
+	mi := &file_app_api_api_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2533,7 +2645,7 @@ func (x *GetCertDomainRequest) String() string {
 func (*GetCertDomainRequest) ProtoMessage() {}
 
 func (x *GetCertDomainRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[43]
+	mi := &file_app_api_api_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2546,7 +2658,7 @@ func (x *GetCertDomainRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCertDomainRequest.ProtoReflect.Descriptor instead.
 func (*GetCertDomainRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{43}
+	return file_app_api_api_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *GetCertDomainRequest) GetCert() []byte {
@@ -2565,7 +2677,7 @@ type GetCertDomainResponse struct {
 
 func (x *GetCertDomainResponse) Reset() {
 	*x = GetCertDomainResponse{}
-	mi := &file_app_api_api_proto_msgTypes[44]
+	mi := &file_app_api_api_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2577,7 +2689,7 @@ func (x *GetCertDomainResponse) String() string {
 func (*GetCertDomainResponse) ProtoMessage() {}
 
 func (x *GetCertDomainResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[44]
+	mi := &file_app_api_api_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2590,7 +2702,7 @@ func (x *GetCertDomainResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCertDomainResponse.ProtoReflect.Descriptor instead.
 func (*GetCertDomainResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{44}
+	return file_app_api_api_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *GetCertDomainResponse) GetDomain() string {
@@ -2609,7 +2721,7 @@ type AddInboundRequest struct {
 
 func (x *AddInboundRequest) Reset() {
 	*x = AddInboundRequest{}
-	mi := &file_app_api_api_proto_msgTypes[45]
+	mi := &file_app_api_api_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2621,7 +2733,7 @@ func (x *AddInboundRequest) String() string {
 func (*AddInboundRequest) ProtoMessage() {}
 
 func (x *AddInboundRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[45]
+	mi := &file_app_api_api_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2634,7 +2746,7 @@ func (x *AddInboundRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddInboundRequest.ProtoReflect.Descriptor instead.
 func (*AddInboundRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{45}
+	return file_app_api_api_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *AddInboundRequest) GetInbound() *inbound.ProxyInboundConfig {
@@ -2652,7 +2764,7 @@ type AddInboundResponse struct {
 
 func (x *AddInboundResponse) Reset() {
 	*x = AddInboundResponse{}
-	mi := &file_app_api_api_proto_msgTypes[46]
+	mi := &file_app_api_api_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2664,7 +2776,7 @@ func (x *AddInboundResponse) String() string {
 func (*AddInboundResponse) ProtoMessage() {}
 
 func (x *AddInboundResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[46]
+	mi := &file_app_api_api_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2677,7 +2789,7 @@ func (x *AddInboundResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddInboundResponse.ProtoReflect.Descriptor instead.
 func (*AddInboundResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{46}
+	return file_app_api_api_proto_rawDescGZIP(), []int{48}
 }
 
 type UploadLogRequest struct {
@@ -2694,7 +2806,7 @@ type UploadLogRequest struct {
 
 func (x *UploadLogRequest) Reset() {
 	*x = UploadLogRequest{}
-	mi := &file_app_api_api_proto_msgTypes[47]
+	mi := &file_app_api_api_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2706,7 +2818,7 @@ func (x *UploadLogRequest) String() string {
 func (*UploadLogRequest) ProtoMessage() {}
 
 func (x *UploadLogRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[47]
+	mi := &file_app_api_api_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2719,7 +2831,7 @@ func (x *UploadLogRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadLogRequest.ProtoReflect.Descriptor instead.
 func (*UploadLogRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{47}
+	return file_app_api_api_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *UploadLogRequest) GetBody() string {
@@ -2772,7 +2884,7 @@ type UploadLogResponse struct {
 
 func (x *UploadLogResponse) Reset() {
 	*x = UploadLogResponse{}
-	mi := &file_app_api_api_proto_msgTypes[48]
+	mi := &file_app_api_api_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2784,7 +2896,7 @@ func (x *UploadLogResponse) String() string {
 func (*UploadLogResponse) ProtoMessage() {}
 
 func (x *UploadLogResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[48]
+	mi := &file_app_api_api_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2797,7 +2909,7 @@ func (x *UploadLogResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadLogResponse.ProtoReflect.Descriptor instead.
 func (*UploadLogResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{48}
+	return file_app_api_api_proto_rawDescGZIP(), []int{50}
 }
 
 type DefaultNICHasGlobalV6Request struct {
@@ -2808,7 +2920,7 @@ type DefaultNICHasGlobalV6Request struct {
 
 func (x *DefaultNICHasGlobalV6Request) Reset() {
 	*x = DefaultNICHasGlobalV6Request{}
-	mi := &file_app_api_api_proto_msgTypes[49]
+	mi := &file_app_api_api_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2820,7 +2932,7 @@ func (x *DefaultNICHasGlobalV6Request) String() string {
 func (*DefaultNICHasGlobalV6Request) ProtoMessage() {}
 
 func (x *DefaultNICHasGlobalV6Request) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[49]
+	mi := &file_app_api_api_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2833,7 +2945,7 @@ func (x *DefaultNICHasGlobalV6Request) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DefaultNICHasGlobalV6Request.ProtoReflect.Descriptor instead.
 func (*DefaultNICHasGlobalV6Request) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{49}
+	return file_app_api_api_proto_rawDescGZIP(), []int{51}
 }
 
 type DefaultNICHasGlobalV6Response struct {
@@ -2845,7 +2957,7 @@ type DefaultNICHasGlobalV6Response struct {
 
 func (x *DefaultNICHasGlobalV6Response) Reset() {
 	*x = DefaultNICHasGlobalV6Response{}
-	mi := &file_app_api_api_proto_msgTypes[50]
+	mi := &file_app_api_api_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2857,7 +2969,7 @@ func (x *DefaultNICHasGlobalV6Response) String() string {
 func (*DefaultNICHasGlobalV6Response) ProtoMessage() {}
 
 func (x *DefaultNICHasGlobalV6Response) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[50]
+	mi := &file_app_api_api_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2870,7 +2982,7 @@ func (x *DefaultNICHasGlobalV6Response) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DefaultNICHasGlobalV6Response.ProtoReflect.Descriptor instead.
 func (*DefaultNICHasGlobalV6Response) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{50}
+	return file_app_api_api_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *DefaultNICHasGlobalV6Response) GetHasGlobalV6() bool {
@@ -2889,7 +3001,7 @@ type UpdateTmStatusRequest struct {
 
 func (x *UpdateTmStatusRequest) Reset() {
 	*x = UpdateTmStatusRequest{}
-	mi := &file_app_api_api_proto_msgTypes[51]
+	mi := &file_app_api_api_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2901,7 +3013,7 @@ func (x *UpdateTmStatusRequest) String() string {
 func (*UpdateTmStatusRequest) ProtoMessage() {}
 
 func (x *UpdateTmStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[51]
+	mi := &file_app_api_api_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2914,7 +3026,7 @@ func (x *UpdateTmStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTmStatusRequest.ProtoReflect.Descriptor instead.
 func (*UpdateTmStatusRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{51}
+	return file_app_api_api_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *UpdateTmStatusRequest) GetOn() bool {
@@ -2932,7 +3044,7 @@ type Receipt struct {
 
 func (x *Receipt) Reset() {
 	*x = Receipt{}
-	mi := &file_app_api_api_proto_msgTypes[52]
+	mi := &file_app_api_api_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2944,7 +3056,7 @@ func (x *Receipt) String() string {
 func (*Receipt) ProtoMessage() {}
 
 func (x *Receipt) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[52]
+	mi := &file_app_api_api_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2957,7 +3069,7 @@ func (x *Receipt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Receipt.ProtoReflect.Descriptor instead.
 func (*Receipt) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{52}
+	return file_app_api_api_proto_rawDescGZIP(), []int{54}
 }
 
 type ParseClashRuleFileRequest struct {
@@ -2969,7 +3081,7 @@ type ParseClashRuleFileRequest struct {
 
 func (x *ParseClashRuleFileRequest) Reset() {
 	*x = ParseClashRuleFileRequest{}
-	mi := &file_app_api_api_proto_msgTypes[53]
+	mi := &file_app_api_api_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2981,7 +3093,7 @@ func (x *ParseClashRuleFileRequest) String() string {
 func (*ParseClashRuleFileRequest) ProtoMessage() {}
 
 func (x *ParseClashRuleFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[53]
+	mi := &file_app_api_api_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2994,7 +3106,7 @@ func (x *ParseClashRuleFileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParseClashRuleFileRequest.ProtoReflect.Descriptor instead.
 func (*ParseClashRuleFileRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{53}
+	return file_app_api_api_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *ParseClashRuleFileRequest) GetContent() []byte {
@@ -3015,7 +3127,7 @@ type ParseClashRuleFileResponse struct {
 
 func (x *ParseClashRuleFileResponse) Reset() {
 	*x = ParseClashRuleFileResponse{}
-	mi := &file_app_api_api_proto_msgTypes[54]
+	mi := &file_app_api_api_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3027,7 +3139,7 @@ func (x *ParseClashRuleFileResponse) String() string {
 func (*ParseClashRuleFileResponse) ProtoMessage() {}
 
 func (x *ParseClashRuleFileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[54]
+	mi := &file_app_api_api_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3040,7 +3152,7 @@ func (x *ParseClashRuleFileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParseClashRuleFileResponse.ProtoReflect.Descriptor instead.
 func (*ParseClashRuleFileResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{54}
+	return file_app_api_api_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *ParseClashRuleFileResponse) GetDomains() []*geo.Domain {
@@ -3073,7 +3185,7 @@ type ParseGeositeConfigRequest struct {
 
 func (x *ParseGeositeConfigRequest) Reset() {
 	*x = ParseGeositeConfigRequest{}
-	mi := &file_app_api_api_proto_msgTypes[55]
+	mi := &file_app_api_api_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3085,7 +3197,7 @@ func (x *ParseGeositeConfigRequest) String() string {
 func (*ParseGeositeConfigRequest) ProtoMessage() {}
 
 func (x *ParseGeositeConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[55]
+	mi := &file_app_api_api_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3098,7 +3210,7 @@ func (x *ParseGeositeConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParseGeositeConfigRequest.ProtoReflect.Descriptor instead.
 func (*ParseGeositeConfigRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{55}
+	return file_app_api_api_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *ParseGeositeConfigRequest) GetConfig() *geo1.GeositeConfig {
@@ -3117,7 +3229,7 @@ type ParseGeositeConfigResponse struct {
 
 func (x *ParseGeositeConfigResponse) Reset() {
 	*x = ParseGeositeConfigResponse{}
-	mi := &file_app_api_api_proto_msgTypes[56]
+	mi := &file_app_api_api_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3129,7 +3241,7 @@ func (x *ParseGeositeConfigResponse) String() string {
 func (*ParseGeositeConfigResponse) ProtoMessage() {}
 
 func (x *ParseGeositeConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[56]
+	mi := &file_app_api_api_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3142,7 +3254,7 @@ func (x *ParseGeositeConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParseGeositeConfigResponse.ProtoReflect.Descriptor instead.
 func (*ParseGeositeConfigResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{56}
+	return file_app_api_api_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *ParseGeositeConfigResponse) GetDomains() []*geo.Domain {
@@ -3161,7 +3273,7 @@ type ParseGeoIPConfigRequest struct {
 
 func (x *ParseGeoIPConfigRequest) Reset() {
 	*x = ParseGeoIPConfigRequest{}
-	mi := &file_app_api_api_proto_msgTypes[57]
+	mi := &file_app_api_api_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3173,7 +3285,7 @@ func (x *ParseGeoIPConfigRequest) String() string {
 func (*ParseGeoIPConfigRequest) ProtoMessage() {}
 
 func (x *ParseGeoIPConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[57]
+	mi := &file_app_api_api_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3186,7 +3298,7 @@ func (x *ParseGeoIPConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParseGeoIPConfigRequest.ProtoReflect.Descriptor instead.
 func (*ParseGeoIPConfigRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{57}
+	return file_app_api_api_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *ParseGeoIPConfigRequest) GetConfig() *geo1.GeoIPConfig {
@@ -3205,7 +3317,7 @@ type ParseGeoIPConfigResponse struct {
 
 func (x *ParseGeoIPConfigResponse) Reset() {
 	*x = ParseGeoIPConfigResponse{}
-	mi := &file_app_api_api_proto_msgTypes[58]
+	mi := &file_app_api_api_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3217,7 +3329,7 @@ func (x *ParseGeoIPConfigResponse) String() string {
 func (*ParseGeoIPConfigResponse) ProtoMessage() {}
 
 func (x *ParseGeoIPConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[58]
+	mi := &file_app_api_api_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3230,7 +3342,7 @@ func (x *ParseGeoIPConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParseGeoIPConfigResponse.ProtoReflect.Descriptor instead.
 func (*ParseGeoIPConfigResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{58}
+	return file_app_api_api_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *ParseGeoIPConfigResponse) GetCidrs() []*geo.CIDR {
@@ -3248,7 +3360,7 @@ type GenerateX25519KeyPairRequest struct {
 
 func (x *GenerateX25519KeyPairRequest) Reset() {
 	*x = GenerateX25519KeyPairRequest{}
-	mi := &file_app_api_api_proto_msgTypes[59]
+	mi := &file_app_api_api_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3260,7 +3372,7 @@ func (x *GenerateX25519KeyPairRequest) String() string {
 func (*GenerateX25519KeyPairRequest) ProtoMessage() {}
 
 func (x *GenerateX25519KeyPairRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[59]
+	mi := &file_app_api_api_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3273,7 +3385,7 @@ func (x *GenerateX25519KeyPairRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateX25519KeyPairRequest.ProtoReflect.Descriptor instead.
 func (*GenerateX25519KeyPairRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{59}
+	return file_app_api_api_proto_rawDescGZIP(), []int{61}
 }
 
 type GenerateX25519KeyPairResponse struct {
@@ -3286,7 +3398,7 @@ type GenerateX25519KeyPairResponse struct {
 
 func (x *GenerateX25519KeyPairResponse) Reset() {
 	*x = GenerateX25519KeyPairResponse{}
-	mi := &file_app_api_api_proto_msgTypes[60]
+	mi := &file_app_api_api_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3298,7 +3410,7 @@ func (x *GenerateX25519KeyPairResponse) String() string {
 func (*GenerateX25519KeyPairResponse) ProtoMessage() {}
 
 func (x *GenerateX25519KeyPairResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[60]
+	mi := &file_app_api_api_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3311,7 +3423,7 @@ func (x *GenerateX25519KeyPairResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateX25519KeyPairResponse.ProtoReflect.Descriptor instead.
 func (*GenerateX25519KeyPairResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{60}
+	return file_app_api_api_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *GenerateX25519KeyPairResponse) GetPub() string {
@@ -3337,7 +3449,7 @@ type GenerateECHRequest struct {
 
 func (x *GenerateECHRequest) Reset() {
 	*x = GenerateECHRequest{}
-	mi := &file_app_api_api_proto_msgTypes[61]
+	mi := &file_app_api_api_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3349,7 +3461,7 @@ func (x *GenerateECHRequest) String() string {
 func (*GenerateECHRequest) ProtoMessage() {}
 
 func (x *GenerateECHRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[61]
+	mi := &file_app_api_api_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3362,7 +3474,7 @@ func (x *GenerateECHRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateECHRequest.ProtoReflect.Descriptor instead.
 func (*GenerateECHRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{61}
+	return file_app_api_api_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *GenerateECHRequest) GetDomain() string {
@@ -3382,7 +3494,7 @@ type GenerateECHResponse struct {
 
 func (x *GenerateECHResponse) Reset() {
 	*x = GenerateECHResponse{}
-	mi := &file_app_api_api_proto_msgTypes[62]
+	mi := &file_app_api_api_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3394,7 +3506,7 @@ func (x *GenerateECHResponse) String() string {
 func (*GenerateECHResponse) ProtoMessage() {}
 
 func (x *GenerateECHResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[62]
+	mi := &file_app_api_api_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3407,7 +3519,7 @@ func (x *GenerateECHResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateECHResponse.ProtoReflect.Descriptor instead.
 func (*GenerateECHResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{62}
+	return file_app_api_api_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *GenerateECHResponse) GetConfig() []byte {
@@ -3438,7 +3550,7 @@ type StartMacSystemProxyRequest struct {
 
 func (x *StartMacSystemProxyRequest) Reset() {
 	*x = StartMacSystemProxyRequest{}
-	mi := &file_app_api_api_proto_msgTypes[63]
+	mi := &file_app_api_api_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3450,7 +3562,7 @@ func (x *StartMacSystemProxyRequest) String() string {
 func (*StartMacSystemProxyRequest) ProtoMessage() {}
 
 func (x *StartMacSystemProxyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[63]
+	mi := &file_app_api_api_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3463,7 +3575,7 @@ func (x *StartMacSystemProxyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartMacSystemProxyRequest.ProtoReflect.Descriptor instead.
 func (*StartMacSystemProxyRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{63}
+	return file_app_api_api_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *StartMacSystemProxyRequest) GetHttpProxyAddress() string {
@@ -3516,7 +3628,7 @@ type StopMacSystemProxyRequest struct {
 
 func (x *StopMacSystemProxyRequest) Reset() {
 	*x = StopMacSystemProxyRequest{}
-	mi := &file_app_api_api_proto_msgTypes[64]
+	mi := &file_app_api_api_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3528,7 +3640,7 @@ func (x *StopMacSystemProxyRequest) String() string {
 func (*StopMacSystemProxyRequest) ProtoMessage() {}
 
 func (x *StopMacSystemProxyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[64]
+	mi := &file_app_api_api_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3541,7 +3653,7 @@ func (x *StopMacSystemProxyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StopMacSystemProxyRequest.ProtoReflect.Descriptor instead.
 func (*StopMacSystemProxyRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{64}
+	return file_app_api_api_proto_rawDescGZIP(), []int{66}
 }
 
 type CloseDbRequest struct {
@@ -3552,7 +3664,7 @@ type CloseDbRequest struct {
 
 func (x *CloseDbRequest) Reset() {
 	*x = CloseDbRequest{}
-	mi := &file_app_api_api_proto_msgTypes[65]
+	mi := &file_app_api_api_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3564,7 +3676,7 @@ func (x *CloseDbRequest) String() string {
 func (*CloseDbRequest) ProtoMessage() {}
 
 func (x *CloseDbRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[65]
+	mi := &file_app_api_api_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3577,7 +3689,7 @@ func (x *CloseDbRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloseDbRequest.ProtoReflect.Descriptor instead.
 func (*CloseDbRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{65}
+	return file_app_api_api_proto_rawDescGZIP(), []int{67}
 }
 
 type OpenDbRequest struct {
@@ -3589,7 +3701,7 @@ type OpenDbRequest struct {
 
 func (x *OpenDbRequest) Reset() {
 	*x = OpenDbRequest{}
-	mi := &file_app_api_api_proto_msgTypes[66]
+	mi := &file_app_api_api_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3601,7 +3713,7 @@ func (x *OpenDbRequest) String() string {
 func (*OpenDbRequest) ProtoMessage() {}
 
 func (x *OpenDbRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[66]
+	mi := &file_app_api_api_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3614,7 +3726,7 @@ func (x *OpenDbRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OpenDbRequest.ProtoReflect.Descriptor instead.
 func (*OpenDbRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{66}
+	return file_app_api_api_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *OpenDbRequest) GetPath() string {
@@ -3636,7 +3748,7 @@ type InboundConfigToOutboundConfigRequest struct {
 
 func (x *InboundConfigToOutboundConfigRequest) Reset() {
 	*x = InboundConfigToOutboundConfigRequest{}
-	mi := &file_app_api_api_proto_msgTypes[67]
+	mi := &file_app_api_api_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3648,7 +3760,7 @@ func (x *InboundConfigToOutboundConfigRequest) String() string {
 func (*InboundConfigToOutboundConfigRequest) ProtoMessage() {}
 
 func (x *InboundConfigToOutboundConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[67]
+	mi := &file_app_api_api_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3661,7 +3773,7 @@ func (x *InboundConfigToOutboundConfigRequest) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use InboundConfigToOutboundConfigRequest.ProtoReflect.Descriptor instead.
 func (*InboundConfigToOutboundConfigRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{67}
+	return file_app_api_api_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *InboundConfigToOutboundConfigRequest) GetInbound() *inbound.ProxyInboundConfig {
@@ -3701,7 +3813,7 @@ type InboundConfigToOutboundConfigResponse struct {
 
 func (x *InboundConfigToOutboundConfigResponse) Reset() {
 	*x = InboundConfigToOutboundConfigResponse{}
-	mi := &file_app_api_api_proto_msgTypes[68]
+	mi := &file_app_api_api_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3713,7 +3825,7 @@ func (x *InboundConfigToOutboundConfigResponse) String() string {
 func (*InboundConfigToOutboundConfigResponse) ProtoMessage() {}
 
 func (x *InboundConfigToOutboundConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[68]
+	mi := &file_app_api_api_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3726,7 +3838,7 @@ func (x *InboundConfigToOutboundConfigResponse) ProtoReflect() protoreflect.Mess
 
 // Deprecated: Use InboundConfigToOutboundConfigResponse.ProtoReflect.Descriptor instead.
 func (*InboundConfigToOutboundConfigResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{68}
+	return file_app_api_api_proto_rawDescGZIP(), []int{70}
 }
 
 func (x *InboundConfigToOutboundConfigResponse) GetOutboundConfigs() []*outbound.OutboundHandlerConfig {
@@ -3745,7 +3857,7 @@ type ToUrlRequest struct {
 
 func (x *ToUrlRequest) Reset() {
 	*x = ToUrlRequest{}
-	mi := &file_app_api_api_proto_msgTypes[69]
+	mi := &file_app_api_api_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3757,7 +3869,7 @@ func (x *ToUrlRequest) String() string {
 func (*ToUrlRequest) ProtoMessage() {}
 
 func (x *ToUrlRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[69]
+	mi := &file_app_api_api_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3770,7 +3882,7 @@ func (x *ToUrlRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToUrlRequest.ProtoReflect.Descriptor instead.
 func (*ToUrlRequest) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{69}
+	return file_app_api_api_proto_rawDescGZIP(), []int{71}
 }
 
 func (x *ToUrlRequest) GetOutboundConfogs() []*outbound.OutboundHandlerConfig {
@@ -3790,7 +3902,7 @@ type ToUrlResponse struct {
 
 func (x *ToUrlResponse) Reset() {
 	*x = ToUrlResponse{}
-	mi := &file_app_api_api_proto_msgTypes[70]
+	mi := &file_app_api_api_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3802,7 +3914,7 @@ func (x *ToUrlResponse) String() string {
 func (*ToUrlResponse) ProtoMessage() {}
 
 func (x *ToUrlResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_api_api_proto_msgTypes[70]
+	mi := &file_app_api_api_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3815,7 +3927,7 @@ func (x *ToUrlResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToUrlResponse.ProtoReflect.Descriptor instead.
 func (*ToUrlResponse) Descriptor() ([]byte, []int) {
-	return file_app_api_api_proto_rawDescGZIP(), []int{70}
+	return file_app_api_api_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *ToUrlResponse) GetUrls() []string {
@@ -3875,7 +3987,14 @@ const file_app_api_api_proto_rawDesc = "" +
 	"\ffailed_nodes\x18\x06 \x03(\tR\vfailedNodes\x1a?\n" +
 	"\x11ErrorReasonsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\".\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"m\n" +
+	"\x1fFetchSubscriptionContentRequest\x12\x12\n" +
+	"\x04link\x18\x01 \x01(\tR\x04link\x126\n" +
+	"\bhandlers\x18\x02 \x03(\v2\x1a.vx.outbound.HandlerConfigR\bhandlers\"\xa7\x01\n" +
+	" FetchSubscriptionContentResponse\x12>\n" +
+	"\bhandlers\x18\x01 \x03(\v2\".vx.outbound.OutboundHandlerConfigR\bhandlers\x12!\n" +
+	"\ffailed_nodes\x18\x02 \x03(\tR\vfailedNodes\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\".\n" +
 	"\x11SetTunNameRequest\x12\x19\n" +
 	"\btun_name\x18\x01 \x01(\tR\atunName\"\x14\n" +
 	"\x12SetTunNameResponse\"o\n" +
@@ -4092,7 +4211,7 @@ const file_app_api_api_proto_rawDesc = "" +
 	"\x10outbound_confogs\x18\x01 \x03(\v2\".vx.outbound.OutboundHandlerConfigR\x0foutboundConfogs\"F\n" +
 	"\rToUrlResponse\x12\x12\n" +
 	"\x04urls\x18\x01 \x03(\tR\x04urls\x12!\n" +
-	"\ffailed_nodes\x18\x02 \x03(\tR\vfailedNodes2\xe8\x13\n" +
+	"\ffailed_nodes\x18\x02 \x03(\tR\vfailedNodes2\xd7\x14\n" +
 	"\x03Api\x12@\n" +
 	"\x0eUpdateTmStatus\x12\x1d.vx.api.UpdateTmStatusRequest\x1a\x0f.vx.api.Receipt\x12=\n" +
 	"\bDownload\x12\x17.vx.api.DownloadRequest\x1a\x18.vx.api.DownloadResponse\x12L\n" +
@@ -4107,7 +4226,8 @@ const file_app_api_api_proto_rawDesc = "" +
 	"\x02VX\x12\x11.vx.api.VXRequest\x1a\x0f.vx.api.Receipt\x12I\n" +
 	"\fServerConfig\x12\x1b.vx.api.ServerConfigRequest\x1a\x1c.vx.api.ServerConfigResponse\x12[\n" +
 	"\x12UpdateServerConfig\x12!.vx.api.UpdateServerConfigRequest\x1a\".vx.api.UpdateServerConfigResponse\x12[\n" +
-	"\x12UpdateSubscription\x12!.vx.api.UpdateSubscriptionRequest\x1a\".vx.api.UpdateSubscriptionResponse\x12R\n" +
+	"\x12UpdateSubscription\x12!.vx.api.UpdateSubscriptionRequest\x1a\".vx.api.UpdateSubscriptionResponse\x12m\n" +
+	"\x18FetchSubscriptionContent\x12'.vx.api.FetchSubscriptionContentRequest\x1a(.vx.api.FetchSubscriptionContentResponse\x12R\n" +
 	"\x0fProcessGeoFiles\x12\x1e.vx.api.ProcessGeoFilesRequest\x1a\x1f.vx.api.ProcessGeoFilesResponse\x127\n" +
 	"\x06Decode\x12\x15.vx.api.DecodeRequest\x1a\x16.vx.api.DecodeResponse\x127\n" +
 	"\x06Deploy\x12\x15.vx.api.DeployRequest\x1a\x16.vx.api.DeployResponse\x12I\n" +
@@ -4145,7 +4265,7 @@ func file_app_api_api_proto_rawDescGZIP() []byte {
 }
 
 var file_app_api_api_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_app_api_api_proto_msgTypes = make([]protoimpl.MessageInfo, 74)
+var file_app_api_api_proto_msgTypes = make([]protoimpl.MessageInfo, 76)
 var file_app_api_api_proto_goTypes = []any{
 	(XStatusChangeNotifyRequest_Status)(0),        // 0: vx.api.XStatusChangeNotifyRequest.Status
 	(ServerActionRequest_Action)(0),               // 1: vx.api.ServerActionRequest.Action
@@ -4156,194 +4276,200 @@ var file_app_api_api_proto_goTypes = []any{
 	(*SetSubscriptionIntervalResponse)(nil),       // 6: vx.api.SetSubscriptionIntervalResponse
 	(*UpdateSubscriptionRequest)(nil),             // 7: vx.api.UpdateSubscriptionRequest
 	(*UpdateSubscriptionResponse)(nil),            // 8: vx.api.UpdateSubscriptionResponse
-	(*SetTunNameRequest)(nil),                     // 9: vx.api.SetTunNameRequest
-	(*SetTunNameResponse)(nil),                    // 10: vx.api.SetTunNameResponse
-	(*DownloadRequest)(nil),                       // 11: vx.api.DownloadRequest
-	(*DownloadResponse)(nil),                      // 12: vx.api.DownloadResponse
-	(*HandlerIpRequest)(nil),                      // 13: vx.api.HandlerIpRequest
-	(*RttTestRequest)(nil),                        // 14: vx.api.RttTestRequest
-	(*RttTestResponse)(nil),                       // 15: vx.api.RttTestResponse
-	(*HandlerIpResponse)(nil),                     // 16: vx.api.HandlerIpResponse
-	(*HandlerUsableRequest)(nil),                  // 17: vx.api.HandlerUsableRequest
-	(*HandlerUsableResponse)(nil),                 // 18: vx.api.HandlerUsableResponse
-	(*SpeedTestRequest)(nil),                      // 19: vx.api.SpeedTestRequest
-	(*SpeedTestResponse)(nil),                     // 20: vx.api.SpeedTestResponse
-	(*GeoIPRequest)(nil),                          // 21: vx.api.GeoIPRequest
-	(*GeoIPResponse)(nil),                         // 22: vx.api.GeoIPResponse
-	(*ServerSshConfig)(nil),                       // 23: vx.api.ServerSshConfig
-	(*MonitorServerRequest)(nil),                  // 24: vx.api.MonitorServerRequest
-	(*MonitorServerResponse)(nil),                 // 25: vx.api.MonitorServerResponse
-	(*DeployRequest)(nil),                         // 26: vx.api.DeployRequest
-	(*DeployResponse)(nil),                        // 27: vx.api.DeployResponse
-	(*ServerActionRequest)(nil),                   // 28: vx.api.ServerActionRequest
-	(*ServerActionResponse)(nil),                  // 29: vx.api.ServerActionResponse
-	(*VproxyStatusRequest)(nil),                   // 30: vx.api.VproxyStatusRequest
-	(*VproxyStatusResponse)(nil),                  // 31: vx.api.VproxyStatusResponse
-	(*VXRequest)(nil),                             // 32: vx.api.VXRequest
-	(*ServerConfigRequest)(nil),                   // 33: vx.api.ServerConfigRequest
-	(*ServerConfigResponse)(nil),                  // 34: vx.api.ServerConfigResponse
-	(*UpdateServerConfigRequest)(nil),             // 35: vx.api.UpdateServerConfigRequest
-	(*UpdateServerConfigResponse)(nil),            // 36: vx.api.UpdateServerConfigResponse
-	(*ProcessGeoFilesRequest)(nil),                // 37: vx.api.ProcessGeoFilesRequest
-	(*ProcessGeoFilesResponse)(nil),               // 38: vx.api.ProcessGeoFilesResponse
-	(*DecodeRequest)(nil),                         // 39: vx.api.DecodeRequest
-	(*DecodeResponse)(nil),                        // 40: vx.api.DecodeResponse
-	(*GetServerPublicKeyRequest)(nil),             // 41: vx.api.GetServerPublicKeyRequest
-	(*GetServerPublicKeyResponse)(nil),            // 42: vx.api.GetServerPublicKeyResponse
-	(*GenerateCertRequest)(nil),                   // 43: vx.api.GenerateCertRequest
-	(*GenerateCertResponse)(nil),                  // 44: vx.api.GenerateCertResponse
-	(*GetCertDomainRequest)(nil),                  // 45: vx.api.GetCertDomainRequest
-	(*GetCertDomainResponse)(nil),                 // 46: vx.api.GetCertDomainResponse
-	(*AddInboundRequest)(nil),                     // 47: vx.api.AddInboundRequest
-	(*AddInboundResponse)(nil),                    // 48: vx.api.AddInboundResponse
-	(*UploadLogRequest)(nil),                      // 49: vx.api.UploadLogRequest
-	(*UploadLogResponse)(nil),                     // 50: vx.api.UploadLogResponse
-	(*DefaultNICHasGlobalV6Request)(nil),          // 51: vx.api.DefaultNICHasGlobalV6Request
-	(*DefaultNICHasGlobalV6Response)(nil),         // 52: vx.api.DefaultNICHasGlobalV6Response
-	(*UpdateTmStatusRequest)(nil),                 // 53: vx.api.UpdateTmStatusRequest
-	(*Receipt)(nil),                               // 54: vx.api.Receipt
-	(*ParseClashRuleFileRequest)(nil),             // 55: vx.api.ParseClashRuleFileRequest
-	(*ParseClashRuleFileResponse)(nil),            // 56: vx.api.ParseClashRuleFileResponse
-	(*ParseGeositeConfigRequest)(nil),             // 57: vx.api.ParseGeositeConfigRequest
-	(*ParseGeositeConfigResponse)(nil),            // 58: vx.api.ParseGeositeConfigResponse
-	(*ParseGeoIPConfigRequest)(nil),               // 59: vx.api.ParseGeoIPConfigRequest
-	(*ParseGeoIPConfigResponse)(nil),              // 60: vx.api.ParseGeoIPConfigResponse
-	(*GenerateX25519KeyPairRequest)(nil),          // 61: vx.api.GenerateX25519KeyPairRequest
-	(*GenerateX25519KeyPairResponse)(nil),         // 62: vx.api.GenerateX25519KeyPairResponse
-	(*GenerateECHRequest)(nil),                    // 63: vx.api.GenerateECHRequest
-	(*GenerateECHResponse)(nil),                   // 64: vx.api.GenerateECHResponse
-	(*StartMacSystemProxyRequest)(nil),            // 65: vx.api.StartMacSystemProxyRequest
-	(*StopMacSystemProxyRequest)(nil),             // 66: vx.api.StopMacSystemProxyRequest
-	(*CloseDbRequest)(nil),                        // 67: vx.api.CloseDbRequest
-	(*OpenDbRequest)(nil),                         // 68: vx.api.OpenDbRequest
-	(*InboundConfigToOutboundConfigRequest)(nil),  // 69: vx.api.InboundConfigToOutboundConfigRequest
-	(*InboundConfigToOutboundConfigResponse)(nil), // 70: vx.api.InboundConfigToOutboundConfigResponse
-	(*ToUrlRequest)(nil),                          // 71: vx.api.ToUrlRequest
-	(*ToUrlResponse)(nil),                         // 72: vx.api.ToUrlResponse
-	nil,                                           // 73: vx.api.UpdateSubscriptionResponse.ErrorReasonsEntry
-	nil,                                           // 74: vx.api.DownloadResponse.UsageEntry
-	nil,                                           // 75: vx.api.DeployRequest.FilesEntry
-	(*log.LoggerConfig)(nil),                      // 76: vx.log.LoggerConfig
-	(*outbound.HandlerConfig)(nil),                // 77: vx.outbound.HandlerConfig
-	(*outbound.OutboundHandlerConfig)(nil),        // 78: vx.outbound.OutboundHandlerConfig
-	(*vx.ServerConfig)(nil),                       // 79: vx.ServerConfig
-	(*inbound.ProxyInboundConfig)(nil),            // 80: vx.inbound.ProxyInboundConfig
-	(*geo.Domain)(nil),                            // 81: vx.common.geo.Domain
-	(*geo.CIDR)(nil),                              // 82: vx.common.geo.CIDR
-	(*router.AppId)(nil),                          // 83: vx.router.AppId
-	(*geo1.GeositeConfig)(nil),                    // 84: vx.geo.GeositeConfig
-	(*geo1.GeoIPConfig)(nil),                      // 85: vx.geo.GeoIPConfig
-	(*inbound.MultiProxyInboundConfig)(nil),       // 86: vx.inbound.MultiProxyInboundConfig
+	(*FetchSubscriptionContentRequest)(nil),       // 9: vx.api.FetchSubscriptionContentRequest
+	(*FetchSubscriptionContentResponse)(nil),      // 10: vx.api.FetchSubscriptionContentResponse
+	(*SetTunNameRequest)(nil),                     // 11: vx.api.SetTunNameRequest
+	(*SetTunNameResponse)(nil),                    // 12: vx.api.SetTunNameResponse
+	(*DownloadRequest)(nil),                       // 13: vx.api.DownloadRequest
+	(*DownloadResponse)(nil),                      // 14: vx.api.DownloadResponse
+	(*HandlerIpRequest)(nil),                      // 15: vx.api.HandlerIpRequest
+	(*RttTestRequest)(nil),                        // 16: vx.api.RttTestRequest
+	(*RttTestResponse)(nil),                       // 17: vx.api.RttTestResponse
+	(*HandlerIpResponse)(nil),                     // 18: vx.api.HandlerIpResponse
+	(*HandlerUsableRequest)(nil),                  // 19: vx.api.HandlerUsableRequest
+	(*HandlerUsableResponse)(nil),                 // 20: vx.api.HandlerUsableResponse
+	(*SpeedTestRequest)(nil),                      // 21: vx.api.SpeedTestRequest
+	(*SpeedTestResponse)(nil),                     // 22: vx.api.SpeedTestResponse
+	(*GeoIPRequest)(nil),                          // 23: vx.api.GeoIPRequest
+	(*GeoIPResponse)(nil),                         // 24: vx.api.GeoIPResponse
+	(*ServerSshConfig)(nil),                       // 25: vx.api.ServerSshConfig
+	(*MonitorServerRequest)(nil),                  // 26: vx.api.MonitorServerRequest
+	(*MonitorServerResponse)(nil),                 // 27: vx.api.MonitorServerResponse
+	(*DeployRequest)(nil),                         // 28: vx.api.DeployRequest
+	(*DeployResponse)(nil),                        // 29: vx.api.DeployResponse
+	(*ServerActionRequest)(nil),                   // 30: vx.api.ServerActionRequest
+	(*ServerActionResponse)(nil),                  // 31: vx.api.ServerActionResponse
+	(*VproxyStatusRequest)(nil),                   // 32: vx.api.VproxyStatusRequest
+	(*VproxyStatusResponse)(nil),                  // 33: vx.api.VproxyStatusResponse
+	(*VXRequest)(nil),                             // 34: vx.api.VXRequest
+	(*ServerConfigRequest)(nil),                   // 35: vx.api.ServerConfigRequest
+	(*ServerConfigResponse)(nil),                  // 36: vx.api.ServerConfigResponse
+	(*UpdateServerConfigRequest)(nil),             // 37: vx.api.UpdateServerConfigRequest
+	(*UpdateServerConfigResponse)(nil),            // 38: vx.api.UpdateServerConfigResponse
+	(*ProcessGeoFilesRequest)(nil),                // 39: vx.api.ProcessGeoFilesRequest
+	(*ProcessGeoFilesResponse)(nil),               // 40: vx.api.ProcessGeoFilesResponse
+	(*DecodeRequest)(nil),                         // 41: vx.api.DecodeRequest
+	(*DecodeResponse)(nil),                        // 42: vx.api.DecodeResponse
+	(*GetServerPublicKeyRequest)(nil),             // 43: vx.api.GetServerPublicKeyRequest
+	(*GetServerPublicKeyResponse)(nil),            // 44: vx.api.GetServerPublicKeyResponse
+	(*GenerateCertRequest)(nil),                   // 45: vx.api.GenerateCertRequest
+	(*GenerateCertResponse)(nil),                  // 46: vx.api.GenerateCertResponse
+	(*GetCertDomainRequest)(nil),                  // 47: vx.api.GetCertDomainRequest
+	(*GetCertDomainResponse)(nil),                 // 48: vx.api.GetCertDomainResponse
+	(*AddInboundRequest)(nil),                     // 49: vx.api.AddInboundRequest
+	(*AddInboundResponse)(nil),                    // 50: vx.api.AddInboundResponse
+	(*UploadLogRequest)(nil),                      // 51: vx.api.UploadLogRequest
+	(*UploadLogResponse)(nil),                     // 52: vx.api.UploadLogResponse
+	(*DefaultNICHasGlobalV6Request)(nil),          // 53: vx.api.DefaultNICHasGlobalV6Request
+	(*DefaultNICHasGlobalV6Response)(nil),         // 54: vx.api.DefaultNICHasGlobalV6Response
+	(*UpdateTmStatusRequest)(nil),                 // 55: vx.api.UpdateTmStatusRequest
+	(*Receipt)(nil),                               // 56: vx.api.Receipt
+	(*ParseClashRuleFileRequest)(nil),             // 57: vx.api.ParseClashRuleFileRequest
+	(*ParseClashRuleFileResponse)(nil),            // 58: vx.api.ParseClashRuleFileResponse
+	(*ParseGeositeConfigRequest)(nil),             // 59: vx.api.ParseGeositeConfigRequest
+	(*ParseGeositeConfigResponse)(nil),            // 60: vx.api.ParseGeositeConfigResponse
+	(*ParseGeoIPConfigRequest)(nil),               // 61: vx.api.ParseGeoIPConfigRequest
+	(*ParseGeoIPConfigResponse)(nil),              // 62: vx.api.ParseGeoIPConfigResponse
+	(*GenerateX25519KeyPairRequest)(nil),          // 63: vx.api.GenerateX25519KeyPairRequest
+	(*GenerateX25519KeyPairResponse)(nil),         // 64: vx.api.GenerateX25519KeyPairResponse
+	(*GenerateECHRequest)(nil),                    // 65: vx.api.GenerateECHRequest
+	(*GenerateECHResponse)(nil),                   // 66: vx.api.GenerateECHResponse
+	(*StartMacSystemProxyRequest)(nil),            // 67: vx.api.StartMacSystemProxyRequest
+	(*StopMacSystemProxyRequest)(nil),             // 68: vx.api.StopMacSystemProxyRequest
+	(*CloseDbRequest)(nil),                        // 69: vx.api.CloseDbRequest
+	(*OpenDbRequest)(nil),                         // 70: vx.api.OpenDbRequest
+	(*InboundConfigToOutboundConfigRequest)(nil),  // 71: vx.api.InboundConfigToOutboundConfigRequest
+	(*InboundConfigToOutboundConfigResponse)(nil), // 72: vx.api.InboundConfigToOutboundConfigResponse
+	(*ToUrlRequest)(nil),                          // 73: vx.api.ToUrlRequest
+	(*ToUrlResponse)(nil),                         // 74: vx.api.ToUrlResponse
+	nil,                                           // 75: vx.api.UpdateSubscriptionResponse.ErrorReasonsEntry
+	nil,                                           // 76: vx.api.DownloadResponse.UsageEntry
+	nil,                                           // 77: vx.api.DeployRequest.FilesEntry
+	(*log.LoggerConfig)(nil),                      // 78: vx.log.LoggerConfig
+	(*outbound.HandlerConfig)(nil),                // 79: vx.outbound.HandlerConfig
+	(*outbound.OutboundHandlerConfig)(nil),        // 80: vx.outbound.OutboundHandlerConfig
+	(*vx.ServerConfig)(nil),                       // 81: vx.ServerConfig
+	(*inbound.ProxyInboundConfig)(nil),            // 82: vx.inbound.ProxyInboundConfig
+	(*geo.Domain)(nil),                            // 83: vx.common.geo.Domain
+	(*geo.CIDR)(nil),                              // 84: vx.common.geo.CIDR
+	(*router.AppId)(nil),                          // 85: vx.router.AppId
+	(*geo1.GeositeConfig)(nil),                    // 86: vx.geo.GeositeConfig
+	(*geo1.GeoIPConfig)(nil),                      // 87: vx.geo.GeoIPConfig
+	(*inbound.MultiProxyInboundConfig)(nil),       // 88: vx.inbound.MultiProxyInboundConfig
 }
 var file_app_api_api_proto_depIdxs = []int32{
-	76, // 0: vx.api.ApiServerConfig.log_config:type_name -> vx.log.LoggerConfig
+	78, // 0: vx.api.ApiServerConfig.log_config:type_name -> vx.log.LoggerConfig
 	0,  // 1: vx.api.XStatusChangeNotifyRequest.status:type_name -> vx.api.XStatusChangeNotifyRequest.Status
-	77, // 2: vx.api.UpdateSubscriptionRequest.handlers:type_name -> vx.outbound.HandlerConfig
-	73, // 3: vx.api.UpdateSubscriptionResponse.error_reasons:type_name -> vx.api.UpdateSubscriptionResponse.ErrorReasonsEntry
-	77, // 4: vx.api.DownloadRequest.handlers:type_name -> vx.outbound.HandlerConfig
-	74, // 5: vx.api.DownloadResponse.usage:type_name -> vx.api.DownloadResponse.UsageEntry
-	78, // 6: vx.api.HandlerIpRequest.handler:type_name -> vx.outbound.OutboundHandlerConfig
-	77, // 7: vx.api.HandlerUsableRequest.handler:type_name -> vx.outbound.HandlerConfig
-	77, // 8: vx.api.SpeedTestRequest.handlers:type_name -> vx.outbound.HandlerConfig
-	23, // 9: vx.api.MonitorServerRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	23, // 10: vx.api.DeployRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	75, // 11: vx.api.DeployRequest.files:type_name -> vx.api.DeployRequest.FilesEntry
-	79, // 12: vx.api.DeployRequest.vx_config:type_name -> vx.ServerConfig
-	1,  // 13: vx.api.ServerActionRequest.action:type_name -> vx.api.ServerActionRequest.Action
-	23, // 14: vx.api.ServerActionRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	23, // 15: vx.api.VproxyStatusRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	23, // 16: vx.api.VXRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	23, // 17: vx.api.ServerConfigRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	79, // 18: vx.api.ServerConfigResponse.config:type_name -> vx.ServerConfig
-	23, // 19: vx.api.UpdateServerConfigRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	79, // 20: vx.api.UpdateServerConfigRequest.config:type_name -> vx.ServerConfig
-	78, // 21: vx.api.DecodeResponse.handlers:type_name -> vx.outbound.OutboundHandlerConfig
-	23, // 22: vx.api.GetServerPublicKeyRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	80, // 23: vx.api.AddInboundRequest.inbound:type_name -> vx.inbound.ProxyInboundConfig
-	81, // 24: vx.api.ParseClashRuleFileResponse.domains:type_name -> vx.common.geo.Domain
-	82, // 25: vx.api.ParseClashRuleFileResponse.cidrs:type_name -> vx.common.geo.CIDR
-	83, // 26: vx.api.ParseClashRuleFileResponse.app_ids:type_name -> vx.router.AppId
-	84, // 27: vx.api.ParseGeositeConfigRequest.config:type_name -> vx.geo.GeositeConfig
-	81, // 28: vx.api.ParseGeositeConfigResponse.domains:type_name -> vx.common.geo.Domain
-	85, // 29: vx.api.ParseGeoIPConfigRequest.config:type_name -> vx.geo.GeoIPConfig
-	82, // 30: vx.api.ParseGeoIPConfigResponse.cidrs:type_name -> vx.common.geo.CIDR
-	80, // 31: vx.api.InboundConfigToOutboundConfigRequest.inbound:type_name -> vx.inbound.ProxyInboundConfig
-	86, // 32: vx.api.InboundConfigToOutboundConfigRequest.multi_inbound:type_name -> vx.inbound.MultiProxyInboundConfig
-	78, // 33: vx.api.InboundConfigToOutboundConfigResponse.outbound_configs:type_name -> vx.outbound.OutboundHandlerConfig
-	78, // 34: vx.api.ToUrlRequest.outbound_confogs:type_name -> vx.outbound.OutboundHandlerConfig
-	53, // 35: vx.api.Api.UpdateTmStatus:input_type -> vx.api.UpdateTmStatusRequest
-	11, // 36: vx.api.Api.Download:input_type -> vx.api.DownloadRequest
-	17, // 37: vx.api.Api.HandlerUsable:input_type -> vx.api.HandlerUsableRequest
-	19, // 38: vx.api.Api.SpeedTest:input_type -> vx.api.SpeedTestRequest
-	14, // 39: vx.api.Api.RttTest:input_type -> vx.api.RttTestRequest
-	21, // 40: vx.api.Api.GeoIP:input_type -> vx.api.GeoIPRequest
-	41, // 41: vx.api.Api.GetServerPublicKey:input_type -> vx.api.GetServerPublicKeyRequest
-	24, // 42: vx.api.Api.MonitorServer:input_type -> vx.api.MonitorServerRequest
-	28, // 43: vx.api.Api.ServerAction:input_type -> vx.api.ServerActionRequest
-	30, // 44: vx.api.Api.VproxyStatus:input_type -> vx.api.VproxyStatusRequest
-	32, // 45: vx.api.Api.VX:input_type -> vx.api.VXRequest
-	33, // 46: vx.api.Api.ServerConfig:input_type -> vx.api.ServerConfigRequest
-	35, // 47: vx.api.Api.UpdateServerConfig:input_type -> vx.api.UpdateServerConfigRequest
-	7,  // 48: vx.api.Api.UpdateSubscription:input_type -> vx.api.UpdateSubscriptionRequest
-	37, // 49: vx.api.Api.ProcessGeoFiles:input_type -> vx.api.ProcessGeoFilesRequest
-	39, // 50: vx.api.Api.Decode:input_type -> vx.api.DecodeRequest
-	26, // 51: vx.api.Api.Deploy:input_type -> vx.api.DeployRequest
-	43, // 52: vx.api.Api.GenerateCert:input_type -> vx.api.GenerateCertRequest
-	63, // 53: vx.api.Api.GenerateECH:input_type -> vx.api.GenerateECHRequest
-	45, // 54: vx.api.Api.GetCertDomain:input_type -> vx.api.GetCertDomainRequest
-	47, // 55: vx.api.Api.AddInbound:input_type -> vx.api.AddInboundRequest
-	49, // 56: vx.api.Api.UploadLog:input_type -> vx.api.UploadLogRequest
-	51, // 57: vx.api.Api.DefaultNICHasGlobalV6:input_type -> vx.api.DefaultNICHasGlobalV6Request
-	55, // 58: vx.api.Api.ParseClashRuleFile:input_type -> vx.api.ParseClashRuleFileRequest
-	57, // 59: vx.api.Api.ParseGeositeConfig:input_type -> vx.api.ParseGeositeConfigRequest
-	59, // 60: vx.api.Api.ParseGeoIPConfig:input_type -> vx.api.ParseGeoIPConfigRequest
-	61, // 61: vx.api.Api.GenerateX25519KeyPair:input_type -> vx.api.GenerateX25519KeyPairRequest
-	65, // 62: vx.api.Api.StartMacSystemProxy:input_type -> vx.api.StartMacSystemProxyRequest
-	66, // 63: vx.api.Api.StopMacSystemProxy:input_type -> vx.api.StopMacSystemProxyRequest
-	67, // 64: vx.api.Api.CloseDb:input_type -> vx.api.CloseDbRequest
-	68, // 65: vx.api.Api.OpenDb:input_type -> vx.api.OpenDbRequest
-	69, // 66: vx.api.Api.InboundConfigToOutboundConfig:input_type -> vx.api.InboundConfigToOutboundConfigRequest
-	71, // 67: vx.api.Api.ToUrl:input_type -> vx.api.ToUrlRequest
-	76, // 68: vx.api.Api.SetLog:input_type -> vx.log.LoggerConfig
-	54, // 69: vx.api.Api.UpdateTmStatus:output_type -> vx.api.Receipt
-	12, // 70: vx.api.Api.Download:output_type -> vx.api.DownloadResponse
-	18, // 71: vx.api.Api.HandlerUsable:output_type -> vx.api.HandlerUsableResponse
-	20, // 72: vx.api.Api.SpeedTest:output_type -> vx.api.SpeedTestResponse
-	15, // 73: vx.api.Api.RttTest:output_type -> vx.api.RttTestResponse
-	22, // 74: vx.api.Api.GeoIP:output_type -> vx.api.GeoIPResponse
-	42, // 75: vx.api.Api.GetServerPublicKey:output_type -> vx.api.GetServerPublicKeyResponse
-	25, // 76: vx.api.Api.MonitorServer:output_type -> vx.api.MonitorServerResponse
-	29, // 77: vx.api.Api.ServerAction:output_type -> vx.api.ServerActionResponse
-	31, // 78: vx.api.Api.VproxyStatus:output_type -> vx.api.VproxyStatusResponse
-	54, // 79: vx.api.Api.VX:output_type -> vx.api.Receipt
-	34, // 80: vx.api.Api.ServerConfig:output_type -> vx.api.ServerConfigResponse
-	36, // 81: vx.api.Api.UpdateServerConfig:output_type -> vx.api.UpdateServerConfigResponse
-	8,  // 82: vx.api.Api.UpdateSubscription:output_type -> vx.api.UpdateSubscriptionResponse
-	38, // 83: vx.api.Api.ProcessGeoFiles:output_type -> vx.api.ProcessGeoFilesResponse
-	40, // 84: vx.api.Api.Decode:output_type -> vx.api.DecodeResponse
-	27, // 85: vx.api.Api.Deploy:output_type -> vx.api.DeployResponse
-	44, // 86: vx.api.Api.GenerateCert:output_type -> vx.api.GenerateCertResponse
-	64, // 87: vx.api.Api.GenerateECH:output_type -> vx.api.GenerateECHResponse
-	46, // 88: vx.api.Api.GetCertDomain:output_type -> vx.api.GetCertDomainResponse
-	48, // 89: vx.api.Api.AddInbound:output_type -> vx.api.AddInboundResponse
-	50, // 90: vx.api.Api.UploadLog:output_type -> vx.api.UploadLogResponse
-	52, // 91: vx.api.Api.DefaultNICHasGlobalV6:output_type -> vx.api.DefaultNICHasGlobalV6Response
-	56, // 92: vx.api.Api.ParseClashRuleFile:output_type -> vx.api.ParseClashRuleFileResponse
-	58, // 93: vx.api.Api.ParseGeositeConfig:output_type -> vx.api.ParseGeositeConfigResponse
-	60, // 94: vx.api.Api.ParseGeoIPConfig:output_type -> vx.api.ParseGeoIPConfigResponse
-	62, // 95: vx.api.Api.GenerateX25519KeyPair:output_type -> vx.api.GenerateX25519KeyPairResponse
-	54, // 96: vx.api.Api.StartMacSystemProxy:output_type -> vx.api.Receipt
-	54, // 97: vx.api.Api.StopMacSystemProxy:output_type -> vx.api.Receipt
-	54, // 98: vx.api.Api.CloseDb:output_type -> vx.api.Receipt
-	54, // 99: vx.api.Api.OpenDb:output_type -> vx.api.Receipt
-	70, // 100: vx.api.Api.InboundConfigToOutboundConfig:output_type -> vx.api.InboundConfigToOutboundConfigResponse
-	72, // 101: vx.api.Api.ToUrl:output_type -> vx.api.ToUrlResponse
-	54, // 102: vx.api.Api.SetLog:output_type -> vx.api.Receipt
-	69, // [69:103] is the sub-list for method output_type
-	35, // [35:69] is the sub-list for method input_type
-	35, // [35:35] is the sub-list for extension type_name
-	35, // [35:35] is the sub-list for extension extendee
-	0,  // [0:35] is the sub-list for field type_name
+	79, // 2: vx.api.UpdateSubscriptionRequest.handlers:type_name -> vx.outbound.HandlerConfig
+	75, // 3: vx.api.UpdateSubscriptionResponse.error_reasons:type_name -> vx.api.UpdateSubscriptionResponse.ErrorReasonsEntry
+	79, // 4: vx.api.FetchSubscriptionContentRequest.handlers:type_name -> vx.outbound.HandlerConfig
+	80, // 5: vx.api.FetchSubscriptionContentResponse.handlers:type_name -> vx.outbound.OutboundHandlerConfig
+	79, // 6: vx.api.DownloadRequest.handlers:type_name -> vx.outbound.HandlerConfig
+	76, // 7: vx.api.DownloadResponse.usage:type_name -> vx.api.DownloadResponse.UsageEntry
+	80, // 8: vx.api.HandlerIpRequest.handler:type_name -> vx.outbound.OutboundHandlerConfig
+	79, // 9: vx.api.HandlerUsableRequest.handler:type_name -> vx.outbound.HandlerConfig
+	79, // 10: vx.api.SpeedTestRequest.handlers:type_name -> vx.outbound.HandlerConfig
+	25, // 11: vx.api.MonitorServerRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	25, // 12: vx.api.DeployRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	77, // 13: vx.api.DeployRequest.files:type_name -> vx.api.DeployRequest.FilesEntry
+	81, // 14: vx.api.DeployRequest.vx_config:type_name -> vx.ServerConfig
+	1,  // 15: vx.api.ServerActionRequest.action:type_name -> vx.api.ServerActionRequest.Action
+	25, // 16: vx.api.ServerActionRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	25, // 17: vx.api.VproxyStatusRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	25, // 18: vx.api.VXRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	25, // 19: vx.api.ServerConfigRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	81, // 20: vx.api.ServerConfigResponse.config:type_name -> vx.ServerConfig
+	25, // 21: vx.api.UpdateServerConfigRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	81, // 22: vx.api.UpdateServerConfigRequest.config:type_name -> vx.ServerConfig
+	80, // 23: vx.api.DecodeResponse.handlers:type_name -> vx.outbound.OutboundHandlerConfig
+	25, // 24: vx.api.GetServerPublicKeyRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	82, // 25: vx.api.AddInboundRequest.inbound:type_name -> vx.inbound.ProxyInboundConfig
+	83, // 26: vx.api.ParseClashRuleFileResponse.domains:type_name -> vx.common.geo.Domain
+	84, // 27: vx.api.ParseClashRuleFileResponse.cidrs:type_name -> vx.common.geo.CIDR
+	85, // 28: vx.api.ParseClashRuleFileResponse.app_ids:type_name -> vx.router.AppId
+	86, // 29: vx.api.ParseGeositeConfigRequest.config:type_name -> vx.geo.GeositeConfig
+	83, // 30: vx.api.ParseGeositeConfigResponse.domains:type_name -> vx.common.geo.Domain
+	87, // 31: vx.api.ParseGeoIPConfigRequest.config:type_name -> vx.geo.GeoIPConfig
+	84, // 32: vx.api.ParseGeoIPConfigResponse.cidrs:type_name -> vx.common.geo.CIDR
+	82, // 33: vx.api.InboundConfigToOutboundConfigRequest.inbound:type_name -> vx.inbound.ProxyInboundConfig
+	88, // 34: vx.api.InboundConfigToOutboundConfigRequest.multi_inbound:type_name -> vx.inbound.MultiProxyInboundConfig
+	80, // 35: vx.api.InboundConfigToOutboundConfigResponse.outbound_configs:type_name -> vx.outbound.OutboundHandlerConfig
+	80, // 36: vx.api.ToUrlRequest.outbound_confogs:type_name -> vx.outbound.OutboundHandlerConfig
+	55, // 37: vx.api.Api.UpdateTmStatus:input_type -> vx.api.UpdateTmStatusRequest
+	13, // 38: vx.api.Api.Download:input_type -> vx.api.DownloadRequest
+	19, // 39: vx.api.Api.HandlerUsable:input_type -> vx.api.HandlerUsableRequest
+	21, // 40: vx.api.Api.SpeedTest:input_type -> vx.api.SpeedTestRequest
+	16, // 41: vx.api.Api.RttTest:input_type -> vx.api.RttTestRequest
+	23, // 42: vx.api.Api.GeoIP:input_type -> vx.api.GeoIPRequest
+	43, // 43: vx.api.Api.GetServerPublicKey:input_type -> vx.api.GetServerPublicKeyRequest
+	26, // 44: vx.api.Api.MonitorServer:input_type -> vx.api.MonitorServerRequest
+	30, // 45: vx.api.Api.ServerAction:input_type -> vx.api.ServerActionRequest
+	32, // 46: vx.api.Api.VproxyStatus:input_type -> vx.api.VproxyStatusRequest
+	34, // 47: vx.api.Api.VX:input_type -> vx.api.VXRequest
+	35, // 48: vx.api.Api.ServerConfig:input_type -> vx.api.ServerConfigRequest
+	37, // 49: vx.api.Api.UpdateServerConfig:input_type -> vx.api.UpdateServerConfigRequest
+	7,  // 50: vx.api.Api.UpdateSubscription:input_type -> vx.api.UpdateSubscriptionRequest
+	9,  // 51: vx.api.Api.FetchSubscriptionContent:input_type -> vx.api.FetchSubscriptionContentRequest
+	39, // 52: vx.api.Api.ProcessGeoFiles:input_type -> vx.api.ProcessGeoFilesRequest
+	41, // 53: vx.api.Api.Decode:input_type -> vx.api.DecodeRequest
+	28, // 54: vx.api.Api.Deploy:input_type -> vx.api.DeployRequest
+	45, // 55: vx.api.Api.GenerateCert:input_type -> vx.api.GenerateCertRequest
+	65, // 56: vx.api.Api.GenerateECH:input_type -> vx.api.GenerateECHRequest
+	47, // 57: vx.api.Api.GetCertDomain:input_type -> vx.api.GetCertDomainRequest
+	49, // 58: vx.api.Api.AddInbound:input_type -> vx.api.AddInboundRequest
+	51, // 59: vx.api.Api.UploadLog:input_type -> vx.api.UploadLogRequest
+	53, // 60: vx.api.Api.DefaultNICHasGlobalV6:input_type -> vx.api.DefaultNICHasGlobalV6Request
+	57, // 61: vx.api.Api.ParseClashRuleFile:input_type -> vx.api.ParseClashRuleFileRequest
+	59, // 62: vx.api.Api.ParseGeositeConfig:input_type -> vx.api.ParseGeositeConfigRequest
+	61, // 63: vx.api.Api.ParseGeoIPConfig:input_type -> vx.api.ParseGeoIPConfigRequest
+	63, // 64: vx.api.Api.GenerateX25519KeyPair:input_type -> vx.api.GenerateX25519KeyPairRequest
+	67, // 65: vx.api.Api.StartMacSystemProxy:input_type -> vx.api.StartMacSystemProxyRequest
+	68, // 66: vx.api.Api.StopMacSystemProxy:input_type -> vx.api.StopMacSystemProxyRequest
+	69, // 67: vx.api.Api.CloseDb:input_type -> vx.api.CloseDbRequest
+	70, // 68: vx.api.Api.OpenDb:input_type -> vx.api.OpenDbRequest
+	71, // 69: vx.api.Api.InboundConfigToOutboundConfig:input_type -> vx.api.InboundConfigToOutboundConfigRequest
+	73, // 70: vx.api.Api.ToUrl:input_type -> vx.api.ToUrlRequest
+	78, // 71: vx.api.Api.SetLog:input_type -> vx.log.LoggerConfig
+	56, // 72: vx.api.Api.UpdateTmStatus:output_type -> vx.api.Receipt
+	14, // 73: vx.api.Api.Download:output_type -> vx.api.DownloadResponse
+	20, // 74: vx.api.Api.HandlerUsable:output_type -> vx.api.HandlerUsableResponse
+	22, // 75: vx.api.Api.SpeedTest:output_type -> vx.api.SpeedTestResponse
+	17, // 76: vx.api.Api.RttTest:output_type -> vx.api.RttTestResponse
+	24, // 77: vx.api.Api.GeoIP:output_type -> vx.api.GeoIPResponse
+	44, // 78: vx.api.Api.GetServerPublicKey:output_type -> vx.api.GetServerPublicKeyResponse
+	27, // 79: vx.api.Api.MonitorServer:output_type -> vx.api.MonitorServerResponse
+	31, // 80: vx.api.Api.ServerAction:output_type -> vx.api.ServerActionResponse
+	33, // 81: vx.api.Api.VproxyStatus:output_type -> vx.api.VproxyStatusResponse
+	56, // 82: vx.api.Api.VX:output_type -> vx.api.Receipt
+	36, // 83: vx.api.Api.ServerConfig:output_type -> vx.api.ServerConfigResponse
+	38, // 84: vx.api.Api.UpdateServerConfig:output_type -> vx.api.UpdateServerConfigResponse
+	8,  // 85: vx.api.Api.UpdateSubscription:output_type -> vx.api.UpdateSubscriptionResponse
+	10, // 86: vx.api.Api.FetchSubscriptionContent:output_type -> vx.api.FetchSubscriptionContentResponse
+	40, // 87: vx.api.Api.ProcessGeoFiles:output_type -> vx.api.ProcessGeoFilesResponse
+	42, // 88: vx.api.Api.Decode:output_type -> vx.api.DecodeResponse
+	29, // 89: vx.api.Api.Deploy:output_type -> vx.api.DeployResponse
+	46, // 90: vx.api.Api.GenerateCert:output_type -> vx.api.GenerateCertResponse
+	66, // 91: vx.api.Api.GenerateECH:output_type -> vx.api.GenerateECHResponse
+	48, // 92: vx.api.Api.GetCertDomain:output_type -> vx.api.GetCertDomainResponse
+	50, // 93: vx.api.Api.AddInbound:output_type -> vx.api.AddInboundResponse
+	52, // 94: vx.api.Api.UploadLog:output_type -> vx.api.UploadLogResponse
+	54, // 95: vx.api.Api.DefaultNICHasGlobalV6:output_type -> vx.api.DefaultNICHasGlobalV6Response
+	58, // 96: vx.api.Api.ParseClashRuleFile:output_type -> vx.api.ParseClashRuleFileResponse
+	60, // 97: vx.api.Api.ParseGeositeConfig:output_type -> vx.api.ParseGeositeConfigResponse
+	62, // 98: vx.api.Api.ParseGeoIPConfig:output_type -> vx.api.ParseGeoIPConfigResponse
+	64, // 99: vx.api.Api.GenerateX25519KeyPair:output_type -> vx.api.GenerateX25519KeyPairResponse
+	56, // 100: vx.api.Api.StartMacSystemProxy:output_type -> vx.api.Receipt
+	56, // 101: vx.api.Api.StopMacSystemProxy:output_type -> vx.api.Receipt
+	56, // 102: vx.api.Api.CloseDb:output_type -> vx.api.Receipt
+	56, // 103: vx.api.Api.OpenDb:output_type -> vx.api.Receipt
+	72, // 104: vx.api.Api.InboundConfigToOutboundConfig:output_type -> vx.api.InboundConfigToOutboundConfigResponse
+	74, // 105: vx.api.Api.ToUrl:output_type -> vx.api.ToUrlResponse
+	56, // 106: vx.api.Api.SetLog:output_type -> vx.api.Receipt
+	72, // [72:107] is the sub-list for method output_type
+	37, // [37:72] is the sub-list for method input_type
+	37, // [37:37] is the sub-list for extension type_name
+	37, // [37:37] is the sub-list for extension extendee
+	0,  // [0:37] is the sub-list for field type_name
 }
 
 func init() { file_app_api_api_proto_init() }
@@ -4357,7 +4483,7 @@ func file_app_api_api_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_api_api_proto_rawDesc), len(file_app_api_api_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   74,
+			NumMessages:   76,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

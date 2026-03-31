@@ -151,17 +151,19 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 	opts = append(opts, grpc.Creds(credentials.NewTLS(tlsConfig)))
 
 	// subscription
-	db, err := gorm.Open(sqlite.Open(config.DbPath),
-		&gorm.Config{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect database: %w", err)
+	if config.DbPath != "" {
+		db, err := gorm.Open(sqlite.Open(config.DbPath),
+			&gorm.Config{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to connect database: %w", err)
+		}
+		db.Exec("PRAGMA journal_mode = WAL")
+		db.Exec("PRAGMA foreign_keys = ON")
+		api.db = db
 	}
-	db.Exec("PRAGMA journal_mode = WAL")
-	db.Exec("PRAGMA foreign_keys = ON")
 
 	server := grpc.NewServer(opts...)
 	api.server = server
-	api.db = db
 
 	// in android, if app is added to vpn black list, all dns queries does not go through tun.
 	nameServersDirect := []net.AddressPort{
@@ -364,6 +366,11 @@ func (a *Api) SpeedTest(req *SpeedTestRequest, in Api_SpeedTestServer) error {
 
 func (a *Api) UpdateSubscription(ctx context.Context, req *UpdateSubscriptionRequest) (*UpdateSubscriptionResponse, error) {
 	log.Debug().Msg("UpdateSubscription")
+	db := a.GetDb()
+	if db == nil {
+		return nil, errors.New("database not open")
+	}
+
 	handlers := make([]i.Outbound, 0, len(req.Handlers))
 	// for android, if there are other vpn apps running, bind to default nic will not work, resulting in failed download.
 	// therefore, add a plain handler first
@@ -385,11 +392,6 @@ func (a *Api) UpdateSubscription(ctx context.Context, req *UpdateSubscriptionReq
 			continue
 		}
 		handlers = append(handlers, handler)
-	}
-
-	db := a.GetDb()
-	if db == nil {
-		return nil, errors.New("database not open")
 	}
 
 	if req.All {
@@ -423,6 +425,33 @@ func (a *Api) UpdateSubscription(ctx context.Context, req *UpdateSubscriptionReq
 			FailedNodes:  failedNodes,
 		}, nil
 	}
+}
+
+func (a *Api) FetchSubscriptionContent(ctx context.Context, req *FetchSubscriptionContentRequest) (*FetchSubscriptionContentResponse, error) {
+	handlers := make([]i.Outbound, 0, len(req.Handlers))
+	for _, h := range req.Handlers {
+		handler, err := create.NewHandler(&create.HandlerConfig{
+			HandlerConfig: h,
+			DialerFactory: a.getDialerFactory(),
+			Policy:        policy.New(),
+			IPResolver:    a.getIPResolver(),
+			EchResolver:   a.echResolver,
+		})
+		if err != nil {
+			log.Error().Err(err).Msg("failed to create outbound handler")
+			continue
+		}
+		handlers = append(handlers, handler)
+	}
+	result, err := subscription.FetchSubscription(ctx, req.Link, downloader.NewDownloader0(handlers))
+	if err != nil {
+		return nil, err
+	}
+	return &FetchSubscriptionContentResponse{
+		Handlers:    result.Configs,
+		FailedNodes: result.FailedNodes,
+		Description: result.Description,
+	}, nil
 }
 
 func (a *Api) Decode(ctx context.Context, req *DecodeRequest) (*DecodeResponse, error) {
@@ -475,6 +504,7 @@ func (a *Api) OpenDb(ctx context.Context, req *OpenDbRequest) (*Receipt, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}
+	db.Exec("PRAGMA journal_mode = WAL")
 	db.Exec("PRAGMA foreign_keys = ON")
 
 	a.dbLock.Lock()
