@@ -14,6 +14,7 @@ import (
 	"time"
 
 	vx "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx"
+	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/util"
 	mynet "github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/signal/done"
@@ -398,8 +399,14 @@ func (a *Api) ServerConfig(ctx context.Context, req *ServerConfigRequest) (*Serv
 	if err != nil {
 		return nil, err
 	}
+
+	jsonString := string(configBytes)
+	for oldTypeUrl, newTypeUrl := range create.OldTypeUrlToNewTypeUrl {
+		jsonString = strings.ReplaceAll(jsonString, oldTypeUrl, newTypeUrl)
+	}
+
 	var config vx.ServerConfig
-	err = protojson.Unmarshal(configBytes, &config)
+	err = protojson.Unmarshal([]byte(jsonString), &config)
 	if err != nil {
 		return nil, err
 	}

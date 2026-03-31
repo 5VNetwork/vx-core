@@ -148,6 +148,31 @@ func UninstallVX(sshClient *sshhelper.Client) error {
 }
 
 func UpdateVX(sshClient *sshhelper.Client, user string) error {
+	// result, err := sshClient.Output("vx --version", false)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to get current vx version: %w", err)
+	// }
+	// parts := strings.Split(strings.TrimRight(result, "\n"), " ")
+	// currentVersion := parts[len(parts)-1]
+
+	// // replace old type url with new type url
+	// if currentVersion <= "1.1.1" {
+	// 	// get config
+	// 	configBytes, err := sshClient.DownloadRemoteFileToMemory("/usr/local/etc/vx/config.json")
+	// 	if err != nil {
+	// 		return fmt.Errorf("failed to get config: %w", err)
+	// 	}
+	// 	jsonString := string(configBytes)
+	// 	// replace old type url with new type url
+	// 	for oldTypeUrl, newTypeUrl := range create.OldTypeUrlToNewTypeUrl {
+	// 		jsonString = strings.ReplaceAll(jsonString, oldTypeUrl, newTypeUrl)
+	// 	}
+	// 	err = sshClient.CopyContentToRemoteSudo(strings.NewReader(jsonString), "/usr/local/etc/vx/config.json", 644)
+	// 	if err != nil {
+	// 		return fmt.Errorf("failed to copy config to remote: %w", err)
+	// 	}
+	// }
+
 	o, err := sshClient.CombinedOutput("bash -c \"$(curl -L https://github.com/5vnetwork/vx-install/raw/main/install-vx.sh)\" @ install -u "+user, true)
 	if err != nil {
 		return fmt.Errorf("failed to run download install-vx.sh: %w. Output: %s", err, o)
