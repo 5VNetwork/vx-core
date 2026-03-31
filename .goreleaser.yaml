@@ -9,6 +9,9 @@
 version: 2
 
 project_name: x
+
+release:
+  prerelease: auto
 before:
   hooks:
     # You may remove this if you don't use go modules.
