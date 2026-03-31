@@ -5,6 +5,7 @@ import (
 
 	commongeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/5vnetwork/vx-core/common/strmatcher"
+	"github.com/rs/zerolog/log"
 )
 
 type (
@@ -35,7 +36,13 @@ func ToMphIndexMatcher(domainMatchings []*commongeo.Domain,
 	for _, d := range domainMatchings {
 		matcher, err := ToStrMatcher(d)
 		if err != nil {
-			return nil, err
+			// domain might not be valid, ignore it
+			if d.Type == commongeo.Domain_RootDomain {
+				log.Warn().Str("domain", d.Value).Msg("failed to create domain matcher")
+				continue
+			} else {
+				return nil, err
+			}
 		}
 		indexMatcher.Add(matcher)
 	}
