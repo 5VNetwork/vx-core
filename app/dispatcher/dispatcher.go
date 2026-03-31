@@ -196,7 +196,7 @@ loop:
 					log.Ctx(ctx).Debug().Err(err).Str("tag", handler.Tag()).
 						Int32("cacheSize", mb.Len()).Uint64("upCounter", info.SessionUpCounter.Load()).
 						Uint64("downCounter", info.SessionDownCounter.Load()).
-						Msg("cacheHandler failed")
+						Msg("cacheHandle err and fallbackable")
 					// try to find next handler
 					for len(retries) > 0 {
 						nextHandler := retries[0].GetHandler(ctx, info)
@@ -244,15 +244,16 @@ func (d *Dispatcher) cacheHandle(ctx context.Context, info *session.Info,
 		ctx:              ctx,
 	}
 	if d.FallbackTimeout > 0 {
-		time.AfterFunc(d.FallbackTimeout, func() {
+		t := time.AfterFunc(d.FallbackTimeout, func() {
 			cacheRw.lock.Lock()
 			defer cacheRw.lock.Unlock()
-			if cacheRw.stopCaching {
+			if cacheRw.stopCaching || cacheRw.done {
 				return
 			}
 			log.Ctx(ctx).Debug().Msg("fallback timeout")
 			cancel(errFallbackTimeout)
 		})
+		defer t.Stop()
 	}
 
 	err = handler.HandleFlow(ctx, info.Target, cacheRw)
