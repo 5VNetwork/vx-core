@@ -74,6 +74,10 @@ func (s *GrpcService) OnSubscriptionUpdated() {
 				log.Error().Err(err).Msg("create outbound handler")
 				continue
 			}
+			if h == nil {
+				log.Warn().Str("tag", ph.Tag()).Msg("outbound handler is nil")
+				continue
+			}
 			handlers = append(handlers, h)
 		}
 		ReplaceHandlers(s.Client.OutboundManager, handlers...)
