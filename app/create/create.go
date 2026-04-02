@@ -117,13 +117,14 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 	}
 
 	if _, ok := m.(*configs.FreedomConfig); ok {
-		dialer, err := df.GetDialer(
-			TransportConfigToMemoryConfig(config.Transport, nil, nil, config.ECHResolver))
+		transportConfig := TransportConfigToMemoryConfig(config.Transport, nil, nil, config.ECHResolver)
+		transportConfig.DomainStrategy = domain.DomainStrategy(config.DomainStrategy)
+		dialer, err := df.GetDialer(transportConfig)
 		if err != nil {
 			return nil, err
 		}
 		pl, err := df.GetPacketListener(
-			TransportConfigToMemoryConfig(config.Transport, nil, nil, config.ECHResolver))
+			transportConfig)
 		if err != nil {
 			return nil, err
 		}
