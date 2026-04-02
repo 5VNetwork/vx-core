@@ -146,32 +146,3 @@ func (s *DnsHandler) handleDnsQuery(ctx context.Context, b *buf.Buffer, msg *d.M
 		return
 	}
 }
-
-// func (hd *DnsHandler) Dial(ctx context.Context, dest net.Destination) (net.Conn, error) {
-// 	lc, rc := gonet.Pipe()
-// 	var reader dns.MessageReader //leftReader
-// 	var writer dns.MessageWriter //leftWriter
-// 	reader = dns.NewTCPReader(buf.NewReader(rc))
-// 	writer = &dns.TCPWriter{
-// 		Writer: buf.NewWriter(rc),
-// 	}
-
-// 	go func() {
-// 		for {
-// 			b, err := reader.ReadMessage()
-// 			if err != nil {
-// 				b.Release()
-// 				return
-// 			}
-
-// 			m := &d.Msg{}
-// 			if err := m.Unpack(b.Bytes()); err != nil {
-// 				b.Release()
-// 				log.Ctx(ctx).Err(err).Msg("failed to unpack DNS message")
-// 				return
-// 			}
-// 			go hd.handleDnsQuery(ctx, b, m, writer, false)
-// 		}
-// 	}()
-// 	return lc, nil
-// }

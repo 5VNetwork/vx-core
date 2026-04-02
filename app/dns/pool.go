@@ -27,6 +27,8 @@ func NewPools(poolConfigs []*configs.FakeDnsServer_PoolConfig) (Pools, error) {
 	return p, nil
 }
 
+// no two pool should have same ip type, since if there are two
+// pools have same ip type, the first pool will always be used.
 type Pools []*Pool
 
 type PoolConfig struct {

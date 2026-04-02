@@ -132,9 +132,10 @@ func NewRouter(config *RouterConfig) (*Router, error) {
 				return nil, err
 			}
 			conditions = append(conditions, &IpMatcher{
-				IpSet:      dstIPSet,
-				IpResolver: config.IpResolver,
-				Resolve:    routerRuleConfig.ResolveDomain,
+				IpSet:       dstIPSet,
+				IpResolver:  config.IpResolver,
+				ResolveHard: routerRuleConfig.ResolveDomain,
+				ResolveSoft: routerRuleConfig.ResolveRewrite,
 			})
 		}
 		if len(routerRuleConfig.Protocols) > 0 {
@@ -237,9 +238,10 @@ func NewRouter(config *RouterConfig) (*Router, error) {
 							}}),
 				},
 				ipMatcher: &IpMatcher{
-					IpSet:      ipSet,
-					IpResolver: config.IpResolver,
-					Resolve:    routerRuleConfig.ResolveDomain,
+					IpSet:       ipSet,
+					IpResolver:  config.IpResolver,
+					ResolveHard: routerRuleConfig.ResolveDomain,
+					ResolveSoft: routerRuleConfig.ResolveRewrite,
 				},
 				appIdMatcher: &AppIdMatcher{
 					AppSet: appSet,
