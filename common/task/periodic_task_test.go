@@ -165,3 +165,30 @@ func TestPeriodicTask_ImmediateRun(t *testing.T) {
 		t.Errorf("Task should have run exactly once immediately, but ran %d times", count)
 	}
 }
+
+func TestPeriodicTask_InitialDelay(t *testing.T) {
+	var counter int32
+
+	task := NewPeriodicTask(200*time.Millisecond, func() error {
+		atomic.AddInt32(&counter, 1)
+		return nil
+	}, WithInitialDelay(40*time.Millisecond))
+
+	task.Start()
+	defer task.Close()
+
+	time.Sleep(20 * time.Millisecond)
+	if count := atomic.LoadInt32(&counter); count != 0 {
+		t.Fatalf("Task should not have run before initial delay, but ran %d times", count)
+	}
+
+	time.Sleep(35 * time.Millisecond)
+	if count := atomic.LoadInt32(&counter); count != 1 {
+		t.Fatalf("Task should have run once after initial delay, but ran %d times", count)
+	}
+
+	time.Sleep(80 * time.Millisecond)
+	if count := atomic.LoadInt32(&counter); count != 1 {
+		t.Fatalf("Task should not run again before interval elapses, but ran %d times", count)
+	}
+}

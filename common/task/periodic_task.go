@@ -4,8 +4,6 @@ import (
 	"context"
 	"sync"
 	"time"
-
-	"github.com/rs/zerolog/log"
 )
 
 // PeriodicTask is a struct that periodically runs a specified task
@@ -18,6 +16,7 @@ type PeriodicTask struct {
 	mu               sync.Mutex         // Mutex to protect the isRunning state
 	isRunning        bool               // Flag to track if the task is running
 	startImmediately bool
+	initialDelay     time.Duration
 	ticker           *time.Ticker
 }
 
@@ -26,6 +25,12 @@ type PeriodicTaskOption func(*PeriodicTask)
 func WithStartImmediately() PeriodicTaskOption {
 	return func(pt *PeriodicTask) {
 		pt.startImmediately = true
+	}
+}
+
+func WithInitialDelay(delay time.Duration) PeriodicTaskOption {
+	return func(pt *PeriodicTask) {
+		pt.initialDelay = delay
 	}
 }
 
@@ -64,27 +69,46 @@ func (pt *PeriodicTask) Start() error {
 		return nil // Already running
 	}
 
-	pt.ticker = time.NewTicker(pt.Interval)
 	pt.isRunning = true
 	pt.wg.Add(1)
 
 	go func() {
 		defer pt.wg.Done()
-		// Run the task immediately upon starting
+
+		runTask := pt.task
+
 		if pt.startImmediately {
-			if err := pt.task(); err != nil {
-				// Handle error (could add an error channel or logger here)
-				log.Error().Err(err).Msg("periodic task failed")
+			runTask()
+		} else {
+			firstDelay := pt.Interval
+			if pt.initialDelay > 0 {
+				firstDelay = pt.initialDelay
+			}
+
+			timer := time.NewTimer(firstDelay)
+			defer timer.Stop()
+
+			select {
+			case <-timer.C:
+				runTask()
+			case <-pt.ctx.Done():
+				return
 			}
 		}
+
+		pt.mu.Lock()
+		if !pt.isRunning {
+			pt.mu.Unlock()
+			return
+		}
+		pt.ticker = time.NewTicker(pt.Interval)
+		pt.mu.Unlock()
+		defer pt.ticker.Stop()
 
 		for {
 			select {
 			case <-pt.ticker.C:
-				if err := pt.task(); err != nil {
-					// Handle error (could add an error channel or logger here)
-					log.Error().Err(err).Msg("periodic task failed")
-				}
+				runTask()
 			case <-pt.ctx.Done():
 				return
 			}
