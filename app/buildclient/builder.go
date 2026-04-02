@@ -233,10 +233,12 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 		if config.Subscription != nil {
 			builder.requireFeature(func(r i.Router) {
 				sm := subscription.NewSubscriptionManager(
-					time.Duration(config.Subscription.Interval)*time.Minute,
-					db, downloader.NewDownloader(r),
-					subscription.WithPeriodicUpdate(
-						config.Subscription.PeriodicUpdate))
+					&subscription.SubscriptionManagerConfig{
+						Interval:   time.Duration(config.Subscription.Interval) * time.Minute,
+						Db:         db,
+						Downloader: downloader.NewDownloader(r),
+						AutoUpdate: config.Subscription.PeriodicUpdate,
+					})
 				x.Subscription = sm
 				builder.addComponent(sm)
 			})
@@ -320,7 +322,7 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 				return fmt.Errorf("failed to add grpc service: %w", err)
 			}
 			if x.Subscription != nil {
-				subscription.WithOnUpdatedCallback(clientGrpc.OnSubscriptionUpdated)(x.Subscription)
+				x.Subscription.OnUpdatedCallback = clientGrpc.OnSubscriptionUpdated
 			}
 			return nil
 		})

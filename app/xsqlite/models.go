@@ -11,11 +11,6 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-type Pref struct {
-	ID                     int
-	SubscriptionLastUpdate int
-}
-
 type Subscription struct {
 	ID                int `gorm:"primaryKey"`
 	Name              string
@@ -29,15 +24,15 @@ type Subscription struct {
 }
 
 type OutboundHandlerGroup struct {
-	Name string `gorm:"primaryKey;not null"`
+	Name string `gorm:"primaryKey"`
 }
 
 type OutboundHandlerGroupRelation struct {
-	GroupName string `gorm:"primaryKey;not null;column:group_name"`
-	HandlerId int    `gorm:"primaryKey;not null;column:handler_id"`
+	GroupName string `gorm:"primaryKey"`
+	HandlerId int    `gorm:"primaryKey"`
 
 	Group   OutboundHandlerGroup `gorm:"foreignKey:GroupName;references:Name;constraint:OnDelete:CASCADE;"`
-	Handler OutboundHandler      `gorm:"foreignKey:HandlerId;references:ID;constraint:OnDelete:CASCADE;"`
+	Handler OutboundHandler      `gorm:"foreignKey:HandlerId;constraint:OnDelete:CASCADE;"`
 }
 
 // type SelectorHandlerRelation struct {
@@ -46,15 +41,15 @@ type OutboundHandlerGroupRelation struct {
 // }
 
 type GeoDomain struct {
-	ID            int    `gorm:"primaryKey;autoIncrement"`
-	GeoDomain     []byte `gorm:"not null;column:geo_domain;uniqueIndex:idx_geo_domains_domain_set"`
-	DomainSetName string `gorm:"not null;column:domain_set_name;uniqueIndex:idx_geo_domains_domain_set"`
+	ID            int `gorm:"primaryKey"`
+	GeoDomain     []byte
+	DomainSetName string
 
 	DomainSet AtomicDomainSet `gorm:"foreignKey:DomainSetName;references:Name;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 type AtomicDomainSet struct {
-	Name           string `gorm:"primaryKey;not null"`
+	Name           string `gorm:"primaryKey"`
 	GeositeConfig  []byte
 	UseBloomFilter bool
 	ClashRuleUrls  string
@@ -71,14 +66,14 @@ type OutboundHandler struct {
 	SpeedTestTime    int
 	Ping             int
 	PingTestTime     int
-	SubId            *int `gorm:"column:sub_id"`
+	SubId            *int
 	Config           []byte
 	Sni              string
 	ServerIp         string
 	Support6         int
 	Support6TestTime int
 
-	Subscription *Subscription `gorm:"foreignKey:SubId;references:ID;constraint:OnDelete:CASCADE;"`
+	Subscription *Subscription `gorm:"foreignKey:SubId;constraint:OnDelete:CASCADE;"`
 }
 
 // if last test time is more than 10 minutes ago, return true

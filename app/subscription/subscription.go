@@ -39,34 +39,23 @@ type downloader interface {
 
 type SubscriptionOption func(*SubscriptionManager)
 
-func WithOnUpdatedCallback(callback func()) SubscriptionOption {
-	return func(s *SubscriptionManager) {
-		s.OnUpdatedCallback = callback
-	}
+type SubscriptionManagerConfig struct {
+	Interval          time.Duration
+	Db                *gorm.DB
+	Downloader        downloader
+	OnUpdatedCallback func()
+	AutoUpdate        bool
 }
 
-func WithDownloader(downloader downloader) SubscriptionOption {
-	return func(s *SubscriptionManager) {
-		s.Downloader = downloader
-	}
-}
-
-func WithPeriodicUpdate(periodicUpdate bool) SubscriptionOption {
-	return func(s *SubscriptionManager) {
-		s.AutoUpdate = periodicUpdate
-	}
-}
-
-func NewSubscriptionManager(interval time.Duration, db *gorm.DB,
-	downloader downloader, opts ...SubscriptionOption) *SubscriptionManager {
+func NewSubscriptionManager(config *SubscriptionManagerConfig) *SubscriptionManager {
 	s := &SubscriptionManager{
-		Db:         db,
-		Interval:   interval,
-		Downloader: downloader,
+		Db:                config.Db,
+		Interval:          config.Interval,
+		Downloader:        config.Downloader,
+		OnUpdatedCallback: config.OnUpdatedCallback,
+		AutoUpdate:        config.AutoUpdate,
 	}
-	for _, opt := range opts {
-		opt(s)
-	}
+
 	return s
 }
 
@@ -115,9 +104,10 @@ func (s *SubscriptionManager) periodicUpdate() {
 	}
 	nextUpdateTime := lastUpdate.Add(s.Interval)
 
-	if nextUpdateTime.Before(time.Now()) || time.Until(nextUpdateTime) < time.Minute {
+	now := time.Now()
+	if !nextUpdateTime.After(now) {
 		go s.UpdateSubscriptions()
-		nextUpdateTime = time.Now().Add(s.Interval)
+		nextUpdateTime = now.Add(s.Interval)
 	}
 
 	log.Debug().Str("next_update", nextUpdateTime.Local().String()).
@@ -192,9 +182,11 @@ func UpdateSubscriptions(db *gorm.DB, downloader downloader) UpdateSubscriptionR
 				log.Error().Err(err).Int("id", sub.ID).Str("name", sub.Name).Str("link", sub.Link).
 					Msg("update subscription failed")
 			} else {
+				lock.Lock()
 				result.SuccessSub++
 				result.SuccessNodes += successNodes
 				result.FailedNodes = append(result.FailedNodes, failedNodes...)
+				lock.Unlock()
 			}
 		}(sub)
 	}
