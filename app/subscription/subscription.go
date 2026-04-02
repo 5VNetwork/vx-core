@@ -105,7 +105,7 @@ func (s *SubscriptionManager) periodicUpdate() {
 	nextUpdateTime := lastUpdate.Add(s.Interval)
 
 	now := time.Now()
-	if !nextUpdateTime.After(now) {
+	if !nextUpdateTime.After(now.Add(time.Minute)) {
 		go s.UpdateSubscriptions()
 		nextUpdateTime = now.Add(s.Interval)
 	}
@@ -381,10 +381,12 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 	}
 
 	subscription.LastSuccessUpdate = subscription.LastUpdate
-	db.Model(subscription).Updates(map[string]interface{}{
+	if err := db.Model(subscription).Updates(map[string]interface{}{
 		"last_success_update": subscription.LastSuccessUpdate,
 		"description":         subscription.Description,
-	})
+	}).Error; err != nil {
+		log.Error().Err(err).Msg("failed to update subscription")
+	}
 	logger.Debug().Msg("done")
 	return len(uriContent.Configs), uriContent.FailedNodes, nil
 }
