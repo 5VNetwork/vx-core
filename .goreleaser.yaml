@@ -11,7 +11,8 @@ version: 2
 project_name: x
 
 release:
-  prerelease: auto
+  prerelease: "true"
+  make_latest: false
 before:
   hooks:
     # You may remove this if you don't use go modules.
