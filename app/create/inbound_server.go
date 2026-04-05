@@ -11,7 +11,6 @@ import (
 
 	"fmt"
 
-	"github.com/5vnetwork/vx-core/app/inbound/monitor"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
@@ -34,7 +33,7 @@ import (
 )
 
 func NewInboundServer(config *configs.ProxyInboundConfig, ha i.Handler,
-	tp i.TimeoutSetting, inStats *monitor.Stats, onUnauth i.UnauthorizedReport) (proxy.Inbound, error) {
+	tp i.TimeoutSetting, onUnauth i.UnauthorizedReport) (proxy.Inbound, error) {
 
 	ports := make([]uint16, 0, 10)
 	if config.Port != 0 {
@@ -77,7 +76,6 @@ func NewInboundServer(config *configs.ProxyInboundConfig, ha i.Handler,
 		in, err := hysteria2.NewInbound(&hysteria2.InboundConfig{
 			Ports:                 ports,
 			Hysteria2ServerConfig: hysteriaConfig,
-			InStats:               inStats,
 			Tag:                   config.Tag,
 			OnUnauthorizedRequest: onUnauth,
 			Handler:               ha,

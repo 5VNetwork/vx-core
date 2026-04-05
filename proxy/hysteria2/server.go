@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/inbound/monitor"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/proxy/hysteria2/internal/server"
@@ -57,7 +56,6 @@ type InboundConfig struct {
 	*configs.Hysteria2ServerConfig
 	Ports                 []uint16
 	Tag                   string
-	InStats               *monitor.Stats
 	OnUnauthorizedRequest i.UnauthorizedReport
 	Handler               i.Handler
 }
@@ -191,10 +189,6 @@ func (in *Inbound) LogTraffic(user i.User, tx, rx uint64) (ok bool) {
 			return false
 		}
 		user.Counter().Add(tx + rx)
-
-		if in.config.InStats != nil {
-			in.config.InStats.Traffic.Add(tx + rx)
-		}
 	}
 	return true
 }
@@ -266,10 +260,5 @@ func (c *statsPacketConn) WriteTo(b []byte, addr net.Addr) (int, error) {
 	info.counter.Add(uint64(n))
 
 	// log.Debug().Str("src_addr", addr.String()).Uint64("traffic", info.counter.Load()).Msgf("hysteria2 traffic")
-
-	if c.inbound.config.InStats != nil {
-		c.inbound.config.InStats.Traffic.Add(uint64(n))
-	}
-
 	return n, nil
 }
