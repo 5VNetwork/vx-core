@@ -31,6 +31,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 
 	d := &dispatcher.Dispatcher{
 		FallbackTimeout: time.Duration(config.GetDispatcher().GetFallbackTimeout()) * time.Second,
+		OutStats:        cc.OutStats,
 	}
 
 	if config.Log.LogLevel == configs.Level_DEBUG {
