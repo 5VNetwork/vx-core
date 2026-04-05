@@ -39,6 +39,8 @@ type Dispatcher struct {
 	OnFallbacks                 []OnFallback
 	FallbackTimeout             time.Duration
 
+	OutStats *OutStats
+
 	Flows       atomic.Int32
 	PacketConns atomic.Int32
 
@@ -222,7 +224,8 @@ loop:
 				return nil
 			}
 		} else {
-			err = handler.HandleFlow(ctx, info.Target, rw)
+			err = handler.HandleFlow(ctx, info.Target,
+				d.statsHandler(ctx, rw, handler.Tag()).(buf.ReaderWriter))
 			if err != nil {
 				d.onHandlerError(ctx, info, handler.Tag(), err)
 			}
@@ -256,7 +259,8 @@ func (d *Dispatcher) cacheHandle(ctx context.Context, info *session.Info,
 		defer t.Stop()
 	}
 
-	err = handler.HandleFlow(ctx, info.Target, cacheRw)
+	err = handler.HandleFlow(ctx, info.Target,
+		d.statsHandler(ctx, cacheRw, handler.Tag()).(buf.ReaderWriter))
 	if err != nil {
 		d.onHandlerError(ctx, info, handler.Tag(), err)
 
@@ -329,7 +333,8 @@ func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, 
 	// 	defer udpConn.Close()
 	// 	err = helper.RelayUDPPacketConn(ctx, pc, udpConn)
 	// } else {
-	err = handler.HandlePacketConn(ctx, info.Target, pc)
+	err = handler.HandlePacketConn(ctx, info.Target,
+		d.statsHandler(ctx, pc, handler.Tag()).(udp.PacketReaderWriter))
 	// }
 	if err != nil {
 		d.onHandlerError(ctx, info, handler.Tag(), err)
@@ -345,10 +350,6 @@ func (p *Dispatcher) onHandlerError(ctx context.Context, info *session.Info, tag
 	if errors.Is(err, context.Canceled) {
 		return
 	}
-	var closeError *websocket.CloseError
-	if errors.As(err, &closeError) && closeError.Code == websocket.CloseNormalClosure {
-		return
-	}
 	if errors.Is(err, io.EOF) {
 		return
 	}
@@ -362,26 +363,6 @@ func (p *Dispatcher) onHandlerError(ctx context.Context, info *session.Info, tag
 		return
 	}
 
-	errStr := err.Error()
-	// this error occurs if the src closes the connection, x continues to write response data, and src send rst.
-	if strings.Contains(errStr, "endpoint is closed for send") {
-		return
-	}
-	if strings.Contains(errStr, "An established connection was aborted by the software in your host machine.") {
-		return
-	}
-	if strings.Contains(errStr, "write: broken pipe") {
-		return
-	}
-	if strings.Contains(errStr, "connection reset by peer") {
-		return
-	}
-	if strings.Contains(errStr, "reject quic over hysteria2") {
-		return
-	}
-	if strings.Contains(errStr, "XTLS rejected QUIC traffic") {
-		return
-	}
 	log.Ctx(ctx).Debug().Str("tag", tag).Err(err).Msg("handler error")
 	for _, observer := range p.HandlerErrorObservers {
 		go observer.OnHandlerError(tag, err)
@@ -459,22 +440,52 @@ func shouldOverride(info *session.Info, domainOverride []string, fakeIPNotFound 
 	return false
 }
 
-type LinkStats struct {
-	sync.Mutex
-	Num       uint32
-	BWTotal   uint32 //MBps
-	PingTotal uint32 //ms
-}
+func (d *Dispatcher) statsHandler(ctx context.Context, rw any, tag string) any {
+	if d.OutStats == nil {
+		return rw
+	}
+	stats := d.OutStats.Get(tag)
+	if stats == nil {
+		return rw
+	}
 
-func (l *LinkStats) AddPing(pingMs uint64) {
-	l.Lock()
-	defer l.Unlock()
-	l.PingTotal += uint32(pingMs)
-}
+	var ups session.UpCounters
+	var downs session.DownCounters
 
-func (l *LinkStats) AddThroughput(bytesPerSec uint64) {
-	l.Lock()
-	defer l.Unlock()
-	l.Num++
-	l.BWTotal += uint32(units.BytesToMB(bytesPerSec))
+	// link status
+	ls := &linkStats{
+		ctx:     ctx,
+		ohStats: stats,
+	}
+	ups = append(ups, ls)
+	downs = append(downs, ls)
+
+	//
+	ups = append(ups, session.AtomicCounter{
+		Counter: &stats.UpCounter,
+	})
+	downs = append(downs, session.AtomicCounter{
+		Counter: &stats.DownCounter,
+	})
+
+	if r, ok := rw.(i.DeadlineRW); ok {
+		rw = &StatsDeadlineRW{
+			DeadlineRW:  r,
+			upCounter:   ups,
+			downCounter: downs,
+		}
+	} else if r, ok := rw.(buf.ReaderWriter); ok {
+		rw = &StatsReaderWriter{
+			ReaderWriter: r,
+			upCounter:    ups,
+			downCounter:  downs,
+		}
+	} else {
+		rw = &StatsPacketConn{
+			PacketReaderWriter: rw.(udp.PacketReaderWriter),
+			upCounter:          ups,
+			downCounter:        downs,
+		}
+	}
+	return rw
 }

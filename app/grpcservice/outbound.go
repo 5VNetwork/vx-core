@@ -124,6 +124,7 @@ func (s *GrpcService) ChangeSelector(ctx context.Context, in *ChangeSelectorRequ
 			SelectorConfig:            selectorConfig,
 			CreateHandler:             s.Client.CreateHandlerWithLandHandlers,
 			HandlerErrorChangeSubject: s.Client.Dispatcher,
+			HandlerStat:               s.Client.OutStats,
 			Tester:                    s.Client.Tetser,
 			Filter:                    filter,
 		}))

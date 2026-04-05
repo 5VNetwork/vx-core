@@ -53,19 +53,6 @@ func (w *TimeoutReaderWriter) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	return m, err
 }
 
-func (w *TimeoutReaderWriter) OkayToUnwrapReader() int {
-	return 1
-}
-func (w *TimeoutReaderWriter) UnwrapReader() any {
-	return w.ReaderWriter
-}
-func (w *TimeoutReaderWriter) OkayToUnwrapWriter() int {
-	return 1
-}
-func (w *TimeoutReaderWriter) UnwrapWriter() any {
-	return w.ReaderWriter
-}
-
 type TimeoutDeadlineRW struct {
 	i.DeadlineRW
 	timeout i.TimeoutSetting
@@ -94,19 +81,6 @@ func (w *TimeoutDeadlineRW) ReadMultiBuffer() (buf.MultiBuffer, error) {
 		}
 	}
 	return m, err
-}
-
-func (w *TimeoutDeadlineRW) OkayToUnwrapReader() int {
-	return 1
-}
-func (w *TimeoutDeadlineRW) UnwrapReader() any {
-	return w.DeadlineRW
-}
-func (w *TimeoutDeadlineRW) OkayToUnwrapWriter() int {
-	return 1
-}
-func (w *TimeoutDeadlineRW) UnwrapWriter() any {
-	return w.DeadlineRW
 }
 
 type linkStatsAdder interface {
@@ -161,127 +135,6 @@ func (w *linkStats) DownTraffic(n uint64) {
 		}
 	}
 }
-
-// // calculate throughput of this connection
-// type LinkStatsReaderWriter struct {
-// 	buf.ReaderWriter
-
-// 	ctx                    context.Context
-// 	ohStats                linkStatsAdder
-// 	initialWriteTime       time.Time
-// 	prevWriteTime          time.Time
-// 	writeCounter           atomic.Uint64
-// 	hasDoneCalculatingRate bool
-// 	initialReadTime        time.Time
-// 	hadAddedPing           bool
-// }
-
-// func (w *LinkStatsReaderWriter) ReadMultiBuffer() (buf.MultiBuffer, error) {
-// 	if w.initialReadTime.IsZero() {
-// 		w.initialReadTime = time.Now()
-// 	}
-// 	return w.ReaderWriter.ReadMultiBuffer()
-// }
-
-// // downlink, right to left
-// func (w *LinkStatsReaderWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
-// 	if !w.hadAddedPing {
-// 		w.ohStats.AddPing(uint64(time.Since(w.initialReadTime).Milliseconds()))
-// 		w.hadAddedPing = true
-// 	}
-// 	if !w.hasDoneCalculatingRate && w.ohStats != nil {
-// 		if w.initialWriteTime.IsZero() {
-// 			w.initialWriteTime = time.Now()
-// 			// w.prevWriteTime = time.Now()
-// 		}
-// 		if !w.prevWriteTime.IsZero() && time.Since(w.prevWriteTime).Seconds() > 1 {
-// 			w.hasDoneCalculatingRate = true
-// 		} else {
-// 			w.prevWriteTime = time.Now()
-// 			w.writeCounter.Add(uint64(mb.Len()))
-// 			if w.writeCounter.Load() >= common.OneMB {
-// 				elapsed := time.Since(w.initialWriteTime).Seconds()
-// 				rate := float64(w.writeCounter.Swap(0)) / elapsed
-// 				if rate > 1024*1024*100 {
-// 					log.Ctx(w.ctx).Warn().Float64("elapsed", elapsed).Uint64("rate", uint64(rate)).Msg("throughput is too high")
-// 					w.hasDoneCalculatingRate = true
-// 				} else {
-// 					log.Ctx(w.ctx).Debug().Float64("rate(MBps)", rate/1000/1000).Msg("throughput")
-// 					w.ohStats.AddThroughput(uint64(rate))
-// 				}
-// 				w.initialWriteTime = time.Now()
-// 			}
-// 		}
-// 	}
-// 	return w.ReaderWriter.WriteMultiBuffer(mb)
-// }
-
-// func (w *LinkStatsReaderWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
-// 	if !w.hasDoneCalculatingRate && w.ohStats != nil {
-// 		if w.initialWriteTime.IsZero() {
-// 			w.initialWriteTime = time.Now()
-// 		}
-// 		if !w.prevWriteTime.IsZero() && time.Since(w.prevWriteTime).Seconds() > 0.5 {
-// 			// if the two consecutive writes are more than 0.5s apart, stop calculating the rate using this connection
-// 			w.hasDoneCalculatingRate = true
-// 			writeCounter := w.writeCounter.Load()
-// 			if writeCounter >= common.OneMB*5 {
-// 				elapsed := time.Since(w.initialWriteTime).Seconds()
-// 				rate := float64(writeCounter) / elapsed
-// 				w.ohStats.AddThroughput(uint64(rate))
-// 			}
-// 		} else {
-// 			w.prevWriteTime = time.Now()
-// 			w.writeCounter.Add(uint64(mb.Len()))
-// 			if w.writeCounter.Load() >= common.OneMB*5 {
-// 				w.hasDoneCalculatingRate = true
-// 				elapsed := time.Since(w.initialWriteTime).Seconds()
-// 				rate := float64(w.writeCounter.Swap(0)) / elapsed
-// 				w.ohStats.AddThroughput(uint64(rate))
-// 			}
-// 		}
-// 	}
-// 	return w.ReaderWriter.WriteMultiBuffer(mb)
-// }
-
-// type LinkStatsPacketConn struct {
-// 	ctx context.Context
-// 	udp.PacketReaderWriter
-// 	ohStats                linkStatsAdder
-// 	initialWriteTime       time.Time
-// 	prevWriteTime          time.Time
-// 	writeCounter           atomic.Uint64
-// 	hasDoneCalculatingRate bool
-// }
-
-// // downlink, right to left
-// func (w *LinkStatsPacketConn) WritePacket(packet *udp.Packet) error {
-// 	if !w.hasDoneCalculatingRate && w.ohStats != nil {
-// 		if w.initialWriteTime.IsZero() {
-// 			w.initialWriteTime = time.Now()
-// 		}
-// 		if !w.prevWriteTime.IsZero() && time.Since(w.prevWriteTime).Seconds() > 1 {
-// 			// if the two consecutive writes are more than 0.5s apart, stop calculating the rate using this connection
-// 			w.hasDoneCalculatingRate = true
-// 		} else {
-// 			w.prevWriteTime = time.Now()
-// 			w.writeCounter.Add(uint64(packet.Payload.Len()))
-// 			if w.writeCounter.Load() >= common.OneMB {
-// 				elapsed := time.Since(w.initialWriteTime).Seconds()
-// 				rate := float64(w.writeCounter.Swap(0)) / elapsed
-// 				if rate > 1024*1024*100 {
-// 					log.Ctx(w.ctx).Warn().Uint64("rate", uint64(rate)).Msg("throughput is too high")
-// 					w.hasDoneCalculatingRate = true
-// 				} else {
-// 					log.Ctx(w.ctx).Debug().Uint64("rate(MBps)", uint64(rate/1000/1000)).Msg("throughput")
-// 					w.ohStats.AddThroughput(uint64(rate))
-// 				}
-// 				w.initialWriteTime = time.Now()
-// 			}
-// 		}
-// 	}
-// 	return w.PacketReaderWriter.WritePacket(packet)
-// }
 
 type TimeoutPacketConn struct {
 	idle *signal.ActivityChecker
@@ -408,19 +261,6 @@ func (w *StatsReaderWriter) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	return mb, err
 }
 
-func (w *StatsReaderWriter) OkayToUnwrapReader() int {
-	return 1
-}
-func (w *StatsReaderWriter) UnwrapReader() any {
-	return w.ReaderWriter
-}
-func (w *StatsReaderWriter) OkayToUnwrapWriter() int {
-	return 1
-}
-func (w *StatsReaderWriter) UnwrapWriter() any {
-	return w.ReaderWriter
-}
-
 type StatsDeadlineRW struct {
 	i.DeadlineRW
 	// might be nil
@@ -447,19 +287,6 @@ func (w *StatsDeadlineRW) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	mb, err := w.DeadlineRW.ReadMultiBuffer()
 	w.upCounter.UpTraffic(uint64(mb.Len()))
 	return mb, err
-}
-
-func (w *StatsDeadlineRW) OkayToUnwrapReader() int {
-	return 1
-}
-func (w *StatsDeadlineRW) UnwrapReader() any {
-	return w.DeadlineRW
-}
-func (w *StatsDeadlineRW) OkayToUnwrapWriter() int {
-	return 1
-}
-func (w *StatsDeadlineRW) UnwrapWriter() any {
-	return w.DeadlineRW
 }
 
 type StatsPacketConn struct {

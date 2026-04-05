@@ -8,12 +8,12 @@ import (
 	"sync"
 
 	"github.com/5vnetwork/vx-core/app/inbound/monitor"
-	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/user"
 	"github.com/5vnetwork/vx-core/common/buf"
 	mynet "github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/net/udp"
 	"github.com/5vnetwork/vx-core/common/session"
+	"github.com/5vnetwork/vx-core/common/units"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/rs/zerolog/log"
 )
@@ -23,7 +23,6 @@ type StatsHook struct {
 	Um           *user.Manager
 	LinkStats    sync.Map              //key is prefix string, value is *LinkStats
 	InboundStats *monitor.InboundStats //key is inbound tag, value is *InboundStats
-	OutStats     *outbound.OutStats
 }
 
 func (p *StatsHook) AfterHandlerSelection(ctx context.Context, info *session.Info, rw any,
@@ -42,9 +41,6 @@ func (p *StatsHook) AfterHandlerSelection(ctx context.Context, info *session.Inf
 				p.LinkStats.Store(network, stats)
 			}
 			throughputAdder = stats.(*LinkStats)
-		} else if p.StatsPolicy.CalculateOutboundLinkStats() && p.OutStats != nil {
-			stats := p.OutStats.Get(handler.Tag())
-			throughputAdder = stats
 		}
 		if throughputAdder != nil {
 			ls := &linkStats{
@@ -87,15 +83,7 @@ func (p *StatsHook) AfterHandlerSelection(ctx context.Context, info *session.Inf
 			Counter: &info.SessionDownCounter,
 		})
 	}
-	if p.StatsPolicy.CalculateOutboundLinkStats() && p.OutStats != nil {
-		stats := p.OutStats.Get(handler.Tag())
-		ups = append(ups, session.AtomicCounter{
-			Counter: &stats.UpCounter,
-		})
-		downs = append(downs, session.AtomicCounter{
-			Counter: &stats.DownCounter,
-		})
-	}
+
 	if len(ups) > 0 || len(downs) > 0 {
 		if r, ok := rw.(i.DeadlineRW); ok {
 			rw = &StatsDeadlineRW{
@@ -118,4 +106,24 @@ func (p *StatsHook) AfterHandlerSelection(ctx context.Context, info *session.Inf
 		}
 	}
 	return ctx, rw, nil
+}
+
+type LinkStats struct {
+	sync.Mutex
+	Num       uint32
+	BWTotal   uint32 //MBps
+	PingTotal uint32 //ms
+}
+
+func (l *LinkStats) AddPing(pingMs uint64) {
+	l.Lock()
+	defer l.Unlock()
+	l.PingTotal += uint32(pingMs)
+}
+
+func (l *LinkStats) AddThroughput(bytesPerSec uint64) {
+	l.Lock()
+	defer l.Unlock()
+	l.Num++
+	l.BWTotal += uint32(units.BytesToMB(bytesPerSec))
 }

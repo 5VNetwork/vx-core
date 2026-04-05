@@ -10,16 +10,7 @@ import (
 	"github.com/5vnetwork/vx-core/i"
 )
 
-type HandlerWithStats struct {
-	i.Outbound
-	Stats *OutboundHandlerStats
-}
-
 var ErrIpv6NotSupported = errors.New("ipv6 not supported")
-
-func (i *HandlerWithStats) GetHandlerStats() *OutboundHandlerStats {
-	return i.Stats
-}
 
 type HandlerWithSupport6Info struct {
 	i.Outbound

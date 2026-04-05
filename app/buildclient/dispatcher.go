@@ -69,7 +69,6 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 		})
 		d.AddAfterHandlerSelectionHook(&dispatcher.StatsHook{
 			StatsPolicy: p,
-			OutStats:    cc.OutStats,
 		})
 		d.AddSessionEndHook(ul)
 		d.AddOnFallback(ul)
@@ -90,6 +89,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 						CreateHandler:             cc.CreateHandlerWithLandHandlers,
 						Tester:                    tester,
 						HandlerErrorChangeSubject: d,
+						HandlerStat:               cc.OutStats,
 						Filter:                    filter,
 					}))
 					return nil
@@ -115,6 +115,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 						CreateHandler:             cc.CreateHandlerWithLandHandlers,
 						Tester:                    tester,
 						HandlerErrorChangeSubject: d,
+						HandlerStat:               cc.OutStats,
 						Filter:                    filter,
 					}))
 					return nil
