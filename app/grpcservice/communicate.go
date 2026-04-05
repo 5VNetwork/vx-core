@@ -207,8 +207,14 @@ func (s *GrpcService) SpeedResult(tag string, speed int64) {
 	// store result into DB
 	id, err := strconv.Atoi(tag)
 	if err == nil {
+		var speedToWrite float64
+		if speed > 0 {
+			speedToWrite = units.BytesToMb(speed)
+		} else {
+			speedToWrite = -1
+		}
 		err := s.Client.DB.UpdateHandler(id, map[string]interface{}{
-			"speed":           units.BytesToMb(speed),
+			"speed":           speedToWrite,
 			"ok":              int(speed),
 			"speed_test_time": time.Now().Unix(),
 		})

@@ -121,6 +121,7 @@ type SelectorConfig struct {
 	*router.SelectorConfig
 	CreateHandler             CreateHandlerFunc
 	HandlerErrorChangeSubject HandlerErrorChangeSubject
+	HandlerStat               HandlerStat
 	Tester                    Tester
 	Filter                    Filter
 	OnHandlerBeingUsedChange  HandlersBeingUsedUpdate
@@ -128,10 +129,6 @@ type SelectorConfig struct {
 
 func NewSelector(config SelectorConfig) *Selector {
 	log.Debug().Str("tag", config.SelectorConfig.GetTag()).Msg("NewSelector")
-	// TODO: tmp solution. ONlY proxy selector update
-	if config.SelectorConfig.GetTag() != "代理" {
-		config.OnHandlerBeingUsedChange = nil
-	}
 	sc := config.SelectorConfig
 
 	var balancer Balancer
@@ -165,6 +162,7 @@ func NewSelector(config SelectorConfig) *Selector {
 		Tester:                   config.Tester,
 		OnHandlerBeingUsedChange: config.OnHandlerBeingUsedChange,
 		Dispatcher:               config.HandlerErrorChangeSubject,
+		HandlerStat:              config.HandlerStat,
 	})
 	return selector0
 }
@@ -208,3 +206,4 @@ func (n *SelectedHandlersChangeNotifier) NotifySelectedHandlersChanged(tag strin
 		go o.OnSelectedHandlersChanged(tag, handlers)
 	}
 }
+

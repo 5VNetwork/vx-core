@@ -52,6 +52,13 @@ func NewGrpcService(grpcConfig *GrpcServiceConfig) (*GrpcService, error) {
 
 func (s *GrpcService) Start() error {
 	s.Client.Selectors.RegisterSelectedHandlersChangeObserver(s)
+	selector := s.Client.Selectors.GetSelector("代理")
+	if selector != nil {
+		handlers := selector.GetHandlersBeingUsed()
+		if len(handlers) == 1 {
+			handler4BeingUsed.Store(handlers[0])
+		}
+	}
 	return nil
 }
 

@@ -238,20 +238,25 @@ type StatsReaderWriter struct {
 	// might be nil
 	upCounter session.UpCounters
 	// might be nil
-	downCounter session.DownCounters
+	downCounter   session.DownCounters
+	activeChecker *atomic.Value
 }
 
 func NewStatsReaderWriter(rw buf.ReaderWriter, upCounter session.UpCounters,
-	downCounter session.DownCounters) *StatsReaderWriter {
+	downCounter session.DownCounters, activeChecker *atomic.Value) *StatsReaderWriter {
 	return &StatsReaderWriter{
-		ReaderWriter: rw,
-		upCounter:    upCounter,
-		downCounter:  downCounter,
+		ReaderWriter:  rw,
+		upCounter:     upCounter,
+		downCounter:   downCounter,
+		activeChecker: activeChecker,
 	}
 }
 
 func (w *StatsReaderWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	w.downCounter.DownTraffic(uint64(mb.Len()))
+	if w.activeChecker != nil {
+		w.activeChecker.Store(time.Now())
+	}
 	return w.ReaderWriter.WriteMultiBuffer(mb)
 }
 
@@ -266,20 +271,25 @@ type StatsDeadlineRW struct {
 	// might be nil
 	upCounter session.UpCounters
 	// might be nil
-	downCounter session.DownCounters
+	downCounter   session.DownCounters
+	activeChecker *atomic.Value
 }
 
 func NewStatsDeadlineRW(rw i.DeadlineRW, upCounter session.UpCounters,
-	downCounter session.DownCounters) *StatsDeadlineRW {
+	downCounter session.DownCounters, activeChecker *atomic.Value) *StatsDeadlineRW {
 	return &StatsDeadlineRW{
-		DeadlineRW:  rw,
-		upCounter:   upCounter,
-		downCounter: downCounter,
+		DeadlineRW:    rw,
+		upCounter:     upCounter,
+		downCounter:   downCounter,
+		activeChecker: activeChecker,
 	}
 }
 
 func (w *StatsDeadlineRW) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	w.downCounter.DownTraffic(uint64(mb.Len()))
+	if w.activeChecker != nil {
+		w.activeChecker.Store(time.Now())
+	}
 	return w.DeadlineRW.WriteMultiBuffer(mb)
 }
 
@@ -294,15 +304,17 @@ type StatsPacketConn struct {
 	// might be nil
 	upCounter session.UpCounters
 	// might be nil
-	downCounter session.DownCounters
+	downCounter   session.DownCounters
+	activeChecker *atomic.Value
 }
 
 func NewStatsPacketConn(prw udp.PacketReaderWriter, upCounter session.UpCounters,
-	downCounter session.DownCounters) *StatsPacketConn {
+	downCounter session.DownCounters, activeChecker *atomic.Value) *StatsPacketConn {
 	return &StatsPacketConn{
 		PacketReaderWriter: prw,
 		upCounter:          upCounter,
 		downCounter:        downCounter,
+		activeChecker:      activeChecker,
 	}
 }
 
@@ -317,5 +329,8 @@ func (p *StatsPacketConn) ReadPacket() (*udp.Packet, error) {
 
 func (p *StatsPacketConn) WritePacket(packet *udp.Packet) error {
 	p.downCounter.DownTraffic(uint64(packet.Payload.Len()))
+	if p.activeChecker != nil {
+		p.activeChecker.Store(time.Now())
+	}
 	return p.PacketReaderWriter.WritePacket(packet)
 }

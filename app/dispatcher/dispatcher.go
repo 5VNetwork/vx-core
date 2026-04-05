@@ -20,12 +20,10 @@ import (
 	"github.com/5vnetwork/vx-core/common/net/udp"
 	"github.com/5vnetwork/vx-core/common/retry"
 	"github.com/5vnetwork/vx-core/common/session"
-	"github.com/5vnetwork/vx-core/common/units"
 	"github.com/5vnetwork/vx-core/common/uot"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/proxy"
 	vless_out "github.com/5vnetwork/vx-core/proxy/vless/outbound"
-	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
 )
 
@@ -33,6 +31,7 @@ type Dispatcher struct {
 	BeforeHandlerSelectionHooks []BeforeHandlerSelectionHook
 	Router                      i.Router
 	OnHandlerSelectedHooks      []AfterHandlerSelectedHook
+	SessionStartHooks           []SessionStartHook
 	SessionEndHooks             []SessionEndHook
 	TimeoutSetting              i.TimeoutSetting
 	GetCounters                 GetCounters
@@ -88,6 +87,10 @@ type AfterHandlerSelectedHook interface {
 		handler i.Outbound) (context.Context, any, error)
 }
 
+type SessionStartHook interface {
+	SessionStart(ctx context.Context, info *session.Info)
+}
+
 type SessionEndHook interface {
 	// should return quickly
 	FlowSessionEnd(ctx context.Context, info *session.Info, err error)
@@ -110,6 +113,10 @@ func (d *Dispatcher) AddSessionEndHook(hook SessionEndHook) {
 	d.SessionEndHooks = append(d.SessionEndHooks, hook)
 }
 
+func (d *Dispatcher) AddSessionStartHook(hook SessionStartHook) {
+	d.SessionStartHooks = append(d.SessionStartHooks, hook)
+}
+
 func (d *Dispatcher) AddOnFallback(fallback OnFallback) {
 	d.OnFallbacks = append(d.OnFallbacks, fallback)
 }
@@ -126,6 +133,10 @@ func (d *Dispatcher) HandleFlow(ctx context.Context, dst net.Destination,
 	info := infoFromContext(ctx, dst)
 	ctx = session.ContextWithInfo(ctx, info)
 	defer info.CleanUp()
+
+	for _, hook := range d.SessionStartHooks {
+		hook.SessionStart(ctx, info)
+	}
 
 	d.Flows.Add(1)
 	defer d.Flows.Add(-1)
@@ -287,6 +298,10 @@ func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, 
 	info := infoFromContext(ctx, dst)
 	ctx = session.ContextWithInfo(ctx, info)
 	defer info.CleanUp()
+
+	for _, hook := range d.SessionStartHooks {
+		hook.SessionStart(ctx, info)
+	}
 
 	d.PacketConns.Add(1)
 	defer d.PacketConns.Add(-1)
@@ -470,21 +485,24 @@ func (d *Dispatcher) statsHandler(ctx context.Context, rw any, tag string) any {
 
 	if r, ok := rw.(i.DeadlineRW); ok {
 		rw = &StatsDeadlineRW{
-			DeadlineRW:  r,
-			upCounter:   ups,
-			downCounter: downs,
+			DeadlineRW:    r,
+			upCounter:     ups,
+			downCounter:   downs,
+			activeChecker: &stats.ActiveTime,
 		}
 	} else if r, ok := rw.(buf.ReaderWriter); ok {
 		rw = &StatsReaderWriter{
-			ReaderWriter: r,
-			upCounter:    ups,
-			downCounter:  downs,
+			ReaderWriter:  r,
+			upCounter:     ups,
+			downCounter:   downs,
+			activeChecker: &stats.ActiveTime,
 		}
 	} else {
 		rw = &StatsPacketConn{
 			PacketReaderWriter: rw.(udp.PacketReaderWriter),
 			upCounter:          ups,
 			downCounter:        downs,
+			activeChecker:      &stats.ActiveTime,
 		}
 	}
 	return rw
