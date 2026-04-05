@@ -14,7 +14,6 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/create"
-	"github.com/5vnetwork/vx-core/app/inbound/monitor"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/app/sniff"
 	"github.com/5vnetwork/vx-core/transport"
@@ -41,7 +40,7 @@ import (
 )
 
 func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler,
-	tp i.TimeoutSetting, inStats *monitor.Stats, onUnauth i.UnauthorizedReport) (proxy.Inbound, error) {
+	tp i.TimeoutSetting, onUnauth i.UnauthorizedReport) (proxy.Inbound, error) {
 	ports := make([]uint16, 0, 10)
 	for _, port := range config.Ports {
 		ports = append(ports, uint16(port))
@@ -69,7 +68,6 @@ func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler
 		in, err := hysteria2.NewInbound(&hysteria2.InboundConfig{
 			Ports:                 ports,
 			Hysteria2ServerConfig: hysteriaConfig,
-			InStats:               inStats,
 			Tag:                   config.Tag,
 			OnUnauthorizedRequest: onUnauth,
 			Handler:               ha,

@@ -94,7 +94,6 @@ type AuthenticationReader struct {
 	transferType protocol.TransferType
 	padding      PaddingLengthGenerator
 	size         uint16
-	sizeOffset   uint16
 	paddingLen   uint16
 	hasSize      bool
 	done         bool
@@ -108,9 +107,6 @@ func NewAuthenticationReader(ctx context.Context, auth Authenticator, sizeParser
 		transferType: transferType,
 		padding:      paddingLen,
 		sizeBytes:    make([]byte, sizeParser.SizeBytes()),
-	}
-	if chunkSizeDecoderWithOffset, ok := sizeParser.(ChunkSizeDecoderWithOffset); ok {
-		r.sizeOffset = chunkSizeDecoderWithOffset.HasConstantOffset()
 	}
 	if breader, ok := reader.(*buf.BufferedReader); ok {
 		r.reader = breader
@@ -165,17 +161,15 @@ func (r *AuthenticationReader) readInternal(soft bool, mb *buf.MultiBuffer) erro
 
 	size, padding, err := r.readSize()
 	if err != nil {
-		return fmt.Errorf("failed to read size: %w", err)
+		return err
 	}
 
-	if size+r.sizeOffset == uint16(r.auth.Overhead())+padding {
+	if size == uint16(r.auth.Overhead())+padding {
 		r.done = true
 		return io.EOF
 	}
 
-	effectiveSize := int32(size) + int32(r.sizeOffset)
-
-	if soft && effectiveSize > r.reader.BufferedBytes() {
+	if soft && int32(size) > r.reader.BufferedBytes() {
 		r.size = size
 		r.paddingLen = padding
 		r.hasSize = true
@@ -183,26 +177,26 @@ func (r *AuthenticationReader) readInternal(soft bool, mb *buf.MultiBuffer) erro
 	}
 
 	if size <= buf.Size {
-		b, err := r.readBuffer(effectiveSize, int32(padding))
+		b, err := r.readBuffer(int32(size), int32(padding))
 		if err != nil {
-			return nil
+			return err
 		}
 		*mb = append(*mb, b)
 		return nil
 	}
 
-	payload := bytespool.Alloc(effectiveSize)
+	payload := bytespool.Alloc(int32(size))
 	defer bytespool.Free(payload)
 
-	if _, err := io.ReadFull(r.reader, payload[:effectiveSize]); err != nil {
-		return fmt.Errorf("failed to read payload: %w", err)
+	if _, err := io.ReadFull(r.reader, payload[:size]); err != nil {
+		return err
 	}
 
-	effectiveSize -= int32(padding)
+	size -= padding
 
-	rb, err := r.auth.Open(payload[:0], payload[:effectiveSize])
+	rb, err := r.auth.Open(payload[:0], payload[:size])
 	if err != nil {
-		return fmt.Errorf("failed to authenticate payload: %w", err)
+		return err
 	}
 
 	*mb = buf.MergeBytes(*mb, rb)
