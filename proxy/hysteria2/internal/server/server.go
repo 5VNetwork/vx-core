@@ -287,7 +287,7 @@ func (h *h3sHandler) handleTCPRequest(stream *utils.QStream) {
 		buf.NewRWD(buf.NewReader(stream), buf.NewWriter(stream), stream))
 	cancel(err)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to handle flow")
+		log.Ctx(ctx).Error().Err(err).Msg("failed to handle flow")
 	}
 
 	if h.config.EventLogger != nil {

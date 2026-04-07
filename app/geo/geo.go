@@ -62,7 +62,6 @@ func (g *GeoWrapper) MatchDomain(domain string, tag string) (bool, error) {
 	defer g.RUnlock()
 
 	matched, err := g.geo.MatchDomain(domain, tag)
-	log.Debug().Str("domain", domain).Str("tag", tag).Bool("matched", matched).Msg("geo match domain")
 	return matched, err
 }
 
@@ -76,7 +75,6 @@ func (g *GeoWrapper) MatchIP(ip net.IP, tag string) (bool, error) {
 	g.RLock()
 	defer g.RUnlock()
 	matched, err := g.geo.MatchIP(ip, tag)
-	log.Debug().IPAddr("ip", ip).Str("tag", tag).Bool("matched", matched).Msg("geo match ip")
 	return matched, err
 }
 
@@ -128,34 +126,47 @@ func (g *Geo) RemoveDomain(name string, domain *commongeo.Domain) error {
 
 func (g *Geo) MatchDomain(domain string, tag string) (bool, error) {
 	if m, found := g.DomainSets[tag]; found {
-		return m.Match(domain), nil
+		ret := m.Match(domain)
+		log.Debug().Str("domain", domain).Str("tag", tag).Bool("matched", ret).Msg("geo match domain")
+		return ret, nil
 	}
 	// if its opposite is known
 	if opposite, found := g.OppositeDomainTags[tag]; found {
 		if m, found := g.DomainSets[opposite]; found {
-			return !m.Match(domain), nil
+			ret := !m.Match(domain)
+			log.Debug().Str("domain", domain).Str("tag", tag).Bool("matched", ret).Msg("geo match domain")
+			return ret, nil
 		}
 	}
+	log.Debug().Str("domain", domain).Str("tag", tag).Msg("geo match domain set not found")
 	return false, ErrSetNotFound
 }
 
 func (g *Geo) MatchIP(ip net.IP, tag string) (bool, error) {
 	if m, found := g.IpSets[tag]; found {
-		return m.Match(ip), nil
+		ret := m.Match(ip)
+		log.Debug().IPAddr("ip", ip).Str("tag", tag).Bool("matched", ret).Msg("geo match ip")
+		return ret, nil
 	}
 	// if its opposite is known
 	if oTag, found := g.OppositeIpTags[tag]; found {
 		if m, found := g.IpSets[oTag]; found {
-			return !m.Match(ip), nil
+			ret := !m.Match(ip)
+			log.Debug().IPAddr("ip", ip).Str("tag", tag).Bool("matched", ret).Msg("geo match ip")
+			return ret, nil
 		}
 	}
+	log.Debug().IPAddr("ip", ip).Str("tag", tag).Msg("geo match ip set not found")
 	return false, ErrSetNotFound
 }
 
 func (g *Geo) MatchAppId(appId string, tag string) (bool, error) {
 	if m, found := g.AppSets[tag]; found {
-		return m.Match(appId), nil
+		ret := m.Match(appId)
+		log.Debug().Str("appId", appId).Str("tag", tag).Bool("matched", ret).Msg("geo match appId")
+		return ret, nil
 	}
+	log.Debug().Str("appId", appId).Str("tag", tag).Msg("geo match appId set not found")
 	return false, ErrSetNotFound
 }
 
