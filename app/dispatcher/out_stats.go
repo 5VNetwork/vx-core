@@ -7,17 +7,34 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/5vnetwork/vx-core/common/task"
+	"github.com/rs/zerolog/log"
 )
 
 type OutStats struct {
 	sync.Mutex
-	Map map[string]*OutboundHandlerStats
+	Map  map[string]*OutboundHandlerStats
+	task *task.PeriodicTask
 }
 
 func NewOutStats() *OutStats {
 	return &OutStats{
 		Map: make(map[string]*OutboundHandlerStats),
 	}
+}
+
+func (o *OutStats) Start() error {
+	o.task = task.NewPeriodicTask(300*time.Second, o.cleanOldStats)
+	o.task.Start()
+	return nil
+}
+
+func (o *OutStats) Close() error {
+	if o.task != nil {
+		o.task.Close()
+	}
+	return nil
 }
 
 func (o *OutStats) Get(tag string) *OutboundHandlerStats {
@@ -33,11 +50,11 @@ func (o *OutStats) Get(tag string) *OutboundHandlerStats {
 	return stats
 }
 
-func (o *OutStats) CleanOldStats() {
+func (o *OutStats) cleanOldStats() {
 	o.Lock()
 	defer o.Unlock()
 	for tag, stats := range o.Map {
-		if time.Since(stats.Time.Load().(time.Time)) > 60*time.Second {
+		if time.Since(stats.Time.Load().(time.Time)) > 300*time.Second {
 			delete(o.Map, tag)
 		}
 	}
@@ -50,7 +67,11 @@ func (o *OutStats) IsHandlerActive(tag string) bool {
 	if !ok {
 		return false
 	}
-	return time.Since(stats.ActiveTime.Load().(time.Time)) < 1*time.Second
+	yes := time.Since(stats.ActiveTime.Load().(time.Time)) < 1*time.Second
+	if !yes {
+		log.Debug().Str("tag", tag).Time("last_activeTime", stats.ActiveTime.Load().(time.Time)).Msg("handler is not active")
+	}
+	return yes
 }
 
 type OutboundHandlerStats struct {

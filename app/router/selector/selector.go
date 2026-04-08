@@ -409,10 +409,9 @@ func (s *Selector) enterRecoveryIfNot() {
 	s.isRecovery = true
 	if s.periodicTestUnusableHandlersInFastRevovery == nil {
 		s.periodicTestUnusableHandlersInFastRevovery = task.NewPeriodicTask(
-			time.Second*10, func() error {
+			time.Second*10, func() {
 				log.Debug().Msg("TestAllUsabe")
 				s.testItems(s.getOutHandlers(), TestHandlerUsable)
-				return nil
 			}, task.WithStartImmediately())
 		s.periodicTestUnusableHandlersInFastRevovery.Start()
 	}
@@ -430,20 +429,17 @@ func (s *Selector) exitRecovery() {
 	s.FastRecoveryChangeNotifier.Notify(false)
 }
 
-func (s *Selector) TestSpeedAll() error {
+func (s *Selector) TestSpeedAll() {
 	s.testItems(s.getOutHandlers(), TestHandlerSpeed)
 	s.setHandlers()
-	return nil
 }
-func (s *Selector) TestPingAll() error {
+func (s *Selector) TestPingAll() {
 	s.testItems(s.getOutHandlers(), TestHandlerPing)
 	s.setHandlers()
-	return nil
 }
-func (s *Selector) TestAllUnusable() error {
+func (s *Selector) TestAllUnusable() {
 	s.testItems(s.getOutHandlers(), TestHandlerUsable)
 	s.setHandlers()
-	return nil
 }
 
 func (s *Selector) OnHandlerChanged() {

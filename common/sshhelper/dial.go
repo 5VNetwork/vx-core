@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/pkg/sftp"
 	"github.com/rs/zerolog/log"
@@ -43,6 +44,7 @@ type DialConfig struct {
 	PrivateKey           []byte
 	PrivateKeyPassphrase string
 	HostKey              []byte
+	Timeout              time.Duration
 }
 
 func Dial(s *DialConfig) (*Client, []byte, error) {
@@ -100,6 +102,7 @@ func Dial(s *DialConfig) (*Client, []byte, error) {
 		User:            s.User,
 		Auth:            authMethods,
 		HostKeyCallback: hostKeyCallback,
+		Timeout:         s.Timeout,
 	}
 
 	client, err := ssh.Dial("tcp", s.Addr, conf)

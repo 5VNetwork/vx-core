@@ -30,7 +30,6 @@ func (s *GrpcService) GetStatsStream(in *GetStatsRequest,
 
 	sendStats := func() error {
 		st := s.Client.OutStats
-		st.CleanOldStats()
 
 		statsList := make([]*OutboundStats, 0, len(st.Map))
 		st.Lock()

@@ -827,10 +827,9 @@ func TestSelector_TestSpeedAll(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Act
-	err := sel.TestSpeedAll()
+	sel.TestSpeedAll()
 
 	// Assert
-	assert.NoError(t, err)
 	assert.GreaterOrEqual(t, tester.testSpeedCalls.Load(), int32(2))
 }
 
@@ -860,10 +859,9 @@ func TestSelector_TestPingAll(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Act
-	err := sel.TestPingAll()
+	sel.TestPingAll()
 
 	// Assert
-	assert.NoError(t, err)
 	assert.GreaterOrEqual(t, tester.testPingCalls.Load(), int32(2))
 }
 
@@ -893,10 +891,9 @@ func TestSelector_TestAllUnusable(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Act
-	err := sel.TestAllUnusable()
+	sel.TestAllUnusable()
 
 	// Assert
-	assert.NoError(t, err)
 	assert.GreaterOrEqual(t, tester.testUsableCalls.Load(), int32(2))
 }
 
@@ -1475,10 +1472,8 @@ func TestSelector_TestItems_BatchProcessing(t *testing.T) {
 	tester.testSpeedCalls.Store(0)
 
 	// Act
-	err := sel.TestSpeedAll()
+	sel.TestSpeedAll()
 
-	// Assert
-	assert.NoError(t, err)
 	// All 25 handlers should be tested in batches of 10
 	assert.Equal(t, int32(25), tester.testSpeedCalls.Load())
 }
@@ -1916,10 +1911,9 @@ func TestSelector_RecoveryMode_ExitWhenHandlerBecomesUsable(t *testing.T) {
 	sel.handlersLock.Unlock()
 
 	// Act - Test all unusable handlers
-	err := sel.TestAllUnusable()
+	sel.TestAllUnusable()
 
 	// Assert
-	assert.NoError(t, err)
 	assert.GreaterOrEqual(t, tester.testUsableCalls.Load(), int32(2), "Should test both handlers")
 
 	// Verify handler1 became usable

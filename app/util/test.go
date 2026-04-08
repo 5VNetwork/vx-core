@@ -58,11 +58,11 @@ func ApiHandlerUsable1(ctx context.Context, h i.Outbound, url string) (bool, err
 	}
 	rsp, err := httpClient.Do(request)
 	if err != nil {
-		logger.Debug().Err(err).Msg("usable test failed")
+		logger.Debug().Err(err).Msg("unusable")
 		return false, nil
 	} else {
 		rsp.Body.Close()
-		logger.Debug().Msg("usable test success")
+		logger.Debug().Msg("usable")
 		return true, nil
 	}
 }

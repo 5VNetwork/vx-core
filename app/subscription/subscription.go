@@ -201,6 +201,13 @@ type FetchSubscriptionResult struct {
 }
 
 func FetchSubscription(ctx context.Context, link string, downloader downloader) (*FetchSubscriptionResult, error) {
+	if parsedUrl, err := url.Parse(link); err == nil {
+		q := parsedUrl.Query()
+		q.Set("flag", "vx")
+		parsedUrl.RawQuery = q.Encode()
+		link = parsedUrl.String()
+	}
+
 	var uriContent *sub.DecodeResult
 	// try no user agent first
 	body, header, err := downloader.Download(ctx, link, map[string]string{})
@@ -359,7 +366,9 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 	// delete handlers that are not in the new configs
 	for _, existingHandler := range existingHandlers {
 		if !slices.Contains(updatedHandlers, existingHandler) {
-			db.Delete(existingHandler)
+			if err := db.Delete(existingHandler).Error; err != nil {
+				log.Error().Err(err).Msg("failed to delete handler")
+			}
 		}
 	}
 
