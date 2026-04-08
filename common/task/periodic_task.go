@@ -9,7 +9,7 @@ import (
 // PeriodicTask is a struct that periodically runs a specified task
 type PeriodicTask struct {
 	Interval         time.Duration      // How often to run the task
-	task             func() error       // The task to run
+	task             func()             // The task to run
 	ctx              context.Context    // Context to control cancellation
 	cancel           context.CancelFunc // Function to cancel the context
 	wg               sync.WaitGroup     // WaitGroup to wait for the task to finish
@@ -35,7 +35,7 @@ func WithInitialDelay(delay time.Duration) PeriodicTaskOption {
 }
 
 // NewPeriodicTask creates a new PeriodicTask with the given interval and task
-func NewPeriodicTask(interval time.Duration, task func() error, opts ...PeriodicTaskOption) *PeriodicTask {
+func NewPeriodicTask(interval time.Duration, task func(), opts ...PeriodicTaskOption) *PeriodicTask {
 	ctx, cancel := context.WithCancel(context.Background())
 	pt := &PeriodicTask{
 		Interval:  interval,

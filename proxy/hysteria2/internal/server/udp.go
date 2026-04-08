@@ -299,6 +299,7 @@ func (m *udpSessionManager) feed(msg *protocol.UDPMessage) {
 				net.DestinationFromAddr(m.gateway), m.tag)
 			ctx = proxy.ContextWithUser(ctx, m.io.(*udpIOImpl).User)
 			ctx = proxy.ContextWithInboundProxyProtocol(ctx, "hysteria2")
+			log.Ctx(ctx).Debug().Any("dst", dest).Send()
 
 			go func() {
 				err := m.io.HandlePacketConn(ctx, dest, p2)

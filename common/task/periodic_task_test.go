@@ -1,7 +1,6 @@
 package task
 
 import (
-	"fmt"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -12,9 +11,8 @@ func TestPeriodicTask_Start(t *testing.T) {
 	var counter int32
 
 	// Create a task that increments the counter
-	task := NewPeriodicTask(50*time.Millisecond, func() error {
+	task := NewPeriodicTask(50*time.Millisecond, func() {
 		atomic.AddInt32(&counter, 1)
-		return nil
 	})
 
 	// Start the task
@@ -42,9 +40,8 @@ func TestPeriodicTask_Start(t *testing.T) {
 func TestPeriodicTask_MultipleStarts(t *testing.T) {
 	var counter int32
 
-	task := NewPeriodicTask(50*time.Millisecond, func() error {
+	task := NewPeriodicTask(50*time.Millisecond, func() {
 		atomic.AddInt32(&counter, 1)
-		return nil
 	})
 
 	// Start the task
@@ -82,8 +79,7 @@ func TestPeriodicTask_MultipleStarts(t *testing.T) {
 }
 
 func TestPeriodicTask_MultipleCloses(t *testing.T) {
-	task := NewPeriodicTask(50*time.Millisecond, func() error {
-		return nil
+	task := NewPeriodicTask(50*time.Millisecond, func() {
 	})
 
 	// Start the task
@@ -105,49 +101,11 @@ func TestPeriodicTask_MultipleCloses(t *testing.T) {
 	}
 }
 
-func TestPeriodicTask_TaskError(t *testing.T) {
-	var counter int32
-	var errorCount int32
-
-	// Create a test error
-	testError := fmt.Errorf("test error")
-
-	task := NewPeriodicTask(50*time.Millisecond, func() error {
-		current := atomic.AddInt32(&counter, 1)
-		// Return an error on the second run
-		if current == 2 {
-			atomic.AddInt32(&errorCount, 1)
-			return testError
-		}
-		return nil
-	})
-
-	// Start the task
-	task.Start()
-
-	// Sleep to allow multiple runs
-	time.Sleep(150 * time.Millisecond)
-
-	// Close the task
-	task.Close()
-
-	// The task should have continued running even after an error
-	if counter < 2 {
-		t.Errorf("Task should have run at least 2 times, but ran %d times", counter)
-	}
-
-	// Should have encountered exactly one error
-	if errorCount != 1 {
-		t.Errorf("Expected 1 error, but got %d", errorCount)
-	}
-}
-
 func TestPeriodicTask_ImmediateRun(t *testing.T) {
 	var counter int32
 
-	task := NewPeriodicTask(1*time.Hour, func() error {
+	task := NewPeriodicTask(1*time.Hour, func() {
 		atomic.AddInt32(&counter, 1)
-		return nil
 	}, WithStartImmediately())
 
 	// Start the task - it should run immediately despite the long interval
@@ -169,9 +127,8 @@ func TestPeriodicTask_ImmediateRun(t *testing.T) {
 func TestPeriodicTask_InitialDelay(t *testing.T) {
 	var counter int32
 
-	task := NewPeriodicTask(200*time.Millisecond, func() error {
+	task := NewPeriodicTask(200*time.Millisecond, func() {
 		atomic.AddInt32(&counter, 1)
-		return nil
 	}, WithInitialDelay(40*time.Millisecond))
 
 	task.Start()
