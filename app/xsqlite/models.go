@@ -12,7 +12,7 @@ import (
 )
 
 type Subscription struct {
-	ID                int `gorm:"primaryKey"`
+	ID                int
 	Name              string
 	Link              string
 	RemainingData     float64
@@ -24,28 +24,19 @@ type Subscription struct {
 }
 
 type OutboundHandlerGroup struct {
-	Name string `gorm:"primaryKey"`
+	Name       string `gorm:"primaryKey"`
+	PlaceOnTop bool
 }
 
 type OutboundHandlerGroupRelation struct {
 	GroupName string `gorm:"primaryKey"`
 	HandlerId int    `gorm:"primaryKey"`
-
-	Group   OutboundHandlerGroup `gorm:"foreignKey:GroupName;references:Name;constraint:OnDelete:CASCADE;"`
-	Handler OutboundHandler      `gorm:"foreignKey:HandlerId;constraint:OnDelete:CASCADE;"`
 }
 
-// type SelectorHandlerRelation struct {
-// 	SelectorName string `gorm:"not null;foreignKey:Name;references:HandlerSelector"`
-// 	HandlerId    int    `gorm:"not null;foreignKey:ID;references:OutboundHandler"`
-// }
-
 type GeoDomain struct {
-	ID            int `gorm:"primaryKey"`
+	ID            int `gorm:"primaryKey;autoIncrement"`
 	GeoDomain     []byte
 	DomainSetName string
-
-	DomainSet AtomicDomainSet `gorm:"foreignKey:DomainSetName;references:Name;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 type AtomicDomainSet struct {
@@ -57,7 +48,7 @@ type AtomicDomainSet struct {
 }
 
 type OutboundHandler struct {
-	ID          int `gorm:"primaryKey"`
+	ID          int
 	Selected    bool
 	CountryCode string
 	Ok          int
@@ -72,8 +63,6 @@ type OutboundHandler struct {
 	ServerIp         string
 	Support6         int
 	Support6TestTime int
-
-	Subscription *Subscription `gorm:"foreignKey:SubId;constraint:OnDelete:CASCADE;"`
 }
 
 // if last test time is more than 10 minutes ago, return true
