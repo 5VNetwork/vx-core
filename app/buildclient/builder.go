@@ -222,8 +222,11 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to connect database: %w", err)
 		}
-		db.Exec("PRAGMA journal_mode = WAL")
+		if runtime.GOOS != "android" {
+			db.Exec("PRAGMA journal_mode = WAL")
+		}
 		db.Exec("PRAGMA foreign_keys = ON")
+		db.Exec("PRAGMA busy_timeout = 5000")
 		x.DB = &xsqlite.Database{DB: db}
 		err = builder.addComponent(x.DB)
 		if err != nil {

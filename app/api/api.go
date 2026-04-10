@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	sync "sync"
 	"time"
 
@@ -157,8 +158,11 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 		if err != nil {
 			return nil, fmt.Errorf("failed to connect database: %w", err)
 		}
-		db.Exec("PRAGMA journal_mode = WAL")
+		if runtime.GOOS != "android" {
+			db.Exec("PRAGMA journal_mode = WAL")
+		}
 		db.Exec("PRAGMA foreign_keys = ON")
+		db.Exec("PRAGMA busy_timeout = 5000")
 		api.db = db
 	}
 
@@ -504,8 +508,11 @@ func (a *Api) OpenDb(ctx context.Context, req *OpenDbRequest) (*Receipt, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}
-	db.Exec("PRAGMA journal_mode = WAL")
+	if runtime.GOOS != "android" {
+		db.Exec("PRAGMA journal_mode = WAL")
+	}
 	db.Exec("PRAGMA foreign_keys = ON")
+	db.Exec("PRAGMA busy_timeout = 5000")
 
 	a.dbLock.Lock()
 	defer a.dbLock.Unlock()
