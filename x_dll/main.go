@@ -204,7 +204,7 @@ func startService(path string, name string) error {
 	if err != nil {
 		return fmt.Errorf("could not start service: %v", err)
 	}
-	timeout := time.Now().Add(10 * time.Second)
+	timeout := time.Now().Add(16 * time.Second)
 	for {
 		status, err := s.Query()
 		if err != nil {
