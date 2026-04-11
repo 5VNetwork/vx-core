@@ -19,8 +19,14 @@ type Handler interface {
 	PacketHandler
 }
 
+type Conn interface {
+	ReadDeadline
+	io.Reader
+	io.Writer
+}
+
 type ConnHandler interface {
-	HandleConn(ctx context.Context, dst net.Destination, rw io.ReadWriter) error
+	HandleConn(ctx context.Context, dst net.Destination, rw Conn) error
 }
 
 type FlowHandler interface {

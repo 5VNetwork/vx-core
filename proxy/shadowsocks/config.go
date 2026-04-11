@@ -207,7 +207,7 @@ func (c *AEADCipher) NewDecryptionReader(key []byte, iv []byte, reader io.Reader
 
 func (c *AEADCipher) NewDecryptionReaderIO(key []byte, iv []byte, reader io.Reader) (io.Reader, error) {
 	auth := c.createAuthenticator(key, iv)
-	return crypto.NewAuthenticationReader1(auth, &crypto.AEADChunkSizeParser{
+	return crypto.NewAuthenticationReaderIO(auth, &crypto.AEADChunkSizeParser{
 		Auth: auth,
 	}, reader, protocol.TransferTypeStream, nil), nil
 }

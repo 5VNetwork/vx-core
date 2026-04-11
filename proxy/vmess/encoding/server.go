@@ -597,7 +597,7 @@ func (s *ServerSession) DecodeRequestBody1(ctx context.Context, request *protoco
 				NonceGenerator:          crypto.GenerateEmptyBytes(),
 				AdditionalDataGenerator: crypto.GenerateEmptyBytes(),
 			}
-			return crypto.NewAuthenticationReader1(auth, sizeParser, reader, protocol.TransferTypePacket, padding), nil
+			return crypto.NewAuthenticationReaderIO(auth, sizeParser, reader, protocol.TransferTypePacket, padding), nil
 		}
 		return reader, nil
 
@@ -610,7 +610,7 @@ func (s *ServerSession) DecodeRequestBody1(ctx context.Context, request *protoco
 				NonceGenerator:          crypto.GenerateEmptyBytes(),
 				AdditionalDataGenerator: crypto.GenerateEmptyBytes(),
 			}
-			return crypto.NewAuthenticationReader1(auth, sizeParser, cryptionReader, request.Command.TransferType(), padding), nil
+			return crypto.NewAuthenticationReaderIO(auth, sizeParser, cryptionReader, request.Command.TransferType(), padding), nil
 		}
 		return cryptionReader, nil
 
@@ -632,7 +632,7 @@ func (s *ServerSession) DecodeRequestBody1(ctx context.Context, request *protoco
 			}
 			sizeParser = NewAEADSizeParser(lengthAuth)
 		}
-		return crypto.NewAuthenticationReader1(auth, sizeParser, reader, request.Command.TransferType(), padding), nil
+		return crypto.NewAuthenticationReaderIO(auth, sizeParser, reader, request.Command.TransferType(), padding), nil
 
 	case protocol.SecurityType_CHACHA20_POLY1305:
 		aead, _ := chacha20poly1305.New(GenerateChacha20Poly1305Key(s.requestBodyKey[:]))
@@ -654,7 +654,7 @@ func (s *ServerSession) DecodeRequestBody1(ctx context.Context, request *protoco
 			}
 			sizeParser = NewAEADSizeParser(lengthAuth)
 		}
-		return crypto.NewAuthenticationReader1(auth, sizeParser, reader, request.Command.TransferType(), padding), nil
+		return crypto.NewAuthenticationReaderIO(auth, sizeParser, reader, request.Command.TransferType(), padding), nil
 
 	default:
 		return nil, errors.New("invalid option: Security")
@@ -679,7 +679,7 @@ func (s *ServerSession) EncodeResponseBody1(request *protocol.RequestHeader, wri
 	case protocol.SecurityType_NONE:
 		if request.Option.Has(protocol.RequestOptionChunkStream) {
 			if request.Command.TransferType() == protocol.TransferTypeStream {
-				return crypto.NewChunkStreamWriter1(sizeParser, writer), nil
+				return crypto.NewChunkStreamWriterIO(sizeParser, writer), nil
 			}
 
 			auth := &crypto.AEADAuthenticator{

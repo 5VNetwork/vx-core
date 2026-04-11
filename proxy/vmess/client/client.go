@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"hash/crc64"
+	"io"
 	"time"
 
 	"github.com/5vnetwork/vx-core/common/buf"
@@ -380,134 +381,134 @@ func init() {
 	}
 }
 
-// func (c *Client) Dial(ctx context.Context, dst net.Destination) (net.Conn, error) {
-// 	return c.DialWithInitialData(ctx, dst, nil)
-// }
+func (c *Client) Dial(ctx context.Context, dst net.Destination) (net.Conn, error) {
+	return c.DialWithInitialData(ctx, dst, nil)
+}
 
-// func (c *Client) DialWithInitialData(ctx context.Context, dst net.Destination, initialData []byte) (net.Conn, error) {
-// 	command := protocol.RequestCommandTCP
-// 	if dst.Network == net.Network_UDP {
-// 		command = protocol.RequestCommandUDP
-// 	}
-// 	if dst.Address.Family().IsDomain() && dst.Address.Domain() == mux.MuxCoolAddressDst.Domain() {
-// 		command = protocol.RequestCommandMux
-// 	}
+func (c *Client) DialWithInitialData(ctx context.Context, dst net.Destination, initialData []byte) (net.Conn, error) {
+	command := protocol.RequestCommandTCP
+	if dst.Network == net.Network_UDP {
+		command = protocol.RequestCommandUDP
+	}
+	if dst.Address.Family().IsDomain() && dst.Address.Domain() == mux.MuxCoolAddressDst.Domain() {
+		command = protocol.RequestCommandMux
+	}
 
-// 	rec := c.ServerPicker.PickServer()
-// 	account := rec.GetProtocolSetting().(*vmess.MemoryAccount)
+	rec := c.ServerPicker.PickServer()
+	account := rec.GetProtocolSetting().(*vmess.MemoryAccount)
 
-// 	conn, err := c.Dialer.Dial(ctx, rec.Destination())
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to dial, %w", err)
-// 	}
+	conn, err := c.Dialer.Dial(ctx, rec.Destination())
+	if err != nil {
+		return nil, fmt.Errorf("failed to dial, %w", err)
+	}
 
-// 	request := &protocol.RequestHeader{
-// 		Version:  encoding.Version,
-// 		Account:  account,
-// 		Command:  command,
-// 		Address:  dst.Address,
-// 		Port:     dst.Port,
-// 		Option:   protocol.RequestOptionChunkStream,
-// 		Security: account.Security,
-// 	}
-// 	if request.Security == protocol.SecurityType_AES128_GCM || request.Security == protocol.SecurityType_NONE || request.Security == protocol.SecurityType_CHACHA20_POLY1305 {
-// 		request.Option.Set(protocol.RequestOptionChunkMasking)
-// 	}
-// 	if shouldEnablePadding(request.Security) && request.Option.Has(protocol.RequestOptionChunkMasking) {
-// 		request.Option.Set(protocol.RequestOptionGlobalPadding)
-// 	}
-// 	if request.Security == protocol.SecurityType_ZERO {
-// 		request.Security = protocol.SecurityType_NONE
-// 		request.Option.Clear(protocol.RequestOptionChunkStream)
-// 		request.Option.Clear(protocol.RequestOptionChunkMasking)
-// 	}
-// 	if account.AuthenticatedLengthExperiment {
-// 		request.Option.Set(protocol.RequestOptionAuthenticatedLength)
-// 	}
-// 	isAEAD := false
-// 	if !aeadDisabled && len(account.AlterIDs) == 0 {
-// 		isAEAD = true
-// 	}
-// 	hashkdf := hmac.New(sha256.New, []byte("VMessBF"))
-// 	hashkdf.Write(account.ID.Bytes())
+	request := &protocol.RequestHeader{
+		Version:  encoding.Version,
+		Account:  account,
+		Command:  command,
+		Address:  dst.Address,
+		Port:     dst.Port,
+		Option:   protocol.RequestOptionChunkStream,
+		Security: account.Security,
+	}
+	if request.Security == protocol.SecurityType_AES128_GCM || request.Security == protocol.SecurityType_NONE || request.Security == protocol.SecurityType_CHACHA20_POLY1305 {
+		request.Option.Set(protocol.RequestOptionChunkMasking)
+	}
+	if shouldEnablePadding(request.Security) && request.Option.Has(protocol.RequestOptionChunkMasking) {
+		request.Option.Set(protocol.RequestOptionGlobalPadding)
+	}
+	if request.Security == protocol.SecurityType_ZERO {
+		request.Security = protocol.SecurityType_NONE
+		request.Option.Clear(protocol.RequestOptionChunkStream)
+		request.Option.Clear(protocol.RequestOptionChunkMasking)
+	}
+	if account.AuthenticatedLengthExperiment {
+		request.Option.Set(protocol.RequestOptionAuthenticatedLength)
+	}
+	isAEAD := false
+	if !aeadDisabled && len(account.AlterIDs) == 0 {
+		isAEAD = true
+	}
+	hashkdf := hmac.New(sha256.New, []byte("VMessBF"))
+	hashkdf.Write(account.ID.Bytes())
 
-// 	behaviorSeed := crc64.Checksum(hashkdf.Sum(nil), crc64.MakeTable(crc64.ISO))
+	behaviorSeed := crc64.Checksum(hashkdf.Sum(nil), crc64.MakeTable(crc64.ISO))
 
-// 	session := encoding.NewClientSession(ctx, isAEAD, protocol.DefaultIDHash, int64(behaviorSeed))
+	session := encoding.NewClientSession(ctx, isAEAD, protocol.DefaultIDHash, int64(behaviorSeed))
 
-// 	writer := buf.NewBufferedWriter(buf.NewWriter(conn))
-// 	if err := session.EncodeRequestHeader(request, writer); err != nil {
-// 		conn.Close()
-// 		return nil, fmt.Errorf("failed to encode request, %w", err)
-// 	}
+	writer := buf.NewBufferedWriter(buf.NewWriter(conn))
+	if err := session.EncodeRequestHeader(request, writer); err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("failed to encode request, %w", err)
+	}
 
-// 	bodyWriter, err := session.EncodeRequestBody1(request, writer)
-// 	if err != nil {
-// 		conn.Close()
-// 		return nil, fmt.Errorf("failed to start encoding, %w", err)
-// 	}
-// 	if len(initialData) > 0 {
-// 		_, err := bodyWriter.Write(initialData)
-// 		if err != nil {
-// 			conn.Close()
-// 			return nil, err
-// 		}
-// 	}
-// 	if err := writer.SetBuffered(false); err != nil {
-// 		conn.Close()
-// 		return nil, err
-// 	}
+	bodyWriter, err := session.EncodeRequestBodyIO(request, writer)
+	if err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("failed to start encoding, %w", err)
+	}
+	if len(initialData) > 0 {
+		_, err := bodyWriter.Write(initialData)
+		if err != nil {
+			conn.Close()
+			return nil, err
+		}
+	}
+	if err := writer.SetBuffered(false); err != nil {
+		conn.Close()
+		return nil, err
+	}
 
-// 	return &clientConn{
-// 		Conn:              conn,
-// 		Writer:            bodyWriter,
-// 		session:           session,
-// 		request:           request,
-// 		client:            c,
-// 		serverDestination: rec.Destination(),
-// 		closeWrite:        request.Option.Has(protocol.RequestOptionChunkStream),
-// 	}, nil
-// }
+	return &clientConn{
+		Conn:              conn,
+		Writer:            bodyWriter,
+		session:           session,
+		request:           request,
+		client:            c,
+		serverDestination: rec.Destination(),
+		closeWrite:        request.Option.Has(protocol.RequestOptionChunkStream),
+	}, nil
+}
 
-// type clientConn struct {
-// 	net.Conn
-// 	io.Reader
-// 	io.Writer
-// 	session           *encoding.ClientSession
-// 	serverDestination net.Destination
-// 	client            *Client
-// 	request           *protocol.RequestHeader
-// 	closeWrite        bool
-// }
+type clientConn struct {
+	net.Conn
+	io.Reader
+	io.Writer
+	session           *encoding.ClientSession
+	serverDestination net.Destination
+	client            *Client
+	request           *protocol.RequestHeader
+	closeWrite        bool
+}
 
-// func (c *clientConn) Write(b []byte) (int, error) {
-// 	return c.Writer.Write(b)
-// }
+func (c *clientConn) Write(b []byte) (int, error) {
+	return c.Writer.Write(b)
+}
 
-// func (c *clientConn) Read(b []byte) (int, error) {
-// 	if c.Reader == nil {
-// 		header, err := c.session.DecodeResponseHeader(c.Conn)
-// 		if err != nil {
-// 			return 0, fmt.Errorf("failed to read header, %w", err)
-// 		}
-// 		c.client.handleCommand(c.serverDestination, header.Command)
-// 		bodyReader, err := c.session.DecodeResponseBody1(c.request, c.Conn)
-// 		if err != nil {
-// 			return 0, fmt.Errorf("failed to start encoding response, %w", err)
-// 		}
-// 		c.request = nil
-// 		c.session = nil
-// 		c.client = nil
-// 		c.Reader = bodyReader
-// 	}
+func (c *clientConn) Read(b []byte) (int, error) {
+	if c.Reader == nil {
+		header, err := c.session.DecodeResponseHeader(c.Conn)
+		if err != nil {
+			return 0, fmt.Errorf("failed to read header, %w", err)
+		}
+		c.client.handleCommand(c.serverDestination, header.Command)
+		bodyReader, err := c.session.DecodeResponseBody1(c.request, c.Conn)
+		if err != nil {
+			return 0, fmt.Errorf("failed to start encoding response, %w", err)
+		}
+		c.request = nil
+		c.session = nil
+		c.client = nil
+		c.Reader = bodyReader
+	}
 
-// 	return c.Reader.Read(b)
-// }
+	return c.Reader.Read(b)
+}
 
-// func (c *clientConn) CloseWrite() error {
-// 	if c.closeWrite {
-// 		_, err := c.Writer.Write([]byte{})
-// 		return err
-// 	}
-// 	return nil
-// }
+func (c *clientConn) CloseWrite() error {
+	if c.closeWrite {
+		_, err := c.Writer.Write([]byte{})
+		return err
+	}
+	return nil
+}

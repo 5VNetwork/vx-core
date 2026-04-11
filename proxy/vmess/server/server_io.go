@@ -157,7 +157,7 @@ func (h *ServerIO) processCommon(ctx context.Context, conn net.Conn, request *pr
 	}
 	// if the following is not sent, the client will get an error "failed to read size" caused by
 	// AuthenticationReader.readSize(), which reads two bytes size from vmess stream
-	// This is acutally an  end signal of the stream.
+	// This is acutally an end signal of the stream.
 	var closeWrite func()
 	if request.Option.Has(protocol.RequestOptionChunkStream) {
 		closeWrite = func() {

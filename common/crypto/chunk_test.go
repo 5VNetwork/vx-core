@@ -52,7 +52,7 @@ func TestChunkStreamIO(t *testing.T) {
 func TestChunkStreamIO1(t *testing.T) {
 	cache := bytes.NewBuffer(make([]byte, 0, 8192))
 
-	writer := NewChunkStreamWriter1(PlainChunkSizeParser{}, cache)
+	writer := NewChunkStreamWriterIO(PlainChunkSizeParser{}, cache)
 	reader := NewChunkStreamReader1(PlainChunkSizeParser{}, cache, 0)
 
 	b := buf.New()
