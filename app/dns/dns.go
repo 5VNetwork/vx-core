@@ -87,11 +87,7 @@ type DnsMsgMeta struct {
 	Src *net.Destination
 }
 
-func (d *DnsMsgMeta) Tcp() bool {
-	return d.Src != nil && d.Src.Network == net.Network_TCP
-}
-
-func (d *Dns) HandleQuery(ctx context.Context, msg *DnsMsgMeta) (*dns.Msg, error) {
+func (d *Dns) HandleQuery(ctx context.Context, msg *DnsMsgMeta, tcp bool) (*dns.Msg, error) {
 	if len(msg.Question) == 0 {
 		return nil, ErrNoQuestion
 	}
@@ -103,7 +99,7 @@ func (d *Dns) HandleQuery(ctx context.Context, msg *DnsMsgMeta) (*dns.Msg, error
 
 	for _, dnsRule := range d.dnsRules {
 		if dnsRule.match(msg) {
-			return dnsRule.dnsServer.HandleQuery(ctx, msg.Msg, msg.Tcp())
+			return dnsRule.dnsServer.HandleQuery(ctx, msg.Msg, tcp)
 		}
 	}
 	return nil, ErrAllServersFailed
@@ -265,5 +261,5 @@ type DnsToDnsServer struct {
 }
 
 func (d *DnsToDnsServer) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool) (*dns.Msg, error) {
-	return d.Dns.HandleQuery(ctx, &DnsMsgMeta{Msg: msg})
+	return d.Dns.HandleQuery(ctx, &DnsMsgMeta{Msg: msg}, tcp)
 }

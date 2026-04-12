@@ -27,7 +27,7 @@ type DnsHandler struct {
 }
 
 type dnsServer interface {
-	HandleQuery(ctx context.Context, msg *DnsMsgMeta) (*d.Msg, error)
+	HandleQuery(ctx context.Context, msg *DnsMsgMeta, tcp bool) (*d.Msg, error)
 }
 
 func NewHandlerV() *DnsHandler {
@@ -118,7 +118,7 @@ func MsgToBuffer(msg *d.Msg) (*buf.Buffer, error) {
 }
 
 func (s *DnsHandler) handleDnsQuery(ctx context.Context, b *buf.Buffer, msg *d.Msg, writer dns.MessageWriter, src net.Destination) {
-	reply, err := s.dnsServer.HandleQuery(ctx, &DnsMsgMeta{Msg: msg, Src: &src})
+	reply, err := s.dnsServer.HandleQuery(ctx, &DnsMsgMeta{Msg: msg, Src: &src}, src.Network == net.Network_TCP)
 	if err != nil {
 		b.Release()
 		log.Ctx(ctx).Err(err).Msg("failed to handle DNS message")
