@@ -317,9 +317,6 @@ func (s *UserLogger) logSessionError(info *session.Info, err error) {
 		if errors.Is(err, io.EOF) {
 			return
 		}
-		if errors.Is(err, context.Canceled) {
-			return
-		}
 		se := &SessionError{
 			Up:   uint32(info.SessionUpCounter.Load()),
 			Down: uint32(info.SessionDownCounter.Load()),

@@ -141,6 +141,7 @@ func (s *Selector) GetHandler(info *session.Info) i.Outbound {
 	return s.getBalancer().GetHandler(info)
 }
 
+// reload handlers
 func (s *Selector) Load() {
 	handlers, err := s.filter.Load().(Filter).GetHandlers()
 	if err != nil {
