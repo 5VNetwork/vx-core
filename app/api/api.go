@@ -327,11 +327,12 @@ func (a *Api) SpeedTest(req *SpeedTestRequest, in Api_SpeedTestServer) error {
 				Tag: util.GetTag(t),
 			}
 			h, err := create.NewHandler(&create.HandlerConfig{
-				HandlerConfig: t,
-				DialerFactory: a.getDialerFactory(),
-				Policy:        policy.New(),
-				IPResolver:    a.getIPResolver(),
-				EchResolver:   a.echResolver,
+				HandlerConfig:               t,
+				DialerFactory:               a.getDialerFactory(),
+				Policy:                      policy.New(),
+				IPResolver:                  a.getIPResolver(),
+				EchResolver:                 a.echResolver,
+				IPResolverForRequestAddress: a.getIPResolver(),
 			})
 			if err != nil {
 				log.Debug().Err(err).Str("tag", util.GetTag(t)).Msg("failed to create outbound handler")

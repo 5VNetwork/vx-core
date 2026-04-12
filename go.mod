@@ -1,10 +1,10 @@
 module github.com/5vnetwork/vx-core
 
-go 1.25.1
+go 1.25.5
 
 require (
 	anytls v0.0.0-00010101000000-000000000000
-	buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260330121503-bba1d0a80e81.1
+	buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260412140412-a48cdf140436.1
 	github.com/apernet/hysteria/core/v2 v2.0.0-00010101000000-000000000000
 	github.com/apernet/hysteria/extras/v2 v2.6.5
 	github.com/apernet/quic-go v0.57.2-0.20260111184307-eec823306178
@@ -38,17 +38,17 @@ require (
 	github.com/xtls/reality v0.0.0-20250527000105-e679ef7bb130
 	go.uber.org/fx v1.24.0
 	go4.org/mem v0.0.0-20220726221520-4f986261bf13
-	golang.org/x/crypto v0.49.0
+	golang.org/x/crypto v0.50.0
 	golang.org/x/exp v0.0.0-20251125195548-87e1e737ad39
-	golang.org/x/net v0.52.0
+	golang.org/x/net v0.53.0
 	golang.org/x/sync v0.20.0
-	golang.zx2c4.com/wireguard v0.0.0-20231211153847-12269c276173
+	golang.zx2c4.com/wireguard v0.0.0-20250521234502-f333402bd9cb
 	golang.zx2c4.com/wireguard/windows v0.5.3
 	google.golang.org/grpc v1.75.1
 	google.golang.org/protobuf v1.36.11
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.0
-	gvisor.dev/gvisor v0.0.0-20250428193742-2d800c3129d5
+	gvisor.dev/gvisor v0.0.0-20260122175437-89a5d21be8f0
 	lukechampine.com/blake3 v1.4.1
 	tailscale.com v1.76.6
 )
@@ -87,10 +87,10 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20240314144324-c7f7c6466f7f // indirect
-	golang.org/x/mobile v0.0.0-20260312152759-81488f6aeb60 // indirect
-	golang.org/x/mod v0.34.0 // indirect
+	golang.org/x/mobile v0.0.0-20260410095206-2cfb76559b7b // indirect
+	golang.org/x/mod v0.35.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
-	golang.org/x/tools v0.43.0 // indirect
+	golang.org/x/tools v0.44.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251014184007-4626949a642f // indirect
 	honnef.co/go/tools v0.5.1 // indirect
@@ -100,8 +100,8 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
-	golang.org/x/sys v0.42.0
-	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/sys v0.43.0
+	golang.org/x/text v0.36.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1
 )
 

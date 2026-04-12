@@ -46,11 +46,12 @@ func (a *Api) HandlerTest(ctx context.Context, req *HandlerUsableRequest) (ret H
 	}
 
 	h, err := create.NewHandler(&create.HandlerConfig{
-		HandlerConfig: req.Handler,
-		DialerFactory: a.getDialerFactory(),
-		Policy:        policy.New(),
-		IPResolver:    a.getIPResolver(),
-		EchResolver:   a.echResolver,
+		HandlerConfig:               req.Handler,
+		DialerFactory:               a.getDialerFactory(),
+		Policy:                      policy.New(),
+		IPResolver:                  a.getIPResolver(),
+		IPResolverForRequestAddress: a.getIPResolver(),
+		EchResolver:                 a.echResolver,
 	})
 	if err != nil {
 		logger.Debug().Msgf("Handler %s create handler err: %v", configs.HandlerTag(req.Handler), err)

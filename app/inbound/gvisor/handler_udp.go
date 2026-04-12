@@ -33,14 +33,14 @@ func SetUDPHandler(in *TunGvisorInbound) StackOption {
 	return func(s *stack.Stack) error {
 		udpForwarder := gvisor_udp.NewForwarder(s,
 			// this function is called on every udp packet that does not belongs to an exsiting flow
-			func(r *gvisor_udp.ForwarderRequest) {
+			func(r *gvisor_udp.ForwarderRequest) bool {
 				wg := new(waiter.Queue)
 				// this registers a flow, packets belong to the flow will not be given to this callback anymore
 				linkedEndpoint, err := r.CreateEndpoint(wg)
 				if err != nil {
 					// errors.New("failed to create endpoint: ", err).WriteToLog(session.ExportIDToError(ctx))
 					log.Error().Str("err", err.String()).Msg("failed to create endpoint")
-					return
+					return false
 				}
 				conn := &udpConn{
 					UDPConn: gonet.NewUDPConn(wg, linkedEndpoint),
@@ -48,6 +48,7 @@ func SetUDPHandler(in *TunGvisorInbound) StackOption {
 				}
 
 				go in.HandleUdp(conn)
+				return true
 			})
 		s.SetTransportProtocolHandler(gvisor_udp.ProtocolNumber, udpForwarder.HandlePacket)
 		return nil

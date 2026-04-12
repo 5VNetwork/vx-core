@@ -31,6 +31,7 @@ import (
 	"github.com/5vnetwork/vx-core/proxy/shadowsocks_2022"
 	"github.com/5vnetwork/vx-core/proxy/socks"
 	"github.com/5vnetwork/vx-core/proxy/trojan"
+	"github.com/5vnetwork/vx-core/proxy/wireguard"
 
 	"github.com/5vnetwork/vx-core/proxy/vless"
 	vless_client "github.com/5vnetwork/vx-core/proxy/vless/outbound"
@@ -135,11 +136,6 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 		return freedomHandler, nil
 	}
 
-	sp, err := getPortSelector(config.Address, config.Port, config.Ports)
-	if err != nil {
-		return nil, err
-	}
-
 	// dialer
 	transportConfig := TransportConfigToMemoryConfig(config.Transport,
 		readCounter, writeCounter, config.ECHResolver)
@@ -149,6 +145,25 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 		return nil, err
 	}
 
+	if conf, ok := m.(*configs.WireguardClientConfig); ok {
+		handler, err := wireguard.New(wireguard.HandlerSettings{
+			Name:                 config.Tag,
+			Conf:                 conf,
+			Dialer:               dialer,
+			Strategy:             domain.DomainStrategy(config.DomainStrategy),
+			DnsForRequestAddress: config.IPResolverForRequestAddress,
+			DnsForEndpoint:       config.IPResolver,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return handler, nil
+	}
+
+	sp, err := getPortSelector(config.Address, config.Port, config.Ports)
+	if err != nil {
+		return nil, err
+	}
 	var pc i.Handler
 	switch m := m.(type) {
 	case *configs.HttpClientConfig:
