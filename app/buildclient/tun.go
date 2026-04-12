@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"net/netip"
 
-	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/client"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/inbound/reject"
@@ -23,7 +23,7 @@ func Tun(config *configs.TmConfig, fc *Builder, client *client.Client) error {
 	if config.Tun != nil {
 		var rejector *reject.Rejector
 		if config.Tun.GetRejectIpv6() {
-			rejector := &reject.Rejector{
+			rejector = &reject.Rejector{
 				InboundTag:  config.Tun.Tag,
 				FakeDnsPool: client.AllFakeDns,
 			}
