@@ -21,9 +21,6 @@ import (
 
 func (d *Dispatcher) Relay(ctx context.Context, info *session.Info,
 	left, right any, outbound i.Outbound) error {
-	ups, downs := d.GetCounters.GetCounters(ctx, info, outbound)
-	info.UpCounter = ups
-	info.DownCounter = downs
 
 	var activityChecker *signal.ActivityChecker
 	if timeout := d.getTimeout(info); timeout != 0 {

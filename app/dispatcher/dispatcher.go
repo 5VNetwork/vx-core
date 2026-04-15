@@ -34,11 +34,12 @@ type Dispatcher struct {
 	SessionStartHooks           []SessionStartHook
 	SessionEndHooks             []SessionEndHook
 	TimeoutSetting              i.TimeoutSetting
-	GetCounters                 GetCounters
 	OnFallbacks                 []OnFallback
 	FallbackTimeout             time.Duration
 
-	OutStats *OutStats
+	OutStats            *OutStats
+	SessionStats        bool
+	RewriteIpv6ToDomain bool
 
 	Flows       atomic.Int32
 	PacketConns atomic.Int32
@@ -173,6 +174,8 @@ func (d *Dispatcher) HandleFlow(ctx context.Context, dst net.Destination,
 		}
 	}
 
+	rw = d.sessionStats(info, rw).(buf.ReaderWriter)
+
 	// if dialer, ok := handler.(i.ProxyDialer); ok {
 	// 	var conn i.FlowConn
 	// 	if ddlRw, ok := rw.(i.DeadlineRW); ok &&
@@ -236,7 +239,7 @@ loop:
 			}
 		} else {
 			err = handler.HandleFlow(ctx, info.Target,
-				d.statsHandler(ctx, rw, handler.Tag()).(buf.ReaderWriter))
+				d.handler(ctx, info, rw, handler).(buf.ReaderWriter))
 			if err != nil {
 				d.onHandlerError(ctx, info, handler.Tag(), err)
 			}
@@ -271,7 +274,7 @@ func (d *Dispatcher) cacheHandle(ctx context.Context, info *session.Info,
 	}
 
 	err = handler.HandleFlow(ctx, info.Target,
-		d.statsHandler(ctx, cacheRw, handler.Tag()).(buf.ReaderWriter))
+		d.handler(ctx, info, cacheRw, handler).(buf.ReaderWriter))
 	if err != nil {
 		d.onHandlerError(ctx, info, handler.Tag(), err)
 
@@ -337,6 +340,7 @@ func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, 
 			return err
 		}
 	}
+	pc = d.sessionStats(info, pc).(udp.PacketReaderWriter)
 
 	// if listener, ok := handler.(i.ProxyPacketListener); ok {
 	// 	var udpConn udp.UdpConn
@@ -349,7 +353,7 @@ func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, 
 	// 	err = helper.RelayUDPPacketConn(ctx, pc, udpConn)
 	// } else {
 	err = handler.HandlePacketConn(ctx, info.Target,
-		d.statsHandler(ctx, pc, handler.Tag()).(udp.PacketReaderWriter))
+		d.handler(ctx, info, pc, handler).(udp.PacketReaderWriter))
 	// }
 	if err != nil {
 		d.onHandlerError(ctx, info, handler.Tag(), err)
@@ -455,11 +459,55 @@ func shouldOverride(info *session.Info, domainOverride []string, fakeIPNotFound 
 	return false
 }
 
-func (d *Dispatcher) statsHandler(ctx context.Context, rw any, tag string) any {
+func (d *Dispatcher) sessionStats(info *session.Info, rw any) any {
+	if d.SessionStats {
+		if r, ok := rw.(i.DeadlineRW); ok {
+			rw = &StatsDeadlineRW{
+				DeadlineRW: r,
+				upCounter: session.AtomicCounter{
+					Counter: &info.SessionUpCounter,
+				},
+				downCounter: session.AtomicCounter{
+					Counter: &info.SessionDownCounter,
+				},
+			}
+		} else if r, ok := rw.(buf.ReaderWriter); ok {
+			rw = &StatsReaderWriter{
+				ReaderWriter: r,
+				upCounter: session.AtomicCounter{
+					Counter: &info.SessionUpCounter,
+				},
+				downCounter: session.AtomicCounter{
+					Counter: &info.SessionDownCounter,
+				},
+			}
+		} else {
+			rw = &StatsPacketConn{
+				PacketReaderWriter: rw.(udp.PacketReaderWriter),
+				upCounter: session.AtomicCounter{
+					Counter: &info.SessionUpCounter,
+				},
+				downCounter: session.AtomicCounter{
+					Counter: &info.SessionDownCounter,
+				},
+			}
+		}
+	}
+	return rw
+}
+
+func (d *Dispatcher) handler(ctx context.Context, info *session.Info, rw any, handler i.Outbound) any {
+	if d.RewriteIpv6ToDomain && info.Target.Address.Family().IsIP() && info.Target.Address.Family().IsIPv6() {
+		if handlerSupport6, ok := handler.(i.HandlerWith6Info); ok && !handlerSupport6.Support6() && info.SniffedDomain != "" {
+			log.Ctx(ctx).Debug().Str("handler", handler.Tag()).Str("dst", info.Target.String()).Msg("ipv6 not supported, replace it with the domain")
+			info.Target.Address = net.DomainAddress(info.SniffedDomain)
+		}
+	}
+
 	if d.OutStats == nil {
 		return rw
 	}
-	stats := d.OutStats.Get(tag)
+	stats := d.OutStats.Get(handler.Tag())
 	if stats == nil {
 		return rw
 	}

@@ -30,8 +30,10 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 	cc.Selectors = selectors
 
 	d := &dispatcher.Dispatcher{
-		FallbackTimeout: time.Duration(config.GetDispatcher().GetFallbackTimeout()) * time.Second,
-		OutStats:        cc.OutStats,
+		FallbackTimeout:     time.Duration(config.GetDispatcher().GetFallbackTimeout()) * time.Second,
+		OutStats:            cc.OutStats,
+		SessionStats:        config.GetPolicy().GetSessionStats(),
+		RewriteIpv6ToDomain: config.GetDispatcher().GetIpv6UseDomain(),
 	}
 
 	if config.Log.LogLevel == configs.Level_DEBUG {
@@ -57,19 +59,12 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 	}
 	d.AddBeforeHandlerSelectionHook(rewriteDestination)
 
-	if config.GetDispatcher().GetIpv6UseDomain() {
-		d.AddAfterHandlerSelectionHook(&dispatcher.RewriteIPv6ToDomainHook{})
-	}
-
 	cc.Dispatcher = d
 	fc.requireFeature(func(om *outbound.Manager, p *policy.Policy,
 		ul *userlogger.UserLogger) {
 		d.AddAfterHandlerSelectionHook(ul)
 		d.AddBeforeHandlerSelectionHook(&dispatcher.IdleHook{
 			TimeoutPolicy: p,
-		})
-		d.AddAfterHandlerSelectionHook(&dispatcher.StatsHook{
-			StatsPolicy: p,
 		})
 		d.AddSessionEndHook(ul)
 		d.AddOnFallback(ul)

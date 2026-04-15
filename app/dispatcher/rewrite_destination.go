@@ -86,15 +86,3 @@ func (p *RewriteDestinationHook) BeforeHandlerSelection(ctx context.Context, si 
 	return ctx, rw, nil
 }
 
-type RewriteIPv6ToDomainHook struct{}
-
-func (p *RewriteIPv6ToDomainHook) AfterHandlerSelection(ctx context.Context, info *session.Info, rw any,
-	handler i.Outbound) (context.Context, any, error) {
-	if info.Target.Address.Family().IsIP() && info.Target.Address.Family().IsIPv6() {
-		if handlerSupport6, ok := handler.(i.HandlerWith6Info); ok && !handlerSupport6.Support6() && info.SniffedDomain != "" {
-			log.Ctx(ctx).Debug().Str("handler", handler.Tag()).Str("dst", info.Target.String()).Msg("ipv6 not supported, replace it with the domain")
-			info.Target.Address = mynet.DomainAddress(info.SniffedDomain)
-		}
-	}
-	return ctx, rw, nil
-}

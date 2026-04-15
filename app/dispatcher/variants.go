@@ -236,14 +236,14 @@ func (p *RealIpPacketConn) WritePacket(packet *udp.Packet) error {
 type StatsReaderWriter struct {
 	buf.ReaderWriter
 	// might be nil
-	upCounter session.UpCounters
+	upCounter session.UpCounter
 	// might be nil
-	downCounter   session.DownCounters
+	downCounter   session.DownCounter
 	activeChecker *atomic.Value
 }
 
-func NewStatsReaderWriter(rw buf.ReaderWriter, upCounter session.UpCounters,
-	downCounter session.DownCounters, activeChecker *atomic.Value) *StatsReaderWriter {
+func NewStatsReaderWriter(rw buf.ReaderWriter, upCounter session.UpCounter,
+	downCounter session.DownCounter, activeChecker *atomic.Value) *StatsReaderWriter {
 	return &StatsReaderWriter{
 		ReaderWriter:  rw,
 		upCounter:     upCounter,
@@ -269,14 +269,14 @@ func (w *StatsReaderWriter) ReadMultiBuffer() (buf.MultiBuffer, error) {
 type StatsDeadlineRW struct {
 	i.DeadlineRW
 	// might be nil
-	upCounter session.UpCounters
+	upCounter session.UpCounter
 	// might be nil
-	downCounter   session.DownCounters
+	downCounter   session.DownCounter
 	activeChecker *atomic.Value
 }
 
-func NewStatsDeadlineRW(rw i.DeadlineRW, upCounter session.UpCounters,
-	downCounter session.DownCounters, activeChecker *atomic.Value) *StatsDeadlineRW {
+func NewStatsDeadlineRW(rw i.DeadlineRW, upCounter session.UpCounter,
+	downCounter session.DownCounter, activeChecker *atomic.Value) *StatsDeadlineRW {
 	return &StatsDeadlineRW{
 		DeadlineRW:    rw,
 		upCounter:     upCounter,
@@ -302,9 +302,9 @@ func (w *StatsDeadlineRW) ReadMultiBuffer() (buf.MultiBuffer, error) {
 type StatsPacketConn struct {
 	udp.PacketReaderWriter
 	// might be nil
-	upCounter session.UpCounters
+	upCounter session.UpCounter
 	// might be nil
-	downCounter   session.DownCounters
+	downCounter   session.DownCounter
 	activeChecker *atomic.Value
 }
 

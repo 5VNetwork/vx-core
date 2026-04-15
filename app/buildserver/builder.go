@@ -221,10 +221,6 @@ func NewDispatcher(params DispatcherParams) (DispatcherResult, error) {
 	dp.AddBeforeHandlerSelectionHook(&dispatcher.IdleHook{
 		TimeoutPolicy: params.Timeout,
 	})
-	dp.AddAfterHandlerSelectionHook(&dispatcher.StatsHook{
-		StatsPolicy:  params.Policy,
-		InboundStats: params.InStats,
-	})
 	dp.Router = params.Router
 	return DispatcherResult{Handler: dp, Dispatcher: dp}, nil
 }

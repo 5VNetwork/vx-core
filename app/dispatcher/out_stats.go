@@ -25,7 +25,7 @@ func NewOutStats() *OutStats {
 }
 
 func (o *OutStats) Start() error {
-	o.task = task.NewPeriodicTask(300*time.Second, o.cleanOldStats)
+	o.task = task.NewPeriodicTask(60*time.Second, o.cleanOldStats)
 	o.task.Start()
 	return nil
 }
@@ -54,7 +54,9 @@ func (o *OutStats) cleanOldStats() {
 	o.Lock()
 	defer o.Unlock()
 	for tag, stats := range o.Map {
-		if time.Since(stats.Time.Load().(time.Time)) > 300*time.Second {
+		// if a handler is not selected to handle for 1 minute, remove it
+		if time.Since(stats.Time.Load().(time.Time)) > 60*time.Second &&
+			time.Since(stats.ActiveTime.Load().(time.Time)) > 60*time.Second {
 			delete(o.Map, tag)
 		}
 	}
@@ -77,12 +79,13 @@ func (o *OutStats) IsHandlerActive(tag string) bool {
 type OutboundHandlerStats struct {
 	UpCounter   atomic.Uint64
 	DownCounter atomic.Uint64
-	Interval    atomic.Value
-
+	// The time when the up/down counter is reset
+	Interval   atomic.Value
 	Throughput atomic.Uint64
 	Ping       atomic.Uint64
-	Time       atomic.Value
-
+	// The time when this handler is selected to handle
+	Time atomic.Value
+	// The time when there is response traffic from this handler
 	ActiveTime atomic.Value //time.Time
 }
 
