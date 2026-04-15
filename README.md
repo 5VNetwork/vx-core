@@ -4,8 +4,16 @@
 
 ---
 
-A proxy tool originated from [v2ray-core](https://www.v2fly.org/). It powers our
-multi-platform proxy client app: [VX](https://github.com/5vnetwork/vx)
+vx-core powers multi-platform proxy client app: [VX](https://github.com/5vnetwork/vx) and [UmiVPN](https://github.com/5vnetwork/umivpn)
+
+## Credit
+
+This core incorporates code from
+[v2ray-core](https://github.com/v2fly/v2ray-core),
+[xray-core](https://github.com/XTLS/Xray-core) ,
+[hysteria](https://github.com/apernet/hysteria) and
+[sing-box](https://github.com/SagerNet/sing-box)
+
 
 ## Supported Proxy Protocols
 

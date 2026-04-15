@@ -4,7 +4,16 @@
 
 ---
 
-一个源自 [v2ray-core](https://www.v2fly.org/) 的代理工具。它为我们的多平台代理客户端[VX](https://github.com/5vnetwork/vx)所使用
+vx-core被多平台代理客户端[VX](https://github.com/5vnetwork/vx)、[UmiVPN](https://github.com/5vnetwork/umivpn)
+所使用
+
+## 致谢
+
+本核心使包含了以下内核的代码
+[v2ray-core](https://github.com/v2fly/v2ray-core)、
+[xray-core](https://github.com/XTLS/Xray-core)、
+[hysteria](https://github.com/apernet/hysteria)、
+[sing-box](https://github.com/SagerNet/sing-box)
 
 ## 支持的代理协议
 
