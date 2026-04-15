@@ -115,6 +115,7 @@ func New(settings HandlerSettings) (*Handler, error) {
 	settings.Conf.IsClient = true
 
 	ctx, cancel := context.WithCancel(context.Background())
+	ctx = log.With().Str("handler", settings.Name).Logger().WithContext(ctx)
 	return &Handler{
 		HandlerSettings: settings,
 		endpoints:       endpoints,
@@ -294,7 +295,7 @@ func (h *Handler) createIPCRequest() string {
 		}
 		addr := net.ParseAddress(address)
 		if addr.Family().IsDomain() {
-			ips := domain.GetIPs(context.Background(), addr.Domain(), h.Strategy, h.DnsForEndpoint)
+			ips := domain.GetIPs(h.ctx, addr.Domain(), h.Strategy, h.DnsForEndpoint)
 			if len(ips) == 0 {
 				log.Error().Msgf("createIPCRequest empty lookup DNS for %s", addr.Domain())
 			} else {
