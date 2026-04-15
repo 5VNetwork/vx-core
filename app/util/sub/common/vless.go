@@ -50,6 +50,7 @@ func ParseVlessFromLink(link string) (*configs.OutboundHandlerConfig, error) {
 		Protocol:  serial.ToTypedMessage(vlessConfig),
 		Transport: transportConfig,
 	}
+	setOthers(outboundConfig, query)
 
 	return outboundConfig, nil
 }

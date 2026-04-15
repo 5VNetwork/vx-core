@@ -45,6 +45,7 @@ func ParseTrojan(link string) (*configs.OutboundHandlerConfig, error) {
 		Protocol:  serial.ToTypedMessage(trojanConfig),
 		Transport: transportConfig,
 	}
+	setOthers(outboundConfig, q)
 
 	return outboundConfig, nil
 }

@@ -60,4 +60,10 @@ func addQueryParameters(queryParameters url.Values, outboundConfig *configs.Outb
 		queryParameters.Add("type", "grpc")
 		queryParameters.Add("serviceName", g.GetServiceName())
 	}
+	if outboundConfig.EnableMux {
+		queryParameters.Add("mux", "1")
+	}
+	if outboundConfig.Uot {
+		queryParameters.Add("uot", "1")
+	}
 }

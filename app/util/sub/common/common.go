@@ -176,6 +176,15 @@ func DecodeCommon(content string) (*sub.DecodeResult, error) {
 	return result, nil
 }
 
+func setOthers(config *configs.OutboundHandlerConfig, query url.Values) {
+	if query.Get("mux") == "1" {
+		config.EnableMux = true
+	}
+	if query.Get("uot") == "1" {
+		config.Uot = true
+	}
+}
+
 func setProtocol(config *configs.TransportConfig, query url.Values) error {
 	var header *any.Any
 
