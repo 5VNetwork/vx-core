@@ -1,11 +1,15 @@
 syntax = "proto3";
 package vx.dispatcher;
+
 option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
-message DispatcherConfig { 
+message DispatcherConfig {
   repeated string destination_override = 4;
   bool sniff = 5;
   reserved 6;
   bool ipv6_use_domain = 7;
   uint32 fallback_timeout = 8;
+  bool session_stats = 9;
+  bool handler_link_stats = 10;
+  bool handler_meter = 11;
 }

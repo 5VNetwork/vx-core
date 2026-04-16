@@ -37,9 +37,12 @@ type Dispatcher struct {
 	OnFallbacks                 []OnFallback
 	FallbackTimeout             time.Duration
 
-	OutStats            *OutStats
+	OutStats *OutStats
+
 	SessionStats        bool
 	RewriteIpv6ToDomain bool
+	HandlerLinkStats    bool
+	HandlerMeter        bool
 
 	Flows       atomic.Int32
 	PacketConns atomic.Int32
@@ -508,28 +511,28 @@ func (d *Dispatcher) handler(ctx context.Context, info *session.Info, rw any, ha
 		return rw
 	}
 	stats := d.OutStats.Get(handler.Tag())
-	if stats == nil {
-		return rw
-	}
 
 	var ups session.UpCounters
 	var downs session.DownCounters
 
 	// link status
-	ls := &linkStats{
-		ctx:     ctx,
-		ohStats: stats,
+	if d.HandlerLinkStats {
+		ls := &linkStats{
+			ctx:     ctx,
+			ohStats: stats,
+		}
+		ups = append(ups, ls)
+		downs = append(downs, ls)
 	}
-	ups = append(ups, ls)
-	downs = append(downs, ls)
 
-	//
-	ups = append(ups, session.AtomicCounter{
-		Counter: &stats.UpCounter,
-	})
-	downs = append(downs, session.AtomicCounter{
-		Counter: &stats.DownCounter,
-	})
+	if d.HandlerMeter {
+		ups = append(ups, session.AtomicCounter{
+			Counter: &stats.UpCounter,
+		})
+		downs = append(downs, session.AtomicCounter{
+			Counter: &stats.DownCounter,
+		})
+	}
 
 	if r, ok := rw.(i.DeadlineRW); ok {
 		rw = &StatsDeadlineRW{
@@ -553,5 +556,6 @@ func (d *Dispatcher) handler(ctx context.Context, info *session.Info, rw any, ha
 			activeChecker:      &stats.ActiveTime,
 		}
 	}
+
 	return rw
 }

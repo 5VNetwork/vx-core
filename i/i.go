@@ -95,15 +95,6 @@ type TimeoutSetting interface {
 	DownLinkOnlyTimeout() time.Duration
 }
 
-type StatsSetting interface {
-	CalculateUserStats() bool
-	// whether sample throughput and ping
-	CalculateOutboundLinkStats() bool
-	CalculateInboundLinkStats() bool
-	CalculateInboundStats() bool
-	CalculateSessionStats() bool
-}
-
 type BufferPolicy interface {
 	UserBufferSize(level uint32) int32
 }

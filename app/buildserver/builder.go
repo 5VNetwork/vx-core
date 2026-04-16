@@ -61,7 +61,6 @@ func NewX(config *configs.ServerConfig) (*fx.App, error) {
 	fxOptions = append(fxOptions, fx.Provide(fx.Annotate(
 		create.NewPolicy,
 		fx.As(new(i.TimeoutSetting)),
-		fx.As(new(i.StatsSetting)),
 	)))
 	fxOptions = append(fxOptions, fx.Provide(NewUserManager))
 	fxOptions = append(fxOptions, fx.Provide(monitor.NewInboundStats))
@@ -205,7 +204,6 @@ func NewRouter(lc fx.Lifecycle, params RouterParams) (RouterResult, error) {
 
 type DispatcherParams struct {
 	fx.In
-	Policy  i.StatsSetting
 	Timeout i.TimeoutSetting
 	InStats *monitor.InboundStats
 	Router  i.Router

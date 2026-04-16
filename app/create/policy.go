@@ -27,21 +27,6 @@ func NewPolicy(config *configs.PolicyConfig) *policy.Policy {
 	if config.GetDownLinkOnlyTimeout() != 0 {
 		p.SetDownLinkOnlyTimeout(time.Second * time.Duration(config.GetDownLinkOnlyTimeout()))
 	}
-	if config.GetLinkStats() {
-		p.SetLinkStats(true)
-	}
-	if config.GetOutboundStats() {
-		p.SetOutboundStats(true)
-	}
-	if config.GetInboundStats() {
-		p.SetInboundStats(true)
-	}
-	if config.GetUserStats() {
-		p.SetUserStats(true)
-	}
-	if config.GetSessionStats() {
-		p.SetSessionStats(true)
-	}
 	if config.GetUserPolicyMap() != nil {
 		for level, size := range config.GetUserPolicyMap() {
 			p.SetUserBufferSize(level, size.BufferSize)

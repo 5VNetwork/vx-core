@@ -4,7 +4,7 @@ go 1.25.5
 
 require (
 	anytls v0.0.0-00010101000000-000000000000
-	buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260412140412-a48cdf140436.1
+	buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260415193955-206007e09617.1
 	github.com/apernet/hysteria/core/v2 v2.0.0-00010101000000-000000000000
 	github.com/apernet/hysteria/extras/v2 v2.6.5
 	github.com/apernet/quic-go v0.57.2-0.20260111184307-eec823306178
@@ -57,6 +57,7 @@ require (
 	github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c // indirect
 	github.com/alexbrainman/sspi v0.0.0-20231016080023-1a75b4708caa // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
+	github.com/anytls/sing-anytls v0.0.11 // indirect
 	github.com/bits-and-blooms/bitset v1.22.0 // indirect
 	github.com/chen3feng/stl4go v0.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
