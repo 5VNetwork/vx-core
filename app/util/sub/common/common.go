@@ -179,6 +179,14 @@ func DecodeCommon(content string) (*sub.DecodeResult, error) {
 func setOthers(config *configs.OutboundHandlerConfig, query url.Values) {
 	if query.Get("mux") == "1" {
 		config.EnableMux = true
+		if maxConcurrency := query.Get("mux_max_concurrency"); maxConcurrency != "" {
+			maxConcurrencyInt, _ := strconv.Atoi(maxConcurrency)
+			config.MuxConfig.MaxConcurrency = uint32(maxConcurrencyInt)
+		}
+		if maxConnection := query.Get("mux_max_connection"); maxConnection != "" {
+			maxConnectionInt, _ := strconv.Atoi(maxConnection)
+			config.MuxConfig.MaxConnection = uint32(maxConnectionInt)
+		}
 	}
 	if query.Get("uot") == "1" {
 		config.Uot = true

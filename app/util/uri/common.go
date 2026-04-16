@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/5vnetwork/vx-core/app/configs"
@@ -62,6 +63,14 @@ func addQueryParameters(queryParameters url.Values, outboundConfig *configs.Outb
 	}
 	if outboundConfig.EnableMux {
 		queryParameters.Add("mux", "1")
+		if outboundConfig.GetMuxConfig().GetMaxConcurrency() > 0 {
+			queryParameters.Add("mux_max_concurrency",
+				strconv.Itoa(int(outboundConfig.GetMuxConfig().GetMaxConcurrency())))
+		}
+		if outboundConfig.GetMuxConfig().GetMaxConnection() > 0 {
+			queryParameters.Add("mux_max_connection",
+				strconv.Itoa(int(outboundConfig.GetMuxConfig().GetMaxConnection())))
+		}
 	}
 	if outboundConfig.Uot {
 		queryParameters.Add("uot", "1")
