@@ -6,10 +6,9 @@ import (
 	"encoding/binary"
 	"time"
 
-	"anytls/proxy/session"
-	as "anytls/proxy/session"
-
-	"anytls/proxy/padding"
+	"github.com/anytls/sing-anytls/padding"
+	"github.com/anytls/sing-anytls/session"
+	"github.com/sagernet/sing/common/atomic"
 
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/net"
@@ -29,7 +28,8 @@ func init() {
 type Client struct {
 	ClientConfig
 	secret        [32]byte
-	sessionClient *as.Client
+	sessionClient *session.Client
+	padding       atomic.TypedValue[*padding.PaddingFactory]
 }
 
 type ClientConfig struct {
@@ -56,8 +56,9 @@ func NewClient(config *ClientConfig) *Client {
 		config.MinIdleSession = 5
 	}
 	c.secret = sha256.Sum256([]byte(config.Password))
-	c.sessionClient = session.NewClient(context.Background(),
-		c.createOutboundConnection, &padding.DefaultPaddingFactory,
+	padding.UpdatePaddingScheme(padding.DefaultPaddingScheme, &c.padding)
+	c.sessionClient = session.NewClient(context.Background(), logrus.StandardLogger(),
+		c.createOutboundConnection, &c.padding,
 		config.IdleSessionCheckInterval, config.IdleSessionTimeout, config.MinIdleSession)
 	return c
 }
@@ -106,7 +107,7 @@ func (c *Client) createOutboundConnection(ctx context.Context) (net.Conn, error)
 
 	b.Write(c.secret[:])
 	var paddingLen int
-	if pad := padding.DefaultPaddingFactory.Load().GenerateRecordPayloadSizes(0); len(pad) > 0 {
+	if pad := c.padding.Load().GenerateRecordPayloadSizes(0); len(pad) > 0 {
 		paddingLen = pad[0]
 	}
 	binary.BigEndian.PutUint16(b.Extend(2), uint16(paddingLen))

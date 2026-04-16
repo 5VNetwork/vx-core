@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-			"github.com/5vnetwork/vx-core/app/buildclient"
+	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/create"

@@ -1,13 +1,17 @@
 package anytls
 
 import (
-	"anytls/proxy/padding"
-	"anytls/proxy/session"
 	"context"
+
 	"crypto/sha256"
 	"errors"
 	"io"
 	"sync"
+
+	"github.com/anytls/sing-anytls/padding"
+	"github.com/anytls/sing-anytls/session"
+	"github.com/sagernet/sing/common/atomic"
+	"github.com/sirupsen/logrus"
 
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/net"
@@ -22,6 +26,7 @@ import (
 type Server struct {
 	ServerSettings
 	secrets sync.Map // key: [32]byte sha256(password), value: i.User
+	padding atomic.TypedValue[*padding.PaddingFactory]
 }
 
 type ServerSettings struct {
@@ -30,9 +35,13 @@ type ServerSettings struct {
 }
 
 func NewServer(settings ServerSettings) *Server {
-	return &Server{
+	s := &Server{
 		ServerSettings: settings,
 	}
+	if !padding.UpdatePaddingScheme(padding.DefaultPaddingScheme, &s.padding) {
+		// return nil, errors.New("incorrect padding scheme format")
+	}
+	return s
 }
 
 func (h *Server) AddUser(user i.User) {
@@ -143,7 +152,7 @@ func (d *Server) processCommon(ctx context.Context, conn net.Conn,
 			log.Ctx(ctx).Err(err).Msg("HandleFlow")
 			return
 		}
-	}, &padding.DefaultPaddingFactory)
+	}, &d.padding, logrus.StandardLogger())
 	session.Run()
 	return session.Close()
 }
