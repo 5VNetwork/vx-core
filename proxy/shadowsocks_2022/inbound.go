@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/net"
@@ -23,15 +24,16 @@ import (
 )
 
 type Inbound struct {
+	lock     sync.RWMutex
 	networks []net.Network
 	service  shadowsocks.Service
+	method   string
 	user     i.User
 	handler  i.Handler
 }
 
 type ServerConfig struct {
 	Method  string
-	User    i.User
 	Network []net.Network
 	Handler i.Handler
 }
@@ -46,24 +48,30 @@ func NewServer(config *ServerConfig) (*Inbound, error) {
 	}
 	inbound := &Inbound{
 		networks: networks,
-		user:     config.User,
 		handler:  config.Handler,
+		method:   config.Method,
 	}
 	if !C.Contains(shadowaead_2022.List, config.Method) {
 		return nil, fmt.Errorf("unsupported method %s", config.Method)
 	}
-	keySize := keySizeForMethod(config.Method)
-	key, err := toBase64PSK(strings.TrimSpace(config.User.Secret()), keySize)
-	if err != nil {
-		return nil, fmt.Errorf("invalid key: %w", err)
-	}
-	service, err := shadowaead_2022.NewServiceWithPassword(config.Method,
-		key, 500, inbound, nil)
-	if err != nil {
-		return nil, fmt.Errorf("create service: %w", err)
-	}
-	inbound.service = service
+
 	return inbound, nil
+}
+
+func (i *Inbound) AddUser(user i.User) {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	keySize := keySizeForMethod(i.method)
+	key, _ := toBase64PSK(strings.TrimSpace(user.Secret()), keySize)
+
+	service, err := shadowaead_2022.NewServiceWithPassword(i.method,
+		key, 500, i, nil)
+	if err != nil {
+		log.Fatal().Err(err).Msg("create service")
+	}
+	i.user = user
+	i.service = service
 }
 
 func (i *Inbound) Network() []net.Network {
@@ -73,12 +81,19 @@ func (i *Inbound) Network() []net.Network {
 func (i *Inbound) Process(ctx context.Context, conn net.Conn) error {
 	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "shadowsocks-2022")
 
+	i.lock.RLock()
+	service := i.service
+	i.lock.RUnlock()
+	if service == nil {
+		return fmt.Errorf("service not found")
+	}
+
 	var metadata M.Metadata
 	metadata.Source = M.ParseSocksaddr(conn.RemoteAddr().String())
 
 	network := net.NetworkFromAddr(conn.LocalAddr())
 	if network == net.Network_TCP {
-		return i.service.NewConnection(ctx, conn, metadata)
+		return service.NewConnection(ctx, conn, metadata)
 	} else {
 		reader := buf.NewReader(conn)
 		pc := &natPacketConn{conn}
@@ -91,7 +106,8 @@ func (i *Inbound) Process(ctx context.Context, conn net.Conn) error {
 			for _, buffer := range mb {
 				packet := B.As(buffer.Bytes()).ToOwned()
 				buffer.Release()
-				err = i.service.NewPacket(ctx, pc, packet, metadata)
+
+				err = service.NewPacket(ctx, pc, packet, metadata)
 				if err != nil {
 					packet.Release()
 					buf.ReleaseMulti(mb)

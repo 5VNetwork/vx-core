@@ -184,6 +184,11 @@ func proxyProtocolToOutboundConfig(proxyProtocol []*anypb.Any, user *configs.Use
 				Password:   user.Secret,
 				CipherType: pc.CipherType,
 			}))
+		case *configs.Shadowsocks2022ServerConfig:
+			clientProtocols = append(clientProtocols, serial.ToTypedMessage(&configs.Shadowsocks2022ClientConfig{
+				Key:    user.Secret,
+				Method: pc.Method,
+			}))
 		case *configs.TrojanServerConfig:
 			clientProtocols = append(clientProtocols, serial.ToTypedMessage(&configs.TrojanClientConfig{
 				Password: user.Secret,

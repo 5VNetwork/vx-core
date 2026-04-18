@@ -287,20 +287,22 @@ func GetServers(users []*configs.UserConfig, protocols []*anypb.Any, ha i.Handle
 				server.(*anytls.Server).AddUser(user)
 			}
 		case *configs.Shadowsocks2022ServerConfig:
-			user, err := UserConfigToUser(c.User)
-			if err != nil {
-				return nil, nil, err
-			}
 			server, err = shadowsocks_2022.NewServer(
 				&shadowsocks_2022.ServerConfig{
 					Method:  c.Method,
 					Network: c.Networks,
 					Handler: ha,
-					User:    user,
 				},
 			)
 			if err != nil {
 				return nil, nil, err
+			}
+			if c.User != nil {
+				user, err := UserConfigToUser(c.User)
+				if err != nil {
+					return nil, nil, err
+				}
+				server.(*shadowsocks_2022.Inbound).AddUser(user)
 			}
 		default:
 			return nil, nil, fmt.Errorf("unknown proxy server config: %T", c)
