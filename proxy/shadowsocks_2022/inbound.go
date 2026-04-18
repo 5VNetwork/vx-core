@@ -74,6 +74,16 @@ func (i *Inbound) AddUser(user i.User) {
 	i.service = service
 }
 
+func (s *Inbound) RemoveUser(user i.User) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	s.user = nil
+	s.service = nil
+}
+
+func (h *Inbound) WithOnUnauthorizedRequest(f i.UnauthorizedReport) {
+}
+
 func (i *Inbound) Network() []net.Network {
 	return i.networks
 }
