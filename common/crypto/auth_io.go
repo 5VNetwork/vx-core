@@ -22,6 +22,7 @@ type AuthenticationReaderIO struct {
 	padding      PaddingLengthGenerator
 	size         uint16
 	paddingLen   uint16
+	sizeOffset   uint16
 	hasSize      bool
 	done         bool
 	leftOver     buf.MultiBuffer
@@ -37,6 +38,9 @@ func NewAuthenticationReaderIO(auth Authenticator, sizeParser ChunkSizeDecoder, 
 		transferType: transferType,
 		padding:      paddingLen,
 		sizeBytes:    make([]byte, sizeParser.SizeBytes()),
+	}
+	if chunkSizeDecoderWithOffset, ok := sizeParser.(ChunkSizeDecoderWithOffset); ok {
+		r.sizeOffset = chunkSizeDecoderWithOffset.HasConstantOffset()
 	}
 	return r
 }
@@ -87,37 +91,39 @@ func (r *AuthenticationReaderIO) readInternal(soft bool, mb *buf.MultiBuffer) er
 		return fmt.Errorf("failed to read size: %w", err)
 	}
 
-	if size == uint16(r.auth.Overhead())+padding {
+	if size+r.sizeOffset == uint16(r.auth.Overhead())+padding {
 		r.done = true
 		return io.EOF
 	}
 
-	if soft && int32(size) > int32(r.reader.Buffered()) {
+	effectiveSize := int32(size) + int32(r.sizeOffset)
+
+	if soft && effectiveSize > int32(r.reader.Buffered()) {
 		r.size = size
 		r.paddingLen = padding
 		r.hasSize = true
 		return errSoft
 	}
 
-	if size <= buf.Size {
-		b, err := r.readBuffer(int32(size), int32(padding))
+	if effectiveSize <= buf.Size {
+		b, err := r.readBuffer(effectiveSize, int32(padding))
 		if err != nil {
-			return fmt.Errorf("failed to read buffer: %w", err)
+			return err
 		}
 		*mb = append(*mb, b)
 		return nil
 	}
 
-	payload := bytespool.Alloc(int32(size))
+	payload := bytespool.Alloc(effectiveSize)
 	defer bytespool.Free(payload)
 
-	if _, err := io.ReadFull(r.reader, payload[:size]); err != nil {
+	if _, err := io.ReadFull(r.reader, payload[:effectiveSize]); err != nil {
 		return fmt.Errorf("failed to read payload: %w", err)
 	}
 
-	size -= padding
+	effectiveSize -= int32(padding)
 
-	rb, err := r.auth.Open(payload[:0], payload[:size])
+	rb, err := r.auth.Open(payload[:0], payload[:effectiveSize])
 	if err != nil {
 		return fmt.Errorf("failed to authenticate payload: %w", err)
 	}

@@ -21,6 +21,13 @@ type ChunkSizeEncoder interface {
 	Encode(uint16, []byte) []byte
 }
 
+type ChunkSizeDecoderWithOffset interface {
+	ChunkSizeDecoder
+	// HasConstantOffset set the constant offset of Decode
+	// The effective size should be HasConstantOffset() + Decode(_).[0](uint64)
+	HasConstantOffset() uint16
+}
+
 type PaddingLengthGenerator interface {
 	MaxPaddingLen() uint16
 	NextPaddingLen() uint16
