@@ -62,18 +62,23 @@ func (c *Client) Output(command string, sudo bool) (string, error) {
 }
 
 // client.CombinedOutput("sh -c 'curl -fsSL https://get.docker.com | sh'", true)
-func (c *Client) ShRun(command string, sudo bool) error {
-	command = fmt.Sprintf("sh -c '%s'", command)
-
+// This is for applying sudo to joined command.
+// If non-root users, use sudo and sh -c to run command.
+// If root users, just run the command.
+func (c *Client) ShRun(command string) error {
 	session, err := c.NewSession()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %w", err)
 	}
 	defer session.Close()
 
-	if sudo {
-		command = c.getSudoCmd(command)
+	if c.isRoot {
+		return session.Run(command)
 	}
+
+	command = fmt.Sprintf("sh -c '%s'", command)
+
+	command = c.getSudoCmd(command)
 
 	return session.Run(command)
 }

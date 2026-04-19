@@ -5,49 +5,6 @@ import (
 	"strings"
 )
 
-// Firewall management for SSH Client
-// This package provides methods to manage firewalls on remote servers via SSH.
-//
-// Supported firewall types:
-// - UFW (Uncomplicated Firewall) - Ubuntu/Debian default
-// - firewalld - RHEL/CentOS/Fedora default
-// - iptables - Legacy, universal
-// - nftables - Modern replacement for iptables
-//
-// Example usage in server preparation:
-//
-//	client, err := sshhelper.Dial(config)
-//	if err != nil {
-//		return err
-//	}
-//	defer client.Close()
-//
-//	// Enable firewall
-//	if err := client.EnableFirewall(); err != nil {
-//		log.Warn().Err(err).Msg("failed to enable firewall")
-//	}
-//
-//	// Open SSH port
-//	if err := client.OpenPort(server.SshPort, "tcp"); err != nil {
-//		return err
-//	}
-//
-//	// Open inbound ports from ServerConfig
-//	for _, inbound := range xConfig.Config.Inbounds {
-//		if inbound.Port != 0 {
-//			client.OpenPort(inbound.Port, "tcp")
-//			client.OpenPort(inbound.Port, "udp")
-//		}
-//		for _, port := range inbound.Ports {
-//			client.OpenPort(port, "tcp")
-//			client.OpenPort(port, "udp")
-//		}
-//	}
-//
-//	// When config changes, delete old port rules:
-//	client.DeletePortRule(oldPort, "tcp")
-//	client.DeletePortRule(oldPort, "udp")
-
 // FirewallType represents the type of firewall system
 type FirewallType string
 
@@ -58,6 +15,44 @@ const (
 	FirewallNftables  FirewallType = "nftables"
 	FirewallUnknown   FirewallType = "unknown"
 )
+
+// netfilter-persistent (Debian/Ubuntu) layout; matches existing iptables IPv4 path.
+const (
+	iptablesRulesV4Path = "/etc/iptables/rules.v4"
+	iptablesRulesV6Path = "/etc/iptables/rules.v6"
+	// Loaded by nftables.service on Debian/Ubuntu; RHEL often uses /etc/sysconfig/nftables — write both when present.
+	nftablesConfPath       = "/etc/nftables.conf"
+	nftablesSysconfigPath  = "/etc/sysconfig/nftables"
+	nftablesSysconfigPath2 = "/etc/sysconfig/nftables.conf"
+)
+
+// iptablesInputHasPortRule reports whether INPUT contains an ACCEPT rule matching dport/protocol.
+// Uses `iptables -C` (the canonical existence check) rather than fragile grep on `-L` output.
+func (c *Client) iptablesInputHasPortRule(iptablesBin string, port uint32, protocol string) bool {
+	err := c.Run(fmt.Sprintf("%s -C INPUT -p %s --dport %d -j ACCEPT", iptablesBin, protocol, port), true)
+	return err == nil
+}
+
+// nftRulesetLooksManagedByIptablesNft is true when nft's ruleset reflects the iptables-nft compatibility
+// layer (manage with iptables/ip6tables), not a hand-written nft-only configuration.
+func nftRulesetLooksManagedByIptablesNft(ruleset string) bool {
+	s := strings.ToLower(ruleset)
+	if strings.Contains(s, "managed by iptables-nft") {
+		return true
+	}
+	// iptables-nft creates the legacy IPv4 "ip filter" table; typical raw-nft host configs use "inet" only.
+	return strings.Contains(s, "table ip filter")
+}
+
+// flushIptablesInputPermissive sets INPUT policy to ACCEPT, flushes INPUT chain rules in the kernel,
+// and writes the result to persistent rule files (IPv4 + IPv6 when ip6tables exists).
+func (c *Client) flushIptablesInputPermissive() error {
+	cmd := fmt.Sprintf("iptables -P INPUT ACCEPT && iptables -F INPUT && iptables-save > %s", iptablesRulesV4Path)
+	if hasIp6, _ := c.CommandExists("ip6tables", true); hasIp6 {
+		cmd += fmt.Sprintf(" && ip6tables -P INPUT ACCEPT && ip6tables -F INPUT && ip6tables-save > %s", iptablesRulesV6Path)
+	}
+	return c.ShRun(cmd)
+}
 
 // DetectFirewall determines which firewall system is active on the remote server
 func (c *Client) DetectFirewall() (FirewallType, error) {
@@ -80,14 +75,19 @@ func (c *Client) DetectFirewall() (FirewallType, error) {
 		return FirewallFirewalld, nil
 	}
 
-	// Check nftables
+	iptablesExists, _ := c.CommandExists("iptables", true)
+
+	// Non-empty nft ruleset: distinguish raw nft from iptables-nft (Debian/Ubuntu default), which
+	// shares the nf_tables backend but must be managed via iptables, not raw "nft add rule ...".
 	output, err = c.Output("nft list ruleset", true)
 	if err == nil && len(strings.TrimSpace(output)) > 0 {
+		if iptablesExists && nftRulesetLooksManagedByIptablesNft(output) {
+			return FirewallIptables, nil
+		}
 		return FirewallNftables, nil
 	}
 
-	// Fallback to iptables if it exists
-	if exists, _ := c.CommandExists("iptables", true); exists {
+	if iptablesExists {
 		return FirewallIptables, nil
 	}
 
@@ -130,22 +130,28 @@ func (c *Client) OpenPort(port uint32, protocol string) error {
 
 		// Add the rule permanently and reload
 		cmd := fmt.Sprintf("firewall-cmd --add-port=%d/%s --permanent && firewall-cmd --reload", port, protocol)
-		if err := c.Run(cmd, true); err != nil {
+		if err := c.ShRun(cmd); err != nil {
 			return fmt.Errorf("failed to open port %d/%s with firewalld: %w", port, protocol, err)
 		}
 		return nil
 
 	case FirewallIptables:
-		// Check if rule already exists
-		output, _ := c.Output(fmt.Sprintf("iptables -L INPUT -n | grep -E 'dpt:%d.*%s'", port, strings.ToUpper(protocol)), true)
-		if strings.TrimSpace(output) != "" {
-			// Rule already exists, skip
+		v4Done := c.iptablesInputHasPortRule("iptables", port, protocol)
+		hasIp6tables, _ := c.CommandExists("ip6tables", true)
+		v6Done := !hasIp6tables || c.iptablesInputHasPortRule("ip6tables", port, protocol)
+		if v4Done && v6Done {
 			return nil
 		}
 
-		// Add the rule and save
-		cmd := fmt.Sprintf("iptables -A INPUT -p %s --dport %d -j ACCEPT && iptables-save > /etc/iptables/rules.v4", protocol, port)
-		if err := c.Run(cmd, true); err != nil {
+		var parts []string
+		if !v4Done {
+			parts = append(parts, fmt.Sprintf("iptables -A INPUT -p %s --dport %d -j ACCEPT && iptables-save > %s", protocol, port, iptablesRulesV4Path))
+		}
+		if hasIp6tables && !v6Done {
+			parts = append(parts, fmt.Sprintf("ip6tables -A INPUT -p %s --dport %d -j ACCEPT && ip6tables-save > %s", protocol, port, iptablesRulesV6Path))
+		}
+		cmd := strings.Join(parts, " && ")
+		if err := c.ShRun(cmd); err != nil {
 			return fmt.Errorf("failed to open port %d/%s with iptables: %w", port, protocol, err)
 		}
 		return nil
@@ -180,14 +186,17 @@ func (c *Client) ClosePort(port uint32, protocol string) error {
 
 	case FirewallFirewalld:
 		cmd := fmt.Sprintf("firewall-cmd --remove-port=%d/%s --permanent && firewall-cmd --reload", port, protocol)
-		if err := c.Run(cmd, true); err != nil {
+		if err := c.ShRun(cmd); err != nil {
 			return fmt.Errorf("failed to close port %d/%s with firewalld: %w", port, protocol, err)
 		}
 		return nil
 
 	case FirewallIptables:
-		cmd := fmt.Sprintf("iptables -A INPUT -p %s --dport %d -j DROP && iptables-save > /etc/iptables/rules.v4", protocol, port)
-		if err := c.Run(cmd, true); err != nil {
+		cmd := fmt.Sprintf("iptables -A INPUT -p %s --dport %d -j DROP && iptables-save > %s", protocol, port, iptablesRulesV4Path)
+		if hasIp6, _ := c.CommandExists("ip6tables", true); hasIp6 {
+			cmd += fmt.Sprintf(" && ip6tables -A INPUT -p %s --dport %d -j DROP && ip6tables-save > %s", protocol, port, iptablesRulesV6Path)
+		}
+		if err := c.ShRun(cmd); err != nil {
 			return fmt.Errorf("failed to close port %d/%s with iptables: %w", port, protocol, err)
 		}
 		return nil
@@ -237,7 +246,7 @@ func (c *Client) DeletePortRule(port uint32, protocol string) error {
 		}
 
 		cmd := fmt.Sprintf("firewall-cmd --remove-port=%d/%s --permanent && firewall-cmd --reload", port, protocol)
-		if err := c.Run(cmd, true); err != nil {
+		if err := c.ShRun(cmd); err != nil {
 			return fmt.Errorf("failed to delete port rule %d/%s with firewalld: %w", port, protocol, err)
 		}
 		return nil
@@ -248,8 +257,14 @@ func (c *Client) DeletePortRule(port uint32, protocol string) error {
 		c.Run(cmd, true)
 		cmd = fmt.Sprintf("iptables -D INPUT -p %s --dport %d -j DROP 2>/dev/null || true", protocol, port)
 		c.Run(cmd, true)
-		// Save the changes
-		c.Run("iptables-save > /etc/iptables/rules.v4", true)
+		c.Run(fmt.Sprintf("iptables-save > %s", iptablesRulesV4Path), true)
+		if hasIp6, _ := c.CommandExists("ip6tables", true); hasIp6 {
+			cmd = fmt.Sprintf("ip6tables -D INPUT -p %s --dport %d -j ACCEPT 2>/dev/null || true", protocol, port)
+			c.Run(cmd, true)
+			cmd = fmt.Sprintf("ip6tables -D INPUT -p %s --dport %d -j DROP 2>/dev/null || true", protocol, port)
+			c.Run(cmd, true)
+			c.Run(fmt.Sprintf("ip6tables-save > %s", iptablesRulesV6Path), true)
+		}
 		return nil
 
 	case FirewallNftables:
@@ -311,58 +326,13 @@ func (c *Client) DeletePortRules(ports []uint32, protocol string) error {
 	return nil
 }
 
-// EnableFirewall enables the firewall service
-func (c *Client) EnableFirewall() error {
-	firewallType, err := c.DetectFirewall()
-	if err != nil {
-		return fmt.Errorf("failed to detect firewall: %w", err)
-	}
-
-	switch firewallType {
-	case FirewallUFW:
-		// Check if already enabled
-		output, _ := c.Output("ufw status", true)
-		if strings.Contains(output, "Status: active") {
-			// Already enabled, skip
-			return nil
-		}
-
-		// Enable UFW (--force to avoid interactive prompt)
-		if err := c.Run("ufw --force enable", true); err != nil {
-			return fmt.Errorf("failed to enable ufw: %w", err)
-		}
-		return nil
-
-	case FirewallFirewalld:
-		if err := c.Run("systemctl enable --now firewalld", true); err != nil {
-			return fmt.Errorf("failed to enable firewalld: %w", err)
-		}
-		return nil
-
-	case FirewallNftables:
-		if err := c.Run("systemctl enable --now nftables", true); err != nil {
-			return fmt.Errorf("failed to enable nftables: %w", err)
-		}
-		return nil
-
-	case FirewallIptables:
-		if err := c.Run("systemctl enable --now iptables", true); err != nil {
-			return fmt.Errorf("failed to enable iptables: %w", err)
-		}
-		return nil
-
-	default:
-		return fmt.Errorf("unsupported firewall type: %s", firewallType)
-	}
-}
-
-// DisableFirewall disables the firewall service
+// DisableFirewall disables the firewall service or allow inbound traffic so that incoming connections
+// are allowed.
 func (c *Client) DisableFirewall() error {
 	firewallType, err := c.DetectFirewall()
 	if err != nil {
 		return fmt.Errorf("failed to detect firewall: %w", err)
 	}
-
 	switch firewallType {
 	case FirewallUFW:
 		if err := c.Run("ufw disable", true); err != nil {
@@ -377,17 +347,9 @@ func (c *Client) DisableFirewall() error {
 		return nil
 
 	case FirewallNftables:
-		if err := c.Run("systemctl disable --now nftables", true); err != nil {
-			return fmt.Errorf("failed to disable nftables: %w", err)
-		}
-		return nil
-
+		return c.AllowAllInbound()
 	case FirewallIptables:
-		if err := c.Run("systemctl disable --now iptables", true); err != nil {
-			return fmt.Errorf("failed to disable iptables: %w", err)
-		}
-		return nil
-
+		return c.AllowAllInbound()
 	default:
 		return fmt.Errorf("unsupported firewall type: %s", firewallType)
 	}
@@ -420,6 +382,13 @@ func (c *Client) GetFirewallStatus() (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("failed to get iptables status: %w", err)
 		}
+		if hasIp6, _ := c.CommandExists("ip6tables", true); hasIp6 {
+			out6, err := c.Output("ip6tables -L -n -v", true)
+			if err != nil {
+				return "", fmt.Errorf("failed to get ip6tables status: %w", err)
+			}
+			output += "\n--- ip6tables ---\n" + out6
+		}
 		return output, nil
 
 	case FirewallNftables:
@@ -435,7 +404,7 @@ func (c *Client) GetFirewallStatus() (string, error) {
 }
 
 // AllowAllInbound sets the firewall to allow all inbound connections
-// WARNING: This is insecure and should only be used for testing
+// The setting is persistent
 func (c *Client) AllowAllInbound() error {
 	firewallType, err := c.DetectFirewall()
 	if err != nil {
@@ -453,23 +422,32 @@ func (c *Client) AllowAllInbound() error {
 	case FirewallFirewalld:
 		// Set default zone to trusted (allows all)
 		cmd := "firewall-cmd --set-default-zone=trusted && firewall-cmd --reload"
-		if err := c.Run(cmd, true); err != nil {
+		if err := c.ShRun(cmd); err != nil {
 			return fmt.Errorf("failed to set firewalld to trusted: %w", err)
 		}
 		return nil
 
 	case FirewallIptables:
-		// Set INPUT chain policy to ACCEPT and flush rules
-		cmd := "iptables -P INPUT ACCEPT && iptables -F INPUT && iptables-save > /etc/iptables/rules.v4"
-		if err := c.Run(cmd, true); err != nil {
+		if err := c.flushIptablesInputPermissive(); err != nil {
 			return fmt.Errorf("failed to set iptables allow all: %w", err)
 		}
 		return nil
 
 	case FirewallNftables:
-		// Set input policy to accept
-		cmd := "nft add table inet filter; nft add chain inet filter input { type filter hook input priority 0 \\; policy accept \\; }"
-		if err := c.Run(cmd, true); err != nil {
+		// Flush any pre-existing drop rules so nothing in nft still blocks inbound, rebuild a permissive
+		// inet filter/input chain, then save the ruleset so nftables.service restores it after reboot.
+		// NOTE: this also removes rules installed by Docker/Kubernetes/fail2ban; those services usually
+		// recreate their rules when restarted.
+		cmd := fmt.Sprintf(
+			"nft flush ruleset && "+
+				"nft add table inet filter && "+
+				"nft add chain inet filter input { type filter hook input priority 0 \\; policy accept \\; } && "+
+				"nft list ruleset > %s && "+
+				"(test -d /etc/sysconfig && nft list ruleset > %s 2>/dev/null || true) && "+
+				"(test -d /etc/sysconfig && nft list ruleset > %s 2>/dev/null || true) && "+
+				"(systemctl enable nftables 2>/dev/null || true)",
+			nftablesConfPath, nftablesSysconfigPath, nftablesSysconfigPath2)
+		if err := c.ShRun(cmd); err != nil {
 			return fmt.Errorf("failed to set nftables allow all: %w", err)
 		}
 		return nil
