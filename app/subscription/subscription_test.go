@@ -2,19 +2,36 @@ package subscription_test
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/5vnetwork/vx-core/app/dns"
 	. "github.com/5vnetwork/vx-core/app/subscription"
+	"github.com/5vnetwork/vx-core/app/util/downloader"
 	"github.com/5vnetwork/vx-core/app/xsqlite"
+	"github.com/5vnetwork/vx-core/i"
+	"github.com/5vnetwork/vx-core/proxy/freedom"
+	"github.com/5vnetwork/vx-core/transport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
+
+func TestFetchSubscription(t *testing.T) {
+	t.Skip()
+	url := ""
+	downloader := downloader.NewDownloader0([]i.Outbound{
+		freedom.New(transport.DefaultDialer, transport.DefaultPacketListener, "test", dns.NewGoIpResolver()),
+	})
+	result, err := FetchSubscription(context.Background(), url, downloader)
+	assert.NoError(t, err)
+	log.Println(result)
+}
 
 // MockDownloader implements the downloader interface for testing
 type MockDownloader struct {

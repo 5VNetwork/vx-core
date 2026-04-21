@@ -105,7 +105,7 @@ func (s *SubscriptionManager) periodicUpdate() {
 	nextUpdateTime := lastUpdate.Add(s.Interval)
 
 	now := time.Now()
-	if !nextUpdateTime.After(now.Add(time.Minute)) {
+	if !nextUpdateTime.After(now.Add(time.Millisecond * 100)) {
 		go s.UpdateSubscriptions()
 		nextUpdateTime = now.Add(s.Interval)
 	}
@@ -210,7 +210,9 @@ func FetchSubscription(ctx context.Context, link string, downloader downloader) 
 
 	var uriContent *sub.DecodeResult
 	// try no user agent first
-	body, header, err := downloader.Download(ctx, link, map[string]string{})
+	body, header, err := downloader.Download(ctx, link, map[string]string{
+		"User-Agent": "shadowrocket",
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to download subscription: %v", err)
 	}
@@ -278,7 +280,9 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 
 	var uriContent *sub.DecodeResult
 	// try no user agent first
-	body, header, err := downloader.Download(ctx, link, map[string]string{})
+	body, header, err := downloader.Download(ctx, link, map[string]string{
+		"User-Agent": "shadowrocket",
+	})
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to download subscription: %v", err)
 	}

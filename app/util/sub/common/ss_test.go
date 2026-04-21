@@ -39,3 +39,32 @@ func TestParseSsFromLink(t *testing.T) {
 		t.Fatalf("remark is not test啊")
 	}
 }
+
+func TestParseSs2022FromLink0(t *testing.T) {
+	const ssLink = "ss://YWVzLTEyOC1nY206dGVzdA@192.168.100.1:8888/?plugin=obfs-local%3Bobfs%3Dhttp#Example2"
+
+	config, err := ParseSsFromLink(ssLink)
+	if err != nil {
+		t.Fatalf("failed to parse ss link: %v", err)
+	}
+	ssConfig0, err := serial.GetInstanceOf(config.Protocol)
+	if err != nil {
+		t.Fatalf("failed to get ss config: %v", err)
+	}
+	ssConfig := ssConfig0.(*configs.ShadowsocksClientConfig)
+
+	fmt.Println(ssConfig)
+
+}
+
+func TestParseSs2022FromLink1(t *testing.T) {
+	const ssLink = "ss://2022-blake3-aes-256-gcm:YctPZ6U7xPPcU%2Bgp3u%2B0tx%2FtRizJN9K8y%2BuKlW2qjlI%3D@192.168.100.1:8888#Example3"
+
+	config, err := ParseSsFromLink(ssLink)
+	if err != nil {
+		t.Fatalf("failed to parse ss link: %v", err)
+	}
+
+	fmt.Println(config)
+
+}

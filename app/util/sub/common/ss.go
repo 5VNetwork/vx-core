@@ -52,17 +52,24 @@ func ParseSsFromLink(link string) (*configs.OutboundHandlerConfig, error) {
 		password, _ = u.User.Password()
 	} else {
 		cipherPasswordBase64 := u.User.Username()
-		cipherPasswordBytes, err := sub.DecodeBase64(cipherPasswordBase64)
-		if err != nil {
-			return nil, fmt.Errorf("failed to decode cipher:password: %v", err)
+		pass, hasPassword := u.User.Password()
+		if hasPassword {
+			// ss://2022-blake3-aes-256-gcm:YctPZ6U7xPPcU%2Bgp3u%2B0tx%2FtRizJN9K8y%2BuKlW2qjlI%3D@192.168.100.1:8888#Example3
+			password = pass
+			cipher = cipherPasswordBase64
+		} else {
+			cipherPasswordBytes, err := sub.DecodeBase64(cipherPasswordBase64)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode cipher:password: %v", err)
+			}
+			cipherPassword := string(cipherPasswordBytes)
+			indexOfSeperator := strings.Index(cipherPassword, ":")
+			if indexOfSeperator <= 0 || indexOfSeperator == len(cipherPassword)-1 {
+				return nil, fmt.Errorf("invalid cipher:password format")
+			}
+			cipher = cipherPassword[:indexOfSeperator]
+			password = cipherPassword[indexOfSeperator+1:]
 		}
-		cipherPassword := string(cipherPasswordBytes)
-		indexOfSeperator := strings.Index(cipherPassword, ":")
-		if indexOfSeperator <= 0 || indexOfSeperator == len(cipherPassword)-1 {
-			return nil, fmt.Errorf("invalid cipher:password format")
-		}
-		cipher = cipherPassword[:indexOfSeperator]
-		password = cipherPassword[indexOfSeperator+1:]
 	}
 
 	portStr := u.Port()
