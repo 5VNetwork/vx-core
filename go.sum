@@ -1,9 +1,5 @@
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260412140412-a48cdf140436.1 h1:8sQSC6yPZvMEfzkoqB27mG5oFeRBM0xmZWAobBsG6vU=
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260412140412-a48cdf140436.1/go.mod h1:dElz5P1GgVs3z2p9u3xGM8xRJG+VcCpxZkkn8izmP7g=
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260415193523-733a5fd9b5e5.1 h1:/V9skyGy/B+Q4jQ7YJCKAakNJCzX6kF6EyGKEnwVbGg=
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260415193523-733a5fd9b5e5.1/go.mod h1:dElz5P1GgVs3z2p9u3xGM8xRJG+VcCpxZkkn8izmP7g=
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260415193955-206007e09617.1 h1:r1LRsrm+0nzyxX2/6rfQFpJNc4FuMhuDZqJEmMl8yjw=
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260415193955-206007e09617.1/go.mod h1:dElz5P1GgVs3z2p9u3xGM8xRJG+VcCpxZkkn8izmP7g=
+buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260421145404-d0018206705f.1 h1:D0py0WRRO3rFNewePCA8KxxEOz5phOCb1P/T/sdxaiE=
+buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260421145404-d0018206705f.1/go.mod h1:dElz5P1GgVs3z2p9u3xGM8xRJG+VcCpxZkkn8izmP7g=
 github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260113111745-7754c3d7fd99 h1:euzzk5ydUyewOVSBToAf2FycFXOE3x7d0iXjygYMNXQ=
 github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260113111745-7754c3d7fd99/go.mod h1:C9d4xzzMCM00QUF33EO+XUVQAbrG8biBL4nD0Q5cL6k=
 github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c h1:pxW6RcqyfI9/kWtOwnv/G+AzdKuy2ZrqINhenH4HyNs=
@@ -12,8 +8,6 @@ github.com/alexbrainman/sspi v0.0.0-20231016080023-1a75b4708caa h1:LHTHcTQiSGT7V
 github.com/alexbrainman/sspi v0.0.0-20231016080023-1a75b4708caa/go.mod h1:cEWa1LVoE5KvSD9ONXsZrj0z6KqySlCCNKHlLzbqAt4=
 github.com/andybalholm/brotli v1.1.0 h1:eLKJA0d02Lf0mVpIDgYnqXcUn0GqVmEFny3VuID1U3M=
 github.com/andybalholm/brotli v1.1.0/go.mod h1:sms7XGricyQI9K10gOSf56VKKWS4oLer58Q+mhRPtnY=
-github.com/anytls/anytls-go v0.0.11 h1:BLai0kkcoh429CibfAkULBA0Jo3T1LI9o1k9aXXM000=
-github.com/anytls/anytls-go v0.0.11/go.mod h1:8vNBmLZiH8Cyb4/pPnlVzCIr/9JRADAHqlw4TZaY0Ag=
 github.com/anytls/sing-anytls v0.0.11 h1:w8e9Uj1oP3m4zxkyZDewPk0EcQbvVxb7Nn+rapEx4fc=
 github.com/anytls/sing-anytls v0.0.11/go.mod h1:7rjN6IukwysmdusYsrV51Fgu1uW6vsrdd6ctjnEAln8=
 github.com/apernet/hysteria/extras/v2 v2.6.5 h1:JjH7m0IkuKQmy6CtdvdT9HB0M+SrLz/kRZEk6FBt4lU=
@@ -25,8 +19,6 @@ github.com/bits-and-blooms/bitset v1.22.0 h1:Tquv9S8+SGaS3EhyA+up3FXzmkhxPGjQQCk
 github.com/bits-and-blooms/bitset v1.22.0/go.mod h1:7hO7Gc7Pp1vODcmWvKMRA9BNmbv6a/7QIWpPxHddWR8=
 github.com/bits-and-blooms/bloom/v3 v3.7.0 h1:VfknkqV4xI+PsaDIsoHueyxVDZrfvMn56jeWUzvzdls=
 github.com/bits-and-blooms/bloom/v3 v3.7.0/go.mod h1:VKlUSvp0lFIYqxJjzdnSsZEw4iHb1kOL2tfHTgyJBHg=
-github.com/chen3feng/stl4go v0.1.1 h1:0L1+mDw7pomftKDruM23f1mA7miavOj6C6MZeadzN2Q=
-github.com/chen3feng/stl4go v0.1.1/go.mod h1:5ml3psLgETJjRJnMbPE+JiHLrCpt+Ajc2weeTECXzWU=
 github.com/cilium/ebpf v0.15.0 h1:7NxJhNiBT3NG8pZJ3c+yfrVdHY8ScgKD27sScgjLMMk=
 github.com/cilium/ebpf v0.15.0/go.mod h1:DHp1WyrLeiBh19Cf/tfiSMhqheEiK8fXFZ4No0P1Hso=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=

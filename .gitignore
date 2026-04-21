@@ -35,3 +35,4 @@ image.tar
 test_results.txt
 logs/
 logs.zip
+protos/gen/
