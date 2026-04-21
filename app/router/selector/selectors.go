@@ -121,7 +121,6 @@ type SelectorConfig struct {
 	*router.SelectorConfig
 	CreateHandler             i.HandlerFactory
 	HandlerErrorChangeSubject HandlerErrorChangeSubject
-	HandlerStat               HandlerStat
 	Tester                    Tester
 	Filter                    Filter
 	OnHandlerBeingUsedChange  HandlersBeingUsedUpdate
@@ -162,7 +161,6 @@ func NewSelector(config SelectorConfig) *Selector {
 		Tester:                   config.Tester,
 		OnHandlerBeingUsedChange: config.OnHandlerBeingUsedChange,
 		Dispatcher:               config.HandlerErrorChangeSubject,
-		HandlerStat:              config.HandlerStat,
 	})
 	return selector0
 }
@@ -206,4 +204,3 @@ func (n *SelectedHandlersChangeNotifier) NotifySelectedHandlersChanged(tag strin
 		go o.OnSelectedHandlersChanged(tag, handlers)
 	}
 }
-

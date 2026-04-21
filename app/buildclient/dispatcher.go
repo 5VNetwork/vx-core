@@ -88,7 +88,6 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 						CreateHandler:             handlerFactory,
 						Tester:                    tester,
 						HandlerErrorChangeSubject: d,
-						HandlerStat:               cc.OutStats,
 						Filter:                    filter,
 					}))
 					return nil
@@ -114,7 +113,6 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 						CreateHandler:             handlerFactory,
 						Tester:                    tester,
 						HandlerErrorChangeSubject: d,
-						HandlerStat:               cc.OutStats,
 						Filter:                    filter,
 					}))
 					return nil

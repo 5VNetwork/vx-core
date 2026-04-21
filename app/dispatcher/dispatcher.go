@@ -23,7 +23,9 @@ import (
 	"github.com/5vnetwork/vx-core/common/uot"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/proxy"
+	"github.com/5vnetwork/vx-core/proxy/hysteria2"
 	vless_out "github.com/5vnetwork/vx-core/proxy/vless/outbound"
+	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
 )
 
@@ -375,7 +377,22 @@ func (p *Dispatcher) onHandlerError(ctx context.Context, info *session.Info, tag
 	if errors.Is(err, io.EOF) {
 		return
 	}
+	if errors.Is(err, hysteria2.ErrRejectQuic) {
+		return
+	}
+	if errors.Is(err, vless_out.ErrRejectQuic) {
+		return
+	}
+	var closeError *websocket.CloseError
+	if errors.As(err, &closeError) && closeError.Code == websocket.CloseNormalClosure {
+		return
+	}
 	if info.SessionDownCounter.Load() != 0 {
+		return
+	}
+
+	if p.OutStats != nil && p.OutStats.IsHandlerActive(tag) {
+		log.Debug().Str("tag", tag).Msg("handler is active, skip notify observer")
 		return
 	}
 

@@ -31,6 +31,9 @@ type Selector struct {
 	handlersBeingUsed []*handler
 	filteredHandlers  []outHandler
 
+	handlerBeingTestedLock sync.RWMutex
+	handlerBeingTested     map[string]struct{}
+
 	// When there is no handler usable, enter fast recovery mode:
 	// test all unusable handlers every 10 seconds
 	isRecovery                                 bool
@@ -47,18 +50,11 @@ type Selector struct {
 
 	onUpdate HandlersBeingUsedUpdate
 
-	dispatcher  HandlerErrorChangeSubject
-	handlerStat HandlerStat
+	dispatcher HandlerErrorChangeSubject
 
 	ctx    context.Context
 	cancel context.CancelFunc
 	closed bool
-}
-
-type HandlerStat interface {
-	// Returns whether there is any data received from the handler in the
-	// last 1 seconds
-	IsHandlerActive(tag string) bool
 }
 
 type selectorConfig struct {
@@ -69,21 +65,20 @@ type selectorConfig struct {
 	Tester                   Tester
 	OnHandlerBeingUsedChange HandlersBeingUsedUpdate
 	Dispatcher               HandlerErrorChangeSubject
-	HandlerStat              HandlerStat
 }
 
 func newSelector(config selectorConfig) *Selector {
 	ctx, cancel := context.WithCancel(context.Background())
 	s := &Selector{
-		tag:         config.Tag,
-		strategy:    config.Strategy,
-		balancer:    config.Balancer,
-		tester:      config.Tester,
-		onUpdate:    config.OnHandlerBeingUsedChange,
-		dispatcher:  config.Dispatcher,
-		handlerStat: config.HandlerStat,
-		ctx:         ctx,
-		cancel:      cancel,
+		tag:                config.Tag,
+		strategy:           config.Strategy,
+		balancer:           config.Balancer,
+		tester:             config.Tester,
+		onUpdate:           config.OnHandlerBeingUsedChange,
+		dispatcher:         config.Dispatcher,
+		ctx:                ctx,
+		cancel:             cancel,
+		handlerBeingTested: make(map[string]struct{}),
 	}
 	s.filter.Store(config.Filter)
 	return s
@@ -351,20 +346,27 @@ func (s *Selector) OnHandlerError(tag string, err error) {
 		return
 	}
 
-	if s.handlerStat != nil {
-		if s.handlerStat.IsHandlerActive(tag) {
-			log.Debug().Str("tag", tag).Msg("handler is active, skip test")
-			return
-		}
-	}
-
 	if handler.GetOk() > 0 {
+		s.handlerBeingTestedLock.Lock()
+		_, ok := s.handlerBeingTested[tag]
+		if ok {
+			s.handlerBeingTestedLock.Unlock()
+			return
+		} else {
+			s.handlerBeingTested[tag] = struct{}{}
+			s.handlerBeingTestedLock.Unlock()
+		}
+
 		TestHandlerUsable(s.ctx, s.tester, handler)
 		usable := handler.outHandler.GetOk() > 0
 		log.Debug().Bool("usable", usable).Str("tag", handler.Tag()).Msg("handler usable result")
 		if !usable {
 			s.setHandlers()
 		}
+
+		s.handlerBeingTestedLock.Lock()
+		delete(s.handlerBeingTested, tag)
+		s.handlerBeingTestedLock.Unlock()
 	}
 }
 
