@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/net/udp"
@@ -240,4 +241,8 @@ type PortSelector interface {
 
 type UnauthorizedReport interface {
 	ReportUnauthorized(ip string, credential string)
+}
+
+type HandlerFactory interface {
+	CreateHandler(hs ...*configs.HandlerConfig) (Outbound, error)
 }

@@ -11,7 +11,7 @@ import "vx/geo/geo.proto";
 import "vx/user/user.proto";
 
 message ServerConfig {
-  uint32 id = 1;
+  reserved 1;
   repeated vx.inbound.ProxyInboundConfig inbounds = 3;
   repeated vx.inbound.MultiProxyInboundConfig multi_inbounds = 11;
   vx.PolicyConfig policy = 4;

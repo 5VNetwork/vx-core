@@ -12,6 +12,7 @@ import (
 	"time"
 
 	router "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/xsqlite"
 	"github.com/5vnetwork/vx-core/common/units"
@@ -100,11 +101,11 @@ type dbFilter struct {
 	db            Db
 	filterConfig  atomic.Value
 	landHandlers  []*xsqlite.OutboundHandler
-	createHandler CreateHandlerFunc
+	createHandler i.HandlerFactory
 }
 
 func NewDbFilter(db Db, filterConfig *router.SelectorConfig_Filter,
-	landHandlers []*xsqlite.OutboundHandler, createHandler CreateHandlerFunc) *dbFilter {
+	landHandlers []*xsqlite.OutboundHandler, createHandler i.HandlerFactory) *dbFilter {
 	f := &dbFilter{
 		db:            db,
 		landHandlers:  landHandlers,
@@ -150,15 +151,24 @@ type dbHandler struct {
 	oStats
 	db            Db
 	landHandlers  []*xsqlite.OutboundHandler
-	createHandler CreateHandlerFunc
+	createHandler i.HandlerFactory
 }
 
-func (h *dbHandler) GetHandler() (i.Outbound, error) {
-	handler := h.db.GetHandler(h.id)
+func (dbH *dbHandler) GetHandler() (i.Outbound, error) {
+	handler := dbH.db.GetHandler(dbH.id)
 	if handler == nil {
 		return nil, errors.New("handler not found")
 	}
-	return h.createHandler(handler.ToConfig(), h.landHandlers)
+	h := handler.ToConfig()
+	if dbH.landHandlers == nil {
+		return dbH.createHandler.CreateHandler(h)
+	}
+	var vxHandlerConfigs []*configs.HandlerConfig
+	vxHandlerConfigs = append(vxHandlerConfigs, h)
+	for _, landHandler := range dbH.landHandlers {
+		vxHandlerConfigs = append(vxHandlerConfigs, landHandler.ToConfig())
+	}
+	return dbH.createHandler.CreateHandler(vxHandlerConfigs...)
 }
 
 func (h *dbHandler) Name() string {

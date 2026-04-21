@@ -66,7 +66,7 @@ func (r *Rejector) Reject(p []byte) *buf.Buffer {
 				}
 				if outHandler, ok := handler.(i.HandlerWith6Info); ok && !outHandler.Support6() {
 					log.Debug().Str("handler", handler.Tag()).Any("dst", target).Msg("reject tcp because handler not support ipv6")
-					r.UserLogger.LogReject(info, "handler not support ipv6")
+					r.UserLogger.LogReject(info, "handler not support ipv6: "+handler.Tag())
 					return GenerateRstForTcpSynIPv60(ipv6, tcp)
 				}
 			}
@@ -100,7 +100,7 @@ func (r *Rejector) Reject(p []byte) *buf.Buffer {
 			}
 			if outHandler, ok := handler.(i.HandlerWith6Info); ok && !outHandler.Support6() {
 				log.Debug().Str("handler", handler.Tag()).Any("dst", target).Msg("reject udp because handler not support ipv6")
-				r.UserLogger.LogReject(info, "handler not support ipv6")
+				r.UserLogger.LogReject(info, "handler not support ipv6: "+handler.Tag())
 				return CreateICMPv6Unreachable(ipv6)
 			}
 		}

@@ -5,7 +5,6 @@ package dns
 
 import (
 	"slices"
-	"sync/atomic"
 
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/miekg/dns"
@@ -15,14 +14,6 @@ type HasSrcCondition struct{}
 
 func (h *HasSrcCondition) Match(msg *DnsMsgMeta) bool {
 	return msg.Src != nil
-}
-
-type FakeDnsCondition struct {
-	FakeDnsEnabled *atomic.Bool
-}
-
-func (f *FakeDnsCondition) Match(msg *DnsMsgMeta) bool {
-	return f.FakeDnsEnabled.Load()
 }
 
 type ExcludeDomainCondition struct {

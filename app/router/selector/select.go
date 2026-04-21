@@ -6,7 +6,6 @@ package selector
 import (
 	"context"
 
-	outbound "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/outbound"
 	"github.com/5vnetwork/vx-core/app/xsqlite"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/rs/zerolog/log"
@@ -30,8 +29,6 @@ type Tester interface {
 	TestIPv6(context.Context, i.Outbound) bool
 	TestPing(context.Context, i.Outbound) int
 }
-
-type CreateHandlerFunc func(h *outbound.HandlerConfig, landHandlerIds []*xsqlite.OutboundHandler) (i.Outbound, error)
 
 type outHandler interface {
 	GetHandler() (i.Outbound, error)

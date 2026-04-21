@@ -76,6 +76,7 @@ func (r *FallbackMon) FlowSessionEnd(ctx context.Context, info *session.Info, er
 	if s == nil {
 		return
 	}
+
 	if s.SessionDownCounter.Load() > 0 && s.GetTargetDomain() != "" {
 		// save to db
 		if r.Db != nil {
@@ -104,10 +105,10 @@ func (r *FallbackMon) FlowSessionEnd(ctx context.Context, info *session.Info, er
 
 		// add to set
 		if r.Geo != nil {
-			err = r.Geo.GetGeo().AddDomain(r.DomainSetName, commongeo.Domain_builder{
+			err = r.Geo.GetGeo().AddDomain(r.DomainSetName, &commongeo.Domain{
 				Value: s.GetTargetDomain(),
 				Type:  commongeo.Domain_RootDomain,
-			}.Build())
+			})
 			if err != nil {
 				log.Ctx(ctx).Err(err).Msg("failed to add geo domain to fallback set")
 			}

@@ -16,9 +16,9 @@ import (
 func TestCertificateIssuing(t *testing.T) {
 	certificate := ParseCertificate(cert.MustGenerate(nil, cert.Authority(true), cert.KeyUsage(x509.KeyUsageCertSign)))
 
-	c := (&tlspb.TlsConfig_builder{
+	c := &tlspb.TlsConfig{
 		IssueCas: []*Certificate{certificate},
-	}).Build()
+	}
 
 	tlsConfig, err := GetTLSConfig(c)
 	common.Must(err)
@@ -42,9 +42,9 @@ func TestExpiredCertificate(t *testing.T) {
 
 	certificate2 := ParseCertificate(expiredCert)
 
-	c := (&tlspb.TlsConfig_builder{
+	c := &tlspb.TlsConfig{
 		IssueCas: []*Certificate{certificate, certificate2},
-	}).Build()
+	}
 
 	tlsConfig, err := GetTLSConfig(c)
 	common.Must(err)
@@ -61,7 +61,7 @@ func TestExpiredCertificate(t *testing.T) {
 }
 
 func TestInsecureCertificates(t *testing.T) {
-	c := (&tlspb.TlsConfig_builder{}).Build()
+	c := &tlspb.TlsConfig{}
 
 	tlsConfig, err := GetTLSConfig(c)
 	common.Must(err)
@@ -73,9 +73,9 @@ func TestInsecureCertificates(t *testing.T) {
 func BenchmarkCertificateIssuing(b *testing.B) {
 	certificate := ParseCertificate(cert.MustGenerate(nil, cert.Authority(true), cert.KeyUsage(x509.KeyUsageCertSign)))
 
-	c := (&tlspb.TlsConfig_builder{
+	c := &tlspb.TlsConfig{
 		IssueCas: []*Certificate{certificate},
-	}).Build()
+	}
 
 	tlsConfig, err := GetTLSConfig(c)
 	common.Must(err)

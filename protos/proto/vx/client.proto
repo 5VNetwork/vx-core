@@ -36,7 +36,6 @@ message TmConfig {
   bool default_nic_monitor = 20;
   // subscription
   vx.subscription.SubscriptionConfig subscription = 21;
-  bool hysteria2_reject_quic = 24;
 
   // outbound
   vx.outbound.OutboundConfig outbound = 30;

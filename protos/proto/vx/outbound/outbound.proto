@@ -44,6 +44,7 @@ message OutboundConfig {
   // @deprecated
   repeated ChainHandlerConfig chain_handlers = 2;
   repeated HandlerConfig handlers = 3;
+  bool hysteria_reject_quic = 4;
 }
 
 message HandlerConfig {

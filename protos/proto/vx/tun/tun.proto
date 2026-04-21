@@ -1,5 +1,6 @@
 syntax = "proto3";
 package vx.tun;
+
 option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
 message TunConfig {
@@ -7,7 +8,7 @@ message TunConfig {
   Mode mode = 3;
   // whether to bind outbound traffic to the primary physical interface.
   // This should be true if default route is to tun.
-  bool should_bind_device = 4;
+  reserved 4;
   TunDeviceConfig device = 5;
   enum TUN46Setting {
     // Apply only ipv4 settings of [device] to the tun.
@@ -20,11 +21,10 @@ message TunConfig {
   }
   // Controls whether to apply ipv4 and ipv6 settings of [device] to the tun.
   TUN46Setting tun46_setting = 8;
-  // based on dst, src, network to match a handler, 
+  // based on dst, src, network to match a handler,
   // if the handler does not support ipv6, reject the request
   bool reject_ipv6 = 9;
 }
-
 
 enum Mode {
   MODE_SYSTEM = 0;

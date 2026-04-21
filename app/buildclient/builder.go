@@ -69,14 +69,10 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 	}
 
 	x := &client.Client{
-		Components:          &common.Components{},
-		AllFakeDns:          &dns.AllFakeDns{},
-		Hysteria2RejectQuic: config.Hysteria2RejectQuic,
-		OutStats:            dispatcher.NewOutStats(),
+		Components: &common.Components{},
+		OutStats:   dispatcher.NewOutStats(),
 	}
-	builder.addComponent(x.AllFakeDns)
 	builder.addComponent(x.OutStats)
-	x.FakeDnsEnabled.Store(config.Dns.GetEnableFakeDns())
 
 	// logger
 	if config.GetLog() == nil {
@@ -171,7 +167,7 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 
 	// outbound
 	log.Debug().Msg("outbound")
-	_, err = buildOutbound(config, builder, x)
+	_, err = buildOutbound(config.Outbound, builder, x)
 	if err != nil {
 		return nil, err
 	}

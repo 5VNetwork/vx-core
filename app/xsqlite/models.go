@@ -125,7 +125,5 @@ func (h *OutboundHandler) ToConfig() *outbound.HandlerConfig {
 	} else if config.GetChain() != nil {
 		config.GetChain().Tag = fmt.Sprintf("%d", h.ID)
 	}
-	// config.Ping = uint64(h.Ping)
-	// config.Throughput = uint64(h.Speed * 1024 * 1024 / 8)
 	return &config
 }

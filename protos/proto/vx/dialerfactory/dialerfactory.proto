@@ -2,5 +2,6 @@ syntax = "proto3";
 package vx.dialerfactory;
 
 message DialerFactoryConfig {
-    uint32 dial_timeout = 1;
+  uint32 dial_timeout = 1;
+  bool should_bind_device = 2;
 }

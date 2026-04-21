@@ -4,15 +4,11 @@
 package client
 
 import (
-	"strconv"
-	"sync/atomic"
-
-	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/geo"
 	"github.com/5vnetwork/vx-core/app/grpcserver"
+	"github.com/5vnetwork/vx-core/app/handlerfactory"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/app/logger"
 	"github.com/5vnetwork/vx-core/app/outbound"
@@ -22,7 +18,6 @@ import (
 	"github.com/5vnetwork/vx-core/app/subscription"
 	"github.com/5vnetwork/vx-core/app/tester"
 	"github.com/5vnetwork/vx-core/app/userlogger"
-	"github.com/5vnetwork/vx-core/app/xsqlite"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/transport"
@@ -59,22 +54,7 @@ type Client struct {
 	// used to resolve domains of proxied connections, typically used for converting domain to real ip for udp connections
 	IPResolverForRequestAddress i.IPResolver
 	IPToDomain                  *dns.IPToDomain
-	FakeDnsEnabled              atomic.Bool
-	AllFakeDns                  *dns.AllFakeDns
-	Hysteria2RejectQuic         bool
-}
-
-func (c *Client) SetFakeDnsEnabled(enabled bool) {
-	c.FakeDnsEnabled.Store(enabled)
-}
-
-func (c *Client) GetFakeDnsEnabled() bool {
-	return c.FakeDnsEnabled.Load()
-}
-
-type Db interface {
-	selector.Db
-	UpdateHandler(id int, m map[string]interface{}) error
+	HandlerFactory              *handlerfactory.HandlerFactory
 }
 
 func (c *Client) Start() error {
@@ -96,69 +76,7 @@ func (c *Client) Close() error {
 	return err
 }
 
-func (c *Client) CreateHandler(h *configs.HandlerConfig) (i.Outbound, error) {
-	df := c.DialerFactory
-
-	return create.NewHandler(&create.HandlerConfig{
-		HandlerConfig:               h,
-		DialerFactory:               df,
-		Policy:                      c.Policy,
-		IPResolver:                  c.IPResolver,
-		EchResolver:                 c.EchResolver,
-		IPResolverForRequestAddress: c.IPResolverForRequestAddress,
-		RejectQuic:                  c.Hysteria2RejectQuic,
-	})
-}
-
-func (c *Client) CreateHandlerWithLandHandlers(h *configs.HandlerConfig, landHandlerIds []*xsqlite.OutboundHandler) (i.Outbound, error) {
-	df := c.DialerFactory
-	if len(landHandlerIds) > 0 {
-		handlers := make([]*configs.OutboundHandlerConfig, 0)
-		if h.GetOutbound() != nil {
-			handlers = append(handlers, h.GetOutbound())
-		} else if h.GetChain() != nil {
-			handlers = append(handlers, h.GetChain().GetHandlers()...)
-		}
-
-		for _, handler := range landHandlerIds {
-			handlerConfig := handler.ToConfig()
-			if handlerConfig.GetOutbound() != nil {
-				handlers = append(handlers, handlerConfig.GetOutbound())
-			} else if handlerConfig.GetChain() != nil {
-				handlers = append(handlers, handlerConfig.GetChain().GetHandlers()...)
-			}
-		}
-
-		tag := configs.HandlerTag(h)
-		for _, id := range landHandlerIds {
-			tag = tag + "-" + strconv.Itoa(id.ID)
-		}
-
-		ch, err := create.NewChainHandler(&create.ChainHandlerConfig{
-			ChainHandlerConfig: &configs.ChainHandlerConfig{
-				Tag:      tag,
-				Handlers: handlers,
-			},
-			Policy:                      c.Policy,
-			IPResolver:                  c.IPResolver,
-			DF:                          c.DialerFactory,
-			IPResolverForRequestAddress: c.IPResolverForRequestAddress,
-			RejectQuic:                  c.Hysteria2RejectQuic,
-			EchResolver:                 c.EchResolver,
-		})
-		if err != nil {
-			return nil, err
-		}
-		return ch, nil
-	}
-
-	return create.NewHandler(&create.HandlerConfig{
-		HandlerConfig:               h,
-		DialerFactory:               df,
-		Policy:                      c.Policy,
-		IPResolver:                  c.IPResolver,
-		EchResolver:                 c.EchResolver,
-		IPResolverForRequestAddress: c.IPResolverForRequestAddress,
-		RejectQuic:                  c.Hysteria2RejectQuic,
-	})
+type Db interface {
+	selector.Db
+	UpdateHandler(id int, m map[string]interface{}) error
 }

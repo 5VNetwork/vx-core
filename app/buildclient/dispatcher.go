@@ -12,6 +12,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
 	idns "github.com/5vnetwork/vx-core/app/dns"
+	"github.com/5vnetwork/vx-core/app/handlerfactory"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/router"
@@ -72,7 +73,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 		d.AddOnFallback(ul)
 	})
 	fc.requireOptionalFeatures(func(id *dns.Dns) {
-		rewriteDestination.FakeDns = cc.AllFakeDns
+		rewriteDestination.FakeDns = id
 		rewriteDestination.Dns = cc.IPResolverForRequestAddress
 	})
 
@@ -80,11 +81,11 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 		for _, selectorConfig := range config.Selectors.Selectors {
 			if selectorConfig.SelectFromOm {
 				err := fc.requireFeature(func(dispatcher *dispatcher.Dispatcher, tester *tester.Tester,
-					om *outbound.Manager) error {
+					om *outbound.Manager, handlerFactory *handlerfactory.HandlerFactory) error {
 					filter := selector.NewOmFilter(selectorConfig.GetFilter(), om)
 					selectors.AddSelector(selector.NewSelector(selector.SelectorConfig{
 						SelectorConfig:            selectorConfig,
-						CreateHandler:             cc.CreateHandlerWithLandHandlers,
+						CreateHandler:             handlerFactory,
 						Tester:                    tester,
 						HandlerErrorChangeSubject: d,
 						HandlerStat:               cc.OutStats,
@@ -97,7 +98,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 				}
 			} else {
 				err := fc.requireFeature(func(dispatcher *dispatcher.Dispatcher, tester *tester.Tester,
-					db client.Db) error {
+					db client.Db, handlerFactory *handlerfactory.HandlerFactory) error {
 					landHandlers := make([]*xsqlite.OutboundHandler, 0, len(selectorConfig.LandHandlers))
 					for _, landHandlerId := range selectorConfig.LandHandlers {
 						handler := db.GetHandler(int(landHandlerId))
@@ -107,10 +108,10 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 						landHandlers = append(landHandlers, handler)
 					}
 					filter := selector.NewDbFilter(db, selectorConfig.GetFilter(),
-						landHandlers, cc.CreateHandlerWithLandHandlers)
+						landHandlers, handlerFactory)
 					selectors.AddSelector(selector.NewSelector(selector.SelectorConfig{
 						SelectorConfig:            selectorConfig,
-						CreateHandler:             cc.CreateHandlerWithLandHandlers,
+						CreateHandler:             handlerFactory,
 						Tester:                    tester,
 						HandlerErrorChangeSubject: d,
 						HandlerStat:               cc.OutStats,

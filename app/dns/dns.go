@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"sync/atomic"
 
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/net/udp"
@@ -20,13 +21,14 @@ type Dns struct {
 	dnsRules   []*DnsRule
 	dnsServers []DnsServer
 
-	done      *done.Instance
-	requests  chan *udp.Packet
-	responses chan *udp.Packet
+	done          *done.Instance
+	requests      chan *udp.Packet
+	responses     chan *udp.Packet
+	enableFakeDns atomic.Bool
 }
 
-func NewDns(local *StaticDnsServer, rules []*DnsRule, dnsServers []DnsServer) *Dns {
-	return &Dns{
+func NewDns(local *StaticDnsServer, rules []*DnsRule, dnsServers []DnsServer, enableDns bool) *Dns {
+	d := &Dns{
 		local:      local,
 		dnsRules:   rules,
 		dnsServers: dnsServers,
@@ -34,6 +36,8 @@ func NewDns(local *StaticDnsServer, rules []*DnsRule, dnsServers []DnsServer) *D
 		requests:   make(chan *udp.Packet, 100),
 		responses:  make(chan *udp.Packet, 100),
 	}
+	d.enableFakeDns.Store(enableDns)
+	return d
 }
 
 func (dsp *Dns) Start() error {
@@ -59,6 +63,40 @@ func (dsp *Dns) Close() error {
 	}
 	dsp.done.Close()
 	return nil
+}
+
+func (dsp *Dns) SetFakeDnsEnabled(enabled bool) {
+	dsp.enableFakeDns.Store(enabled)
+}
+
+func (dsp *Dns) GetFakeDnsEnabled() bool {
+	return dsp.enableFakeDns.Load()
+}
+
+func (dsp *Dns) IsIPInIPPool(ip net.Address) bool {
+	for _, dnsServer := range dsp.dnsServers {
+		if isFakeDns(dnsServer) {
+			if fakeDns, ok := dnsServer.(*FakeDns); ok {
+				if fakeDns.IsIPInIPPool(ip) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func (dsp *Dns) GetDomainFromFakeDNS(ip net.Address) string {
+	for _, dnsServer := range dsp.dnsServers {
+		if isFakeDns(dnsServer) {
+			if fakeDns, ok := dnsServer.(*FakeDns); ok {
+				if d := fakeDns.GetDomainFromFakeDNS(ip); d != "" {
+					return d
+				}
+			}
+		}
+	}
+	return ""
 }
 
 type DnsRule struct {
@@ -98,6 +136,9 @@ func (d *Dns) HandleQuery(ctx context.Context, msg *DnsMsgMeta, tcp bool) (*dns.
 	}
 
 	for _, dnsRule := range d.dnsRules {
+		if isFakeDns(dnsRule.dnsServer) && !d.enableFakeDns.Load() {
+			continue
+		}
 		if dnsRule.match(msg) {
 			return dnsRule.dnsServer.HandleQuery(ctx, msg.Msg, tcp)
 		}
@@ -171,6 +212,9 @@ func (dsp *Dns) dispatchWorker() {
 			}
 			found := false
 			for _, rule := range dsp.dnsRules {
+				if isFakeDns(rule.dnsServer) && !dsp.enableFakeDns.Load() {
+					continue
+				}
 				if rule.match(&DnsMsgMeta{Msg: &msg, Src: &p.Source}) {
 					found = true
 					if dnsConn, ok := rule.dnsServer.(DnsConn); ok {
@@ -208,6 +252,11 @@ func (dsp *Dns) dispatchWorker() {
 			}
 		}
 	}
+}
+
+func isFakeDns(dnsServer DnsServer) bool {
+	_, ok := dnsServer.(*FakeDns)
+	return ok
 }
 
 func (t *Dns) handleConnResponse(conn DnsConn) {

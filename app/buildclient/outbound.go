@@ -8,8 +8,8 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/client"
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/dns"
+	"github.com/5vnetwork/vx-core/app/handlerfactory"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/common"
@@ -20,49 +20,55 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func buildOutbound(config *configs.TmConfig, builder *Builder, client *client.Client) (*outbound.Manager, error) {
+func buildOutbound(config *configs.OutboundConfig, builder *Builder, client *client.Client) (*outbound.Manager, error) {
 	om := outbound.NewManager()
 	client.OutboundManager = om
 	common.Must(builder.addComponent(om))
 	err := builder.requireFeature(func(df transport.DialerFactory,
 		policy *policy.Policy, _ *dns.Dns) error {
-		var singleHandlers []*configs.HandlerConfig
-		var chainHandlers []*configs.HandlerConfig
-
-		for _, handlerConfig := range config.Outbound.GetHandlers() {
-			if handlerConfig.GetOutbound() != nil {
-				singleHandlers = append(singleHandlers, handlerConfig)
-			} else if handlerConfig.GetChain() != nil {
-				chainHandlers = append(chainHandlers, handlerConfig)
-			}
+		handlerFactory := &handlerfactory.HandlerFactory{
+			DialerFactory:               df,
+			Policy:                      policy,
+			IPResolver:                  client.IPResolver,
+			IPResolverForRequestAddress: client.IPResolverForRequestAddress,
+			EchResolver:                 client.EchResolver,
+			Hysteria2RejectQuic:         config.GetHysteriaRejectQuic(),
 		}
-		for _, handlerConfig := range config.Outbound.GetOutboundHandlers() {
-			singleHandlers = append(singleHandlers, &configs.HandlerConfig{
+		client.HandlerFactory = handlerFactory
+		common.Must(builder.addComponent(handlerFactory))
+
+		var handlerConfigs []*configs.HandlerConfig
+		for _, handlerConfig := range config.GetOutboundHandlers() {
+			handlerConfigs = append(handlerConfigs, &configs.HandlerConfig{
 				Type: &configs.HandlerConfig_Outbound{
 					Outbound: handlerConfig,
 				},
 			})
 		}
-		if len(singleHandlers) == 0 && len(chainHandlers) == 0 {
-			singleHandlers = append(singleHandlers, &configs.HandlerConfig{
-				Type: &configs.HandlerConfig_Outbound{
-					Outbound: &configs.OutboundHandlerConfig{
-						Protocol: serial.ToTypedMessage(&configs.FreedomConfig{}),
-					},
+		for _, handlerConfig := range config.GetChainHandlers() {
+			handlerConfigs = append(handlerConfigs, &configs.HandlerConfig{
+				Type: &configs.HandlerConfig_Chain{
+					Chain: handlerConfig,
 				},
 			})
 		}
-		handlers := make([]i.Outbound, 0, len(singleHandlers)+len(chainHandlers))
-		for _, handlerConfig := range singleHandlers {
-			handler, err := create.NewOutHandler(&create.Config{
-				OutboundHandlerConfig:       handlerConfig.GetOutbound(),
-				DialerFactory:               df,
-				Policy:                      policy,
-				IPResolver:                  client.IPResolver,
-				ECHResolver:                 client.EchResolver,
-				IPResolverForRequestAddress: client.IPResolverForRequestAddress,
-				RejectQuic:                  config.Hysteria2RejectQuic,
-			})
+		handlerConfigs = append(handlerConfigs, config.GetHandlers()...)
+		if len(handlerConfigs) == 0 {
+			handlerConfigs = []*configs.HandlerConfig{
+				{
+					Type: &configs.HandlerConfig_Outbound{
+						Outbound: &configs.OutboundHandlerConfig{
+							Tag:      "direct",
+							Protocol: serial.ToTypedMessage(&configs.FreedomConfig{}),
+						},
+					},
+				},
+			}
+		}
+
+		handlers := make([]i.Outbound, 0, len(handlerConfigs))
+		for _, handlerConfig := range handlerConfigs {
+			handler, err := handlerFactory.CreateHandler(handlerConfig)
 			if err != nil {
 				return err
 			}
@@ -84,22 +90,6 @@ func buildOutbound(config *configs.TmConfig, builder *Builder, client *client.Cl
 			}
 			handlers = append(handlers, handler)
 		}
-		for _, chainHandlerConfig := range chainHandlers {
-			chainHandler, err := create.NewChainHandler(&create.ChainHandlerConfig{
-				ChainHandlerConfig:          chainHandlerConfig.GetChain(),
-				Policy:                      policy,
-				IPResolver:                  client.IPResolver,
-				EchResolver:                 client.EchResolver,
-				IPResolverForRequestAddress: client.IPResolverForRequestAddress,
-				DF:                          df,
-				RejectQuic:                  config.Hysteria2RejectQuic,
-			})
-			if err != nil {
-				return err
-			}
-			handlers = append(handlers, chainHandler)
-		}
-
 		om.AddHandlers(handlers...)
 		return nil
 	})

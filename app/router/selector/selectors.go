@@ -119,7 +119,7 @@ type HandlersBeingUsedUpdate func([]string)
 
 type SelectorConfig struct {
 	*router.SelectorConfig
-	CreateHandler             CreateHandlerFunc
+	CreateHandler             i.HandlerFactory
 	HandlerErrorChangeSubject HandlerErrorChangeSubject
 	HandlerStat               HandlerStat
 	Tester                    Tester

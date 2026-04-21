@@ -173,6 +173,7 @@ func UpdateVX(sshClient *sshhelper.Client, user string) error {
 	// 	}
 	// }
 
+	// bash -c  "$(curl -L https://github.com/5vnetwork/vx-install/raw/main/install-vx.sh)"  @ install -u root --version v1.2.1
 	o, err := sshClient.CombinedOutput("bash -c \"$(curl -L https://github.com/5vnetwork/vx-install/raw/main/install-vx.sh)\" @ install -u "+user, true)
 	if err != nil {
 		return fmt.Errorf("failed to run download install-vx.sh: %w. Output: %s", err, o)

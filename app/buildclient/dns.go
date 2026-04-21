@@ -65,7 +65,7 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 			}
 
 			var dailer i.Dialer
-			if config.GetTun().GetShouldBindDevice() {
+			if config.GetDialerFactory().GetShouldBindDevice() {
 				if runtime.GOOS == "android" {
 					fdFunc := fc.getFeature(reflect.TypeOf((*transport.FdFunc)(nil)).Elem())
 					dailer = &dlhelper.SocketSetting{
@@ -110,7 +110,8 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 					return fmt.Errorf("internal dns server %s not found", internalDnsServer)
 				}
 			}
-			dns := idns.NewDns(staticDnsServer, dnsRules, dnsServers)
+			dns := idns.NewDns(staticDnsServer, dnsRules, dnsServers, config.Dns.EnableFakeDns)
+			client.Dns = dns
 			client.IPResolverForRequestAddress = &idns.Prefer4IPResolver{
 				IPResolver: &idns.DnsServerToResolver{
 					DnsServers: []idns.DnsServer{&idns.DnsToDnsServer{Dns: dns}},
@@ -129,7 +130,7 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 		client.IPResolverForRequestAddress = &dns.DnsResolver{}
 		client.IPResolver = &dns.DnsResolver{}
 		client.EchResolver = dns.DefaultCfResolver()
-		client.Dns = idns.NewDns(staticDnsServer, nil, nil)
+		client.Dns = idns.NewDns(staticDnsServer, nil, nil, config.Dns.EnableFakeDns)
 		common.Must(fc.addComponent(client.Dns))
 		common.Must(fc.addComponent(&dns.DnsResolver{}))
 	}
@@ -171,7 +172,6 @@ func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain
 			return nil, fmt.Errorf("failed to create fake dns pool: %w", err)
 		}
 		fakeDns := dns.NewFakeDns(pools)
-		client.AllFakeDns.AddFakeDns(fakeDns)
 		return fakeDns, nil
 	case *configs.DnsServerConfig_PlainDnsServer:
 		var addressPorts []mynet.AddressPort
@@ -331,9 +331,6 @@ func newDnsRule(config *configs.DnsRuleConfig, dnsServer idns.DnsServer, gh i.Ge
 		})
 	}
 	if _, ok := dnsServer.(*dns.FakeDns); ok {
-		conditions = append(conditions, &idns.FakeDnsCondition{
-			FakeDnsEnabled: &client.FakeDnsEnabled,
-		})
 		conditions = append(conditions, &idns.HasSrcCondition{})
 	}
 	if len(config.IncludedTypes) > 0 {

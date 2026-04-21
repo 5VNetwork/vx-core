@@ -205,7 +205,6 @@ func NewRouter(lc fx.Lifecycle, params RouterParams) (RouterResult, error) {
 type DispatcherParams struct {
 	fx.In
 	Timeout i.TimeoutSetting
-	InStats *monitor.InboundStats
 	Router  i.Router
 }
 type DispatcherResult struct {

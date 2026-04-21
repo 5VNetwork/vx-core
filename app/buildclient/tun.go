@@ -24,12 +24,12 @@ func Tun(config *configs.TmConfig, fc *Builder, client *client.Client) error {
 		var rejector *reject.Rejector
 		if config.Tun.GetRejectIpv6() {
 			rejector = &reject.Rejector{
-				InboundTag:  config.Tun.Tag,
-				FakeDnsPool: client.AllFakeDns,
+				InboundTag: config.Tun.Tag,
 			}
-			fc.requireFeature(func(r i.Router, ul *userlogger.UserLogger) {
+			fc.requireFeature(func(r i.Router, ul *userlogger.UserLogger, dns *dns.Dns) {
 				rejector.Router = r
 				rejector.UserLogger = ul
+				rejector.FakeDnsPool = dns
 			})
 		}
 		// tun inbound

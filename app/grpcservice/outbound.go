@@ -63,7 +63,7 @@ func (s *GrpcService) ChangeOutbound(ctx context.Context, in *ChangeOutboundRequ
 	om := s.Client.OutboundManager
 	handlers := make([]i.Outbound, 0, len(in.GetHandlers()))
 	for _, handler := range in.GetHandlers() {
-		h, err := s.Client.CreateHandlerWithLandHandlers(handler, nil)
+		h, err := s.Client.HandlerFactory.CreateHandler(handler)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create outbound handler: %w", err)
 		}
@@ -118,11 +118,11 @@ func (s *GrpcService) ChangeSelector(ctx context.Context, in *ChangeSelectorRequ
 			filter = selector.NewOmFilter(selectorConfig.GetFilter(), s.Client.OutboundManager)
 		} else {
 			filter = selector.NewDbFilter(s.Client.DB, selectorConfig.GetFilter(),
-				landHandlers, s.Client.CreateHandlerWithLandHandlers)
+				landHandlers, s.Client.HandlerFactory)
 		}
 		s.Client.Selectors.AddSelector(selector.NewSelector(selector.SelectorConfig{
 			SelectorConfig:            selectorConfig,
-			CreateHandler:             s.Client.CreateHandlerWithLandHandlers,
+			CreateHandler:             s.Client.HandlerFactory,
 			HandlerErrorChangeSubject: s.Client.Dispatcher,
 			HandlerStat:               s.Client.OutStats,
 			Tester:                    s.Client.Tetser,

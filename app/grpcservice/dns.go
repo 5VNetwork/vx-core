@@ -11,18 +11,14 @@ import (
 )
 
 func (d *GrpcService) EnableFakeDns() error {
-	if d.Client.AllFakeDns != nil {
-		log.Info().Msg("fake dns enabled")
-		d.Client.SetFakeDnsEnabled(true)
-	}
+	log.Info().Msg("fake dns enabled")
+	d.Client.Dns.SetFakeDnsEnabled(true)
 	return nil
 }
 
 func (d *GrpcService) DisableFakeDns() error {
-	if d.Client.AllFakeDns != nil {
-		log.Info().Msg("fake dns disabled")
-		d.Client.SetFakeDnsEnabled(false)
-	}
+	log.Info().Msg("fake dns disabled")
+	d.Client.Dns.SetFakeDnsEnabled(false)
 	return nil
 }
 

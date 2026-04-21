@@ -759,16 +759,10 @@ func TestChainHanlerSSHys(t *testing.T) {
 	hysPort := net.PickTCPPort()
 	ssPort := net.PickTCPPort()
 	t.Log("hysPort", hysPort, "ssPort", ssPort)
-	secret := uuid.New()
 	userID := uuid.New()
+	secret1 := uuid.New()
 
 	serverConfig := &configs.ServerConfig{
-		Users: []*configs.UserConfig{
-			{
-				Id:     userID.String(),
-				Secret: userID.String(),
-			},
-		},
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Tag:     "hysteria",
@@ -782,6 +776,12 @@ func TestChainHanlerSSHys(t *testing.T) {
 						},
 					},
 				}),
+				Users: []*configs.UserConfig{
+					{
+						Id:     userID.String(),
+						Secret: secret1.String(),
+					},
+				},
 			},
 			{
 				Tag:     "ss",
@@ -832,7 +832,7 @@ func TestChainHanlerSSHys(t *testing.T) {
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(hysPort),
 							Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
-								Auth: userID.String(),
+								Auth: secret1.String(),
 								TlsConfig: &tls.TlsConfig{
 									AllowInsecure: true,
 								},
@@ -877,16 +877,10 @@ func TestChainHanlerHysSS(t *testing.T) {
 	ssPort := net.PickTCPPort()
 	trojanPort := net.PickTCPPort()
 	t.Log("hysPort", hysPort, "ssPort", ssPort, "trojanPort", trojanPort)
-	secret := uuid.New()
+	secret1 := uuid.New()
 	userID := uuid.New()
 
 	serverConfig := &configs.ServerConfig{
-		Users: []*configs.UserConfig{
-			{
-				Id:     userID.String(),
-				Secret: userID.String(),
-			},
-		},
 		Inbounds: []*configs.ProxyInboundConfig{
 			{
 				Tag:     "hysteria",
@@ -900,6 +894,12 @@ func TestChainHanlerHysSS(t *testing.T) {
 						},
 					},
 				}),
+				Users: []*configs.UserConfig{
+					{
+						Id:     userID.String(),
+						Secret: secret1.String(),
+					},
+				},
 			},
 			{
 				Tag:     "ss",
@@ -945,7 +945,6 @@ func TestChainHanlerHysSS(t *testing.T) {
 			ChainHandlers: []*configs.ChainHandlerConfig{
 				{
 					Handlers: []*configs.OutboundHandlerConfig{
-
 						{
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(ssPort),
@@ -958,7 +957,7 @@ func TestChainHanlerHysSS(t *testing.T) {
 							Address: net.LocalHostIP.String(),
 							Port:    uint32(hysPort),
 							Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
-								Auth: userID.String(),
+								Auth: secret1.String(),
 								TlsConfig: &tls.TlsConfig{
 									AllowInsecure: true,
 								},

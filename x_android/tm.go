@@ -180,7 +180,7 @@ func (t *tm) CreateInbound(tunConfig *configs.TunConfig, fd int32, support6 bool
 		rejector = &reject.Rejector{
 			InboundTag:  tunConfig.Tag,
 			Router:      c.Router,
-			FakeDnsPool: c.AllFakeDns,
+			FakeDnsPool: c.Dns,
 			UserLogger:  c.UserLogger,
 		}
 	}

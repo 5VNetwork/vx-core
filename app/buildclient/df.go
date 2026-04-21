@@ -17,7 +17,7 @@ import (
 
 func DialerFactory(config *configs.TmConfig, fc *Builder, client *client.Client) error {
 	// dialer factory
-	if config.Tun.GetShouldBindDevice() {
+	if config.GetDialerFactory().GetShouldBindDevice() {
 		err := fc.requireFeature(func(bdl i.DefaultInterfaceInfo, ipResolver i.IPResolver) error {
 			opt := transport.DialerFactoryOption{
 				BindToDefaultNIC:        runtime.GOOS != "android",

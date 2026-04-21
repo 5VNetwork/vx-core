@@ -92,7 +92,7 @@ func responseFullVersion(v *ResponseConfig) string {
 
 func responseStatusOrDefault(v *ResponseConfig) *Status {
 	if v == nil || v.GetStatus() == nil {
-		return (&httppb.Status_builder{Code: "200", Reason: "OK"}).Build()
+		return &httppb.Status{Code: "200", Reason: "OK"}
 	}
 	return v.GetStatus()
 }

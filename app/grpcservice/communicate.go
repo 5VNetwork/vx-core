@@ -69,7 +69,7 @@ func (s *GrpcService) OnSubscriptionUpdated() {
 				log.Error().Err(err).Msg("failed to get outbound handler")
 				continue
 			}
-			h, err := s.Client.CreateHandlerWithLandHandlers(handler.ToConfig(), nil)
+			h, err := s.Client.HandlerFactory.CreateHandler(handler.ToConfig())
 			if err != nil {
 				log.Error().Err(err).Msg("create outbound handler")
 				continue
