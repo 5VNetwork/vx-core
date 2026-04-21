@@ -145,10 +145,10 @@ func (c *Client) OpenPort(port uint32, protocol string) error {
 
 		var parts []string
 		if !v4Done {
-			parts = append(parts, fmt.Sprintf("iptables -A INPUT -p %s --dport %d -j ACCEPT && iptables-save > %s", protocol, port, iptablesRulesV4Path))
+			parts = append(parts, fmt.Sprintf("iptables -I INPUT 1 -p %s --dport %d -j ACCEPT && iptables-save > %s", protocol, port, iptablesRulesV4Path))
 		}
 		if hasIp6tables && !v6Done {
-			parts = append(parts, fmt.Sprintf("ip6tables -A INPUT -p %s --dport %d -j ACCEPT && ip6tables-save > %s", protocol, port, iptablesRulesV6Path))
+			parts = append(parts, fmt.Sprintf("ip6tables -I INPUT 1 -p %s --dport %d -j ACCEPT && ip6tables-save > %s", protocol, port, iptablesRulesV6Path))
 		}
 		cmd := strings.Join(parts, " && ")
 		if err := c.ShRun(cmd); err != nil {
