@@ -52,10 +52,6 @@ func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler
 		return nil, err
 	}
 
-	if config.GetAddress() == "" {
-		config.Address = net.AnyIP.String()
-	}
-
 	// proxy inbound
 	h := proxy.NewProxyInbound(config.Tag)
 	for _, server := range servers {
@@ -65,8 +61,14 @@ func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler
 	}
 
 	if hysteriaConfig != nil {
+		var addresses []string
+		if config.Address != "" {
+			addresses = append(addresses, config.Address)
+		}
+		addresses = append(addresses, hysteriaConfig.Addresses...)
 		in, err := hysteria2.NewInbound(&hysteria2.InboundConfig{
 			Ports:                 ports,
+			Addresses:             addresses,
 			Hysteria2ServerConfig: hysteriaConfig,
 			Tag:                   config.Tag,
 			OnUnauthorizedRequest: onUnauth,
@@ -86,6 +88,9 @@ func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler
 		h.AddUserManage(in)
 	}
 
+	if config.GetAddress() == "" {
+		config.Address = net.AnyIP.String()
+	}
 	address := net.ParseAddress(config.Address)
 
 	for _, port := range ports {

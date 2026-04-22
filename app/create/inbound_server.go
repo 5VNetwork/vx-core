@@ -58,10 +58,6 @@ func NewInboundServer(config *configs.ProxyInboundConfig, ha i.Handler,
 		return nil, err
 	}
 
-	if config.GetAddress() == "" {
-		config.Address = net.AnyIP.String()
-	}
-
 	// proxy inbound
 	h := proxy.NewProxyInbound(config.Tag)
 	for _, server := range servers {
@@ -73,8 +69,14 @@ func NewInboundServer(config *configs.ProxyInboundConfig, ha i.Handler,
 	// hysteria
 	hasHys := hysteriaConfig != nil
 	if hysteriaConfig != nil {
+		var addresses []string
+		if config.Address != "" {
+			addresses = append(addresses, config.Address)
+		}
+		addresses = append(addresses, hysteriaConfig.Addresses...)
 		in, err := hysteria2.NewInbound(&hysteria2.InboundConfig{
 			Ports:                 ports,
+			Addresses:             addresses,
 			Hysteria2ServerConfig: hysteriaConfig,
 			Tag:                   config.Tag,
 			OnUnauthorizedRequest: onUnauth,
@@ -94,6 +96,9 @@ func NewInboundServer(config *configs.ProxyInboundConfig, ha i.Handler,
 		h.AddUserManage(in)
 	}
 
+	if config.GetAddress() == "" {
+		config.Address = net.AnyIP.String()
+	}
 	address := net.ParseAddress(config.Address)
 	transport := TransportConfigToMemoryConfig(config.GetTransport(), nil,
 		nil, nil)

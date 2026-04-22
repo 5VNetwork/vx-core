@@ -54,6 +54,7 @@ func NewInbound(config *InboundConfig) (*Inbound, error) {
 
 type InboundConfig struct {
 	*configs.Hysteria2ServerConfig
+	Addresses             []string
 	Ports                 []uint16
 	Tag                   string
 	OnUnauthorizedRequest i.UnauthorizedReport
@@ -96,56 +97,62 @@ func (in *Inbound) Start() error {
 			return fmt.Errorf("failed to create obfuscator: %w", err)
 		}
 	}
-	for _, p := range config.Ports {
-		pc, err := net.ListenPacket("udp", fmt.Sprintf(":%d", p))
-		if err != nil {
-			return err
-		}
-		pc = &statsPacketConn{
-			PacketConn: pc,
-			inbound:    in,
-		}
-		if obfuscator != nil {
-			pc = obfs.WrapPacketConn(pc, obfuscator)
-		}
-		log.Info().Msgf("hysteria2 listen on %d", p)
-		hysConfig := &server.Config{
-			Tag: in.config.Tag,
-			TLSConfig: server.TLSConfig{
-				Certificates:             tlsConfig.Certificates,
-				EncryptedClientHelloKeys: tlsConfig.EncryptedClientHelloKeys,
-			},
-			QUICConfig: server.QUICConfig{
-				InitialStreamReceiveWindow:     uint64(config.GetQuic().GetInitialStreamReceiveWindow()) * 1024 * 1024,
-				MaxStreamReceiveWindow:         uint64(config.GetQuic().GetMaxStreamReceiveWindow()) * 1024 * 1024,
-				InitialConnectionReceiveWindow: uint64(config.GetQuic().GetInitialConnectionReceiveWindow()) * 1024 * 1024,
-				MaxConnectionReceiveWindow:     uint64(config.GetQuic().GetMaxConnectionReceiveWindow()) * 1024 * 1024,
-				MaxIdleTimeout:                 time.Duration(config.GetQuic().GetMaxIdleTimeout()) * time.Second,
-				DisablePathMTUDiscovery:        config.GetQuic().GetDisablePathMtuDiscovery(),
-				MaxIncomingStreams:             int64(config.GetQuic().GetMaxIncomingStreams()),
-			},
-			Conn:     pc,
-			Outbound: in.handler,
-			BandwidthConfig: server.BandwidthConfig{
-				MaxTx: uint64(config.GetBandwidth().GetMaxTx()),
-				MaxRx: uint64(config.GetBandwidth().GetMaxRx()),
-			},
-			IgnoreClientBandwidth: config.GetIgnoreClientBandwidth(),
-			Authenticator:         in,
-			TrafficLogger:         in,
-			EventLogger:           in,
-		}
-		s, err := server.NewServer(hysConfig)
-		if err != nil {
-			return err
-		}
-		in.server = append(in.server, s)
-		go func(s server.Server) {
-			err := s.Serve()
+
+	if len(config.Addresses) == 0 {
+		config.Addresses = []string{""}
+	}
+	for _, addr := range config.Addresses {
+		for _, p := range config.Ports {
+			pc, err := net.ListenPacket("udp", net.JoinHostPort(addr, fmt.Sprintf("%d", p)))
 			if err != nil {
-				log.Error().Msgf("hysteria2 server serve error: %v", err)
+				return err
 			}
-		}(s)
+			log.Info().Msgf("hysteria2 listen on %s:%d", addr, p)
+			pc = &statsPacketConn{
+				PacketConn: pc,
+				inbound:    in,
+			}
+			if obfuscator != nil {
+				pc = obfs.WrapPacketConn(pc, obfuscator)
+			}
+			hysConfig := &server.Config{
+				Tag: in.config.Tag,
+				TLSConfig: server.TLSConfig{
+					Certificates:             tlsConfig.Certificates,
+					EncryptedClientHelloKeys: tlsConfig.EncryptedClientHelloKeys,
+				},
+				QUICConfig: server.QUICConfig{
+					InitialStreamReceiveWindow:     uint64(config.GetQuic().GetInitialStreamReceiveWindow()) * 1024 * 1024,
+					MaxStreamReceiveWindow:         uint64(config.GetQuic().GetMaxStreamReceiveWindow()) * 1024 * 1024,
+					InitialConnectionReceiveWindow: uint64(config.GetQuic().GetInitialConnectionReceiveWindow()) * 1024 * 1024,
+					MaxConnectionReceiveWindow:     uint64(config.GetQuic().GetMaxConnectionReceiveWindow()) * 1024 * 1024,
+					MaxIdleTimeout:                 time.Duration(config.GetQuic().GetMaxIdleTimeout()) * time.Second,
+					DisablePathMTUDiscovery:        config.GetQuic().GetDisablePathMtuDiscovery(),
+					MaxIncomingStreams:             int64(config.GetQuic().GetMaxIncomingStreams()),
+				},
+				Conn:     pc,
+				Outbound: in.handler,
+				BandwidthConfig: server.BandwidthConfig{
+					MaxTx: uint64(config.GetBandwidth().GetMaxTx()),
+					MaxRx: uint64(config.GetBandwidth().GetMaxRx()),
+				},
+				IgnoreClientBandwidth: config.GetIgnoreClientBandwidth(),
+				Authenticator:         in,
+				TrafficLogger:         in,
+				EventLogger:           in,
+			}
+			s, err := server.NewServer(hysConfig)
+			if err != nil {
+				return err
+			}
+			in.server = append(in.server, s)
+			go func(s server.Server) {
+				err := s.Serve()
+				if err != nil {
+					log.Error().Msgf("hysteria2 server serve error: %v", err)
+				}
+			}(s)
+		}
 	}
 	return nil
 }

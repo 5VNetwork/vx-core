@@ -1,9 +1,10 @@
 syntax = "proto3";
 package vx.proxy.hysteria;
-option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/proxy";
-import "vx/user/user.proto";
 
 import "vx/transport/security/tls/tls.proto";
+import "vx/user/user.proto";
+
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/proxy";
 enum Obfs {
   Salamander = 0;
 }
@@ -50,6 +51,7 @@ message Hysteria2ServerConfig {
   QuicConfig quic = 4;
   bool ignore_client_bandwidth = 7;
   vx.transport.security.tls.TlsConfig tls_config = 8;
+  repeated string addresses = 9;
 }
 
 message ObfsConfig {
