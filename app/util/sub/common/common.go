@@ -179,6 +179,7 @@ func DecodeCommon(content string) (*sub.DecodeResult, error) {
 func setOthers(config *configs.OutboundHandlerConfig, query url.Values) {
 	if query.Get("mux") == "1" {
 		config.EnableMux = true
+		config.MuxConfig = &configs.MuxConfig{}
 		if maxConcurrency := query.Get("mux_max_concurrency"); maxConcurrency != "" {
 			maxConcurrencyInt, _ := strconv.Atoi(maxConcurrency)
 			config.MuxConfig.MaxConcurrency = uint32(maxConcurrencyInt)
