@@ -130,7 +130,7 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 		client.IPResolverForRequestAddress = &dns.DnsResolver{}
 		client.IPResolver = &dns.DnsResolver{}
 		client.EchResolver = dns.DefaultCfResolver()
-		client.Dns = idns.NewDns(staticDnsServer, nil, nil, config.Dns.EnableFakeDns)
+		client.Dns = idns.NewDns(staticDnsServer, nil, nil, false)
 		common.Must(fc.addComponent(client.Dns))
 		common.Must(fc.addComponent(&dns.DnsResolver{}))
 	}

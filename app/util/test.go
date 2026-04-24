@@ -12,7 +12,6 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/net"
-	"github.com/5vnetwork/vx-core/common/session"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/transport/dlhelper"
 	"github.com/rs/zerolog/log"
@@ -41,71 +40,47 @@ var (
 )
 
 func ApiHandlerUsable1(ctx context.Context, h i.Outbound, url string) (bool, error) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	logger := log.With().Uint32("sid", uint32(session.NewID())).
-		Str("handler", h.Tag()).Logger()
-	logger.Debug().Msg("usable test start")
-	ctx = logger.WithContext(ctx)
-
 	httpClient := HandlerToHttpClient(h)
 	defer httpClient.CloseIdleConnections()
 	httpClient.Timeout = 10 * time.Second
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		logger.Debug().Err(err).Msg("usable test failed")
 		return false, err
 	}
 	rsp, err := httpClient.Do(request)
 	if err != nil {
-		logger.Debug().Err(err).Msg("unusable")
 		return false, nil
 	} else {
 		rsp.Body.Close()
-		logger.Debug().Msg("usable")
 		return true, nil
 	}
 }
 
 func ApiHandlerPing(ctx context.Context, h i.Outbound, url string) (int, error) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	logger := log.With().Uint32("sid", uint32(session.NewID())).
-		Str("handler", h.Tag()).Logger()
-	logger.Debug().Msg("usable test start")
-	ctx = logger.WithContext(ctx)
-
 	httpClient := HandlerToHttpClient(h)
 	defer httpClient.CloseIdleConnections()
 	httpClient.Timeout = 10 * time.Second
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		logger.Debug().Err(err).Msg("ping test failed")
 		return -1, err
 	}
 	start := time.Now()
 	rsp, err := httpClient.Do(request)
 	if err != nil {
-		logger.Debug().Err(err).Msg("ping test failed")
+		log.Ctx(ctx).Debug().Err(err).Msg("ping test err")
 		return -1, nil
 	} else {
 		rsp.Body.Close()
 		ping := time.Since(start).Milliseconds()
-		logger.Debug().Int64("ping", ping).Msg("ping test success")
 		return int(ping), nil
 	}
 }
 
-func Speedtest(ctx context.Context, url string, h i.Outbound) int64 {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	logger := log.With().Uint32("sid", uint32(session.NewID())).
-		Str("handler", h.Tag()).Str("type", "speedtest").Str("url", url).Logger()
-	ctx = logger.WithContext(ctx)
+func Speedtest(ctx context.Context, url string, h i.Outbound) (int64, error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		logger.Debug().Err(err).Msg("speedtest create request err")
-		return -1
+		log.Ctx(ctx).Debug().Err(err).Msg("speedtest create request err")
+		return -1, err
 	}
 
 	httpClient := HandlerToHttpClient(h)
@@ -114,23 +89,23 @@ func Speedtest(ctx context.Context, url string, h i.Outbound) int64 {
 	httpClient.Timeout = 10 * time.Second
 	rsps, err := httpClient.Do(request)
 	if err != nil {
-		logger.Debug().Err(err).Msg("speedtest get err")
-		return -1
+		log.Ctx(ctx).Debug().Err(err).Msg("speedtest get err")
+		return -1, nil
 	}
 	start := time.Now()
-	logger.Debug().Msg("response got")
+	log.Ctx(ctx).Debug().Msg("response got")
 
 	n, err := io.Copy(io.Discard, rsps.Body)
 	elapsed := time.Since(start)
-	logger.Debug().Int64("n", n/1000).Msg("body read")
-
 	rsps.Body.Close()
 	if err != nil && n == 0 {
-		logger.Debug().Err(err).Msg("speedtest err: failed to read response body")
-		return -1
+		log.Ctx(ctx).Debug().Err(err).Msg("speedtest err: failed to read response body")
+		return -1, nil
 	}
+
+	log.Ctx(ctx).Debug().Int64("n", n/1000).Msg("body read")
 	speed := float64(n) / elapsed.Seconds()
-	return int64(speed)
+	return int64(speed), nil
 }
 
 func Ping(ctx context.Context, config *configs.OutboundHandlerConfig, info i.DefaultInterfaceInfo) (uint32, error) {
@@ -151,7 +126,7 @@ func Ping(ctx context.Context, config *configs.OutboundHandlerConfig, info i.Def
 		port = uint16(config.Port)
 	} else {
 		portList := config.Ports
-		if portList == nil || len(portList) == 0 {
+		if len(portList) == 0 {
 			return 0, fmt.Errorf("speedtest port list err")
 		}
 		port = uint16(portList[0].From)

@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/5vnetwork/vx-core/app/xsqlite"
+	"github.com/5vnetwork/vx-core/common/session"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/rs/zerolog/log"
 )
@@ -95,27 +96,35 @@ func (o *oStats) SetOk(ok int) {
 }
 
 func TestHandlerPing(ctx context.Context, s Tester, item outHandler) {
-	log.Debug().Str("tag", item.Name()).Msg("test handler ping")
+	logger := log.With().Uint32("sid", uint32(session.NewID())).
+		Str("handler", item.Name()).Logger()
+	logger.Debug().Msg("test ping start")
+	ctx = logger.WithContext(ctx)
+
 	oh, err := item.GetHandler()
 	if err != nil {
-		log.Error().Str("tag", item.Name()).Err(err).Msg("failed to get handler")
+		logger.Error().Err(err).Msg("failed to get handler")
 		return
 	}
 	ping := s.TestPing(ctx, oh)
 	item.SetPing(ping)
 	item.SetOk(ping)
-	log.Debug().Str("name", item.Name()).Int("ping", ping).Msg("test handler ping result")
+	logger.Debug().Int("ping", ping).Msg("test handler ping result")
 }
 
 func TestHandler6(ctx context.Context, s Tester, item outHandler) {
-	log.Debug().Str("tag", item.Name()).Msg("test handler ipv6")
+	logger := log.With().Uint32("sid", uint32(session.NewID())).
+		Str("handler", item.Name()).Logger()
+	logger.Debug().Msg("test 6 start")
+	ctx = logger.WithContext(ctx)
+
 	h, err := item.GetHandler()
 	if err != nil {
-		log.Error().Str("tag", item.Name()).Err(err).Msg("failed to get handler")
+		logger.Error().Err(err).Msg("failed to get handler")
 		return
 	}
 	if h == nil {
-		log.Fatal().Any("item", item).Msg("handler is nil")
+		logger.Fatal().Any("item", item).Msg("handler is nil")
 		return
 	}
 	ok := s.TestIPv6(ctx, h)
@@ -125,13 +134,19 @@ func TestHandler6(ctx context.Context, s Tester, item outHandler) {
 	} else {
 		item.SetSupport6(-1)
 	}
+	logger.Debug().Bool("yes", ok).Msg("ipv6 test done")
 }
 
 // used to test unusable handlers
 func TestHandlerUsable(ctx context.Context, s Tester, item outHandler) {
+	logger := log.With().Uint32("sid", uint32(session.NewID())).
+		Str("handler", item.Name()).Logger()
+	logger.Debug().Msg("usable test start")
+	ctx = logger.WithContext(ctx)
+
 	oh, err := item.GetHandler()
 	if err != nil {
-		log.Error().Str("tag", item.Name()).Err(err).Msg("failed to get handler")
+		logger.Error().Err(err).Msg("failed to get handler")
 		return
 	}
 	usable := s.TestUsable(ctx, oh, false)
@@ -144,13 +159,18 @@ func TestHandlerUsable(ctx context.Context, s Tester, item outHandler) {
 		item.SetSpeed(-1)
 		item.SetPing(-1)
 	}
+	logger.Debug().Bool("usable", usable).Msg("handler usable result")
 }
 
 func TestHandlerSpeed(ctx context.Context, s Tester, item outHandler) {
-	log.Debug().Str("tag", item.Name()).Msg("test handler speed")
+	logger := log.With().Uint32("sid", uint32(session.NewID())).
+		Str("handler", item.Name()).Logger()
+	logger.Debug().Msg("speed test start")
+	ctx = logger.WithContext(ctx)
+
 	oh, err := item.GetHandler()
 	if err != nil {
-		log.Error().Str("tag", item.Name()).Err(err).Msg("failed to get handler")
+		logger.Error().Err(err).Msg("failed to get handler")
 		return
 	}
 	speed := s.TestSpeed(ctx, oh, false)
@@ -161,5 +181,5 @@ func TestHandlerSpeed(ctx context.Context, s Tester, item outHandler) {
 		item.SetSpeed(int(speed))
 		item.SetOk(int(speed))
 	}
-	log.Debug().Str("name", item.Name()).Int64("speed", speed).Msg("test handler speed result")
+	logger.Debug().Int64("speed", speed).Msg("handler speed result")
 }

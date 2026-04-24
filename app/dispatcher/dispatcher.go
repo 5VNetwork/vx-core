@@ -371,6 +371,9 @@ func (p *Dispatcher) onHandlerError(ctx context.Context, info *session.Info, tag
 	if tag == "dns" || tag == "direct" {
 		return
 	}
+	if info.SessionDownCounter.Load() != 0 {
+		return
+	}
 	if errors.Is(err, context.Canceled) {
 		return
 	}
@@ -385,9 +388,6 @@ func (p *Dispatcher) onHandlerError(ctx context.Context, info *session.Info, tag
 	}
 	var closeError *websocket.CloseError
 	if errors.As(err, &closeError) && closeError.Code == websocket.CloseNormalClosure {
-		return
-	}
-	if info.SessionDownCounter.Load() != 0 {
 		return
 	}
 

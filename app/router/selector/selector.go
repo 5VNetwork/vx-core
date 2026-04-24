@@ -232,18 +232,18 @@ func (s *Selector) setHandlers() {
 		return
 	}
 
-	handlers := s.getOutHandlers()
-	if len(handlers) == 0 {
+	filteredHandlers := s.getOutHandlers()
+	if len(filteredHandlers) == 0 {
 		log.Warn().Msg("no handlers")
 		return
 	}
 
-	selectedHandlers := s.strategy.Select(handlers)
+	selectedHandlers := s.strategy.Select(filteredHandlers)
 
 	if len(selectedHandlers) == 0 {
 		s.enterRecoveryIfNot()
 		// use all handlers
-		selectedHandlers = handlers
+		selectedHandlers = filteredHandlers
 	} else if s.isRecovery {
 		s.exitRecovery()
 	}
@@ -359,7 +359,6 @@ func (s *Selector) OnHandlerError(tag string, err error) {
 
 		TestHandlerUsable(s.ctx, s.tester, handler)
 		usable := handler.outHandler.GetOk() > 0
-		log.Debug().Bool("usable", usable).Str("tag", handler.Tag()).Msg("handler usable result")
 		if !usable {
 			s.setHandlers()
 		}
@@ -447,6 +446,12 @@ func (s *Selector) TestAllUnusable() {
 
 func (s *Selector) OnHandlerChanged() {
 	s.Load()
+}
+
+func (s *Selector) ResetTestAllUnusableInterval(interval time.Duration) {
+	if a := s.periodicTestUnusableHandlers; a != nil {
+		a.ResetInterval(interval)
+	}
 }
 
 func (s *Selector) OnHandlerSpeedChanged(tag string, speed int32) {

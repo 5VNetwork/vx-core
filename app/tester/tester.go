@@ -39,8 +39,8 @@ type testUsableResult struct {
 func (t *Tester) TestPing(ctx context.Context, h i.Outbound) int {
 	ping, err := t.PingTestFunc(ctx, h)
 	if err != nil {
-		log.Debug().Err(err).Str("handler", h.Tag()).Msg("ping test func error")
-		ping = -1
+		log.Ctx(ctx).Debug().Err(err).Str("handler", h.Tag()).Msg("ping test func error")
+		return -1
 	}
 	if t.ResultReporter != nil {
 		t.ResultReporter.PingResult(h.Tag(), ping)
@@ -51,12 +51,12 @@ func (t *Tester) TestPing(ctx context.Context, h i.Outbound) int {
 func (t *Tester) TestIPv6(ctx context.Context, h i.Outbound) bool {
 	yes, err := util.TestIpv6(ctx, h, util.GoogleDNS6)
 	if err != nil {
-		log.Debug().Err(err).Str("handler", h.Tag()).Msg("ipv6 test func error")
+		log.Ctx(ctx).Debug().Err(err).Str("handler", h.Tag()).Msg("ipv6 test func error")
+		return false
 	}
 	if t.ResultReporter != nil {
 		t.ResultReporter.IPv6Result(h.Tag(), yes)
 	}
-	log.Debug().Bool("yes", yes).Str("handler", h.Tag()).Msg("ipv6 test done")
 	return yes
 }
 
@@ -72,12 +72,14 @@ func (t *Tester) TestSpeed(ctx context.Context, h i.Outbound, rtry bool) int64 {
 	err = retry.Timed(times, 1000).On(func() error {
 		speed, err = t.SpeedTestFunc(ctx, h)
 		if err != nil {
-			log.Debug().Err(err).Str("handler", h.Tag()).Int64("speed", speed).Msg("speed test func error")
+			log.Ctx(ctx).Debug().Err(err).Str("handler", h.Tag()).
+				Int64("speed", speed).Msg("speed test func error")
 		}
 		return err
 	})
 	if err != nil {
-		log.Debug().Str("handler", h.Tag()).Msgf("speedtest err: %v", err)
+		log.Ctx(ctx).Debug().Err(err).Str("handler", h.Tag()).
+			Int64("speed", speed).Msg("speed test func error")
 		speed = -1
 	}
 
@@ -90,7 +92,7 @@ func (t *Tester) TestSpeed(ctx context.Context, h i.Outbound, rtry bool) int64 {
 func (t *Tester) TestUsable(ctx context.Context, h i.Outbound, retry bool) bool {
 	// Check if there's an ongoing test for this handler
 	if existing, ok := t.ongoingUsableTests.Load(h); ok {
-		log.Debug().Str("handler", h.Tag()).Msg("concurrent handler usable test")
+		log.Ctx(ctx).Debug().Str("handler", h.Tag()).Msg("concurrent handler usable test")
 		// Wait for the existing test to complete
 		result := existing.(*testUsableResult)
 		<-result.done
@@ -113,7 +115,7 @@ func (t *Tester) TestUsable(ctx context.Context, h i.Outbound, retry bool) bool 
 	for i := 0; i < times; i++ {
 		ok, err = t.UsableTestFunc(ctx, h)
 		if err != nil {
-			log.Debug().Str("handler", h.Tag()).Msgf("usable test err: %v", err)
+			log.Ctx(ctx).Debug().Str("handler", h.Tag()).Msgf("usable test err: %v", err)
 		}
 		if ok {
 			break

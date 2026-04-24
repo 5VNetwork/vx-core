@@ -256,7 +256,7 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 	// tester
 	t := &tester.Tester{
 		SpeedTestFunc: func(ctx context.Context, h i.Outbound) (int64, error) {
-			return util.Speedtest(ctx, util.SpeedtestURL1, h), nil
+			return util.Speedtest(ctx, util.SpeedtestURL1, h)
 		},
 		UsableTestFunc: func(ctx context.Context, h i.Outbound) (bool, error) {
 			return util.ApiHandlerUsable1(ctx, h, util.TraceList[0])

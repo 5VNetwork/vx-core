@@ -212,6 +212,7 @@ type OutboundManager interface {
 	GetHandler(tag string) Outbound
 	GetAllHandlers() []Outbound
 	ReplaceHandlers(handlers []Outbound)
+	AddHandlers(handlers ...Outbound) error
 }
 
 type Router interface {

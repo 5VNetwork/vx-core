@@ -222,7 +222,6 @@ func DefaultDialerFactory() *DialerFactoryImp {
 
 var defaultDf = &DialerFactoryImp{}
 
-// To prevent route loop
 type DialerFactoryImp struct {
 	DialerFactoryOption
 }
@@ -230,10 +229,10 @@ type DialerFactoryImp struct {
 type DialerFactoryOption struct {
 	Retry                   bool
 	BindToDefaultNIC        bool
-	IpResolver              i.IPResolver
 	DefaultInterfaceMonitor i.DefaultInterfaceInfo
 	// used to bind to default nic
 	FdFunc      FdFunc
+	IpResolver  i.IPResolver
 	DialTimeout time.Duration
 }
 
@@ -260,18 +259,18 @@ func (d *DialerFactoryImp) GetDialer(config *Config) (i.Dialer, error) {
 	var dialer i.DialerListener
 	dialer = config.Socket
 
-	if d.FdFunc != nil {
-		config.Socket.FdFunc = d.FdFunc
-	}
-
 	if d.BindToDefaultNIC && config.Socket.BindToDevice4 == 0 &&
 		config.Socket.BindToDevice6 == 0 &&
 		config.Socket.BindToDeviceName == "" {
-		socketSetting := atomic.Value{}
-		socketSetting.Store(config.Socket)
-		dialer = &BindToDefaultNICDialer{
-			defaultNICMonitor: d.DefaultInterfaceMonitor,
-			socketSetting:     socketSetting,
+		if d.FdFunc != nil {
+			config.Socket.FdFunc = d.FdFunc
+		} else {
+			socketSetting := atomic.Value{}
+			socketSetting.Store(config.Socket)
+			dialer = &BindToDefaultNICDialer{
+				defaultNICMonitor: d.DefaultInterfaceMonitor,
+				socketSetting:     socketSetting,
+			}
 		}
 	}
 

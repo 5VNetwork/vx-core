@@ -17,34 +17,24 @@ import (
 
 func DialerFactory(config *configs.TmConfig, fc *Builder, client *client.Client) error {
 	// dialer factory
-	if config.GetDialerFactory().GetShouldBindDevice() {
-		err := fc.requireFeature(func(bdl i.DefaultInterfaceInfo, ipResolver i.IPResolver) error {
-			opt := transport.DialerFactoryOption{
-				BindToDefaultNIC:        runtime.GOOS != "android",
-				IpResolver:              ipResolver,
-				DefaultInterfaceMonitor: bdl,
-				DialTimeout:             time.Duration(config.GetDialerFactory().GetDialTimeout()) * time.Second,
-			}
-			if runtime.GOOS == "android" {
-				fdFunc := fc.getFeature(reflect.TypeOf((*transport.FdFunc)(nil)).Elem())
-				opt.FdFunc = fdFunc.(transport.FdFunc)
-			}
+	err := fc.requireFeature(func(bdl i.DefaultInterfaceInfo, ipResolver i.IPResolver) error {
+		opt := transport.DialerFactoryOption{
+			BindToDefaultNIC:        config.GetDialerFactory().GetShouldBindDevice(),
+			IpResolver:              ipResolver,
+			DefaultInterfaceMonitor: bdl,
+			DialTimeout:             time.Duration(config.GetDialerFactory().GetDialTimeout()) * time.Second,
+		}
+		if config.GetDialerFactory().GetShouldBindDevice() && runtime.GOOS == "android" {
+			fdFunc := fc.getFeature(reflect.TypeOf((*transport.FdFunc)(nil)).Elem())
+			opt.FdFunc = fdFunc.(transport.FdFunc)
+		}
 
-			df := transport.NewDialerFactoryImp(opt)
-			client.DialerFactory = df
-			return fc.addComponent(df)
-		})
-		if err != nil {
-			return fmt.Errorf("failed to require features: %w", err)
-		}
-	} else {
-		df := transport.DefaultDialerFactory()
-		df.DialTimeout = time.Duration(config.GetDialerFactory().GetDialTimeout()) * time.Second
+		df := transport.NewDialerFactoryImp(opt)
 		client.DialerFactory = df
-		err := fc.addComponent(df)
-		if err != nil {
-			return fmt.Errorf("failed to add dialer factory: %w", err)
-		}
+		return fc.addComponent(df)
+	})
+	if err != nil {
+		return fmt.Errorf("failed to require features: %w", err)
 	}
 
 	return nil

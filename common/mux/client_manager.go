@@ -26,7 +26,7 @@ type ClientManager struct {
 
 func (m *ClientManager) Start() error {
 	m.cleanupTask = task.Periodic{
-		Interval: time.Second * 30,
+		Interval: time.Second * 10,
 		Execute:  m.cleanupFunc,
 	}
 	return m.cleanupTask.Start()

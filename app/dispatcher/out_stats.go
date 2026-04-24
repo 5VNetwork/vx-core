@@ -69,7 +69,7 @@ func (o *OutStats) IsHandlerActive(tag string) bool {
 	if !ok {
 		return false
 	}
-	yes := time.Since(stats.ActiveTime.Load().(time.Time)) < 1*time.Second
+	yes := time.Since(stats.ActiveTime.Load().(time.Time)) < 4*time.Second
 	if !yes {
 		log.Debug().Str("tag", tag).Time("last_activeTime", stats.ActiveTime.Load().(time.Time)).Msg("handler is not active")
 	}

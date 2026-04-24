@@ -30,6 +30,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/dispatcher"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
+	"github.com/5vnetwork/vx-core/common/session"
 	"github.com/5vnetwork/vx-core/common/signal"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/transport"
@@ -316,9 +317,7 @@ func (a *Api) HandlerUsable(ctx context.Context, req *HandlerUsableRequest) (*Ha
 func (a *Api) SpeedTest(req *SpeedTestRequest, in Api_SpeedTestServer) error {
 	wg := new(errgroup.Group)
 	url := util.SpeedtestURL1
-	// if req.GetSize() == 1 {
-	// 	url = SpeedtestURL1
-	// }
+
 	for _, t := range req.GetHandlers() {
 		wg.Go(func() error {
 			log.Debug().Msgf("SpeedTest for: %v", util.GetTag(t))
@@ -338,8 +337,17 @@ func (a *Api) SpeedTest(req *SpeedTestRequest, in Api_SpeedTestServer) error {
 				log.Debug().Err(err).Str("tag", util.GetTag(t)).Msg("failed to create outbound handler")
 				rsp.Down = -1
 			} else {
-				rst := util.Speedtest(in.Context(), url, h)
-				rsp.Down = int32(rst)
+				logger := log.With().Uint32("sid", uint32(session.NewID())).
+					Str("handler", util.GetTag(t)).Logger()
+				logger.Debug().Msg("speed test start")
+				ctx := logger.WithContext(in.Context())
+				rst, err := util.Speedtest(ctx, url, h)
+				if err != nil {
+					log.Err(err).Msg("failed to speed test")
+					rsp.Down = -1
+				} else {
+					rsp.Down = int32(rst)
+				}
 			}
 			if err := in.Send(rsp); err != nil {
 				log.Err(err).Msg("failed to send speed test response")

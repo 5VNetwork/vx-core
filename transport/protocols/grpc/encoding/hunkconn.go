@@ -2,6 +2,7 @@ package encoding
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net"
 
@@ -136,7 +137,7 @@ func (h *HunkReaderWriter) Write(buf []byte) (int, error) {
 
 	err := h.hc.Send(&Hunk{Data: buf[:]})
 	if err != nil {
-		return 0, errors.New("failed to send data over gRPC tunnel").Base(err)
+		return 0, fmt.Errorf("failed to send data over gRPC tunnel: %w", err)
 	}
 	return len(buf), nil
 }

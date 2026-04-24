@@ -310,6 +310,8 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 	db.Where("sub_id = ?", subscription.ID).Find(&existingHandlers)
 	var updatedHandlers []*xsqlite.OutboundHandler
 
+	id := rand.Intn(math.MaxInt)
+
 	for _, config := range uriContent.Configs {
 		existing := false
 		for _, existingHandler := range existingHandlers {
@@ -357,10 +359,11 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 				continue
 			}
 			newHandler := xsqlite.OutboundHandler{
-				ID:     rand.Intn(math.MaxInt),
+				ID:     id,
 				Config: configBytes,
 				SubId:  &subscription.ID,
 			}
+			id++
 			// add new handler to database
 			db.Create(&newHandler)
 		}
