@@ -135,6 +135,10 @@ func (d *InternalDns) LookupIPSpeed(ctx context.Context, host string) ([]net.IP,
 	var ipv6s []net.IP
 	c := make(chan []net.IP, 2)
 	endC := make(chan struct{}, 2)
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	go func() {
 		var err error
 		ipv6s, err = d.LookupIPv6(ctx, host)

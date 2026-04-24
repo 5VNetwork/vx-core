@@ -70,142 +70,220 @@ func (d *DnsServerToResolver) LookupIPv4(ctx context.Context, host string) ([]ne
 	msg := new(dns.Msg)
 	msg.SetQuestion(dns.Fqdn(host), dns.TypeA)
 
-	for _, dnsServer := range d.DnsServers {
-		subCtx, cancel := context.WithTimeout(ctx, time.Second*4)
-		defer cancel()
-		resp, err := dnsServer.HandleQuery(subCtx, msg, false)
-		if err != nil {
-			log.Ctx(subCtx).Error().Err(err).Msg("one dns server lookup ipv4 failed")
-		}
-		if resp != nil {
-			hasCname := false
-			ips := make([]net.IP, 0, len(resp.Answer))
-			for _, answer := range resp.Answer {
-				if a, ok := answer.(*dns.A); ok {
-					ips = append(ips, net.IP(a.A))
-				} else if _, ok := answer.(*dns.CNAME); ok {
-					// if answer is a cname, resolve the cname
-					hasCname = true
-				}
-			}
-			if len(ips) == 0 && hasCname {
-				for _, answer := range resp.Answer {
-					if cname, ok := answer.(*dns.CNAME); ok {
-						return d.LookupIPv4(subCtx, cname.Target)
-					}
-				}
-			}
-			if resp.Truncated {
-				log.Ctx(subCtx).Debug().Any("resp", resp).Msg("ip resolver truncated response")
-				if len(ips) > 0 {
-					return ips, nil
-				}
-				// Retry with TCP for full response
-				resp, err = dnsServer.HandleQuery(subCtx, msg, true)
-				if err != nil || resp == nil {
-					continue
-				}
-				hasCname = false
-				ips = make([]net.IP, 0, len(resp.Answer))
-				for _, answer := range resp.Answer {
-					if a, ok := answer.(*dns.A); ok {
-						ips = append(ips, net.IP(a.A))
-					} else if _, ok := answer.(*dns.CNAME); ok {
-						hasCname = true
-					}
-				}
-				if len(ips) == 0 && hasCname {
-					for _, answer := range resp.Answer {
-						if cname, ok := answer.(*dns.CNAME); ok {
-							return d.LookupIPv4(subCtx, cname.Target)
-						}
-					}
-				}
-			}
+	ctx, cancel := context.WithTimeout(ctx, time.Second*4*time.Duration(len(d.DnsServers)))
+	defer cancel()
 
-			if len(ips) != 0 {
-				return ips, nil
+	if len(d.DnsServers) == 1 {
+		ips, err := d.lookupIPv4FromServer(ctx, d.DnsServers[0], msg)
+		if err != nil {
+			return nil, err
+		}
+		if len(ips) == 0 {
+			return nil, ErrAllServersFailed
+		}
+		return ips, nil
+	}
+
+	resultChan := make(chan []net.IP, 1)
+	for _, dnsServer := range d.DnsServers {
+		c := make(chan struct{}, 1)
+		go func(dnsServer DnsServer, c chan struct{}) {
+			ips, err := d.lookupIPv4FromServer(ctx, dnsServer, msg)
+			if err != nil || len(ips) == 0 {
+				close(c)
+				log.Ctx(ctx).Debug().Err(err).Msg("one dns server lookup ipv4 failed")
+				return
+			}
+			select {
+			case resultChan <- ips:
+			default:
+			}
+		}(dnsServer, c)
+
+		select {
+		// dns server failed
+		case <-c:
+			continue
+		case result := <-resultChan:
+			return result, nil
+		// dns server timeout
+		case <-time.After(time.Second * 4):
+			continue
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+	return nil, ErrAllServersFailed
+}
+
+func (d *DnsServerToResolver) lookupIPv4FromServer(ctx context.Context, dnsServer DnsServer, msg *dns.Msg) ([]net.IP, error) {
+	resp, err := dnsServer.HandleQuery(ctx, msg, false)
+	if err != nil || resp == nil {
+		return nil, err
+	}
+	hasCname := false
+	ips := make([]net.IP, 0, len(resp.Answer))
+	for _, answer := range resp.Answer {
+		if a, ok := answer.(*dns.A); ok {
+			ips = append(ips, net.IP(a.A))
+		} else if _, ok := answer.(*dns.CNAME); ok {
+			// if answer is a cname, resolve the cname
+			hasCname = true
+		}
+	}
+	if len(ips) == 0 && hasCname {
+		for _, answer := range resp.Answer {
+			if cname, ok := answer.(*dns.CNAME); ok {
+				return d.LookupIPv4(ctx, cname.Target)
 			}
 		}
 	}
-
-	return nil, ErrAllServersFailed
+	if resp.Truncated {
+		log.Ctx(ctx).Debug().Any("resp", resp).Msg("ip resolver truncated response")
+		if len(ips) > 0 {
+			return ips, nil
+		}
+		// Retry with TCP for full response
+		resp, err = dnsServer.HandleQuery(ctx, msg, true)
+		if err != nil || resp == nil {
+			return nil, err
+		}
+		hasCname = false
+		ips = make([]net.IP, 0, len(resp.Answer))
+		for _, answer := range resp.Answer {
+			if a, ok := answer.(*dns.A); ok {
+				ips = append(ips, net.IP(a.A))
+			} else if _, ok := answer.(*dns.CNAME); ok {
+				hasCname = true
+			}
+		}
+		if len(ips) == 0 && hasCname {
+			for _, answer := range resp.Answer {
+				if cname, ok := answer.(*dns.CNAME); ok {
+					return d.LookupIPv4(ctx, cname.Target)
+				}
+			}
+		}
+	}
+	return ips, nil
 }
 
 func (d *DnsServerToResolver) LookupIPv6(ctx context.Context, host string) ([]net.IP, error) {
 	msg := new(dns.Msg)
 	msg.SetQuestion(dns.Fqdn(host), dns.TypeAAAA)
 
-	for _, dnsServer := range d.DnsServers {
-		subCtx, cancel := context.WithTimeout(ctx, time.Second*4)
-		defer cancel()
-		resp, err := dnsServer.HandleQuery(subCtx, msg, false)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*4*time.Duration(len(d.DnsServers)))
+	defer cancel()
+
+	if len(d.DnsServers) == 1 {
+		ips, err := d.lookupIPv6FromServer(ctx, d.DnsServers[0], msg)
 		if err != nil {
-			log.Ctx(subCtx).Debug().Err(err).Msg("lookup ipv6 failed")
+			return nil, err
 		}
-		if resp != nil {
-			hasCname := false
-			ips := make([]net.IP, 0, len(resp.Answer))
-			for _, answer := range resp.Answer {
-				if a, ok := answer.(*dns.AAAA); ok {
-					ips = append(ips, net.IP(a.AAAA))
-				} else if _, ok := answer.(*dns.CNAME); ok {
-					// if answer is a cname, resolve the cname
-					hasCname = true
-				}
-			}
-			if len(ips) == 0 && hasCname {
-				for _, answer := range resp.Answer {
-					if cname, ok := answer.(*dns.CNAME); ok {
-						return d.LookupIPv6(subCtx, cname.Target)
-					}
-				}
-			}
-			if resp.Truncated {
-				log.Ctx(subCtx).Debug().Any("resp", resp).Msg("ip resolver truncated response")
+		if len(ips) == 0 {
+			return nil, ErrAllServersFailed
+		}
+		return ips, nil
+	}
 
-				if len(ips) > 0 {
-					return ips, nil
-				}
-				// Retry with TCP for full response
-				resp, err = dnsServer.HandleQuery(subCtx, msg, true)
-				if err != nil || resp == nil {
-					continue
-				}
-				hasCname = false
-				ips = make([]net.IP, 0, len(resp.Answer))
-				for _, answer := range resp.Answer {
-					if a, ok := answer.(*dns.AAAA); ok {
-						ips = append(ips, net.IP(a.AAAA))
-					} else if _, ok := answer.(*dns.CNAME); ok {
-						hasCname = true
-					}
-				}
-				if len(ips) == 0 && hasCname {
-					for _, answer := range resp.Answer {
-						if cname, ok := answer.(*dns.CNAME); ok {
-							return d.LookupIPv6(subCtx, cname.Target)
-						}
-					}
-				}
+	resultChan := make(chan []net.IP, 1)
+	for _, dnsServer := range d.DnsServers {
+		c := make(chan struct{}, 1)
+		go func(dnsServer DnsServer, c chan struct{}) {
+			ips, err := d.lookupIPv6FromServer(ctx, dnsServer, msg)
+			if err != nil || len(ips) == 0 {
+				close(c)
+				log.Ctx(ctx).Debug().Err(err).Msg("one dns server lookup ipv6 failed")
+				return
 			}
+			select {
+			case resultChan <- ips:
+			default:
+			}
+		}(dnsServer, c)
 
-			if len(ips) != 0 {
-				return ips, nil
-			}
+		select {
+		// dns server failed
+		case <-c:
+			continue
+		case result := <-resultChan:
+			return result, nil
+		// dns server timeout
+		case <-time.After(time.Second * 4):
+			continue
+		case <-ctx.Done():
+			return nil, ctx.Err()
 		}
 	}
 
 	return nil, ErrAllServersFailed
 }
 
+func (d *DnsServerToResolver) lookupIPv6FromServer(subCtx context.Context, dnsServer DnsServer,
+	msg *dns.Msg) ([]net.IP, error) {
+	resp, err := dnsServer.HandleQuery(subCtx, msg, false)
+	if err != nil || resp == nil {
+		return nil, err
+	}
+	hasCname := false
+	ips := make([]net.IP, 0, len(resp.Answer))
+	for _, answer := range resp.Answer {
+		if a, ok := answer.(*dns.AAAA); ok {
+			ips = append(ips, net.IP(a.AAAA))
+		} else if _, ok := answer.(*dns.CNAME); ok {
+			// if answer is a cname, resolve the cname
+			hasCname = true
+		}
+	}
+	if len(ips) == 0 && hasCname {
+		for _, answer := range resp.Answer {
+			if cname, ok := answer.(*dns.CNAME); ok {
+				return d.LookupIPv6(subCtx, cname.Target)
+			}
+		}
+	}
+	if resp.Truncated {
+		log.Ctx(subCtx).Debug().Any("resp", resp).Msg("ip resolver truncated response")
+
+		if len(ips) > 0 {
+			return ips, nil
+		}
+		// Retry with TCP for full response
+		resp, err = dnsServer.HandleQuery(subCtx, msg, true)
+		if err != nil || resp == nil {
+			return nil, err
+		}
+		hasCname = false
+		ips = make([]net.IP, 0, len(resp.Answer))
+		for _, answer := range resp.Answer {
+			if a, ok := answer.(*dns.AAAA); ok {
+				ips = append(ips, net.IP(a.AAAA))
+			} else if _, ok := answer.(*dns.CNAME); ok {
+				hasCname = true
+			}
+		}
+		if len(ips) == 0 && hasCname {
+			for _, answer := range resp.Answer {
+				if cname, ok := answer.(*dns.CNAME); ok {
+					return d.LookupIPv6(subCtx, cname.Target)
+				}
+			}
+		}
+	}
+
+	return ips, nil
+}
+
 func (d *DnsServerToResolver) LookupECH(ctx context.Context, domain string) ([]byte, error) {
 	msg := new(dns.Msg)
 	msg.SetQuestion(dns.Fqdn(domain), dns.TypeHTTPS)
 	for _, dnsServer := range d.DnsServers {
+		ctx, cancel := context.WithTimeout(ctx, time.Second*4)
+		defer cancel()
 		resp, err := dnsServer.HandleQuery(ctx, msg, false)
-		if err != nil {
-			return nil, err
+		if err != nil || resp == nil {
+			log.Ctx(ctx).Error().Err(err).Msg("lookup ech failed")
+			continue
 		}
 		if len(resp.Answer) > 0 {
 			for _, answer := range resp.Answer {
