@@ -136,7 +136,7 @@ func (s *Server) processCommon(ctx context.Context, conn net.Conn,
 			&PacketReader{
 				reader: &buf.BufferedReader{Reader: buf.NewReader(conn)},
 				client: false},
-			&PacketWriter{writer: conn}, s.Handler)
+			&PacketWriter{writer: conn}, s.Handler, destination)
 	}
 
 	if err := s.Handler.HandleFlow(ctx, destination,
@@ -185,9 +185,9 @@ func (s *Server) ParseHeader(reader io.Reader) (dst net.Destination, vision bool
 }
 
 func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReader,
-	clientWriter *PacketWriter, d i.Handler) error {
+	clientWriter *PacketWriter, d i.Handler, destination net.Destination) error {
 
-	if err := d.HandlePacketConn(ctx, net.AnyUdpDest,
+	if err := d.HandlePacketConn(ctx, destination,
 		&udp.PacketRW{
 			PacketReader: clientReader,
 			PacketWriter: clientWriter,
