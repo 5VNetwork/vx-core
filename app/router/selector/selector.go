@@ -87,9 +87,11 @@ func newSelector(config selectorConfig) *Selector {
 func (s *Selector) Start() error {
 	if _, ok := s.strategy.(*highestThroughputStrategy); ok {
 		s.periodicTestSpeed = task.NewPeriodicTask(time.Minute*60, s.TestSpeedAll)
+		s.periodicTestUnusableHandlers = task.NewPeriodicTask(time.Minute*10, s.TestAllUnusable)
 	}
 	if _, ok := s.strategy.(*topThroughputStrategy); ok {
 		s.periodicTestSpeed = task.NewPeriodicTask(time.Minute*60, s.TestSpeedAll)
+		s.periodicTestUnusableHandlers = task.NewPeriodicTask(time.Minute*10, s.TestAllUnusable)
 	}
 	if _, ok := s.strategy.(*leastPingStrategy); ok {
 		s.periodicTestPing = task.NewPeriodicTask(time.Minute*10, s.TestPingAll)
@@ -435,12 +437,21 @@ func (s *Selector) TestSpeedAll() {
 	s.testItems(s.getOutHandlers(), TestHandlerSpeed)
 	s.setHandlers()
 }
+
 func (s *Selector) TestPingAll() {
 	s.testItems(s.getOutHandlers(), TestHandlerPing)
 	s.setHandlers()
 }
+
 func (s *Selector) TestAllUnusable() {
-	s.testItems(s.getOutHandlers(), TestHandlerUsable)
+	handlers := s.getOutHandlers()
+	unusableHandlers := make([]outHandler, 0, len(handlers))
+	for _, h := range handlers {
+		if h.GetOk() <= 0 {
+			unusableHandlers = append(unusableHandlers, h)
+		}
+	}
+	s.testItems(unusableHandlers, TestHandlerUsable)
 	s.setHandlers()
 }
 
