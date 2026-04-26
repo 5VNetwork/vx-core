@@ -105,5 +105,3 @@ require (
 )
 
 replace github.com/apernet/hysteria/core/v2 => github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260113111745-7754c3d7fd99
-
-replace anytls => github.com/anytls/anytls-go v0.0.11
