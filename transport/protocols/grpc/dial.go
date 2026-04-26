@@ -203,8 +203,16 @@ func (d *Dialer) getGrpcClient(ctx context.Context, dest net.Destination) (*clie
 	authority := ""
 	if d.config.Authority != "" {
 		authority = d.config.Authority
+	} else if d.engine != nil {
+		config := d.engine.GetTLSConfig()
+		authority = config.ServerName
 	}
-	dialOptions = append(dialOptions, grpc.WithAuthority(authority))
+	if authority == "" && dest.Address.Family().IsDomain() {
+		authority = dest.Address.Domain()
+	}
+	if authority != "" {
+		dialOptions = append(dialOptions, grpc.WithAuthority(authority))
+	}
 
 	if d.config.IdleTimeout > 0 || d.config.HealthCheckTimeout > 0 || d.config.PermitWithoutStream {
 		dialOptions = append(dialOptions, grpc.WithKeepaliveParams(keepalive.ClientParameters{
