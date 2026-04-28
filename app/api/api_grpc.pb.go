@@ -55,6 +55,7 @@ const (
 	Api_InboundConfigToOutboundConfig_FullMethodName = "/vx.api.Api/InboundConfigToOutboundConfig"
 	Api_ToUrl_FullMethodName                         = "/vx.api.Api/ToUrl"
 	Api_SetLog_FullMethodName                        = "/vx.api.Api/SetLog"
+	Api_HandlerCountryTest_FullMethodName            = "/vx.api.Api/HandlerCountryTest"
 )
 
 // ApiClient is the client API for Api service.
@@ -100,6 +101,7 @@ type ApiClient interface {
 	InboundConfigToOutboundConfig(ctx context.Context, in *InboundConfigToOutboundConfigRequest, opts ...grpc.CallOption) (*InboundConfigToOutboundConfigResponse, error)
 	ToUrl(ctx context.Context, in *ToUrlRequest, opts ...grpc.CallOption) (*ToUrlResponse, error)
 	SetLog(ctx context.Context, in *log.LoggerConfig, opts ...grpc.CallOption) (*Receipt, error)
+	HandlerCountryTest(ctx context.Context, in *HandlerCountryTestRequest, opts ...grpc.CallOption) (*HandlerCountryTestResponse, error)
 }
 
 type apiClient struct {
@@ -478,6 +480,16 @@ func (c *apiClient) SetLog(ctx context.Context, in *log.LoggerConfig, opts ...gr
 	return out, nil
 }
 
+func (c *apiClient) HandlerCountryTest(ctx context.Context, in *HandlerCountryTestRequest, opts ...grpc.CallOption) (*HandlerCountryTestResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(HandlerCountryTestResponse)
+	err := c.cc.Invoke(ctx, Api_HandlerCountryTest_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ApiServer is the server API for Api service.
 // All implementations should embed UnimplementedApiServer
 // for forward compatibility.
@@ -521,6 +533,7 @@ type ApiServer interface {
 	InboundConfigToOutboundConfig(context.Context, *InboundConfigToOutboundConfigRequest) (*InboundConfigToOutboundConfigResponse, error)
 	ToUrl(context.Context, *ToUrlRequest) (*ToUrlResponse, error)
 	SetLog(context.Context, *log.LoggerConfig) (*Receipt, error)
+	HandlerCountryTest(context.Context, *HandlerCountryTestRequest) (*HandlerCountryTestResponse, error)
 }
 
 // UnimplementedApiServer should be embedded to have
@@ -634,6 +647,9 @@ func (UnimplementedApiServer) ToUrl(context.Context, *ToUrlRequest) (*ToUrlRespo
 }
 func (UnimplementedApiServer) SetLog(context.Context, *log.LoggerConfig) (*Receipt, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetLog not implemented")
+}
+func (UnimplementedApiServer) HandlerCountryTest(context.Context, *HandlerCountryTestRequest) (*HandlerCountryTestResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method HandlerCountryTest not implemented")
 }
 func (UnimplementedApiServer) testEmbeddedByValue() {}
 
@@ -1271,6 +1287,24 @@ func _Api_SetLog_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Api_HandlerCountryTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HandlerCountryTestRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApiServer).HandlerCountryTest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Api_HandlerCountryTest_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApiServer).HandlerCountryTest(ctx, req.(*HandlerCountryTestRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Api_ServiceDesc is the grpc.ServiceDesc for Api service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1409,6 +1443,10 @@ var Api_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetLog",
 			Handler:    _Api_SetLog_Handler,
+		},
+		{
+			MethodName: "HandlerCountryTest",
+			Handler:    _Api_HandlerCountryTest_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

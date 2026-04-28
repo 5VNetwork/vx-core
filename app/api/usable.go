@@ -4,11 +4,8 @@
 package api
 
 import (
-	"bufio"
 	context "context"
-	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/configs"
@@ -21,6 +18,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func (a *Api) HandlerUsable(ctx context.Context, req *HandlerUsableRequest) (*HandlerUsableResponse, error) {
+	log.Debug().Msgf("HandlerUsable for: %v", util.GetTag(req.Handler))
+	for i := 0; i < 3; i++ {
+		rsp := a.HandlerTest(ctx, req)
+		if rsp.Ping > 0 {
+			return &rsp, nil
+		}
+	}
+	return &HandlerUsableResponse{
+		Ping: -1,
+	}, nil
+}
+
 // use TraceList. Get ip, usable of a handler.
 func (a *Api) HandlerTest(ctx context.Context, req *HandlerUsableRequest) (ret HandlerUsableResponse) {
 	ctx, cancel := context.WithCancel(ctx)
@@ -28,7 +38,7 @@ func (a *Api) HandlerTest(ctx context.Context, req *HandlerUsableRequest) (ret H
 	logger := log.With().Uint32("sid", uint32(session.NewID())).Logger()
 	ctx = logger.WithContext(ctx)
 
-	url := util.TraceList[0]
+	url := util.UsableTestUrlCf
 	logger.Debug().Str("handler", configs.HandlerTag(req.Handler)).Str("test", "usable").Str("url", url).Send()
 
 	var dest net.Address
@@ -76,37 +86,8 @@ func (a *Api) HandlerTest(ctx context.Context, req *HandlerUsableRequest) (ret H
 	}
 	logger.Debug().Msg("response got")
 	ping := time.Since(start).Milliseconds()
-	data, err := io.ReadAll(rsp.Body)
-	if err != nil {
-		logger.Debug().Msgf("Handler %s read body err: %v", configs.HandlerTag(req.Handler), err)
-		return
-	}
-	logger.Debug().Msg("body read")
 	rsp.Body.Close()
 
-	pairs := ParseKeyValueText(string(data))
-
 	ret.Ping = int32(ping)
-	ret.Ip = pairs["ip"]
-	ret.Country = pairs["loc"]
 	return
-}
-
-const testUrl = "https://blog.cloudflare.com/cdn-cgi/trace"
-
-func ParseKeyValueText(text string) map[string]string {
-	result := make(map[string]string)
-	scanner := bufio.NewScanner(strings.NewReader(text))
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) == 2 {
-			key := strings.TrimSpace(parts[0])
-			value := strings.TrimSpace(parts[1])
-			result[key] = value
-		}
-	}
-
-	return result
 }

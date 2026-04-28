@@ -300,65 +300,6 @@ func (a *Api) Download(ctx context.Context, req *DownloadRequest) (*DownloadResp
 	return a.ApiDownload(req, a.getDialerFactory())
 }
 
-func (a *Api) HandlerUsable(ctx context.Context, req *HandlerUsableRequest) (*HandlerUsableResponse, error) {
-	log.Debug().Msgf("HandlerUsable for: %v", util.GetTag(req.Handler))
-	for i := 0; i < 3; i++ {
-		rsp := a.HandlerTest(ctx, req)
-		if rsp.Ping > 0 {
-			return &rsp, nil
-		}
-	}
-	return &HandlerUsableResponse{
-		Ping: -1,
-		Ip:   "",
-	}, nil
-}
-
-func (a *Api) SpeedTest(req *SpeedTestRequest, in Api_SpeedTestServer) error {
-	wg := new(errgroup.Group)
-	url := util.SpeedtestURL1
-
-	for _, t := range req.GetHandlers() {
-		wg.Go(func() error {
-			log.Debug().Msgf("SpeedTest for: %v", util.GetTag(t))
-
-			rsp := &SpeedTestResponse{
-				Tag: util.GetTag(t),
-			}
-			h, err := create.NewHandler(&create.HandlerConfig{
-				HandlerConfig:               t,
-				DialerFactory:               a.getDialerFactory(),
-				Policy:                      policy.New(),
-				IPResolver:                  a.getIPResolver(),
-				EchResolver:                 a.echResolver,
-				IPResolverForRequestAddress: a.getIPResolver(),
-			})
-			if err != nil {
-				log.Debug().Err(err).Str("tag", util.GetTag(t)).Msg("failed to create outbound handler")
-				rsp.Down = -1
-			} else {
-				logger := log.With().Uint32("sid", uint32(session.NewID())).
-					Str("handler", util.GetTag(t)).Logger()
-				logger.Debug().Msg("speed test start")
-				ctx := logger.WithContext(in.Context())
-				rst, err := util.Speedtest(ctx, url, h)
-				if err != nil {
-					log.Err(err).Msg("failed to speed test")
-					rsp.Down = -1
-				} else {
-					rsp.Down = int32(rst)
-				}
-			}
-			if err := in.Send(rsp); err != nil {
-				log.Err(err).Msg("failed to send speed test response")
-				return err
-			}
-			return nil
-		})
-	}
-	return wg.Wait()
-}
-
 // func (a *Api) XStatusChangeNotify(ctx context.Context, req *XStatusChangeNotifyRequest) (*XStatusChangeNotifyResponse, error) {
 // 	log.Debug().Msgf("xstatus change notify: %d", req.Status)
 // 	switch req.Status {

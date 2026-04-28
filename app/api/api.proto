@@ -1,15 +1,16 @@
 syntax = "proto3";
 
 package vx.api;
-option go_package = "github.com/5vnetwork/vx-core/app/api";
 
-import "vx/outbound/outbound.proto";
-import "vx/inbound/inbound.proto";
-import "vx/router/router.proto";
 import "vx/common/geo/geo.proto";
 import "vx/geo/geo.proto";
-import "vx/server.proto";
+import "vx/inbound/inbound.proto";
 import "vx/log/logger.proto";
+import "vx/outbound/outbound.proto";
+import "vx/router/router.proto";
+import "vx/server.proto";
+
+option go_package = "github.com/5vnetwork/vx-core/app/api";
 
 message ApiServerConfig {
   string listen_addr = 1;
@@ -27,7 +28,7 @@ message ApiServerConfig {
 }
 
 service Api {
-  rpc UpdateTmStatus(UpdateTmStatusRequest) returns(Receipt);
+  rpc UpdateTmStatus(UpdateTmStatusRequest) returns (Receipt);
   // rpc SetTunName(SetTunNameRequest) returns (SetTunNameResponse);
   rpc Download(DownloadRequest) returns (DownloadResponse);
   // rpc HandlerIp(HandlerIpRequest) returns (HandlerIpResponse);
@@ -66,6 +67,7 @@ service Api {
   rpc InboundConfigToOutboundConfig(InboundConfigToOutboundConfigRequest) returns (InboundConfigToOutboundConfigResponse);
   rpc ToUrl(ToUrlRequest) returns (ToUrlResponse);
   rpc SetLog(vx.log.LoggerConfig) returns (Receipt);
+  rpc HandlerCountryTest(HandlerCountryTestRequest) returns (HandlerCountryTestResponse);
 }
 
 message XStatusChangeNotifyRequest {
@@ -77,16 +79,14 @@ message XStatusChangeNotifyRequest {
   }
   Status status = 1;
 }
-message XStatusChangeNotifyResponse {
-}
+message XStatusChangeNotifyResponse {}
 
 message SetSubscriptionIntervalRequest {
   // minus means no auto update
   // minutes
   int32 interval = 1;
 }
-message SetSubscriptionIntervalResponse {
-}
+message SetSubscriptionIntervalResponse {}
 
 message UpdateSubscriptionRequest {
   int64 id = 1;
@@ -115,8 +115,7 @@ message FetchSubscriptionContentResponse {
 message SetTunNameRequest {
   string tun_name = 1;
 }
-message SetTunNameResponse {
-}
+message SetTunNameResponse {}
 
 message DownloadRequest {
   string url = 1;
@@ -141,7 +140,7 @@ message RttTestRequest {
 }
 
 message RttTestResponse {
-  uint32 ping = 1;  
+  uint32 ping = 1;
 }
 
 message HandlerIpResponse {
@@ -157,8 +156,14 @@ message HandlerUsableRequest {
 
 message HandlerUsableResponse {
   int32 ping = 1;
-  string ip = 2;
-  string country = 3;
+}
+
+message HandlerCountryTestRequest {
+  vx.outbound.HandlerConfig handler = 1;
+}
+message HandlerCountryTestResponse {
+  string ip = 1;
+  string country = 2;
 }
 
 // speed test
@@ -235,8 +240,7 @@ message ServerActionRequest {
   Action action = 1;
   ServerSshConfig ssh_config = 2;
 }
-message ServerActionResponse {
-}
+message ServerActionResponse {}
 message VproxyStatusRequest {
   ServerSshConfig ssh_config = 1;
 }
@@ -265,8 +269,7 @@ message UpdateServerConfigRequest {
   ServerSshConfig ssh_config = 1;
   vx.ServerConfig config = 2;
 }
-message UpdateServerConfigResponse {
-}
+message UpdateServerConfigResponse {}
 
 message ProcessGeoFilesRequest {
   repeated string geosite_codes = 1;
@@ -293,7 +296,6 @@ message GetServerPublicKeyResponse {
   bytes public_key = 1;
 }
 
-
 message GenerateCertRequest {
   string domain = 1;
 }
@@ -315,22 +317,19 @@ message GetCertDomainResponse {
 message AddInboundRequest {
   vx.inbound.ProxyInboundConfig inbound = 1;
 }
-message AddInboundResponse{
-}
+message AddInboundResponse {}
 
 message UploadLogRequest {
   string body = 1;
   string version = 2;
   string secret = 3;
-  bytes  ca = 4;
+  bytes ca = 4;
   string url = 5;
   string sni = 6;
 }
-message UploadLogResponse {
-}
+message UploadLogResponse {}
 
-message DefaultNICHasGlobalV6Request {
-}
+message DefaultNICHasGlobalV6Request {}
 message DefaultNICHasGlobalV6Response {
   bool has_global_v6 = 1;
 }
@@ -407,4 +406,3 @@ message ToUrlResponse {
   repeated string urls = 1;
   repeated string failed_nodes = 2;
 }
-

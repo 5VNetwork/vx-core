@@ -39,6 +39,8 @@ var (
 	}
 )
 
+const UsableTestUrlCf = "http://cp.cloudflare.com"
+
 func ApiHandlerUsable1(ctx context.Context, h i.Outbound, url string) (bool, error) {
 	httpClient := HandlerToHttpClient(h)
 	defer httpClient.CloseIdleConnections()
