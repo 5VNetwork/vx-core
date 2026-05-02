@@ -92,7 +92,10 @@ func (d *FilterLinkEndpoint) DeliverNetworkPacket(protocol tcpip.NetworkProtocol
 	if !ok {
 		log.Error().Msg("failed to pull up packet")
 	} else {
-		reject := d.reject.Reject(packet)
+		var reject *buf.Buffer
+		if d.reject != nil {
+			reject = d.reject.Reject(packet)
+		}
 		if reject != nil {
 			defer reject.Release()
 			rejectPkt := stack.NewPacketBuffer(stack.PacketBufferOptions{

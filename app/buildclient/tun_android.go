@@ -14,6 +14,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/inbound/gvisor"
+	"github.com/5vnetwork/vx-core/app/inbound/inboundcommon"
 	"github.com/5vnetwork/vx-core/app/inbound/reject"
 	"github.com/5vnetwork/vx-core/app/inbound/system"
 	"github.com/5vnetwork/vx-core/common"
@@ -60,7 +61,11 @@ func NewTunGvisorInbound(config *configs.TunConfig, f *Builder,
 		return fmt.Errorf("failed to create fdbased endpoint: %w", err)
 	}
 
-	ep = gvisor.NewFilterLinkEndpoint(ep, rejector, true)
+	var rej inboundcommon.Rejector
+	if rejector != nil {
+		rej = rejector
+	}
+	ep = gvisor.NewFilterLinkEndpoint(ep, rej, true)
 
 	opts := []system.Option{
 		system.WithTag(config.Tag),
