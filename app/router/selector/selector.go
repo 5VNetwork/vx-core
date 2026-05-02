@@ -52,6 +52,13 @@ type Selector struct {
 
 	dispatcher HandlerErrorChangeSubject
 
+	handlerInfo handlerInfo
+
+	speedTestSize        uint32
+	speedTestInterval    time.Duration
+	pingTestInterval     time.Duration
+	unusableTestInterval time.Duration
+
 	ctx    context.Context
 	cancel context.CancelFunc
 	closed bool
@@ -65,6 +72,11 @@ type selectorConfig struct {
 	Tester                   Tester
 	OnHandlerBeingUsedChange HandlersBeingUsedUpdate
 	Dispatcher               HandlerErrorChangeSubject
+	HandlerInfo              handlerInfo
+	SpeedTestSize            uint32
+	SpeedTestInterval        time.Duration
+	PingTestInterval         time.Duration
+	UnusableTestInterval     time.Duration
 }
 
 func newSelector(config selectorConfig) *Selector {
@@ -78,7 +90,21 @@ func newSelector(config selectorConfig) *Selector {
 		dispatcher:         config.Dispatcher,
 		ctx:                ctx,
 		cancel:             cancel,
+		handlerInfo:        config.HandlerInfo,
 		handlerBeingTested: make(map[string]struct{}),
+		speedTestSize:      config.SpeedTestSize,
+	}
+	if s.speedTestSize == 0 {
+		s.speedTestSize = 1024 * 1024 // 1MB
+	}
+	if s.speedTestInterval == 0 {
+		s.speedTestInterval = time.Minute * 60
+	}
+	if s.pingTestInterval == 0 {
+		s.pingTestInterval = time.Minute * 10
+	}
+	if s.unusableTestInterval == 0 {
+		s.unusableTestInterval = time.Minute * 10
 	}
 	s.filter.Store(config.Filter)
 	return s
@@ -86,21 +112,21 @@ func newSelector(config selectorConfig) *Selector {
 
 func (s *Selector) Start() error {
 	if _, ok := s.strategy.(*highestThroughputStrategy); ok {
-		s.periodicTestSpeed = task.NewPeriodicTask(time.Minute*60, s.TestSpeedAll)
-		s.periodicTestUnusableHandlers = task.NewPeriodicTask(time.Minute*10, s.TestAllUnusable)
+		s.periodicTestSpeed = task.NewPeriodicTask(s.speedTestInterval, s.TestSpeedAll)
+		s.periodicTestUnusableHandlers = task.NewPeriodicTask(s.unusableTestInterval, s.TestAllUnusable)
 	}
 	if _, ok := s.strategy.(*topThroughputStrategy); ok {
-		s.periodicTestSpeed = task.NewPeriodicTask(time.Minute*60, s.TestSpeedAll)
-		s.periodicTestUnusableHandlers = task.NewPeriodicTask(time.Minute*10, s.TestAllUnusable)
+		s.periodicTestSpeed = task.NewPeriodicTask(s.speedTestInterval, s.TestSpeedAll)
+		s.periodicTestUnusableHandlers = task.NewPeriodicTask(s.unusableTestInterval, s.TestAllUnusable)
 	}
 	if _, ok := s.strategy.(*leastPingStrategy); ok {
-		s.periodicTestPing = task.NewPeriodicTask(time.Minute*10, s.TestPingAll)
+		s.periodicTestPing = task.NewPeriodicTask(s.pingTestInterval, s.TestPingAll)
 	}
 	if _, ok := s.strategy.(*topPingStrategy); ok {
-		s.periodicTestPing = task.NewPeriodicTask(time.Minute*10, s.TestPingAll)
+		s.periodicTestPing = task.NewPeriodicTask(s.pingTestInterval, s.TestPingAll)
 	}
 	if _, ok := s.strategy.(*allOkStrategy); ok {
-		s.periodicTestUnusableHandlers = task.NewPeriodicTask(time.Minute*10, s.TestAllUnusable)
+		s.periodicTestUnusableHandlers = task.NewPeriodicTask(s.unusableTestInterval, s.TestAllUnusable)
 	}
 	if _, ok := s.strategy.(*allStrategy); !ok && s.dispatcher != nil {
 		s.dispatcher.AddHandlerErrorObserver(s)
@@ -136,6 +162,10 @@ func (s *Selector) Tag() string {
 
 func (s *Selector) GetHandler(info *session.Info) i.Outbound {
 	return s.getBalancer().GetHandler(info)
+}
+
+type handlerInfo interface {
+	IsHandlerActive(tag string) bool
 }
 
 // reload handlers
@@ -203,7 +233,7 @@ func (s *Selector) Load() {
 	}
 	if len(handlersToBeTestedForSpeed) > 0 {
 		go func() {
-			s.testItems(handlersToBeTestedForSpeed, TestHandlerSpeed)
+			s.testItems(handlersToBeTestedForSpeed, s.testSpeed)
 			s.setHandlers()
 		}()
 	}
@@ -215,6 +245,10 @@ func (s *Selector) Load() {
 	}
 
 	s.setHandlers()
+}
+
+func (s *Selector) testSpeed(ctx context.Context, t Tester, item outHandler) {
+	TestHandlerSpeed(ctx, t, item, s.speedTestSize)
 }
 
 func (s *Selector) getBalancer() Balancer {
@@ -348,6 +382,11 @@ func (s *Selector) OnHandlerError(tag string, err error) {
 		return
 	}
 
+	if s.handlerInfo != nil && s.handlerInfo.IsHandlerActive(tag) {
+		log.Debug().Str("tag", tag).Msg("handler is active, skip testing")
+		return
+	}
+
 	if handler.GetOk() > 0 {
 		s.handlerBeingTestedLock.Lock()
 		_, ok := s.handlerBeingTested[tag]
@@ -363,6 +402,19 @@ func (s *Selector) OnHandlerError(tag string, err error) {
 		usable := handler.outHandler.GetOk() > 0
 		if !usable {
 			s.setHandlers()
+			// since handler unusable might be temporary, test it again after 10 seconds
+			go func() {
+				select {
+				case <-time.After(time.Second * 10):
+					TestHandlerUsable(s.ctx, s.tester, handler)
+					usable = handler.outHandler.GetOk() > 0
+					if usable {
+						s.setHandlers()
+					}
+				case <-s.ctx.Done():
+					return
+				}
+			}()
 		}
 
 		s.handlerBeingTestedLock.Lock()
@@ -434,7 +486,7 @@ func (s *Selector) exitRecovery() {
 }
 
 func (s *Selector) TestSpeedAll() {
-	s.testItems(s.getOutHandlers(), TestHandlerSpeed)
+	s.testItems(s.getOutHandlers(), s.testSpeed)
 	s.setHandlers()
 }
 
@@ -466,6 +518,7 @@ func (s *Selector) ResetTestAllUnusableInterval(interval time.Duration) {
 }
 
 func (s *Selector) OnHandlerSpeedChanged(tag string, speed int32) {
+	log.Debug().Str("tag", tag).Int32("speed", speed).Msg("on handler speed changed")
 	s.handlersLock.RLock()
 	index := slices.IndexFunc(s.filteredHandlers, func(h outHandler) bool {
 		return h.Name() == tag

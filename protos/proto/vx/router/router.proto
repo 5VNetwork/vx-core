@@ -65,17 +65,14 @@ message RuleConfig {
     repeated string dst_ip_tags = 10;
     repeated string domain_tags = 11;
     bool match_all = 12;
-
   }
   repeated Fallback fallbacks = 29;
 }
 
-
-
 message SelectorConfig {
   string tag = 1;
   message Filter {
-    // If an outbound's tag has prefix of any of the prefixes, match! 
+    // If an outbound's tag has prefix of any of the prefixes, match!
     repeated string prefixes = 1;
     // A outbound handler will match if its tag is one of the tags
     repeated string tags = 2;
@@ -112,6 +109,10 @@ message SelectorConfig {
   // ids of the outbound handler
   repeated int64 land_handlers = 6;
   bool select_from_om = 7;
+  uint32 speed_test_size = 8;
+  uint32 speed_test_interval = 9;
+  uint32 ping_test_interval = 10;
+  uint32 unusable_test_interval = 11;
 }
 
 message AppId {

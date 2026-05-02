@@ -6,6 +6,7 @@ package selector
 import (
 	"slices"
 	"sync"
+	"time"
 
 	router "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
 	"github.com/5vnetwork/vx-core/app/util"
@@ -124,6 +125,7 @@ type SelectorConfig struct {
 	Tester                    Tester
 	Filter                    Filter
 	OnHandlerBeingUsedChange  HandlersBeingUsedUpdate
+	HandlerInfo               handlerInfo
 }
 
 func NewSelector(config SelectorConfig) *Selector {
@@ -161,6 +163,11 @@ func NewSelector(config SelectorConfig) *Selector {
 		Tester:                   config.Tester,
 		OnHandlerBeingUsedChange: config.OnHandlerBeingUsedChange,
 		Dispatcher:               config.HandlerErrorChangeSubject,
+		HandlerInfo:              config.HandlerInfo,
+		SpeedTestSize:            sc.GetSpeedTestSize(),
+		SpeedTestInterval:        time.Duration(sc.GetSpeedTestInterval()) * time.Minute,
+		PingTestInterval:         time.Duration(sc.GetPingTestInterval()) * time.Minute,
+		UnusableTestInterval:     time.Duration(sc.GetUnusableTestInterval()) * time.Minute,
 	})
 	return selector0
 }

@@ -25,8 +25,9 @@ type HandlerErrorChangeSubject interface {
 }
 
 type Tester interface {
-	TestSpeed(context.Context, i.Outbound, bool) int64
-	TestUsable(context.Context, i.Outbound, bool) bool
+	// test speed with given size and retry
+	TestSpeed(ctx context.Context, outbound i.Outbound, size uint32, retry bool) int64
+	TestUsable(ctx context.Context, outbound i.Outbound, retry bool) bool
 	TestIPv6(context.Context, i.Outbound) bool
 	TestPing(context.Context, i.Outbound) int
 }
@@ -162,7 +163,7 @@ func TestHandlerUsable(ctx context.Context, s Tester, item outHandler) {
 	logger.Debug().Bool("usable", usable).Msg("handler usable result")
 }
 
-func TestHandlerSpeed(ctx context.Context, s Tester, item outHandler) {
+func TestHandlerSpeed(ctx context.Context, s Tester, item outHandler, size uint32) {
 	logger := log.With().Uint32("sid", uint32(session.NewID())).
 		Str("handler", item.Name()).Logger()
 	logger.Debug().Msg("speed test start")
@@ -173,7 +174,7 @@ func TestHandlerSpeed(ctx context.Context, s Tester, item outHandler) {
 		logger.Error().Err(err).Msg("failed to get handler")
 		return
 	}
-	speed := s.TestSpeed(ctx, oh, false)
+	speed := s.TestSpeed(ctx, oh, size, false)
 	if speed <= 0 {
 		item.SetSpeed(-1)
 		item.SetOk(-1)
