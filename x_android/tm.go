@@ -11,6 +11,9 @@ import (
 	"fmt"
 	"net/netip"
 	"reflect"
+	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/client"
@@ -84,6 +87,17 @@ func New(configBytes []byte, aai AndroidApiInterface) (Tm, error) {
 		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
 	tm.Client = client
+	if client.HandlerFactory != nil &&
+		client.HandlerFactory.TotalUpCounter != nil &&
+		client.HandlerFactory.TotalDownCounter != nil {
+		trafficNotifier := &trafficNotifier{
+			aa:          aai,
+			upCounter:   client.HandlerFactory.TotalUpCounter,
+			downCounter: client.HandlerFactory.TotalDownCounter,
+			done:        make(chan struct{}),
+		}
+		client.Components.AddComponent(trafficNotifier)
+	}
 
 	log.Debug().Bool("enable6", enable6).Msg("tun enable6")
 
@@ -180,7 +194,7 @@ func (t *tm) CreateInbound(tunConfig *configs.TunConfig, fd int32, support6 bool
 		rejector = &reject.Rejector{
 			InboundTag:  tunConfig.Tag,
 			Router:      c.Router,
-			FakeDnsPool: c.Dns,
+			FakeDnsPool: c.AllDnsServers,
 			UserLogger:  c.UserLogger,
 		}
 	}
@@ -189,7 +203,7 @@ func (t *tm) CreateInbound(tunConfig *configs.TunConfig, fd int32, support6 bool
 	if err != nil {
 		return fmt.Errorf("failed to get tun device with info: %w", err)
 	}
-	dnsConn := c.Components.GetComponent(reflect.TypeOf(&dns.Dns{})).(*dns.Dns)
+	dnsConn := c.Components.GetComponent(reflect.TypeOf(&dns.HijackDns{})).(*dns.HijackDns)
 
 	tunInbound, err := buildclient.NewTunSystemInbound(
 		tunDeviceWithInfo, tunConfig.Tag,
@@ -222,8 +236,48 @@ type AndroidApiInterface interface {
 	GetPackageName(protocol int, source string, sourcePort int,
 		destination string, destinationPort int) (string, error)
 	Restart()
+	UpdateTraffic(up int64, down int64) // Java long; uint64 is not bound by gomobile
 
 	ProtectFd(fd int32) error
+}
+
+type trafficNotifier struct {
+	aa          AndroidApiInterface
+	upCounter   *atomic.Uint64
+	downCounter *atomic.Uint64
+	done        chan struct{}
+	closeOnce   sync.Once
+}
+
+func (t *trafficNotifier) Start() error {
+	go func() {
+		ticker := time.NewTicker(1 * time.Second)
+		defer ticker.Stop()
+		var lastUp uint64
+		var lastDown uint64
+		for {
+			select {
+			case <-ticker.C:
+				upNow := t.upCounter.Load()
+				downNow := t.downCounter.Load()
+				upDelta := upNow - lastUp
+				downDelta := downNow - lastDown
+				lastUp = upNow
+				lastDown = downNow
+				t.aa.UpdateTraffic(int64(upDelta), int64(downDelta))
+			case <-t.done:
+				return
+			}
+		}
+	}()
+	return nil
+}
+
+func (t *trafficNotifier) Close() error {
+	t.closeOnce.Do(func() {
+		close(t.done)
+	})
+	return nil
 }
 
 type tunSetter struct {
