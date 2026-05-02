@@ -363,8 +363,8 @@ func (x *HandlerError) GetError() string {
 
 type HandlerBeingUsed struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Tag4          string                 `protobuf:"bytes,1,opt,name=tag4,proto3" json:"tag4,omitempty"`
-	Tag6          string                 `protobuf:"bytes,2,opt,name=tag6,proto3" json:"tag6,omitempty"`
+	Selector      string                 `protobuf:"bytes,1,opt,name=selector,proto3" json:"selector,omitempty"`
+	Tags          []string               `protobuf:"bytes,2,rep,name=tags,proto3" json:"tags,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -399,18 +399,18 @@ func (*HandlerBeingUsed) Descriptor() ([]byte, []int) {
 	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *HandlerBeingUsed) GetTag4() string {
+func (x *HandlerBeingUsed) GetSelector() string {
 	if x != nil {
-		return x.Tag4
+		return x.Selector
 	}
 	return ""
 }
 
-func (x *HandlerBeingUsed) GetTag6() string {
+func (x *HandlerBeingUsed) GetTags() []string {
 	if x != nil {
-		return x.Tag6
+		return x.Tags
 	}
-	return ""
+	return nil
 }
 
 type HandlerUpdated struct {
@@ -2288,7 +2288,7 @@ var File_app_grpcservice_grpc_proto protoreflect.FileDescriptor
 
 const file_app_grpcservice_grpc_proto_rawDesc = "" +
 	"\n" +
-	"\x1aapp/grpcservice/grpc.proto\x12\x0evx.grpcservice\x1a\x18vx/inbound/inbound.proto\x1a\x1avx/outbound/outbound.proto\x1a\x16vx/router/router.proto\x1a\x10vx/geo/geo.proto\x1a\x1bapp/userlogger/config.proto\x1a\x17vx/common/geo/geo.proto\"8\n" +
+	"\x1aapp/grpcservice/grpc.proto\x12\x0evx.grpcservice\x1a\x1bapp/userlogger/config.proto\x1a\x17vx/common/geo/geo.proto\x1a\x10vx/geo/geo.proto\x1a\x18vx/inbound/inbound.proto\x1a\x1avx/outbound/outbound.proto\x1a\x16vx/router/router.proto\"8\n" +
 	"\x0eRttTestRequest\x12\x12\n" +
 	"\x04addr\x18\x01 \x01(\tR\x04addr\x12\x12\n" +
 	"\x04port\x18\x02 \x01(\rR\x04port\"%\n" +
@@ -2304,10 +2304,10 @@ const file_app_grpcservice_grpc_proto_rawDesc = "" +
 	"\amessage\"6\n" +
 	"\fHandlerError\x12\x10\n" +
 	"\x03tag\x18\x01 \x01(\tR\x03tag\x12\x14\n" +
-	"\x05error\x18\x02 \x01(\tR\x05error\":\n" +
-	"\x10HandlerBeingUsed\x12\x12\n" +
-	"\x04tag4\x18\x01 \x01(\tR\x04tag4\x12\x12\n" +
-	"\x04tag6\x18\x02 \x01(\tR\x04tag6\" \n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\"B\n" +
+	"\x10HandlerBeingUsed\x12\x1a\n" +
+	"\bselector\x18\x01 \x01(\tR\bselector\x12\x12\n" +
+	"\x04tags\x18\x02 \x03(\tR\x04tags\" \n" +
 	"\x0eHandlerUpdated\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\"\x15\n" +
 	"\x13SubscriptionUpdated\"Z\n" +

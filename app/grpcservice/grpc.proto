@@ -2,14 +2,14 @@ syntax = "proto3";
 
 package vx.grpcservice;
 
-option go_package = "github.com/5vnetwork/vx-core/app/grpcservice";
-
+import "app/userlogger/config.proto";
+import "vx/common/geo/geo.proto";
+import "vx/geo/geo.proto";
 import "vx/inbound/inbound.proto";
 import "vx/outbound/outbound.proto";
 import "vx/router/router.proto";
-import "vx/geo/geo.proto";
-import "app/userlogger/config.proto";
-import "vx/common/geo/geo.proto";
+
+option go_package = "github.com/5vnetwork/vx-core/app/grpcservice";
 
 service GrpcService {
   // server to client
@@ -17,32 +17,26 @@ service GrpcService {
   // inbound
   rpc AddInbound(AddInboundRequest) returns (AddInboundResponse);
   rpc RemoveInbound(RemoveInboundRequest) returns (RemoveInboundResponse);
-  
+
   // stats
-  rpc GetStatsStream(GetStatsRequest) returns (stream
-  StatsResponse) {}
-  rpc SetOutboundHandlerSpeed(SetOutboundHandlerSpeedRequest)
-  returns (SetOutboundHandlerSpeedResponse);
+  rpc GetStatsStream(GetStatsRequest) returns (stream StatsResponse) {}
+  rpc SetOutboundHandlerSpeed(SetOutboundHandlerSpeedRequest) returns (SetOutboundHandlerSpeedResponse);
   // log
   // rpc ChangeLogLevel(ChangeLogLevelRequest) returns (ChangeLogLevelResponse);
   // rpc LogStream(LogStreamRequest) returns (stream LogMessage);
   rpc UserLogStream(UserLogStreamRequest) returns (stream vx.userlogger.UserLogMessage);
   rpc ResetUserLogging(ResetUserLoggingRequest) returns (ResetUserLoggingResponse);
-  
+
   // outbound
   rpc ChangeOutbound(ChangeOutboundRequest) returns (ChangeOutboundResponse);
   rpc CurrentOutbound(CurrentOutboundRequest) returns (CurrentOutboundResponse);
   // rpc SetLandHandler(SetLandHandlerRequest) returns (SetLandHandlerResponse);
 
   // routing
-  rpc ChangeRoutingMode(ChangeRoutingModeRequest)
-      returns (ChangeRoutingModeResponse);
-  rpc ChangeSelector(ChangeSelectorRequest)
-      returns (ChangeSelectorResponse);
-  rpc UpdateSelectorBalancer(UpdateSelectorBalancerRequest)
-      returns (Receipt);
-  rpc UpdateSelectorFilter(UpdateSelectorFilterRequest)
-      returns (Receipt);
+  rpc ChangeRoutingMode(ChangeRoutingModeRequest) returns (ChangeRoutingModeResponse);
+  rpc ChangeSelector(ChangeSelectorRequest) returns (ChangeSelectorResponse);
+  rpc UpdateSelectorBalancer(UpdateSelectorBalancerRequest) returns (Receipt);
+  rpc UpdateSelectorFilter(UpdateSelectorFilterRequest) returns (Receipt);
   rpc NotifyHandlerChange(HandlerChangeNotify) returns (HandlerChangeNotifyResponse);
   // fake dns
   rpc SwitchFakeDns(SwitchFakeDnsRequest) returns (SwitchFakeDnsResponse);
@@ -56,10 +50,8 @@ service GrpcService {
   // app id
   rpc UpdateRouter(UpdateRouterRequest) returns (UpdateRouterResponse);
   // subscription
-  rpc SetSubscriptionInterval(SetSubscriptionIntervalRequest)
-  returns (SetSubscriptionIntervalResponse);
-  rpc SetAutoSubscriptionUpdate(SetAutoSubscriptionUpdateRequest)
-  returns (Receipt);
+  rpc SetSubscriptionInterval(SetSubscriptionIntervalRequest) returns (SetSubscriptionIntervalResponse);
+  rpc SetAutoSubscriptionUpdate(SetAutoSubscriptionUpdateRequest) returns (Receipt);
 
   rpc RttTest(RttTestRequest) returns (RttTestResponse);
 }
@@ -70,12 +62,10 @@ message RttTestRequest {
 }
 
 message RttTestResponse {
-  uint32 ping = 1;  
+  uint32 ping = 1;
 }
 
-
-message Receipt {
-}
+message Receipt {}
 
 message CommunicateRequest {}
 message CommunicateMessage {
@@ -91,16 +81,22 @@ message HandlerError {
   string error = 2;
 }
 message HandlerBeingUsed {
-  string tag4 = 1;
-  string tag6 = 2;
+  string selector = 1;
+  repeated string tags = 2;
 }
-message HandlerUpdated { int64 id = 1; }
+message HandlerUpdated {
+  int64 id = 1;
+}
 message SubscriptionUpdated {}
 
 // inbound
-message AddInboundRequest { vx.inbound.ProxyInboundConfig handler_config = 1; }
+message AddInboundRequest {
+  vx.inbound.ProxyInboundConfig handler_config = 1;
+}
 message AddInboundResponse {}
-message RemoveInboundRequest { string tag = 1; }
+message RemoveInboundRequest {
+  string tag = 1;
+}
 message RemoveInboundResponse {}
 
 message OutboundStats {
@@ -113,7 +109,9 @@ message OutboundStats {
   // seconds
   float interval = 6;
 }
-message GetStatsRequest { uint32 interval = 1; }
+message GetStatsRequest {
+  uint32 interval = 1;
+}
 message StatsResponse {
   repeated OutboundStats stats = 1;
   int32 connections = 2;
@@ -151,7 +149,9 @@ message ChangeOutboundRequest {
 }
 message ChangeOutboundResponse {}
 message CurrentOutboundRequest {}
-message CurrentOutboundResponse { repeated string outbound_tags = 1; }
+message CurrentOutboundResponse {
+  repeated string outbound_tags = 1;
+}
 
 // message SetLandHandlerRequest {
 //   repeated vx.outbound.OutboundHandlerConfig handlers = 1;
@@ -181,12 +181,17 @@ message UpdateSelectorFilterRequest {
 message ChangeSelectorResponse {}
 message HandlerChangeNotify {}
 message HandlerChangeNotifyResponse {}
+
 // fake dns
-message SwitchFakeDnsRequest { bool enable = 1; }
+message SwitchFakeDnsRequest {
+  bool enable = 1;
+}
 message SwitchFakeDnsResponse {}
 
 // geo
-message UpdateGeoRequest { vx.geo.GeoConfig geo = 1; }
+message UpdateGeoRequest {
+  vx.geo.GeoConfig geo = 1;
+}
 message UpdateGeoResponse {}
 message AddGeoDomainRequest {
   string domain_set_name = 1;
@@ -202,7 +207,6 @@ message ReplaceDomainSetRequest {
 message ReplaceIPSetRequest {
   vx.geo.AtomicIPSetConfig set = 1;
 }
-
 
 // speed test
 // message SpeedTestRequest {
@@ -222,7 +226,9 @@ message ReplaceIPSetRequest {
 // }
 
 // app id
-message UpdateRouterRequest { vx.router.RouterConfig router_config = 1; }
+message UpdateRouterRequest {
+  vx.router.RouterConfig router_config = 1;
+}
 message UpdateRouterResponse {}
 
 // subscription

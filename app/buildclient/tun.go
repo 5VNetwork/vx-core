@@ -26,7 +26,7 @@ func Tun(config *configs.TmConfig, fc *Builder, client *client.Client) error {
 			rejector = &reject.Rejector{
 				InboundTag: config.Tun.Tag,
 			}
-			fc.requireFeature(func(r i.Router, ul *userlogger.UserLogger, dns *dns.Dns) {
+			fc.requireFeature(func(r i.Router, ul *userlogger.UserLogger, dns *dns.AllDnsServers) {
 				rejector.Router = r
 				rejector.UserLogger = ul
 				rejector.FakeDnsPool = dns
@@ -52,7 +52,7 @@ func newTunSystemInbound(
 	if err != nil {
 		return fmt.Errorf("failed to create tun device: %w", err)
 	}
-	return fc.requireFeature(func(h *dispatcher.Dispatcher, dnsConns *dns.Dns) error {
+	return fc.requireFeature(func(h *dispatcher.Dispatcher, dnsConns *dns.HijackDns) error {
 		tunInbound, err := NewTunSystemInbound(device, config.Tag, h, dnsConns,
 			rejector)
 		if err != nil {
@@ -64,7 +64,7 @@ func newTunSystemInbound(
 }
 
 func NewTunSystemInbound(
-	device tun.TunDeviceWithInfo, tag string, handler i.Handler, dnsConns *dns.Dns,
+	device tun.TunDeviceWithInfo, tag string, handler i.Handler, dnsConns *dns.HijackDns,
 	rejector *reject.Rejector) (*system.TunSystemInbound, error) {
 	dnsAddress := make([]net.Destination, 0)
 	for _, dns := range device.DnsServers() {

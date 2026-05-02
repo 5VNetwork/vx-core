@@ -12,6 +12,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/app/logger"
 	"github.com/5vnetwork/vx-core/app/outbound"
+	outboundstats "github.com/5vnetwork/vx-core/app/outbound/stats"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/router"
 	"github.com/5vnetwork/vx-core/app/router/selector"
@@ -37,7 +38,7 @@ type Client struct {
 	InboundManager  *proxy.InboundManager
 	UserLogger      *userlogger.UserLogger
 	OutboundManager *outbound.Manager
-	OutStats        *dispatcher.OutStats
+	OutStats        *outboundstats.OutStats
 	// might be nil
 	DB         Db
 	Tetser     *tester.Tester

@@ -1,10 +1,11 @@
 syntax = "proto3";
 package vx.outbound;
-option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
-import "vx/transport/transport.proto";
-import "vx/common/net/net.proto";
 import "google/protobuf/any.proto";
+import "vx/common/net/net.proto";
+import "vx/transport/transport.proto";
+
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
 message OutboundHandlerConfig {
   string tag = 1;
@@ -18,6 +19,24 @@ message OutboundHandlerConfig {
   bool uot = 9;
   DomainStrategy domain_strategy = 10;
   // bool pre_connect = 11;
+  oneof port_select_strategy {
+    RandomPortSelectStrategy random = 30;
+    OnePortSelectStrategy one = 31;
+  }
+}
+
+// all ports are used at the same time
+message RandomPortSelectStrategy {}
+
+// one port is used at a time
+message OnePortSelectStrategy {
+  // how long to switch port
+  uint32 interval = 1;
+  // only being considered when interval is not set
+  // min interval to switch port
+  uint32 min_interval = 2;
+  // max interval to switch port
+  uint32 max_interval = 3;
 }
 
 message MuxConfig {
@@ -45,6 +64,9 @@ message OutboundConfig {
   repeated ChainHandlerConfig chain_handlers = 2;
   repeated HandlerConfig handlers = 3;
   bool hysteria_reject_quic = 4;
+  bool handler_link_stats = 5;
+  bool handler_meter = 6;
+  bool total_counter = 7;
 }
 
 message HandlerConfig {

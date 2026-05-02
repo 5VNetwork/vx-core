@@ -5,6 +5,7 @@ package outbound
 
 import (
 	"sync"
+	"time"
 
 	"github.com/5vnetwork/vx-core/common/dice"
 	"github.com/5vnetwork/vx-core/common/net"
@@ -40,54 +41,67 @@ func (s *RandomPortSelector) SelectPort() uint16 {
 	return port
 }
 
-// func (s *RandomPortSelector) DisablePort(port uint16, duration time.Duration) {
-// 	s.Lock()
-// 	defer s.Unlock()
-// 	s.enabled = slices.DeleteFunc(s.enabled, func(p uint16) bool {
-// 		return p == port
-// 	})
-// 	s.disabled = append(s.disabled, port)
-// 	time.AfterFunc(duration, func() {
-// 		s.Lock()
-// 		defer s.Unlock()
-// 		s.disabled = slices.DeleteFunc(s.disabled, func(p uint16) bool {
-// 			return p == port
-// 		})
-// 		s.enabled = append(s.enabled, port)
-// 	})
-// }
+type OnePortSelector struct {
+	sync.Mutex
+	randomSelector *RandomPortSelector
+	interval       time.Duration
+	minInterval    time.Duration
+	maxInterval    time.Duration
+	currentPort    uint16
+	nextSwitchAt   time.Time
+}
 
-// type TimeoutPortSelector struct {
-// 	timeout               time.Duration
-// 	randomPortSelector    *RandomPortSelector
-// 	previousPortStartTime time.Time
-// 	currentPort           uint16
-// }
+func NewOnePortSelector(ranges []*net.PortRange, interval, minInterval, maxInterval time.Duration) *OnePortSelector {
+	if minInterval > maxInterval {
+		minInterval, maxInterval = maxInterval, minInterval
+	}
+	return &OnePortSelector{
+		randomSelector: NewRandomPortSelector(ranges),
+		interval:       interval,
+		minInterval:    minInterval,
+		maxInterval:    maxInterval,
+	}
+}
 
-// func NewTimeoutPortSelector(ranges []*net.PortRange, timeout time.Duration) *TimeoutPortSelector {
-// 	r := NewRandomPortSelector(ranges)
-// 	return &TimeoutPortSelector{
-// 		timeout:               timeout,
-// 		randomPortSelector:    r,
-// 		previousPortStartTime: time.Now(),
-// 		currentPort:           r.SelectPort(),
-// 	}
-// }
+func (s *OnePortSelector) SelectPort() uint16 {
+	s.Lock()
+	defer s.Unlock()
 
-// // return the current port, and update the port if timeout
-// func (s *TimeoutPortSelector) SelectPort() uint16 {
-// 	now := time.Now()
-// 	if now.Sub(s.previousPortStartTime) > s.timeout {
-// 		s.previousPortStartTime = now
-// 		s.currentPort = s.randomPortSelector.SelectPort()
-// 	}
-// 	return s.currentPort
-// }
+	now := time.Now()
+	if s.currentPort == 0 {
+		s.currentPort = s.randomSelector.SelectPort()
+		s.scheduleNextSwitch(now)
+		return s.currentPort
+	}
+	if !s.nextSwitchAt.IsZero() && now.After(s.nextSwitchAt) {
+		s.currentPort = s.randomSelector.SelectPort()
+		s.scheduleNextSwitch(now)
+	}
+	return s.currentPort
+}
 
-// func (s *TimeoutPortSelector) DisablePort(port uint16, duration time.Duration) {
-// 	s.randomPortSelector.DisablePort(port, duration)
-// 	if s.currentPort == port {
-// 		s.previousPortStartTime = time.Now()
-// 		s.currentPort = s.randomPortSelector.SelectPort()
-// 	}
-// }
+func (s *OnePortSelector) scheduleNextSwitch(now time.Time) {
+	d := s.switchDuration()
+	if d <= 0 {
+		s.nextSwitchAt = time.Time{}
+		return
+	}
+	s.nextSwitchAt = now.Add(d)
+}
+
+func (s *OnePortSelector) switchDuration() time.Duration {
+	if s.interval > 0 {
+		return s.interval
+	}
+	if s.maxInterval <= 0 {
+		return 0
+	}
+	if s.minInterval <= 0 {
+		return s.maxInterval
+	}
+	if s.minInterval == s.maxInterval {
+		return s.minInterval
+	}
+	span := int((s.maxInterval - s.minInterval) / time.Second)
+	return s.minInterval + time.Second*time.Duration(dice.Roll(span+1))
+}

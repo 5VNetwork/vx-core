@@ -5,7 +5,6 @@ package grpcservice
 
 import (
 	"strconv"
-	"sync/atomic"
 	"time"
 
 	"github.com/5vnetwork/vx-core/common/units"
@@ -37,8 +36,14 @@ func (s *GrpcService) Communicate(in *CommunicateRequest, stream GrpcService_Com
 		}
 	}
 
-	// without this, ui might not know the handler being used promptly
-	s.notifyHandlerBeingUsed()
+	// notify ui about handler being used
+	go func() {
+		selectors := s.Client.Selectors.GetAllSelectors()
+		for _, selector := range selectors {
+			handlers := selector.GetHandlersBeingUsed()
+			s.notifyHandlerBeingUsed(selector.Tag(), handlers)
+		}
+	}()
 
 	select {
 	case <-stream.Context().Done():
@@ -122,26 +127,12 @@ func (s *GrpcService) OnSubscriptionUpdated() {
 	}
 }
 
-var handler4BeingUsed atomic.Value
-
-func init() {
-	handler4BeingUsed.Store("")
-}
-
 func (s *GrpcService) OnSelectedHandlersChanged(selector string, handlers []string) {
-	if selector == "代理" {
-		log.Debug().Msg("handler being used updated")
-		if len(handlers) == 1 {
-			handler4BeingUsed.Store(handlers[0])
-			s.notifyHandlerBeingUsed()
-		} else {
-			handler4BeingUsed.Store("")
-			s.notifyHandlerBeingUsed()
-		}
-	}
+	log.Debug().Msg("handler being used updated")
+	s.notifyHandlerBeingUsed(selector, handlers)
 }
 
-func (s *GrpcService) notifyHandlerBeingUsed() {
+func (s *GrpcService) notifyHandlerBeingUsed(selector string, tags []string) {
 	stream := s.getCommunicateStream()
 	if stream == nil {
 		return
@@ -149,7 +140,8 @@ func (s *GrpcService) notifyHandlerBeingUsed() {
 	erro := stream.Send(&CommunicateMessage{
 		Message: &CommunicateMessage_HandlerBeingUsed{
 			HandlerBeingUsed: &HandlerBeingUsed{
-				Tag4: handler4BeingUsed.Load().(string),
+				Selector: selector,
+				Tags:     tags,
 			},
 		},
 	})

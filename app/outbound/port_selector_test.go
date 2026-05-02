@@ -2,6 +2,7 @@ package outbound
 
 import (
 	"testing"
+	"time"
 
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/stretchr/testify/assert"
@@ -216,4 +217,52 @@ func TestRandomPortSelector_SelectPort_AllPortsSelected(t *testing.T) {
 	assert.True(t, selectedPorts[1000])
 	assert.True(t, selectedPorts[1001])
 	assert.True(t, selectedPorts[1002])
+}
+
+func TestOnePortSelector_SelectPort_StableWithoutSwitchInterval(t *testing.T) {
+	ranges := []*net.PortRange{
+		{From: 6000, To: 6001},
+	}
+	selector := NewOnePortSelector(ranges, 0, 0, 0)
+
+	first := selector.SelectPort()
+	require.NotZero(t, first)
+	for i := 0; i < 20; i++ {
+		assert.Equal(t, first, selector.SelectPort())
+	}
+}
+
+func TestOnePortSelector_SelectPort_SwitchesAfterInterval(t *testing.T) {
+	ranges := []*net.PortRange{
+		{From: 7000, To: 7001},
+	}
+	selector := NewOnePortSelector(ranges, 20*time.Millisecond, 0, 0)
+
+	first := selector.SelectPort()
+	require.NotZero(t, first)
+
+	deadline := time.Now().Add(500 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+		if next := selector.SelectPort(); next != first {
+			return
+		}
+	}
+	t.Fatalf("expected port to switch from %d within deadline", first)
+}
+
+func TestNewOnePortSelector_MinMaxIntervalRangeAndSwap(t *testing.T) {
+	ranges := []*net.PortRange{
+		{From: 8000, To: 8001},
+	}
+
+	selector := NewOnePortSelector(ranges, 0, 3*time.Second, 1*time.Second)
+	assert.Equal(t, 1*time.Second, selector.minInterval)
+	assert.Equal(t, 3*time.Second, selector.maxInterval)
+
+	for i := 0; i < 50; i++ {
+		d := selector.switchDuration()
+		assert.GreaterOrEqual(t, d, 1*time.Second)
+		assert.LessOrEqual(t, d, 3*time.Second)
+	}
 }

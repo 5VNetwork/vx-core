@@ -10,6 +10,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/client"
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/dispatcher"
+	"github.com/5vnetwork/vx-core/app/dispatcher/hooks"
 	"github.com/5vnetwork/vx-core/app/dns"
 	idns "github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/handlerfactory"
@@ -32,21 +33,18 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 
 	d := &dispatcher.Dispatcher{
 		FallbackTimeout:     time.Duration(config.GetDispatcher().GetFallbackTimeout()) * time.Second,
-		OutStats:            cc.OutStats,
 		SessionStats:        config.GetDispatcher().GetSessionStats(),
 		RewriteIpv6ToDomain: config.GetDispatcher().GetIpv6UseDomain(),
-		HandlerLinkStats:    config.GetDispatcher().GetHandlerLinkStats(),
-		HandlerMeter:        config.GetDispatcher().GetHandlerMeter(),
 	}
 
 	if config.Log.LogLevel == configs.Level_DEBUG {
-		debugHook := &dispatcher.DebugHook{}
+		debugHook := &hooks.DebugHook{}
 		d.AddBeforeHandlerSelectionHook(debugHook)
 		d.AddAfterHandlerSelectionHook(debugHook)
 		d.AddSessionEndHook(debugHook)
 	}
 
-	rewriteDestination := &dispatcher.RewriteDestinationHook{
+	rewriteDestination := &hooks.RewriteDestinationHook{
 		DestinationOverride: config.GetDispatcher().GetDestinationOverride(),
 		Sniff:               config.GetDispatcher().GetSniff(),
 		Sniffer: sniff.NewSniffer(sniff.SniffSetting{
@@ -66,13 +64,13 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 	fc.requireFeature(func(om *outbound.Manager, p *policy.Policy,
 		ul *userlogger.UserLogger) {
 		d.AddAfterHandlerSelectionHook(ul)
-		d.AddBeforeHandlerSelectionHook(&dispatcher.IdleHook{
+		d.AddBeforeHandlerSelectionHook(&hooks.IdleHook{
 			TimeoutPolicy: p,
 		})
 		d.AddSessionEndHook(ul)
 		d.AddOnFallback(ul)
 	})
-	fc.requireOptionalFeatures(func(id *dns.Dns) {
+	fc.requireOptionalFeatures(func(id *dns.AllDnsServers) {
 		rewriteDestination.FakeDns = id
 		rewriteDestination.Dns = cc.IPResolverForRequestAddress
 	})
@@ -89,6 +87,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 						Tester:                    tester,
 						HandlerErrorChangeSubject: d,
 						Filter:                    filter,
+						HandlerInfo:               cc.OutStats,
 					}))
 					return nil
 				})
@@ -96,7 +95,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 					return err
 				}
 			} else {
-				err := fc.requireFeature(func(dispatcher *dispatcher.Dispatcher, tester *tester.Tester,
+				err := fc.requireFeature(func(tester *tester.Tester,
 					db client.Db, handlerFactory *handlerfactory.HandlerFactory) error {
 					landHandlers := make([]*xsqlite.OutboundHandler, 0, len(selectorConfig.LandHandlers))
 					for _, landHandlerId := range selectorConfig.LandHandlers {
@@ -114,6 +113,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 						Tester:                    tester,
 						HandlerErrorChangeSubject: d,
 						Filter:                    filter,
+						HandlerInfo:               cc.OutStats,
 					}))
 					return nil
 				})
@@ -126,7 +126,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 
 	// router
 	err := fc.requireFeature(func(om *outbound.Manager, g i.GeoHelper,
-		_ *idns.Dns) error {
+		_ *idns.HijackDns) error {
 		r, err := router.NewRouter(&router.RouterConfig{
 			RouterConfig:    config.Router,
 			GeoHelper:       g,

@@ -5,12 +5,14 @@ package buildclient
 
 import (
 	"reflect"
+	"sync/atomic"
 
 	"github.com/5vnetwork/vx-core/app/client"
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/handlerfactory"
 	"github.com/5vnetwork/vx-core/app/outbound"
+	outboundstats "github.com/5vnetwork/vx-core/app/outbound/stats"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/serial"
@@ -25,7 +27,7 @@ func buildOutbound(config *configs.OutboundConfig, builder *Builder, client *cli
 	client.OutboundManager = om
 	common.Must(builder.addComponent(om))
 	err := builder.requireFeature(func(df transport.DialerFactory,
-		policy *policy.Policy, _ *dns.Dns) error {
+		policy *policy.Policy, _ *dns.HijackDns, outStats *outboundstats.OutStats) error {
 		handlerFactory := &handlerfactory.HandlerFactory{
 			DialerFactory:               df,
 			Policy:                      policy,
@@ -33,6 +35,13 @@ func buildOutbound(config *configs.OutboundConfig, builder *Builder, client *cli
 			IPResolverForRequestAddress: client.IPResolverForRequestAddress,
 			EchResolver:                 client.EchResolver,
 			Hysteria2RejectQuic:         config.GetHysteriaRejectQuic(),
+			HandlerLinkStats:            config.GetHandlerLinkStats(),
+			HandlerMeter:                config.GetHandlerMeter(),
+			OutStats:                    outStats,
+		}
+		if config.GetTotalCounter() {
+			handlerFactory.TotalUpCounter = &atomic.Uint64{}
+			handlerFactory.TotalDownCounter = &atomic.Uint64{}
 		}
 		client.HandlerFactory = handlerFactory
 		common.Must(builder.addComponent(handlerFactory))

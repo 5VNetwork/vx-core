@@ -12,6 +12,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/signal"
 	"github.com/5vnetwork/vx-core/common/signal/done"
+	"github.com/rs/zerolog/log"
 )
 
 // discardOverflow is true when creating a pipe for udp traffic.
@@ -192,6 +193,7 @@ func (p *Pipe) WriteMultiBuffer(mb buf.MultiBuffer) error {
 		}
 
 		if err == errBufferFull && p.discardOverflow {
+			log.Warn().Msg("discard overflow")
 			buf.ReleaseMulti(mb)
 			return nil
 		}

@@ -9,6 +9,7 @@ import (
 	"path"
 	"reflect"
 	"runtime"
+	"strconv"
 	"sync"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/app/logger"
 	"github.com/5vnetwork/vx-core/app/memmon"
+	outboundstats "github.com/5vnetwork/vx-core/app/outbound/stats"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/subscription"
 	"github.com/5vnetwork/vx-core/app/tester"
@@ -70,7 +72,7 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 
 	x := &client.Client{
 		Components: &common.Components{},
-		OutStats:   dispatcher.NewOutStats(),
+		OutStats:   outboundstats.NewOutStats(),
 	}
 	builder.addComponent(x.OutStats)
 
@@ -255,8 +257,8 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 
 	// tester
 	t := &tester.Tester{
-		SpeedTestFunc: func(ctx context.Context, h i.Outbound) (int64, error) {
-			return util.Speedtest(ctx, util.SpeedtestURL1, h)
+		SpeedTestFunc: func(ctx context.Context, h i.Outbound, size uint32) (int64, error) {
+			return util.Speedtest(ctx, util.SpeedTestUrlBasic+strconv.Itoa(int(size)), h)
 		},
 		UsableTestFunc: func(ctx context.Context, h i.Outbound) (bool, error) {
 			return util.ApiHandlerUsable1(ctx, h, util.UsableTestUrlCf)
