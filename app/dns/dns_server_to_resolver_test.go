@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"errors"
+	"log"
 	stdnet "net"
 	"sync"
 	"testing"
@@ -90,7 +91,7 @@ func TestDnsServerToResolverLookupIPv4ReturnsLateEarlierResultAndCancelsLaterReq
 		},
 	}
 
-	resolver := NewDnsServerToResolver(first, second)
+	resolver := NewDnsServerToResolver(DnsServerToResolverOption{DnsServers: []DnsServer{first, second}})
 
 	start := time.Now()
 	ips, err := resolver.LookupIPv4(context.Background(), "example.com")
@@ -131,7 +132,8 @@ func TestDnsServerToResolverLookupIPv4FallsBackToNextServer(t *testing.T) {
 		},
 	}
 
-	resolver := NewDnsServerToResolver(first, second)
+	resolver := NewDnsServerToResolver(
+		DnsServerToResolverOption{DnsServers: []DnsServer{first, second}})
 
 	ips, err := resolver.LookupIPv4(context.Background(), "example.com")
 	if err != nil {
@@ -154,7 +156,7 @@ func TestDnsServerToResolverLookupIPv4ReturnsErrAllServersFailed(t *testing.T) {
 		},
 	}
 
-	resolver := NewDnsServerToResolver(first, second)
+	resolver := NewDnsServerToResolver(DnsServerToResolverOption{DnsServers: []DnsServer{first, second}})
 
 	_, err := resolver.LookupIPv4(context.Background(), "example.com")
 	if !errors.Is(err, ErrAllServersFailed) {
@@ -181,7 +183,7 @@ func TestDnsServerToResolverLookupIPv4RetriesTruncatedResponseWithTCP(t *testing
 		},
 	}
 
-	resolver := NewDnsServerToResolver(server)
+	resolver := NewDnsServerToResolver(DnsServerToResolverOption{DnsServers: []DnsServer{server}})
 
 	ips, err := resolver.LookupIPv4(context.Background(), "example.com")
 	if err != nil {
@@ -195,46 +197,6 @@ func TestDnsServerToResolverLookupIPv4RetriesTruncatedResponseWithTCP(t *testing
 	defer mu.Unlock()
 	if len(calls) != 2 || calls[0] || !calls[1] {
 		t.Fatalf("expected UDP then TCP calls, got %v", calls)
-	}
-}
-
-func TestDnsServerToResolverLookupIPv4ResolvesCNAME(t *testing.T) {
-	var (
-		mu        sync.Mutex
-		questions []string
-	)
-
-	server := &fakeResolverDnsServer{
-		handle: func(ctx context.Context, msg *mdns.Msg, tcp bool) (*mdns.Msg, error) {
-			mu.Lock()
-			questions = append(questions, msg.Question[0].Name)
-			mu.Unlock()
-
-			switch msg.Question[0].Name {
-			case "example.com.":
-				return cnameReply(msg, "alias.example.com"), nil
-			case "alias.example.com.":
-				return aReply(msg, "2.2.2.2"), nil
-			default:
-				return nil, errors.New("unexpected question")
-			}
-		},
-	}
-
-	resolver := NewDnsServerToResolver(server)
-
-	ips, err := resolver.LookupIPv4(context.Background(), "example.com")
-	if err != nil {
-		t.Fatalf("LookupIPv4 returned error: %v", err)
-	}
-	if len(ips) != 1 || ips[0].String() != "2.2.2.2" {
-		t.Fatalf("expected [2.2.2.2], got %v", ips)
-	}
-
-	mu.Lock()
-	defer mu.Unlock()
-	if len(questions) != 2 || questions[0] != "example.com." || questions[1] != "alias.example.com." {
-		t.Fatalf("expected CNAME follow-up queries, got %v", questions)
 	}
 }
 
@@ -256,7 +218,7 @@ func TestDnsServerToResolverLookupIPv4ReturnsTruncatedUDPAnswerWithoutTCPRetry(t
 		},
 	}
 
-	resolver := NewDnsServerToResolver(server)
+	resolver := NewDnsServerToResolver(DnsServerToResolverOption{DnsServers: []DnsServer{server}})
 
 	ips, err := resolver.LookupIPv4(context.Background(), "example.com")
 	if err != nil {
@@ -271,4 +233,86 @@ func TestDnsServerToResolverLookupIPv4ReturnsTruncatedUDPAnswerWithoutTCPRetry(t
 	if len(calls) != 1 || calls[0] {
 		t.Fatalf("expected only one UDP call, got %v", calls)
 	}
+}
+
+func TestFindCNAMEChainTail(t *testing.T) {
+	t.Run("follows chain to tail", func(t *testing.T) {
+		answers := []mdns.RR{
+			&mdns.CNAME{
+				Hdr:    mdns.RR_Header{Name: "a.example.com.", Rrtype: mdns.TypeCNAME, Class: mdns.ClassINET, Ttl: 60},
+				Target: "b.example.com.",
+			},
+			&mdns.CNAME{
+				Hdr:    mdns.RR_Header{Name: "b.example.com.", Rrtype: mdns.TypeCNAME, Class: mdns.ClassINET, Ttl: 60},
+				Target: "c.example.com.",
+			},
+		}
+
+		tail := findCNAMEChainTail(answers, "a.example.com.", 8)
+		if tail != "c.example.com." {
+			t.Fatalf("expected tail c.example.com., got %q", tail)
+		}
+	})
+
+	t.Run("returns start when no cname match", func(t *testing.T) {
+		answers := []mdns.RR{
+			&mdns.CNAME{
+				Hdr:    mdns.RR_Header{Name: "x.example.com.", Rrtype: mdns.TypeCNAME, Class: mdns.ClassINET, Ttl: 60},
+				Target: "y.example.com.",
+			},
+		}
+
+		tail := findCNAMEChainTail(answers, "a.example.com.", 8)
+		if tail != "a.example.com." {
+			t.Fatalf("expected unchanged qname, got %q", tail)
+		}
+	})
+
+	t.Run("stops on self loop", func(t *testing.T) {
+		answers := []mdns.RR{
+			&mdns.CNAME{
+				Hdr:    mdns.RR_Header{Name: "loop.example.com.", Rrtype: mdns.TypeCNAME, Class: mdns.ClassINET, Ttl: 60},
+				Target: "loop.example.com.",
+			},
+		}
+
+		tail := findCNAMEChainTail(answers, "loop.example.com.", 8)
+		if tail != "loop.example.com." {
+			t.Fatalf("expected self-loop name, got %q", tail)
+		}
+	})
+
+	t.Run("returns last hop when max hops reached", func(t *testing.T) {
+		answers := []mdns.RR{
+			&mdns.CNAME{
+				Hdr:    mdns.RR_Header{Name: "a.example.com.", Rrtype: mdns.TypeCNAME, Class: mdns.ClassINET, Ttl: 60},
+				Target: "b.example.com.",
+			},
+			&mdns.CNAME{
+				Hdr:    mdns.RR_Header{Name: "b.example.com.", Rrtype: mdns.TypeCNAME, Class: mdns.ClassINET, Ttl: 60},
+				Target: "c.example.com.",
+			},
+			&mdns.CNAME{
+				Hdr:    mdns.RR_Header{Name: "c.example.com.", Rrtype: mdns.TypeCNAME, Class: mdns.ClassINET, Ttl: 60},
+				Target: "d.example.com.",
+			},
+		}
+
+		tail := findCNAMEChainTail(answers, "a.example.com.", 2)
+		if tail != "c.example.com." {
+			t.Fatalf("expected hop-limited tail c.example.com., got %q", tail)
+		}
+	})
+}
+
+func TestDnsServerToResolverLookupEch(t *testing.T) {
+	resolver := DefaultCfResolver()
+	ech, err := resolver.LookupECH(context.Background(), "")
+	if err != nil {
+		t.Fatalf("LookupECH returned error: %v", err)
+	}
+	if len(ech) == 0 {
+		t.Fatal("expected ech, got empty")
+	}
+	log.Println(ech)
 }

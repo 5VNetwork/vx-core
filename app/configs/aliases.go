@@ -3,6 +3,7 @@
 package configs
 
 import (
+	vx "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx"
 	dispatcherpb "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/dispatcher"
 	dnspb "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/dns"
 	geopb "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/geo"
@@ -16,7 +17,6 @@ import (
 	transportpb "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/transport"
 	tunpb "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/tun"
 	userpb "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/user"
-	vx "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx"
 )
 
 // Root (vx)
@@ -31,9 +31,11 @@ type (
 type (
 	DnsConfig                      = dnspb.DnsConfig
 	DnsRuleConfig                  = dnspb.DnsRuleConfig
-	DnsRules                       = dnspb.DnsRules
+	DnsHijackConfig                = dnspb.DnsHijackConfig
 	DnsServerConfig                = dnspb.DnsServerConfig
 	DnsServerConfig_DohDnsServer   = dnspb.DnsServerConfig_DohDnsServer
+	DnsServerConfig_GoDnsServer    = dnspb.DnsServerConfig_GoDnsServer
+	DnsServerConfig_EmptyDnsServer = dnspb.DnsServerConfig_EmptyDnsServer
 	DnsServerConfig_FakeDnsServer  = dnspb.DnsServerConfig_FakeDnsServer
 	DnsServerConfig_PlainDnsServer = dnspb.DnsServerConfig_PlainDnsServer
 	DnsServerConfig_QuicDnsServer  = dnspb.DnsServerConfig_QuicDnsServer
@@ -101,7 +103,7 @@ type (
 	RuleConfig_Fallback              = routerpb.RuleConfig_Fallback
 	RuleConfig_Fallback_Action       = routerpb.RuleConfig_Fallback_Action
 	SelectorConfig                   = routerpb.SelectorConfig
-	SelectorConfig_BalanceStrategy     = routerpb.SelectorConfig_BalanceStrategy
+	SelectorConfig_BalanceStrategy   = routerpb.SelectorConfig_BalanceStrategy
 	SelectorConfig_Filter            = routerpb.SelectorConfig_Filter
 	SelectorConfig_SelectingStrategy = routerpb.SelectorConfig_SelectingStrategy
 	SelectorsConfig                  = routerpb.SelectorsConfig
@@ -109,19 +111,19 @@ type (
 
 // Transport
 type (
-	SocketConfig                   = transportpb.SocketConfig
-	SocketConfig_TCPFastOpenState  = transportpb.SocketConfig_TCPFastOpenState
-	SocketConfig_TProxyMode        = transportpb.SocketConfig_TProxyMode
-	TransportConfig                = transportpb.TransportConfig
-	TransportConfig_Grpc           = transportpb.TransportConfig_Grpc
-	TransportConfig_Http           = transportpb.TransportConfig_Http
-	TransportConfig_Httpupgrade    = transportpb.TransportConfig_Httpupgrade
-	TransportConfig_Kcp            = transportpb.TransportConfig_Kcp
-	TransportConfig_Reality        = transportpb.TransportConfig_Reality
-	TransportConfig_Splithttp      = transportpb.TransportConfig_Splithttp
-	TransportConfig_Tcp            = transportpb.TransportConfig_Tcp
-	TransportConfig_Tls            = transportpb.TransportConfig_Tls
-	TransportConfig_Websocket      = transportpb.TransportConfig_Websocket
+	SocketConfig                  = transportpb.SocketConfig
+	SocketConfig_TCPFastOpenState = transportpb.SocketConfig_TCPFastOpenState
+	SocketConfig_TProxyMode       = transportpb.SocketConfig_TProxyMode
+	TransportConfig               = transportpb.TransportConfig
+	TransportConfig_Grpc          = transportpb.TransportConfig_Grpc
+	TransportConfig_Http          = transportpb.TransportConfig_Http
+	TransportConfig_Httpupgrade   = transportpb.TransportConfig_Httpupgrade
+	TransportConfig_Kcp           = transportpb.TransportConfig_Kcp
+	TransportConfig_Reality       = transportpb.TransportConfig_Reality
+	TransportConfig_Splithttp     = transportpb.TransportConfig_Splithttp
+	TransportConfig_Tcp           = transportpb.TransportConfig_Tcp
+	TransportConfig_Tls           = transportpb.TransportConfig_Tls
+	TransportConfig_Websocket     = transportpb.TransportConfig_Websocket
 )
 
 // User
@@ -149,9 +151,9 @@ type (
 type (
 	DispatcherConfig   = dispatcherpb.DispatcherConfig
 	SubscriptionConfig = subscriptionpb.SubscriptionConfig
-	SysProxyConfig       = sysproxypb.SysProxyConfig
-	GrpcConfig           = grpcsvc.GrpcConfig
-	GrpcServiceConfig    = grpcsvc.GrpcServiceConfig
+	SysProxyConfig     = sysproxypb.SysProxyConfig
+	GrpcConfig         = grpcsvc.GrpcConfig
+	GrpcServiceConfig  = grpcsvc.GrpcServiceConfig
 )
 
 const (
@@ -159,10 +161,10 @@ const (
 	DnsType_DnsType_AAAA = dnspb.DnsType_DnsType_AAAA
 
 	TunConfig_FOUR_ONLY = tunpb.TunConfig_FOUR_ONLY
-	TunConfig_BOTH        = tunpb.TunConfig_BOTH
-	TunConfig_DYNAMIC     = tunpb.TunConfig_DYNAMIC
-	Mode_MODE_SYSTEM      = tunpb.Mode_MODE_SYSTEM
-	Mode_MODE_GVISOR      = tunpb.Mode_MODE_GVISOR
+	TunConfig_BOTH      = tunpb.TunConfig_BOTH
+	TunConfig_DYNAMIC   = tunpb.TunConfig_DYNAMIC
+	Mode_MODE_SYSTEM    = tunpb.Mode_MODE_SYSTEM
+	Mode_MODE_GVISOR    = tunpb.Mode_MODE_GVISOR
 
 	AppId_Keyword = routerpb.AppId_Keyword
 	AppId_Prefix  = routerpb.AppId_Prefix

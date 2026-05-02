@@ -227,9 +227,6 @@ func (w *dnsConnImpl) handlerReply(msg *dns.Msg) {
 			Str("name", w.tag).
 			Dur("duration", time.Since(info.firstAddedAt)).
 			Msg("dns conn reply")
-		if msg.Rcode == dns.RcodeSuccess && !msg.Truncated {
-			w.rrCache.Set(msg)
-		}
 		p := &udp.Packet{
 			Source:  info.dst,
 			Target:  info.src,

@@ -30,7 +30,6 @@ import (
 	"github.com/5vnetwork/vx-core/common/dispatcher"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
-	"github.com/5vnetwork/vx-core/common/session"
 	"github.com/5vnetwork/vx-core/common/signal"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/transport"
@@ -39,7 +38,6 @@ import (
 
 	vxlog "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/log"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/sync/errgroup"
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -202,7 +200,8 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 			Handler:         freedomHandler,
 			Dispatcher:      dispatcher.NewPacketDispatcher(context.Background(), freedomHandler),
 		})
-		resolver := idns.NewDnsServerToResolver(dnsServer1)
+		resolver := idns.NewDnsServerToResolver(
+			idns.DnsServerToResolverOption{DnsServers: []idns.DnsServer{dnsServer1}})
 		api.echResolver = resolver
 		api.ipResolver = resolver
 		api.dialFactory = transport.NewDialerFactoryImp(transport.DialerFactoryOption{
@@ -219,9 +218,10 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 			Handler:         freedomHandler,
 			Dispatcher:      dispatcher.NewPacketDispatcher(context.Background(), freedomHandler),
 		})
-		resolver := idns.NewDnsServerToResolver(dnsServer1)
+		resolver := idns.NewDnsServerToResolver(
+			idns.DnsServerToResolverOption{DnsServers: []idns.DnsServer{dnsServer1}})
 		api.echResolver = resolver
-		api.ipResolver = &idns.DnsResolver{}
+		api.ipResolver = &idns.GoDnsResolver{}
 		api.dialFactory = transport.DefaultDialerFactory()
 		dnsServer1.Start()
 	}
@@ -397,7 +397,7 @@ func (a *Api) FetchSubscriptionContent(ctx context.Context, req *FetchSubscripti
 		}
 		handlers = append(handlers, handler)
 	}
-	result, err := subscription.FetchSubscription(ctx, req.Link, downloader.NewDownloader0(handlers))
+	result, err := subscription.FetchSubscription(ctx, req.Link, downloader.NewDownloader0(handlers), req.ShareLinkQueryExtra)
 	if err != nil {
 		return nil, err
 	}
@@ -409,7 +409,7 @@ func (a *Api) FetchSubscriptionContent(ctx context.Context, req *FetchSubscripti
 }
 
 func (a *Api) Decode(ctx context.Context, req *DecodeRequest) (*DecodeResponse, error) {
-	result, err := util.Decode(req.Data)
+	result, err := util.Decode(req.Data, req.ShareLinkQueryExtra)
 	if err != nil {
 		return nil, err
 	}

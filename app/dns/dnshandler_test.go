@@ -69,9 +69,11 @@ func TestDNSUDPTunnel(t *testing.T) {
 			},
 		},
 		Dns: &configs.DnsConfig{
-			DnsRules: []*configs.DnsRuleConfig{
-				{
-					DnsServerName: "dns",
+			DnsHijack: &configs.DnsHijackConfig{
+				DnsRules: []*configs.DnsRuleConfig{
+					{
+						DnsServerName: "dns",
+					},
 				},
 			},
 			DnsServers: []*configs.DnsServerConfig{
@@ -193,11 +195,12 @@ func TestDNSTCPTunnel(t *testing.T) {
 	config := &configs.TmConfig{
 		DefaultNicMonitor: true,
 		Dns: &configs.DnsConfig{
-			DnsRules: []*configs.DnsRuleConfig{
-				{
-					DnsServerName: "dns",
-				},
-			},
+			DnsHijack: &configs.DnsHijackConfig{
+				DnsRules: []*configs.DnsRuleConfig{
+					{
+						DnsServerName: "dns",
+					},
+				}},
 			DnsServers: []*configs.DnsServerConfig{
 				{
 					Type: &configs.DnsServerConfig_PlainDnsServer{

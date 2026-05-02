@@ -205,6 +205,10 @@ func (ns *DnsServerConcurrent) HandleQuery(ctx context.Context, msg *dns.Msg, tc
 		return makeReply(msg, cachedMsg), nil
 	}
 
+	if len(ns.clientIp) > 0 {
+		addClientIP(msg, ns.clientIp)
+	}
+
 	log.Ctx(ctx).Debug().Any("question", question).Msg("cache miss")
 
 	lock := &ns.udpWaitingLock
@@ -278,14 +282,9 @@ func (ns *DnsServerConcurrent) HandleQuery(ctx context.Context, msg *dns.Msg, tc
 			Int("rcode", int(reply.Msg.Rcode)).
 			Str("type", dns.TypeToString[question.Qtype]).
 			Any("reply", reply).Msg("dnsConcurrent reply")
-		if reply.Rcode == dns.RcodeSuccess && !reply.Truncated {
-			ns.rrCache.Set(reply.Msg)
-		}
+
 		if tcp || ns.useTls {
 			reply.Msg.Id = oldId
-		}
-		if ns.rewriter != nil {
-			reply.Msg = ns.rewriter.Rewrite(reply.Msg)
 		}
 		return reply.Msg, nil
 	}
@@ -451,14 +450,17 @@ func (w *DnsServerConcurrent) handleTcpReply(ctx context.Context, t2 *t2,
 			delete(w.tcpWaiting, msg.Id)
 		}
 		w.tcpWaitingLock.Unlock()
-		if !ok {
-			if w.rewriter != nil {
-				msg = w.rewriter.Rewrite(msg)
-			}
-			w.dnsConnImpl.handlerReply(msg)
+		if w.rewriter != nil {
+			msg = w.rewriter.Rewrite(msg)
+		}
+		if msg.Rcode == dns.RcodeSuccess && !msg.Truncated {
+			w.rrCache.Set(msg)
 		}
 		if w.ipToDomain != nil {
 			w.ipToDomain.SetDomain(msg, ns.Address)
+		}
+		if !ok {
+			w.dnsConnImpl.handlerReply(msg)
 		}
 	}
 }
@@ -491,15 +493,19 @@ func (w *DnsServerConcurrent) handleReply(b *udp.Packet) {
 		delete(w.udpWaiting, msg.Id)
 	}
 	w.udpWaitingLock.Unlock()
-	if !ok {
-		if w.rewriter != nil {
-			msg = w.rewriter.Rewrite(msg)
-		}
-		w.dnsConnImpl.handlerReply(msg)
+	if w.rewriter != nil {
+		msg = w.rewriter.Rewrite(msg)
+	}
+	if msg.Rcode == dns.RcodeSuccess && !msg.Truncated {
+		w.rrCache.Set(msg)
 	}
 	if w.ipToDomain != nil {
 		w.ipToDomain.SetDomain(msg, b.Source.Address)
 	}
+	if !ok {
+		w.dnsConnImpl.handlerReply(msg)
+	}
+
 }
 
 type request struct {

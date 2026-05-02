@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/miekg/dns"
@@ -18,30 +17,8 @@ import (
 
 // for dialer to lookup ip when dialing
 type InternalDns struct {
-	StaticDns             *StaticDnsServer
-	DnsServers            []DnsServer
-	DnsServerToIPResolver *DnsServerToResolver
-}
-
-func NewInternalDns(staticDns *StaticDnsServer, DnsServers ...DnsServer) *InternalDns {
-	return &InternalDns{
-		StaticDns:             staticDns,
-		DnsServers:            DnsServers,
-		DnsServerToIPResolver: NewDnsServerToResolver(DnsServers...),
-	}
-}
-
-func (d *InternalDns) AddDnsServer(dnsServer DnsServer) {
-	d.DnsServers = append(d.DnsServers, dnsServer)
-	d.DnsServerToIPResolver = NewDnsServerToResolver(d.DnsServers...)
-}
-
-func (d *InternalDns) Start() error {
-	return common.StartAll(d.DnsServers)
-}
-
-func (d *InternalDns) Close() error {
-	return common.CloseAll(d.DnsServers)
+	StaticDns *StaticDnsServer
+	Resolver  i.DnsResolver
 }
 
 func (d *InternalDns) LookupIPv4(ctx context.Context, host string) ([]net.IP, error) {
@@ -59,7 +36,7 @@ func (d *InternalDns) LookupIPv4(ctx context.Context, host string) ([]net.IP, er
 			return ips, nil
 		}
 	}
-	return d.DnsServerToIPResolver.LookupIPv4(ctx, host)
+	return d.Resolver.LookupIPv4(ctx, host)
 }
 
 func (d *InternalDns) LookupIPv6(ctx context.Context, host string) ([]net.IP, error) {
@@ -76,7 +53,7 @@ func (d *InternalDns) LookupIPv6(ctx context.Context, host string) ([]net.IP, er
 			return ips, nil
 		}
 	}
-	return d.DnsServerToIPResolver.LookupIPv6(ctx, host)
+	return d.Resolver.LookupIPv6(ctx, host)
 }
 
 func (d *InternalDns) LookupECH(ctx context.Context, domain string) ([]byte, error) {
@@ -95,7 +72,7 @@ func (d *InternalDns) LookupECH(ctx context.Context, domain string) ([]byte, err
 			}
 		}
 	}
-	return d.DnsServerToIPResolver.LookupECH(ctx, domain)
+	return d.Resolver.LookupECH(ctx, domain)
 }
 
 func (d *InternalDns) LookupIP(ctx context.Context, host string) ([]net.IP, error) {

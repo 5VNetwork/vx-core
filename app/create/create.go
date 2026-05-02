@@ -41,6 +41,7 @@ import (
 	"github.com/5vnetwork/vx-core/transport/security/tls"
 
 	"github.com/apernet/hysteria/core/v2/client"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type HandlerConfig struct {
@@ -130,7 +131,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 			return nil, err
 		}
 		if ipr == nil {
-			ipr = &dns.DnsResolver{}
+			ipr = &dns.GoDnsResolver{}
 		}
 		freedomHandler := freedom.New(dialer, pl, config.Tag, ipr)
 		return freedomHandler, nil
@@ -160,7 +161,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 		return handler, nil
 	}
 
-	sp, err := getPortSelector(config.Address, config.Port, config.Ports)
+	sp, err := getPortSelector(config.OutboundHandlerConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +253,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 		lis, _ := df.GetPacketListener(TransportConfigToMemoryConfig(config.Transport,
 			readCounter, writeCounter, config.ECHResolver))
 		if ipr == nil {
-			ipr = &dns.DnsResolver{}
+			ipr = &dns.GoDnsResolver{}
 		}
 		serverName := m.GetTlsConfig().ServerName
 		if serverName == "" {
@@ -387,17 +388,58 @@ func getSinglePort(config *configs.OutboundHandlerConfig) uint16 {
 	}
 }
 
-// TODO: support udp
-func getPortSelector(address string, port uint32, ports []*net.PortRange) (i.PortSelector, error) {
-	if len(ports) > 0 {
-		return outbound.NewRandomPortSelector(ports), nil
-	} else if port != 0 {
-		return outbound.NewRandomPortSelector([]*net.PortRange{
-			{From: port, To: port},
-		}), nil
+func getPortSelector(config *configs.OutboundHandlerConfig) (i.PortSelector, error) {
+	var ranges []*net.PortRange
+	if len(config.Ports) > 0 {
+		ranges = config.Ports
+	} else if config.Port != 0 {
+		ranges = []*net.PortRange{
+			{From: config.Port, To: config.Port},
+		}
 	} else {
 		return nil, fmt.Errorf("no port and ports")
 	}
+
+	interval, minInterval, maxInterval, useOne := getOnePortStrategySeconds(config)
+	if useOne {
+		return outbound.NewOnePortSelector(
+			ranges,
+			time.Second*time.Duration(interval),
+			time.Second*time.Duration(minInterval),
+			time.Second*time.Duration(maxInterval),
+		), nil
+	}
+	return outbound.NewRandomPortSelector(ranges), nil
+}
+
+func getOnePortStrategySeconds(config *configs.OutboundHandlerConfig) (uint32, uint32, uint32, bool) {
+	msg := config.ProtoReflect()
+	if !msg.IsValid() {
+		return 0, 0, 0, false
+	}
+	oneField := msg.Descriptor().Fields().ByName(protoreflect.Name("one"))
+	if oneField == nil || !msg.Has(oneField) {
+		return 0, 0, 0, false
+	}
+	oneMsg := msg.Get(oneField).Message()
+	if !oneMsg.IsValid() {
+		return 0, 0, 0, false
+	}
+
+	var interval uint32
+	var minInterval uint32
+	var maxInterval uint32
+
+	if intervalField := oneMsg.Descriptor().Fields().ByName(protoreflect.Name("interval")); intervalField != nil && oneMsg.Has(intervalField) {
+		interval = uint32(oneMsg.Get(intervalField).Uint())
+	}
+	if minField := oneMsg.Descriptor().Fields().ByName(protoreflect.Name("min_interval")); minField != nil && oneMsg.Has(minField) {
+		minInterval = uint32(oneMsg.Get(minField).Uint())
+	}
+	if maxField := oneMsg.Descriptor().Fields().ByName(protoreflect.Name("max_interval")); maxField != nil && oneMsg.Has(maxField) {
+		maxInterval = uint32(oneMsg.Get(maxField).Uint())
+	}
+	return interval, minInterval, maxInterval, true
 }
 
 func getServerPicker(account interface{}, address string, port uint32, ports []*net.PortRange) (protocol.ServerPicker, error) {

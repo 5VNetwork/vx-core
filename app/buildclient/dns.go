@@ -57,7 +57,9 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 	if len(dnsConfig.DnsServers) > 0 {
 		err := fc.requireFeature(func(h *dispatcher.Dispatcher, gh i.GeoHelper,
 			om *outbound.Manager, dii i.DefaultInterfaceInfo) error {
-			internalDns := idns.NewInternalDns(staticDnsServer)
+			internalDns := &idns.InternalDns{
+				StaticDns: staticDnsServer,
+			}
 			client.IPResolver = internalDns
 			client.EchResolver = internalDns
 			if err := fc.addComponent(internalDns); err != nil {
@@ -79,71 +81,164 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 			}
 			// dns
 			var dnsServers []idns.DnsServer
-			var dnsRules []*idns.DnsRule
-			internalDnsServers := make(map[string]idns.DnsServer)
+			dnsServerMap := make(map[string]idns.DnsServer)
 			for _, dsConfig := range config.Dns.DnsServers {
-				ds, err := newDnsServer(dsConfig, h, ipToDomain, fc, client, dailer,
-					internalDns, config.Dns.CacheDuration, gh)
+				ds, err := newDnsServer(dsConfig, h, ipToDomain, fc, dailer,
+					internalDns, gh)
 				if err != nil {
 					return err
 				}
+				log.Info().Str("name", dsConfig.Name).Msg("new dns server")
 				dnsServers = append(dnsServers, ds)
-				for _, dnsRule := range dnsConfig.DnsRules {
-					if dnsRule.DnsServerName == dsConfig.Name {
+				dnsServerMap[dsConfig.Name] = ds
+			}
+			createdConcurrent := make(map[string]bool, len(dnsConfig.ConcurrentDnsServers))
+			createdSerial := make(map[string]bool, len(dnsConfig.SerialDnsServers))
+			remaining := len(dnsConfig.ConcurrentDnsServers) + len(dnsConfig.SerialDnsServers)
+			for remaining > 0 {
+				progressed := false
+
+				for _, concurrentDnsServer := range dnsConfig.ConcurrentDnsServers {
+					if createdConcurrent[concurrentDnsServer.Name] {
+						continue
+					}
+					servers := make([]idns.DnsServer, 0, len(concurrentDnsServer.DnsServers))
+					ready := true
+					for _, name := range concurrentDnsServer.DnsServers {
+						ds, ok := dnsServerMap[name]
+						if !ok {
+							ready = false
+							break
+						}
+						servers = append(servers, ds)
+					}
+					if !ready {
+						continue
+					}
+					concurrentDns := idns.NewConcurrentDnsServers(servers...)
+					dnsServers = append(dnsServers, concurrentDns)
+					dnsServerMap[concurrentDnsServer.Name] = concurrentDns
+					createdConcurrent[concurrentDnsServer.Name] = true
+					remaining--
+					progressed = true
+				}
+
+				for _, serialDnsServer := range dnsConfig.SerialDnsServers {
+					if createdSerial[serialDnsServer.Name] {
+						continue
+					}
+					servers := make([]idns.DnsServer, 0, len(serialDnsServer.DnsServers))
+					ready := true
+					for _, name := range serialDnsServer.DnsServers {
+						ds, ok := dnsServerMap[name]
+						if !ok {
+							ready = false
+							break
+						}
+						servers = append(servers, ds)
+					}
+					if !ready {
+						continue
+					}
+					serialDns := idns.NewSerialDnsServers(
+						time.Duration(serialDnsServer.Interval)*time.Second, servers...)
+					dnsServers = append(dnsServers, serialDns)
+					dnsServerMap[serialDnsServer.Name] = serialDns
+					createdSerial[serialDnsServer.Name] = true
+					remaining--
+					progressed = true
+				}
+
+				if !progressed {
+					return fmt.Errorf("unable to resolve dns server dependencies for concurrent/serial dns servers")
+				}
+			}
+
+			// dns hijack
+			{
+				var dnsRules []*idns.DnsRule
+				for _, dnsRule := range dnsConfig.GetDnsHijack().GetDnsRules() {
+					if ds, ok := dnsServerMap[dnsRule.DnsServerName]; ok {
 						dr, err := newDnsRule(dnsRule, ds, gh, client)
 						if err != nil {
 							return err
 						}
 						dnsRules = append(dnsRules, dr)
+					} else {
+						return fmt.Errorf("dns server %s not found", dnsRule.DnsServerName)
 					}
 				}
-				for _, internalDnsServer := range config.Dns.InternalDnsServers {
-					if internalDnsServer == dsConfig.Name {
-						internalDnsServers[internalDnsServer] = ds
+				dns := idns.NewHijackDns(staticDnsServer, dnsRules,
+					config.GetDns().GetDnsHijack().GetEnableFakeDns())
+				hijackDnsToDnsServer := &idns.HijackDnsToDnsServer{
+					HijackDns: dns,
+				}
+				dnsServers = append(dnsServers, hijackDnsToDnsServer)
+				dnsServerMap["hijack"] = hijackDnsToDnsServer
+				client.Dns = dns
+				common.Must(fc.addFeature(dns))
+				om.AddHandlers(idns.NewHandlerV().WithTag("dns").WithDns(dns))
+			}
+
+			// resolver used in dialing
+			{
+				var servers []idns.DnsServer
+				for _, name := range config.Dns.InternalResolver.DnsServers {
+					if ds, ok := dnsServerMap[name]; ok {
+						servers = append(servers, ds)
+					} else {
+						return fmt.Errorf("internal dns server %s not found", name)
 					}
 				}
+				resolver := idns.NewDnsServerToResolver(
+					idns.DnsServerToResolverOption{DnsServers: servers,
+						Interval: time.Duration(config.Dns.InternalResolver.Interval) * time.Second})
+				internalDns.Resolver = resolver
 			}
-			for _, internalDnsServer := range config.Dns.InternalDnsServers {
-				if ds, ok := internalDnsServers[internalDnsServer]; ok {
-					internalDns.AddDnsServer(ds)
-				} else {
-					return fmt.Errorf("internal dns server %s not found", internalDnsServer)
+
+			// resolver used to lookup request domains
+			{
+				var servers []idns.DnsServer
+				for _, name := range config.Dns.RequestDomainResolver.DnsServers {
+					if ds, ok := dnsServerMap[name]; ok {
+						servers = append(servers, ds)
+					} else {
+						return fmt.Errorf("internal dns server %s not found", name)
+					}
 				}
+				resolver := idns.NewDnsServerToResolver(
+					idns.DnsServerToResolverOption{DnsServers: servers,
+						Interval: time.Duration(config.Dns.InternalResolver.Interval) * time.Second})
+				client.IPResolverForRequestAddress = resolver
 			}
-			dns := idns.NewDns(staticDnsServer, dnsRules, dnsServers, config.Dns.EnableFakeDns)
-			client.Dns = dns
-			client.IPResolverForRequestAddress = &idns.Prefer4IPResolver{
-				IPResolver: &idns.DnsServerToResolver{
-					DnsServers: []idns.DnsServer{&idns.DnsToDnsServer{Dns: dns}},
-				},
-			}
-			if err := fc.addComponent(dns); err != nil {
+			//
+			allDnsServers := idns.NewAllDnsServers(dnsServers)
+			if err := fc.addComponent(allDnsServers); err != nil {
 				return err
 			}
-			om.AddHandlers(idns.NewHandlerV().WithTag("dns").WithDns(dns))
+			client.AllDnsServers = allDnsServers
 			return nil
 		})
 		if err != nil {
 			return err
 		}
 	} else {
-		client.IPResolverForRequestAddress = &dns.DnsResolver{}
-		client.IPResolver = &dns.DnsResolver{}
+		client.IPResolverForRequestAddress = &dns.GoDnsResolver{}
+		client.IPResolver = &dns.GoDnsResolver{}
 		client.EchResolver = dns.DefaultCfResolver()
-		client.Dns = idns.NewDns(staticDnsServer, nil, nil, false)
-		common.Must(fc.addComponent(client.Dns))
-		common.Must(fc.addComponent(&dns.DnsResolver{}))
+		client.Dns = idns.NewHijackDns(staticDnsServer, nil, false)
+		allDnsServers := idns.NewAllDnsServers(nil)
+		client.AllDnsServers = allDnsServers
+		common.Must(fc.addComponent(allDnsServers))
+		common.Must(fc.addComponent(&dns.GoDnsResolver{}))
 	}
 
 	return nil
 }
 func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain *idns.IPToDomain,
-	fc *Builder, client *client.Client, dailer i.Dialer, ipResolver i.IPResolver,
-	globalDuration uint32, gh i.GeoHelper) (idns.DnsServer, error) {
+	fc *Builder, dailer i.Dialer, ipResolver i.IPResolver,
+	gh i.GeoHelper) (idns.DnsServer, error) {
 	duration := config.CacheDuration
-	if duration == 0 {
-		duration = globalDuration
-	}
 	rrCache := idns.NewRrCache(idns.RrCacheSetting{Duration: duration})
 
 	var dnsRewriter idns.MsgRewriter
@@ -156,6 +251,14 @@ func newDnsServer(config *configs.DnsServerConfig, handler i.Handler, ipToDomain
 	}
 
 	switch c := config.Type.(type) {
+	case *configs.DnsServerConfig_EmptyDnsServer:
+		return &dns.EmptyDnsResolver{}, nil
+	case *configs.DnsServerConfig_GoDnsServer:
+		return dns.NewGoIpResolver(dns.GoDnsResolverOption{
+			Cache:      rrCache,
+			IpToDomain: ipToDomain,
+			Rewriter:   dnsRewriter,
+		}), nil
 	case *configs.DnsServerConfig_DohDnsServer:
 		return idns.NewDoHNameServer(idns.DoHNameServerOption{
 			Handler:    handler,

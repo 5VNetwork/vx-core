@@ -21,7 +21,7 @@ func TestNameServerQuic(t *testing.T) {
 			transport.DefaultPacketListener,
 			"", nil,
 		),
-		IPResolver: &DnsResolver{},
+		IPResolver: &GoDnsResolver{},
 	})
 
 	m := new(d.Msg)

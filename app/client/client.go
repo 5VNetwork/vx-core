@@ -46,7 +46,8 @@ type Client struct {
 	Logger     *logger.Logger
 	GrpcServer *grpcserver.GrpcServer
 	// used to handle dns requests
-	Dns *dns.Dns
+	Dns           *dns.HijackDns
+	AllDnsServers *dns.AllDnsServers
 	// used to resolve domains when dial, typically node address and domains of direct connection
 	IPResolver i.IPResolver
 	// used to resolve ech config

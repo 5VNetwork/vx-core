@@ -143,7 +143,14 @@ func TestStaticHostDomain(t *testing.T) {
 		},
 	}, transport.DefaultDialer, nil)
 
-	dns := d.NewInternalDns(staticDnsServer, dnsServer1)
+	dns := d.InternalDns{
+		StaticDns: staticDnsServer,
+		Resolver: d.NewDnsServerToResolver(
+			d.DnsServerToResolverOption{
+				DnsServers: []d.DnsServer{dnsServer1},
+			},
+		),
+	}
 	dnsServer1.Start()
 	defer dnsServer1.Close()
 

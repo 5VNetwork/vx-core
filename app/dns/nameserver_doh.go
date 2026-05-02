@@ -181,10 +181,13 @@ func (d *DoHNameServer) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool)
 		Dur("time", time.Since(startTime)).
 		Str("type", dns.TypeToString[msg.Question[0].Qtype]).
 		Any("reply", rply).Msg("doh reply")
-	d.cache.Set(rply)
 
 	if d.rewriter != nil {
 		rply = d.rewriter.Rewrite(rply)
+	}
+
+	if rply.Rcode == dns.RcodeSuccess && !rply.Truncated {
+		d.cache.Set(rply)
 	}
 
 	if d.ipToDomain != nil {
