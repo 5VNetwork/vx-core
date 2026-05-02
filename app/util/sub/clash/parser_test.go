@@ -298,7 +298,7 @@ func TestParseProxies(t *testing.T) {
 		},
 	}
 
-	configs, _, err := clash.ParseProxies(proxiesArray)
+	configs, _, err := clash.ParseProxies(proxiesArray, nil)
 	if err != nil {
 		t.Fatalf("Failed to parse proxies: %v", err)
 	}
@@ -313,6 +313,39 @@ func TestParseProxies(t *testing.T) {
 
 	if configs[1].Tag != "proxy2" {
 		t.Errorf("Expected tag 'proxy2', got %s", configs[1].Tag)
+	}
+}
+
+func TestParseProxies_subscriptionExtrasMerged(t *testing.T) {
+	proxiesArray := []any{
+		map[string]any{
+			"name":     "v1",
+			"type":     "vless",
+			"server":   "a.b.com",
+			"port":     443,
+			"uuid":     "12345678-1234-1234-1234-123456789012",
+			"flow":     "xtls-rprx-vision",
+			"network":  "tcp",
+			"existing": "keep",
+		},
+	}
+	extras := map[string]string{
+		"tx":       "10",
+		"existing": "should-not-override",
+	}
+	configs, _, err := clash.ParseProxies(proxiesArray, extras)
+	if err != nil {
+		t.Fatalf("ParseProxies: %v", err)
+	}
+	if len(configs) != 1 {
+		t.Fatalf("got %d configs", len(configs))
+	}
+	m := proxiesArray[0].(map[string]any)
+	if m["tx"] != "10" {
+		t.Fatalf("expected tx merged, got %v", m["tx"])
+	}
+	if m["existing"] != "keep" {
+		t.Fatalf("existing key should not be overwritten")
 	}
 }
 
@@ -429,7 +462,7 @@ func TestParseClashConfig(t *testing.T) {
 		t.Fatalf("Failed to parse YAML: %v", err)
 	}
 
-	outboundConfigs, failedReasons, err := clash.ParseProxies(clashConfig.Proxies)
+	outboundConfigs, failedReasons, err := clash.ParseProxies(clashConfig.Proxies, nil)
 	if err != nil {
 		t.Fatalf("Failed to parse proxies: %v", err)
 	}
@@ -605,6 +638,37 @@ func TestParseHysteriaProxy(t *testing.T) {
 	// Check bandwidth
 	if hysteriaConfig.Bandwidth == nil {
 		t.Fatal("Expected bandwidth config")
+	}
+}
+
+func TestParseHysteria2ProxyTypeAlias(t *testing.T) {
+	proxyMapping := map[string]any{
+		"name":     "hysteria2-proxy",
+		"type":     "hysteria2",
+		"server":   "example.com",
+		"port":     443,
+		"password": "password123",
+		"up":       "100 Mbps",
+		"down":     "100 Mbps",
+		"sni":      "example.com",
+	}
+
+	config, err := clash.ParseProxy(proxyMapping)
+	if err != nil {
+		t.Fatalf("Failed to parse hysteria2 proxy: %v", err)
+	}
+
+	if config.Tag != "hysteria2-proxy" {
+		t.Errorf("Expected tag 'hysteria2-proxy', got %s", config.Tag)
+	}
+
+	hysteriaConfig := &configs.Hysteria2ClientConfig{}
+	if err := config.Protocol.UnmarshalTo(hysteriaConfig); err != nil {
+		t.Fatalf("Failed to unmarshal hysteria2 config: %v", err)
+	}
+
+	if hysteriaConfig.Auth != "password123" {
+		t.Errorf("Expected auth 'password123', got %s", hysteriaConfig.Auth)
 	}
 }
 
@@ -854,7 +918,7 @@ func TestParseProxiesWithFailures(t *testing.T) {
 		"invalid-string-proxy",
 	}
 
-	configs, failedNodes, err := clash.ParseProxies(proxiesArray)
+	configs, failedNodes, err := clash.ParseProxies(proxiesArray, nil)
 	if err != nil {
 		t.Fatalf("ParseProxies returned error: %v", err)
 	}

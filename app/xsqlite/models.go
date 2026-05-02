@@ -12,15 +12,16 @@ import (
 )
 
 type Subscription struct {
-	ID                int
-	Name              string
-	Link              string
-	RemainingData     float64
-	EndTime           int
-	Website           string
-	LastUpdate        int
-	LastSuccessUpdate int
-	Description       string
+	ID                   int
+	Name                 string
+	Link                 string
+	RemainingData        float64
+	EndTime              int
+	Website              string
+	LastUpdate           int
+	LastSuccessUpdate    int
+	Description          string
+	ShareLinkQueryExtra  string
 }
 
 type OutboundHandlerGroup struct {

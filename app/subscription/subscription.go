@@ -200,7 +200,7 @@ type FetchSubscriptionResult struct {
 	Description string
 }
 
-func FetchSubscription(ctx context.Context, link string, downloader downloader) (*FetchSubscriptionResult, error) {
+func FetchSubscription(ctx context.Context, link string, downloader downloader, shareLinkQueryExtra map[string]string) (*FetchSubscriptionResult, error) {
 	if parsedUrl, err := url.Parse(link); err == nil {
 		q := parsedUrl.Query()
 		q.Set("flag", "vx")
@@ -216,7 +216,7 @@ func FetchSubscription(ctx context.Context, link string, downloader downloader) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to download subscription: %v", err)
 	}
-	uriContent, err = util.Decode(string(body))
+	uriContent, err = util.Decode(string(body), shareLinkQueryExtra)
 	// if failed to decode, try again with user agent
 	if err != nil || len(uriContent.Configs) == 0 {
 		body, header, err = downloader.Download(ctx, link, map[string]string{
@@ -225,7 +225,7 @@ func FetchSubscription(ctx context.Context, link string, downloader downloader) 
 		if err != nil {
 			return nil, fmt.Errorf("failed to download subscription: %v", err)
 		}
-		uriContent, err = util.Decode(string(body))
+		uriContent, err = util.Decode(string(body), shareLinkQueryExtra)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode subscription: %v", err)
 		}
@@ -244,7 +244,7 @@ func FetchSubscription(ctx context.Context, link string, downloader downloader) 
 			content1, _, err := downloader.Download(ctx, parsedUrl1.String(),
 				map[string]string{})
 			if err == nil {
-				uriContent1, err := util.Decode(string(content1))
+				uriContent1, err := util.Decode(string(content1), shareLinkQueryExtra)
 				if err == nil {
 					description = uriContent1.Description
 				}
@@ -286,7 +286,7 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to download subscription: %v", err)
 	}
-	uriContent, err = util.Decode(string(body))
+	uriContent, err = util.Decode(string(body), sub.ShareLinkQueryExtraFromStored(subscription.ShareLinkQueryExtra))
 	// if failed to decode, try again with user agent
 	if err != nil || len(uriContent.Configs) == 0 {
 		body, header, err = downloader.Download(ctx, link, map[string]string{
@@ -295,7 +295,7 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 		if err != nil {
 			return 0, nil, fmt.Errorf("failed to download subscription: %v", err)
 		}
-		uriContent, err = util.Decode(string(body))
+		uriContent, err = util.Decode(string(body), sub.ShareLinkQueryExtraFromStored(subscription.ShareLinkQueryExtra))
 		if err != nil {
 			return 0, nil, fmt.Errorf("failed to decode subscription: %v", err)
 		}
@@ -388,7 +388,7 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 			content1, _, err := downloader.Download(ctx, parsedUrl1.String(),
 				map[string]string{})
 			if err == nil {
-				uriContent1, err := util.Decode(string(content1))
+				uriContent1, err := util.Decode(string(content1), sub.ShareLinkQueryExtraFromStored(subscription.ShareLinkQueryExtra))
 				if err == nil {
 					subscription.Description = uriContent1.Description
 				}

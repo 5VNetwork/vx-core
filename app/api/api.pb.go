@@ -535,11 +535,13 @@ func (x *UpdateSubscriptionResponse) GetFailedNodes() []string {
 }
 
 type FetchSubscriptionContentRequest struct {
-	state         protoimpl.MessageState    `protogen:"open.v1"`
-	Link          string                    `protobuf:"bytes,1,opt,name=link,proto3" json:"link,omitempty"`
-	Handlers      []*outbound.HandlerConfig `protobuf:"bytes,2,rep,name=handlers,proto3" json:"handlers,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state    protoimpl.MessageState    `protogen:"open.v1"`
+	Link     string                    `protobuf:"bytes,1,opt,name=link,proto3" json:"link,omitempty"`
+	Handlers []*outbound.HandlerConfig `protobuf:"bytes,2,rep,name=handlers,proto3" json:"handlers,omitempty"`
+	// Merged into each plain-text share link (query) and into each Clash proxy mapping before parse. Keys already present are not overwritten.
+	ShareLinkQueryExtra map[string]string `protobuf:"bytes,3,rep,name=share_link_query_extra,json=shareLinkQueryExtra,proto3" json:"share_link_query_extra,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *FetchSubscriptionContentRequest) Reset() {
@@ -582,6 +584,13 @@ func (x *FetchSubscriptionContentRequest) GetLink() string {
 func (x *FetchSubscriptionContentRequest) GetHandlers() []*outbound.HandlerConfig {
 	if x != nil {
 		return x.Handlers
+	}
+	return nil
+}
+
+func (x *FetchSubscriptionContentRequest) GetShareLinkQueryExtra() map[string]string {
+	if x != nil {
+		return x.ShareLinkQueryExtra
 	}
 	return nil
 }
@@ -2415,10 +2424,12 @@ func (*ProcessGeoFilesResponse) Descriptor() ([]byte, []int) {
 }
 
 type DecodeRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Data          string                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Data  string                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	// Same semantics as FetchSubscriptionContentRequest.share_link_query_extra
+	ShareLinkQueryExtra map[string]string `protobuf:"bytes,2,rep,name=share_link_query_extra,json=shareLinkQueryExtra,proto3" json:"share_link_query_extra,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *DecodeRequest) Reset() {
@@ -2456,6 +2467,13 @@ func (x *DecodeRequest) GetData() string {
 		return x.Data
 	}
 	return ""
+}
+
+func (x *DecodeRequest) GetShareLinkQueryExtra() map[string]string {
+	if x != nil {
+		return x.ShareLinkQueryExtra
+	}
+	return nil
 }
 
 type DecodeResponse struct {
@@ -4067,10 +4085,14 @@ const file_app_api_api_proto_rawDesc = "" +
 	"\ffailed_nodes\x18\x06 \x03(\tR\vfailedNodes\x1a?\n" +
 	"\x11ErrorReasonsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"m\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xac\x02\n" +
 	"\x1fFetchSubscriptionContentRequest\x12\x12\n" +
 	"\x04link\x18\x01 \x01(\tR\x04link\x126\n" +
-	"\bhandlers\x18\x02 \x03(\v2\x1a.vx.outbound.HandlerConfigR\bhandlers\"\xa7\x01\n" +
+	"\bhandlers\x18\x02 \x03(\v2\x1a.vx.outbound.HandlerConfigR\bhandlers\x12u\n" +
+	"\x16share_link_query_extra\x18\x03 \x03(\v2@.vx.api.FetchSubscriptionContentRequest.ShareLinkQueryExtraEntryR\x13shareLinkQueryExtra\x1aF\n" +
+	"\x18ShareLinkQueryExtraEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xa7\x01\n" +
 	" FetchSubscriptionContentResponse\x12>\n" +
 	"\bhandlers\x18\x01 \x03(\v2\".vx.outbound.OutboundHandlerConfigR\bhandlers\x12!\n" +
 	"\ffailed_nodes\x18\x02 \x03(\tR\vfailedNodes\x12 \n" +
@@ -4209,9 +4231,13 @@ const file_app_api_api_proto_rawDesc = "" +
 	"geoip_path\x18\x04 \x01(\tR\tgeoipPath\x12(\n" +
 	"\x10dst_geosite_path\x18\x05 \x01(\tR\x0edstGeositePath\x12$\n" +
 	"\x0edst_geoip_path\x18\x06 \x01(\tR\fdstGeoipPath\"\x19\n" +
-	"\x17ProcessGeoFilesResponse\"#\n" +
+	"\x17ProcessGeoFilesResponse\"\xd0\x01\n" +
 	"\rDecodeRequest\x12\x12\n" +
-	"\x04data\x18\x01 \x01(\tR\x04data\"s\n" +
+	"\x04data\x18\x01 \x01(\tR\x04data\x12c\n" +
+	"\x16share_link_query_extra\x18\x02 \x03(\v2..vx.api.DecodeRequest.ShareLinkQueryExtraEntryR\x13shareLinkQueryExtra\x1aF\n" +
+	"\x18ShareLinkQueryExtraEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"s\n" +
 	"\x0eDecodeResponse\x12>\n" +
 	"\bhandlers\x18\x01 \x03(\v2\".vx.outbound.OutboundHandlerConfigR\bhandlers\x12!\n" +
 	"\ffailed_nodes\x18\x02 \x03(\tR\vfailedNodes\"S\n" +
@@ -4349,7 +4375,7 @@ func file_app_api_api_proto_rawDescGZIP() []byte {
 }
 
 var file_app_api_api_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_app_api_api_proto_msgTypes = make([]protoimpl.MessageInfo, 78)
+var file_app_api_api_proto_msgTypes = make([]protoimpl.MessageInfo, 80)
 var file_app_api_api_proto_goTypes = []any{
 	(XStatusChangeNotifyRequest_Status)(0),        // 0: vx.api.XStatusChangeNotifyRequest.Status
 	(ServerActionRequest_Action)(0),               // 1: vx.api.ServerActionRequest.Action
@@ -4429,136 +4455,140 @@ var file_app_api_api_proto_goTypes = []any{
 	(*ToUrlRequest)(nil),                          // 75: vx.api.ToUrlRequest
 	(*ToUrlResponse)(nil),                         // 76: vx.api.ToUrlResponse
 	nil,                                           // 77: vx.api.UpdateSubscriptionResponse.ErrorReasonsEntry
-	nil,                                           // 78: vx.api.DownloadResponse.UsageEntry
-	nil,                                           // 79: vx.api.DeployRequest.FilesEntry
-	(*log.LoggerConfig)(nil),                      // 80: vx.log.LoggerConfig
-	(*outbound.HandlerConfig)(nil),                // 81: vx.outbound.HandlerConfig
-	(*outbound.OutboundHandlerConfig)(nil),        // 82: vx.outbound.OutboundHandlerConfig
-	(*vx.ServerConfig)(nil),                       // 83: vx.ServerConfig
-	(*inbound.ProxyInboundConfig)(nil),            // 84: vx.inbound.ProxyInboundConfig
-	(*geo.Domain)(nil),                            // 85: vx.common.geo.Domain
-	(*geo.CIDR)(nil),                              // 86: vx.common.geo.CIDR
-	(*router.AppId)(nil),                          // 87: vx.router.AppId
-	(*geo1.GeositeConfig)(nil),                    // 88: vx.geo.GeositeConfig
-	(*geo1.GeoIPConfig)(nil),                      // 89: vx.geo.GeoIPConfig
-	(*inbound.MultiProxyInboundConfig)(nil),       // 90: vx.inbound.MultiProxyInboundConfig
+	nil,                                           // 78: vx.api.FetchSubscriptionContentRequest.ShareLinkQueryExtraEntry
+	nil,                                           // 79: vx.api.DownloadResponse.UsageEntry
+	nil,                                           // 80: vx.api.DeployRequest.FilesEntry
+	nil,                                           // 81: vx.api.DecodeRequest.ShareLinkQueryExtraEntry
+	(*log.LoggerConfig)(nil),                      // 82: vx.log.LoggerConfig
+	(*outbound.HandlerConfig)(nil),                // 83: vx.outbound.HandlerConfig
+	(*outbound.OutboundHandlerConfig)(nil),        // 84: vx.outbound.OutboundHandlerConfig
+	(*vx.ServerConfig)(nil),                       // 85: vx.ServerConfig
+	(*inbound.ProxyInboundConfig)(nil),            // 86: vx.inbound.ProxyInboundConfig
+	(*geo.Domain)(nil),                            // 87: vx.common.geo.Domain
+	(*geo.CIDR)(nil),                              // 88: vx.common.geo.CIDR
+	(*router.AppId)(nil),                          // 89: vx.router.AppId
+	(*geo1.GeositeConfig)(nil),                    // 90: vx.geo.GeositeConfig
+	(*geo1.GeoIPConfig)(nil),                      // 91: vx.geo.GeoIPConfig
+	(*inbound.MultiProxyInboundConfig)(nil),       // 92: vx.inbound.MultiProxyInboundConfig
 }
 var file_app_api_api_proto_depIdxs = []int32{
-	80, // 0: vx.api.ApiServerConfig.log_config:type_name -> vx.log.LoggerConfig
+	82, // 0: vx.api.ApiServerConfig.log_config:type_name -> vx.log.LoggerConfig
 	0,  // 1: vx.api.XStatusChangeNotifyRequest.status:type_name -> vx.api.XStatusChangeNotifyRequest.Status
-	81, // 2: vx.api.UpdateSubscriptionRequest.handlers:type_name -> vx.outbound.HandlerConfig
+	83, // 2: vx.api.UpdateSubscriptionRequest.handlers:type_name -> vx.outbound.HandlerConfig
 	77, // 3: vx.api.UpdateSubscriptionResponse.error_reasons:type_name -> vx.api.UpdateSubscriptionResponse.ErrorReasonsEntry
-	81, // 4: vx.api.FetchSubscriptionContentRequest.handlers:type_name -> vx.outbound.HandlerConfig
-	82, // 5: vx.api.FetchSubscriptionContentResponse.handlers:type_name -> vx.outbound.OutboundHandlerConfig
-	81, // 6: vx.api.DownloadRequest.handlers:type_name -> vx.outbound.HandlerConfig
-	78, // 7: vx.api.DownloadResponse.usage:type_name -> vx.api.DownloadResponse.UsageEntry
-	82, // 8: vx.api.HandlerIpRequest.handler:type_name -> vx.outbound.OutboundHandlerConfig
-	81, // 9: vx.api.HandlerUsableRequest.handler:type_name -> vx.outbound.HandlerConfig
-	81, // 10: vx.api.HandlerCountryTestRequest.handler:type_name -> vx.outbound.HandlerConfig
-	81, // 11: vx.api.SpeedTestRequest.handlers:type_name -> vx.outbound.HandlerConfig
-	27, // 12: vx.api.MonitorServerRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	27, // 13: vx.api.DeployRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	79, // 14: vx.api.DeployRequest.files:type_name -> vx.api.DeployRequest.FilesEntry
-	83, // 15: vx.api.DeployRequest.vx_config:type_name -> vx.ServerConfig
-	1,  // 16: vx.api.ServerActionRequest.action:type_name -> vx.api.ServerActionRequest.Action
-	27, // 17: vx.api.ServerActionRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	27, // 18: vx.api.VproxyStatusRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	27, // 19: vx.api.VXRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	27, // 20: vx.api.ServerConfigRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	83, // 21: vx.api.ServerConfigResponse.config:type_name -> vx.ServerConfig
-	27, // 22: vx.api.UpdateServerConfigRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	83, // 23: vx.api.UpdateServerConfigRequest.config:type_name -> vx.ServerConfig
-	82, // 24: vx.api.DecodeResponse.handlers:type_name -> vx.outbound.OutboundHandlerConfig
-	27, // 25: vx.api.GetServerPublicKeyRequest.ssh_config:type_name -> vx.api.ServerSshConfig
-	84, // 26: vx.api.AddInboundRequest.inbound:type_name -> vx.inbound.ProxyInboundConfig
-	85, // 27: vx.api.ParseClashRuleFileResponse.domains:type_name -> vx.common.geo.Domain
-	86, // 28: vx.api.ParseClashRuleFileResponse.cidrs:type_name -> vx.common.geo.CIDR
-	87, // 29: vx.api.ParseClashRuleFileResponse.app_ids:type_name -> vx.router.AppId
-	88, // 30: vx.api.ParseGeositeConfigRequest.config:type_name -> vx.geo.GeositeConfig
-	85, // 31: vx.api.ParseGeositeConfigResponse.domains:type_name -> vx.common.geo.Domain
-	89, // 32: vx.api.ParseGeoIPConfigRequest.config:type_name -> vx.geo.GeoIPConfig
-	86, // 33: vx.api.ParseGeoIPConfigResponse.cidrs:type_name -> vx.common.geo.CIDR
-	84, // 34: vx.api.InboundConfigToOutboundConfigRequest.inbound:type_name -> vx.inbound.ProxyInboundConfig
-	90, // 35: vx.api.InboundConfigToOutboundConfigRequest.multi_inbound:type_name -> vx.inbound.MultiProxyInboundConfig
-	82, // 36: vx.api.InboundConfigToOutboundConfigResponse.outbound_configs:type_name -> vx.outbound.OutboundHandlerConfig
-	82, // 37: vx.api.ToUrlRequest.outbound_confogs:type_name -> vx.outbound.OutboundHandlerConfig
-	57, // 38: vx.api.Api.UpdateTmStatus:input_type -> vx.api.UpdateTmStatusRequest
-	13, // 39: vx.api.Api.Download:input_type -> vx.api.DownloadRequest
-	19, // 40: vx.api.Api.HandlerUsable:input_type -> vx.api.HandlerUsableRequest
-	23, // 41: vx.api.Api.SpeedTest:input_type -> vx.api.SpeedTestRequest
-	16, // 42: vx.api.Api.RttTest:input_type -> vx.api.RttTestRequest
-	25, // 43: vx.api.Api.GeoIP:input_type -> vx.api.GeoIPRequest
-	45, // 44: vx.api.Api.GetServerPublicKey:input_type -> vx.api.GetServerPublicKeyRequest
-	28, // 45: vx.api.Api.MonitorServer:input_type -> vx.api.MonitorServerRequest
-	32, // 46: vx.api.Api.ServerAction:input_type -> vx.api.ServerActionRequest
-	34, // 47: vx.api.Api.VproxyStatus:input_type -> vx.api.VproxyStatusRequest
-	36, // 48: vx.api.Api.VX:input_type -> vx.api.VXRequest
-	37, // 49: vx.api.Api.ServerConfig:input_type -> vx.api.ServerConfigRequest
-	39, // 50: vx.api.Api.UpdateServerConfig:input_type -> vx.api.UpdateServerConfigRequest
-	7,  // 51: vx.api.Api.UpdateSubscription:input_type -> vx.api.UpdateSubscriptionRequest
-	9,  // 52: vx.api.Api.FetchSubscriptionContent:input_type -> vx.api.FetchSubscriptionContentRequest
-	41, // 53: vx.api.Api.ProcessGeoFiles:input_type -> vx.api.ProcessGeoFilesRequest
-	43, // 54: vx.api.Api.Decode:input_type -> vx.api.DecodeRequest
-	30, // 55: vx.api.Api.Deploy:input_type -> vx.api.DeployRequest
-	47, // 56: vx.api.Api.GenerateCert:input_type -> vx.api.GenerateCertRequest
-	67, // 57: vx.api.Api.GenerateECH:input_type -> vx.api.GenerateECHRequest
-	49, // 58: vx.api.Api.GetCertDomain:input_type -> vx.api.GetCertDomainRequest
-	51, // 59: vx.api.Api.AddInbound:input_type -> vx.api.AddInboundRequest
-	53, // 60: vx.api.Api.UploadLog:input_type -> vx.api.UploadLogRequest
-	55, // 61: vx.api.Api.DefaultNICHasGlobalV6:input_type -> vx.api.DefaultNICHasGlobalV6Request
-	59, // 62: vx.api.Api.ParseClashRuleFile:input_type -> vx.api.ParseClashRuleFileRequest
-	61, // 63: vx.api.Api.ParseGeositeConfig:input_type -> vx.api.ParseGeositeConfigRequest
-	63, // 64: vx.api.Api.ParseGeoIPConfig:input_type -> vx.api.ParseGeoIPConfigRequest
-	65, // 65: vx.api.Api.GenerateX25519KeyPair:input_type -> vx.api.GenerateX25519KeyPairRequest
-	69, // 66: vx.api.Api.StartMacSystemProxy:input_type -> vx.api.StartMacSystemProxyRequest
-	70, // 67: vx.api.Api.StopMacSystemProxy:input_type -> vx.api.StopMacSystemProxyRequest
-	71, // 68: vx.api.Api.CloseDb:input_type -> vx.api.CloseDbRequest
-	72, // 69: vx.api.Api.OpenDb:input_type -> vx.api.OpenDbRequest
-	73, // 70: vx.api.Api.InboundConfigToOutboundConfig:input_type -> vx.api.InboundConfigToOutboundConfigRequest
-	75, // 71: vx.api.Api.ToUrl:input_type -> vx.api.ToUrlRequest
-	80, // 72: vx.api.Api.SetLog:input_type -> vx.log.LoggerConfig
-	21, // 73: vx.api.Api.HandlerCountryTest:input_type -> vx.api.HandlerCountryTestRequest
-	58, // 74: vx.api.Api.UpdateTmStatus:output_type -> vx.api.Receipt
-	14, // 75: vx.api.Api.Download:output_type -> vx.api.DownloadResponse
-	20, // 76: vx.api.Api.HandlerUsable:output_type -> vx.api.HandlerUsableResponse
-	24, // 77: vx.api.Api.SpeedTest:output_type -> vx.api.SpeedTestResponse
-	17, // 78: vx.api.Api.RttTest:output_type -> vx.api.RttTestResponse
-	26, // 79: vx.api.Api.GeoIP:output_type -> vx.api.GeoIPResponse
-	46, // 80: vx.api.Api.GetServerPublicKey:output_type -> vx.api.GetServerPublicKeyResponse
-	29, // 81: vx.api.Api.MonitorServer:output_type -> vx.api.MonitorServerResponse
-	33, // 82: vx.api.Api.ServerAction:output_type -> vx.api.ServerActionResponse
-	35, // 83: vx.api.Api.VproxyStatus:output_type -> vx.api.VproxyStatusResponse
-	58, // 84: vx.api.Api.VX:output_type -> vx.api.Receipt
-	38, // 85: vx.api.Api.ServerConfig:output_type -> vx.api.ServerConfigResponse
-	40, // 86: vx.api.Api.UpdateServerConfig:output_type -> vx.api.UpdateServerConfigResponse
-	8,  // 87: vx.api.Api.UpdateSubscription:output_type -> vx.api.UpdateSubscriptionResponse
-	10, // 88: vx.api.Api.FetchSubscriptionContent:output_type -> vx.api.FetchSubscriptionContentResponse
-	42, // 89: vx.api.Api.ProcessGeoFiles:output_type -> vx.api.ProcessGeoFilesResponse
-	44, // 90: vx.api.Api.Decode:output_type -> vx.api.DecodeResponse
-	31, // 91: vx.api.Api.Deploy:output_type -> vx.api.DeployResponse
-	48, // 92: vx.api.Api.GenerateCert:output_type -> vx.api.GenerateCertResponse
-	68, // 93: vx.api.Api.GenerateECH:output_type -> vx.api.GenerateECHResponse
-	50, // 94: vx.api.Api.GetCertDomain:output_type -> vx.api.GetCertDomainResponse
-	52, // 95: vx.api.Api.AddInbound:output_type -> vx.api.AddInboundResponse
-	54, // 96: vx.api.Api.UploadLog:output_type -> vx.api.UploadLogResponse
-	56, // 97: vx.api.Api.DefaultNICHasGlobalV6:output_type -> vx.api.DefaultNICHasGlobalV6Response
-	60, // 98: vx.api.Api.ParseClashRuleFile:output_type -> vx.api.ParseClashRuleFileResponse
-	62, // 99: vx.api.Api.ParseGeositeConfig:output_type -> vx.api.ParseGeositeConfigResponse
-	64, // 100: vx.api.Api.ParseGeoIPConfig:output_type -> vx.api.ParseGeoIPConfigResponse
-	66, // 101: vx.api.Api.GenerateX25519KeyPair:output_type -> vx.api.GenerateX25519KeyPairResponse
-	58, // 102: vx.api.Api.StartMacSystemProxy:output_type -> vx.api.Receipt
-	58, // 103: vx.api.Api.StopMacSystemProxy:output_type -> vx.api.Receipt
-	58, // 104: vx.api.Api.CloseDb:output_type -> vx.api.Receipt
-	58, // 105: vx.api.Api.OpenDb:output_type -> vx.api.Receipt
-	74, // 106: vx.api.Api.InboundConfigToOutboundConfig:output_type -> vx.api.InboundConfigToOutboundConfigResponse
-	76, // 107: vx.api.Api.ToUrl:output_type -> vx.api.ToUrlResponse
-	58, // 108: vx.api.Api.SetLog:output_type -> vx.api.Receipt
-	22, // 109: vx.api.Api.HandlerCountryTest:output_type -> vx.api.HandlerCountryTestResponse
-	74, // [74:110] is the sub-list for method output_type
-	38, // [38:74] is the sub-list for method input_type
-	38, // [38:38] is the sub-list for extension type_name
-	38, // [38:38] is the sub-list for extension extendee
-	0,  // [0:38] is the sub-list for field type_name
+	83, // 4: vx.api.FetchSubscriptionContentRequest.handlers:type_name -> vx.outbound.HandlerConfig
+	78, // 5: vx.api.FetchSubscriptionContentRequest.share_link_query_extra:type_name -> vx.api.FetchSubscriptionContentRequest.ShareLinkQueryExtraEntry
+	84, // 6: vx.api.FetchSubscriptionContentResponse.handlers:type_name -> vx.outbound.OutboundHandlerConfig
+	83, // 7: vx.api.DownloadRequest.handlers:type_name -> vx.outbound.HandlerConfig
+	79, // 8: vx.api.DownloadResponse.usage:type_name -> vx.api.DownloadResponse.UsageEntry
+	84, // 9: vx.api.HandlerIpRequest.handler:type_name -> vx.outbound.OutboundHandlerConfig
+	83, // 10: vx.api.HandlerUsableRequest.handler:type_name -> vx.outbound.HandlerConfig
+	83, // 11: vx.api.HandlerCountryTestRequest.handler:type_name -> vx.outbound.HandlerConfig
+	83, // 12: vx.api.SpeedTestRequest.handlers:type_name -> vx.outbound.HandlerConfig
+	27, // 13: vx.api.MonitorServerRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	27, // 14: vx.api.DeployRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	80, // 15: vx.api.DeployRequest.files:type_name -> vx.api.DeployRequest.FilesEntry
+	85, // 16: vx.api.DeployRequest.vx_config:type_name -> vx.ServerConfig
+	1,  // 17: vx.api.ServerActionRequest.action:type_name -> vx.api.ServerActionRequest.Action
+	27, // 18: vx.api.ServerActionRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	27, // 19: vx.api.VproxyStatusRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	27, // 20: vx.api.VXRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	27, // 21: vx.api.ServerConfigRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	85, // 22: vx.api.ServerConfigResponse.config:type_name -> vx.ServerConfig
+	27, // 23: vx.api.UpdateServerConfigRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	85, // 24: vx.api.UpdateServerConfigRequest.config:type_name -> vx.ServerConfig
+	81, // 25: vx.api.DecodeRequest.share_link_query_extra:type_name -> vx.api.DecodeRequest.ShareLinkQueryExtraEntry
+	84, // 26: vx.api.DecodeResponse.handlers:type_name -> vx.outbound.OutboundHandlerConfig
+	27, // 27: vx.api.GetServerPublicKeyRequest.ssh_config:type_name -> vx.api.ServerSshConfig
+	86, // 28: vx.api.AddInboundRequest.inbound:type_name -> vx.inbound.ProxyInboundConfig
+	87, // 29: vx.api.ParseClashRuleFileResponse.domains:type_name -> vx.common.geo.Domain
+	88, // 30: vx.api.ParseClashRuleFileResponse.cidrs:type_name -> vx.common.geo.CIDR
+	89, // 31: vx.api.ParseClashRuleFileResponse.app_ids:type_name -> vx.router.AppId
+	90, // 32: vx.api.ParseGeositeConfigRequest.config:type_name -> vx.geo.GeositeConfig
+	87, // 33: vx.api.ParseGeositeConfigResponse.domains:type_name -> vx.common.geo.Domain
+	91, // 34: vx.api.ParseGeoIPConfigRequest.config:type_name -> vx.geo.GeoIPConfig
+	88, // 35: vx.api.ParseGeoIPConfigResponse.cidrs:type_name -> vx.common.geo.CIDR
+	86, // 36: vx.api.InboundConfigToOutboundConfigRequest.inbound:type_name -> vx.inbound.ProxyInboundConfig
+	92, // 37: vx.api.InboundConfigToOutboundConfigRequest.multi_inbound:type_name -> vx.inbound.MultiProxyInboundConfig
+	84, // 38: vx.api.InboundConfigToOutboundConfigResponse.outbound_configs:type_name -> vx.outbound.OutboundHandlerConfig
+	84, // 39: vx.api.ToUrlRequest.outbound_confogs:type_name -> vx.outbound.OutboundHandlerConfig
+	57, // 40: vx.api.Api.UpdateTmStatus:input_type -> vx.api.UpdateTmStatusRequest
+	13, // 41: vx.api.Api.Download:input_type -> vx.api.DownloadRequest
+	19, // 42: vx.api.Api.HandlerUsable:input_type -> vx.api.HandlerUsableRequest
+	23, // 43: vx.api.Api.SpeedTest:input_type -> vx.api.SpeedTestRequest
+	16, // 44: vx.api.Api.RttTest:input_type -> vx.api.RttTestRequest
+	25, // 45: vx.api.Api.GeoIP:input_type -> vx.api.GeoIPRequest
+	45, // 46: vx.api.Api.GetServerPublicKey:input_type -> vx.api.GetServerPublicKeyRequest
+	28, // 47: vx.api.Api.MonitorServer:input_type -> vx.api.MonitorServerRequest
+	32, // 48: vx.api.Api.ServerAction:input_type -> vx.api.ServerActionRequest
+	34, // 49: vx.api.Api.VproxyStatus:input_type -> vx.api.VproxyStatusRequest
+	36, // 50: vx.api.Api.VX:input_type -> vx.api.VXRequest
+	37, // 51: vx.api.Api.ServerConfig:input_type -> vx.api.ServerConfigRequest
+	39, // 52: vx.api.Api.UpdateServerConfig:input_type -> vx.api.UpdateServerConfigRequest
+	7,  // 53: vx.api.Api.UpdateSubscription:input_type -> vx.api.UpdateSubscriptionRequest
+	9,  // 54: vx.api.Api.FetchSubscriptionContent:input_type -> vx.api.FetchSubscriptionContentRequest
+	41, // 55: vx.api.Api.ProcessGeoFiles:input_type -> vx.api.ProcessGeoFilesRequest
+	43, // 56: vx.api.Api.Decode:input_type -> vx.api.DecodeRequest
+	30, // 57: vx.api.Api.Deploy:input_type -> vx.api.DeployRequest
+	47, // 58: vx.api.Api.GenerateCert:input_type -> vx.api.GenerateCertRequest
+	67, // 59: vx.api.Api.GenerateECH:input_type -> vx.api.GenerateECHRequest
+	49, // 60: vx.api.Api.GetCertDomain:input_type -> vx.api.GetCertDomainRequest
+	51, // 61: vx.api.Api.AddInbound:input_type -> vx.api.AddInboundRequest
+	53, // 62: vx.api.Api.UploadLog:input_type -> vx.api.UploadLogRequest
+	55, // 63: vx.api.Api.DefaultNICHasGlobalV6:input_type -> vx.api.DefaultNICHasGlobalV6Request
+	59, // 64: vx.api.Api.ParseClashRuleFile:input_type -> vx.api.ParseClashRuleFileRequest
+	61, // 65: vx.api.Api.ParseGeositeConfig:input_type -> vx.api.ParseGeositeConfigRequest
+	63, // 66: vx.api.Api.ParseGeoIPConfig:input_type -> vx.api.ParseGeoIPConfigRequest
+	65, // 67: vx.api.Api.GenerateX25519KeyPair:input_type -> vx.api.GenerateX25519KeyPairRequest
+	69, // 68: vx.api.Api.StartMacSystemProxy:input_type -> vx.api.StartMacSystemProxyRequest
+	70, // 69: vx.api.Api.StopMacSystemProxy:input_type -> vx.api.StopMacSystemProxyRequest
+	71, // 70: vx.api.Api.CloseDb:input_type -> vx.api.CloseDbRequest
+	72, // 71: vx.api.Api.OpenDb:input_type -> vx.api.OpenDbRequest
+	73, // 72: vx.api.Api.InboundConfigToOutboundConfig:input_type -> vx.api.InboundConfigToOutboundConfigRequest
+	75, // 73: vx.api.Api.ToUrl:input_type -> vx.api.ToUrlRequest
+	82, // 74: vx.api.Api.SetLog:input_type -> vx.log.LoggerConfig
+	21, // 75: vx.api.Api.HandlerCountryTest:input_type -> vx.api.HandlerCountryTestRequest
+	58, // 76: vx.api.Api.UpdateTmStatus:output_type -> vx.api.Receipt
+	14, // 77: vx.api.Api.Download:output_type -> vx.api.DownloadResponse
+	20, // 78: vx.api.Api.HandlerUsable:output_type -> vx.api.HandlerUsableResponse
+	24, // 79: vx.api.Api.SpeedTest:output_type -> vx.api.SpeedTestResponse
+	17, // 80: vx.api.Api.RttTest:output_type -> vx.api.RttTestResponse
+	26, // 81: vx.api.Api.GeoIP:output_type -> vx.api.GeoIPResponse
+	46, // 82: vx.api.Api.GetServerPublicKey:output_type -> vx.api.GetServerPublicKeyResponse
+	29, // 83: vx.api.Api.MonitorServer:output_type -> vx.api.MonitorServerResponse
+	33, // 84: vx.api.Api.ServerAction:output_type -> vx.api.ServerActionResponse
+	35, // 85: vx.api.Api.VproxyStatus:output_type -> vx.api.VproxyStatusResponse
+	58, // 86: vx.api.Api.VX:output_type -> vx.api.Receipt
+	38, // 87: vx.api.Api.ServerConfig:output_type -> vx.api.ServerConfigResponse
+	40, // 88: vx.api.Api.UpdateServerConfig:output_type -> vx.api.UpdateServerConfigResponse
+	8,  // 89: vx.api.Api.UpdateSubscription:output_type -> vx.api.UpdateSubscriptionResponse
+	10, // 90: vx.api.Api.FetchSubscriptionContent:output_type -> vx.api.FetchSubscriptionContentResponse
+	42, // 91: vx.api.Api.ProcessGeoFiles:output_type -> vx.api.ProcessGeoFilesResponse
+	44, // 92: vx.api.Api.Decode:output_type -> vx.api.DecodeResponse
+	31, // 93: vx.api.Api.Deploy:output_type -> vx.api.DeployResponse
+	48, // 94: vx.api.Api.GenerateCert:output_type -> vx.api.GenerateCertResponse
+	68, // 95: vx.api.Api.GenerateECH:output_type -> vx.api.GenerateECHResponse
+	50, // 96: vx.api.Api.GetCertDomain:output_type -> vx.api.GetCertDomainResponse
+	52, // 97: vx.api.Api.AddInbound:output_type -> vx.api.AddInboundResponse
+	54, // 98: vx.api.Api.UploadLog:output_type -> vx.api.UploadLogResponse
+	56, // 99: vx.api.Api.DefaultNICHasGlobalV6:output_type -> vx.api.DefaultNICHasGlobalV6Response
+	60, // 100: vx.api.Api.ParseClashRuleFile:output_type -> vx.api.ParseClashRuleFileResponse
+	62, // 101: vx.api.Api.ParseGeositeConfig:output_type -> vx.api.ParseGeositeConfigResponse
+	64, // 102: vx.api.Api.ParseGeoIPConfig:output_type -> vx.api.ParseGeoIPConfigResponse
+	66, // 103: vx.api.Api.GenerateX25519KeyPair:output_type -> vx.api.GenerateX25519KeyPairResponse
+	58, // 104: vx.api.Api.StartMacSystemProxy:output_type -> vx.api.Receipt
+	58, // 105: vx.api.Api.StopMacSystemProxy:output_type -> vx.api.Receipt
+	58, // 106: vx.api.Api.CloseDb:output_type -> vx.api.Receipt
+	58, // 107: vx.api.Api.OpenDb:output_type -> vx.api.Receipt
+	74, // 108: vx.api.Api.InboundConfigToOutboundConfig:output_type -> vx.api.InboundConfigToOutboundConfigResponse
+	76, // 109: vx.api.Api.ToUrl:output_type -> vx.api.ToUrlResponse
+	58, // 110: vx.api.Api.SetLog:output_type -> vx.api.Receipt
+	22, // 111: vx.api.Api.HandlerCountryTest:output_type -> vx.api.HandlerCountryTestResponse
+	76, // [76:112] is the sub-list for method output_type
+	40, // [40:76] is the sub-list for method input_type
+	40, // [40:40] is the sub-list for extension type_name
+	40, // [40:40] is the sub-list for extension extendee
+	0,  // [0:40] is the sub-list for field type_name
 }
 
 func init() { file_app_api_api_proto_init() }
@@ -4572,7 +4602,7 @@ func file_app_api_api_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_api_api_proto_rawDesc), len(file_app_api_api_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   78,
+			NumMessages:   80,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

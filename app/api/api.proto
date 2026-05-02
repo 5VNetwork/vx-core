@@ -104,6 +104,8 @@ message UpdateSubscriptionResponse {
 message FetchSubscriptionContentRequest {
   string link = 1;
   repeated vx.outbound.HandlerConfig handlers = 2;
+  // Merged into each plain-text share link (query) and into each Clash proxy mapping before parse. Keys already present are not overwritten.
+  map<string, string> share_link_query_extra = 3;
 }
 
 message FetchSubscriptionContentResponse {
@@ -283,6 +285,8 @@ message ProcessGeoFilesResponse {}
 
 message DecodeRequest {
   string data = 1;
+  // Same semantics as FetchSubscriptionContentRequest.share_link_query_extra
+  map<string, string> share_link_query_extra = 2;
 }
 message DecodeResponse {
   repeated vx.outbound.OutboundHandlerConfig handlers = 1;

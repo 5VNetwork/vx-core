@@ -9,10 +9,10 @@ import (
 	"github.com/5vnetwork/vx-core/app/util/sub/common"
 )
 
-func Decode(content string) (*sub.DecodeResult, error) {
-	result, err := clash.ParseClashConfig([]byte(content))
+func Decode(content string, shareLinkQueryExtra map[string]string) (*sub.DecodeResult, error) {
+	result, err := clash.ParseClashConfig([]byte(content), shareLinkQueryExtra)
 	if err != nil {
-		return common.DecodeCommon(content)
+		return common.DecodeCommon(content, shareLinkQueryExtra)
 	}
 	return result, nil
 }

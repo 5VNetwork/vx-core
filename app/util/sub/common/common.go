@@ -34,8 +34,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Decode parses subscription content into outbound handler configurations
-func DecodeCommon(content string) (*sub.DecodeResult, error) {
+// DecodeCommon parses subscription content into outbound handler configurations.
+// shareLinkQueryExtra is merged into each recognized share-link line before parsing (see ApplyShareLinkQueryExtra).
+func DecodeCommon(content string, shareLinkQueryExtra map[string]string) (*sub.DecodeResult, error) {
 	// If content doesn't contain ':', assume it's base64 encoded
 	if !strings.Contains(content, ":") {
 		decoded, err := sub.DecodeBase64(content)
@@ -64,6 +65,9 @@ func DecodeCommon(content string) (*sub.DecodeResult, error) {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
+		}
+		if len(shareLinkQueryExtra) > 0 {
+			line = ApplyShareLinkQueryExtra(line, shareLinkQueryExtra)
 		}
 
 		var config *configs.OutboundHandlerConfig

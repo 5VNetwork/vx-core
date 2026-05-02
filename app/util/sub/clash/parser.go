@@ -40,12 +40,12 @@ type DNSConfig struct {
 	Fallback          []string `yaml:"fallback"`
 }
 
-func ParseClashConfig(data []byte) (*sub.DecodeResult, error) {
+func ParseClashConfig(data []byte, proxyFieldExtras map[string]string) (*sub.DecodeResult, error) {
 	var clashConfig ClashConfig
 	if err := yaml.Unmarshal(data, &clashConfig); err != nil {
 		return nil, fmt.Errorf("failed to parse yaml: %w", err)
 	}
-	results, failedNodes, err := ParseProxies(clashConfig.Proxies)
+	results, failedNodes, err := ParseProxies(clashConfig.Proxies, proxyFieldExtras)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse proxies: %w", err)
 	}
@@ -55,8 +55,22 @@ func ParseClashConfig(data []byte) (*sub.DecodeResult, error) {
 	}, nil
 }
 
+// mergeProxyMappingExtras adds subscription-level key/value pairs to a Clash proxy map
+// when those keys are not already set.
+func mergeProxyMappingExtras(mapping map[string]any, extras map[string]string) {
+	if len(extras) == 0 {
+		return
+	}
+	for k, v := range extras {
+		if _, exists := mapping[k]; exists {
+			continue
+		}
+		mapping[k] = v
+	}
+}
+
 // ParseProxies converts a "proxies" array from a clash/mihomo config to vx-core OutboundHandlerConfigs
-func ParseProxies(proxies []any) ([]*configs.OutboundHandlerConfig, []string, error) {
+func ParseProxies(proxies []any, proxyFieldExtras map[string]string) ([]*configs.OutboundHandlerConfig, []string, error) {
 	results := make([]*configs.OutboundHandlerConfig, 0, len(proxies))
 	failedNodes := make([]string, 0, len(proxies))
 
@@ -66,6 +80,8 @@ func ParseProxies(proxies []any) ([]*configs.OutboundHandlerConfig, []string, er
 			failedNodes = append(failedNodes, mystrings.ToString(proxyData))
 			continue
 		}
+
+		mergeProxyMappingExtras(mapping, proxyFieldExtras)
 
 		config, err := ParseProxy(mapping)
 		if err != nil {
@@ -109,7 +125,7 @@ func ParseProxy(mapping map[string]any) (*configs.OutboundHandlerConfig, error) 
 		return parseHTTP(mapping, name)
 	case "anytls":
 		return parseAnytls(mapping, name)
-	case "hysteria":
+	case "hysteria", "hysteria2":
 		return parseHysteria(mapping, name)
 	default:
 		return nil, fmt.Errorf("unsupported proxy type: %s", proxyType)

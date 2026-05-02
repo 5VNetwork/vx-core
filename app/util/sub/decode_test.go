@@ -12,7 +12,7 @@ import (
 // =random&type=ws&host=a.b.com&path=%3&allowInsecure=1&fragment=1,40-60,30-50,tlshello#1.1.1.1
 
 func TestDecode(t *testing.T) {
-	r, err := common.DecodeCommon(a)
+	r, err := common.DecodeCommon(a, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

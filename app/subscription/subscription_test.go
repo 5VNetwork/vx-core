@@ -26,9 +26,9 @@ func TestFetchSubscription(t *testing.T) {
 	t.Skip()
 	url := ""
 	downloader := downloader.NewDownloader0([]i.Outbound{
-		freedom.New(transport.DefaultDialer, transport.DefaultPacketListener, "test", dns.NewGoIpResolver()),
+		freedom.New(transport.DefaultDialer, transport.DefaultPacketListener, "test", dns.NewGoIpResolver(dns.GoDnsResolverOption{})),
 	})
-	result, err := FetchSubscription(context.Background(), url, downloader)
+	result, err := FetchSubscription(context.Background(), url, downloader, nil)
 	assert.NoError(t, err)
 	log.Println(result)
 }
