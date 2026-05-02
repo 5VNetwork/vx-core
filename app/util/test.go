@@ -25,8 +25,9 @@ var TraceList = []string{
 }
 
 const (
-	SpeedtestURL1  = "https://speed.cloudflare.com/__down?bytes=1000000"  //1MB
-	SpeedtestURL10 = "https://speed.cloudflare.com/__down?bytes=10000000" //10MB
+	SpeedTestUrlBasic = "https://speed.cloudflare.com/__down?bytes="
+	SpeedtestURL1     = "https://speed.cloudflare.com/__down?bytes=1000000"  //1MB
+	SpeedtestURL10    = "https://speed.cloudflare.com/__down?bytes=10000000" //10MB
 )
 
 var (

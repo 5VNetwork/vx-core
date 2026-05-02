@@ -22,7 +22,7 @@ type ResultReporter interface {
 }
 
 type Tester struct {
-	SpeedTestFunc  func(ctx context.Context, h i.Outbound) (int64, error)
+	SpeedTestFunc  func(ctx context.Context, h i.Outbound, size uint32) (int64, error)
 	UsableTestFunc func(ctx context.Context, h i.Outbound) (bool, error)
 	PingTestFunc   func(ctx context.Context, h i.Outbound) (int, error)
 	ResultReporter ResultReporter
@@ -61,7 +61,7 @@ func (t *Tester) TestIPv6(ctx context.Context, h i.Outbound) bool {
 }
 
 // return -1 if test failed
-func (t *Tester) TestSpeed(ctx context.Context, h i.Outbound, rtry bool) int64 {
+func (t *Tester) TestSpeed(ctx context.Context, h i.Outbound, size uint32, rtry bool) int64 {
 	var speed int64
 	var err error
 
@@ -70,7 +70,7 @@ func (t *Tester) TestSpeed(ctx context.Context, h i.Outbound, rtry bool) int64 {
 		times = 5
 	}
 	err = retry.Timed(times, 1000).On(func() error {
-		speed, err = t.SpeedTestFunc(ctx, h)
+		speed, err = t.SpeedTestFunc(ctx, h, size)
 		if err != nil {
 			log.Ctx(ctx).Debug().Err(err).Str("handler", h.Tag()).
 				Int64("speed", speed).Msg("speed test func error")
