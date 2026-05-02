@@ -76,7 +76,7 @@ func NewTunGvisorInbound(config *configs.TunConfig, f *Builder,
 		for _, dns := range config.Device.Dns6 {
 			dnsAddress = append(dnsAddress, net.UDPDestination(net.ParseAddress(dns), 53))
 		}
-		f.requireFeature(func(h *dispatcher.Dispatcher, dnsConns *dns.Dns) {
+		f.requireFeature(func(h *dispatcher.Dispatcher, dnsConns *dns.HijackDns) {
 			system.WithHandler(h)(tunInbound)
 			system.WithDns(dnsConns, dnsAddress)(tunInbound)
 		})
