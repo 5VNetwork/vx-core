@@ -281,7 +281,7 @@ func (s *clientSession) notifyPeerEOF() {
 
 func (s *clientSession) notifyPeerSessionError() {
 	// if has received sessionStatusEnd, peer has closed the session, do nothing
-	if !s.receivedSessionEndError.Load() && !s.sendSessionEndError.Load() {
+	if !s.receivedSessionEndError.Load() && !s.sendSessionEndError.Load() && s.writer != nil {
 		s.writer.hasError = true
 		s.sendSessionEndError.Store(true)
 		err := s.writer.SendSessionStatusEnd()

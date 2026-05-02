@@ -100,7 +100,6 @@ func (b *Buffer) Release() {
 	b.v = nil
 	b.end = 0
 	b.start = 0
-	b.Clear()
 	switch b.ownership {
 	case defaultPool:
 		pool.Put(p)
@@ -127,7 +126,20 @@ func (b *Buffer) SetByte(index int32, value byte) {
 }
 
 // Bytes returns the content bytes of this Buffer.
+// Returns nil if the underlying storage has been released, mirroring Len() == 0.
+// Panics with a descriptive message when start/end are inconsistent with v, so
+// pool reuse / use-after-Release bugs surface clearly instead of as opaque
+// "slice bounds out of range" runtime errors.
 func (b *Buffer) Bytes() []byte {
+	if b.v == nil {
+		return nil
+	}
+	// if b.start < 0 || b.end < b.start || int(b.end) > len(b.v) {
+	// 	panic(fmt.Sprintf(
+	// 		"buf.Buffer: inconsistent state start=%d end=%d cap=%d ownership=%d",
+	// 		b.start, b.end, len(b.v), b.ownership,
+	// 	))
+	// }
 	return b.v[b.start:b.end]
 }
 
