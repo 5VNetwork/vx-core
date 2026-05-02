@@ -1,14 +1,16 @@
 syntax = "proto3";
 package vx;
-option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/server";
 
-import "vx/inbound/inbound.proto";
-import "vx/outbound/outbound.proto";
-import "vx/router/router.proto";
-import "vx/policy.proto";
-import "vx/log/logger.proto";
+import "vx/dns/dns.proto";
 import "vx/geo/geo.proto";
+import "vx/inbound/inbound.proto";
+import "vx/log/logger.proto";
+import "vx/outbound/outbound.proto";
+import "vx/policy.proto";
+import "vx/router/router.proto";
 import "vx/user/user.proto";
+
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/server";
 
 message ServerConfig {
   reserved 1;
@@ -20,4 +22,6 @@ message ServerConfig {
   repeated vx.user.UserConfig users = 7;
   repeated vx.outbound.OutboundHandlerConfig outbounds = 9;
   vx.geo.GeoConfig geo = 10;
+  vx.dns.DnsConfig dns = 12;
+  vx.outbound.OutboundConfig outbound = 13;
 }

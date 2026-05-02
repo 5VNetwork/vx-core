@@ -1,19 +1,26 @@
 syntax = "proto3";
 package vx.dns;
-option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
 import "vx/common/geo/geo.proto";
+
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
 message DnsConfig {
   repeated Record records = 1;
   repeated string record_strings = 2;
   repeated DnsServerConfig dns_servers = 3;
-  repeated DnsRuleConfig dns_rules = 4;
-  bool enable_fake_dns = 5;
-  // if not zero, dns responses will be cached for this duration.
-  // if zero, the minimum ttl of all answers will be used.
-  uint32 cache_duration = 6;
-  repeated string internal_dns_servers = 7;
+  // used to resolve domains when dialing
+  Resolver internal_resolver = 7;
+  // used to resolve request domains
+  Resolver request_domain_resolver = 8;
+  repeated ConcurrentDnsServer concurrent_dns_servers = 9;
+  repeated SerialDnsServer serial_dns_servers = 10;
+  DnsHijackConfig dns_hijack = 11;
+}
+
+message DnsHijackConfig {
+  repeated DnsRuleConfig dns_rules = 1;
+  bool enable_fake_dns = 2;
 }
 
 message DnsRules {
@@ -35,6 +42,36 @@ message DnsRuleConfig {
 enum DnsType {
   DnsType_A = 0;
   DnsType_AAAA = 1;
+  DnsType_NS = 2;
+  DnsType_CNAME = 3;
+  DnsType_SOA = 4;
+  DnsType_PTR = 5;
+  DnsType_MX = 6;
+  DnsType_TXT = 7;
+  DnsType_SRV = 8;
+  DnsType_NAPTR = 9;
+  DnsType_CAA = 10;
+  DnsType_SVCB = 11;
+  DnsType_HTTPS = 12;
+  DnsType_ANY = 13;
+}
+
+message SerialDnsServer {
+  repeated string dns_servers = 1;
+  // the time to wait to try the next dns server
+  uint32 interval = 2;
+  string name = 3;
+}
+
+message ConcurrentDnsServer {
+  repeated string dns_servers = 1;
+  string name = 2;
+}
+
+// resolve ip, ech
+message Resolver {
+  repeated string dns_servers = 1;
+  uint32 interval = 2;
 }
 
 message DnsServerConfig {
@@ -44,15 +81,19 @@ message DnsServerConfig {
     QuicDnsServer quic_dns_server = 3;
     FakeDnsServer fake_dns_server = 4;
     TlsDnsServer tls_dns_server = 5;
+    GoDnsServer go_dns_server = 6;
+    EmptyDnsServer empty_dns_server = 7;
   }
   string name = 10;
   string client_ip = 11;
   // if not zero, dns responses will be cached for this duration.
   // if zero, the minimum ttl of all answers will be used.
   uint32 cache_duration = 12;
-  // the result should in these ip sets
+  // the result should in these ip sets. Ips that are not in these tags will be removed.
   repeated string ip_tags = 13;
 }
+
+message EmptyDnsServer {}
 
 message PlainDnsServer {
   repeated string addresses = 2;
@@ -69,8 +110,10 @@ message DohDnsServer {
 
 message QuicDnsServer {
   string address = 2;
-  string serverName = 3;
+  string server_name = 3;
 }
+
+message GoDnsServer {}
 
 message Record {
   string domain = 2;
@@ -83,11 +126,7 @@ message Record {
 message FakeDnsServer {
   message PoolConfig {
     string cidr = 1;
-    // FakeDNS ?????IP - ??????????????????????? LRU
-    // ??????????
     uint32 lru_size = 2;
   }
   repeated PoolConfig pool_configs = 1;
 }
-
-

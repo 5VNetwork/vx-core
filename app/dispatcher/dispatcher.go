@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/5vnetwork/vx-core/app/dispatcher/variants"
 	"github.com/5vnetwork/vx-core/app/inbound"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/common/buf"
@@ -39,12 +40,8 @@ type Dispatcher struct {
 	OnFallbacks                 []OnFallback
 	FallbackTimeout             time.Duration
 
-	OutStats *OutStats
-
 	SessionStats        bool
 	RewriteIpv6ToDomain bool
-	HandlerLinkStats    bool
-	HandlerMeter        bool
 
 	Flows       atomic.Int32
 	PacketConns atomic.Int32
@@ -219,7 +216,7 @@ loop:
 						Uint64("downCounter", info.SessionDownCounter.Load()).
 						Msg("cacheHandle err and fallbackable")
 					// try to find next handler
-					for len(retries) > 0 {
+					for len(retries) > 0 { 
 						nextHandler := retries[0].GetHandler(ctx, info)
 						retries = retries[1:]
 						if nextHandler != nil {
@@ -243,8 +240,7 @@ loop:
 				return nil
 			}
 		} else {
-			err = handler.HandleFlow(ctx, info.Target,
-				d.handler(ctx, info, rw, handler).(buf.ReaderWriter))
+			err = handler.HandleFlow(ctx, d.getDst(ctx, info, handler), rw)
 			if err != nil {
 				d.onHandlerError(ctx, info, handler.Tag(), err)
 			}
@@ -278,8 +274,7 @@ func (d *Dispatcher) cacheHandle(ctx context.Context, info *session.Info,
 		defer t.Stop()
 	}
 
-	err = handler.HandleFlow(ctx, info.Target,
-		d.handler(ctx, info, cacheRw, handler).(buf.ReaderWriter))
+	err = handler.HandleFlow(ctx, d.getDst(ctx, info, handler), cacheRw)
 	if err != nil {
 		d.onHandlerError(ctx, info, handler.Tag(), err)
 
@@ -357,8 +352,7 @@ func (d *Dispatcher) HandlePacketConn(ctx context.Context, dst net.Destination, 
 	// 	defer udpConn.Close()
 	// 	err = helper.RelayUDPPacketConn(ctx, pc, udpConn)
 	// } else {
-	err = handler.HandlePacketConn(ctx, info.Target,
-		d.handler(ctx, info, pc, handler).(udp.PacketReaderWriter))
+	err = handler.HandlePacketConn(ctx, d.getDst(ctx, info, handler), pc)
 	// }
 	if err != nil {
 		d.onHandlerError(ctx, info, handler.Tag(), err)
@@ -388,11 +382,6 @@ func (p *Dispatcher) onHandlerError(ctx context.Context, info *session.Info, tag
 	}
 	var closeError *websocket.CloseError
 	if errors.As(err, &closeError) && closeError.Code == websocket.CloseNormalClosure {
-		return
-	}
-
-	if p.OutStats != nil && p.OutStats.IsHandlerActive(tag) {
-		log.Debug().Str("tag", tag).Msg("handler is active, skip notify observer")
 		return
 	}
 
@@ -460,119 +449,48 @@ func udpShouldReconnect(ctx context.Context, err error) bool {
 	return true
 }
 
-func shouldOverride(info *session.Info, domainOverride []string, fakeIPNotFound bool) bool {
-	if info.SniffedDomain == "" {
-		return false
-	}
-	if fakeIPNotFound {
-		return true
-	}
-	protocolString := info.Protocol
-	if protocolString == "" {
-		return false
-	}
-	for _, p := range domainOverride {
-		if strings.HasPrefix(protocolString, p) || strings.HasSuffix(protocolString, p) {
-			return true
-		}
-	}
-	return false
-}
-
 func (d *Dispatcher) sessionStats(info *session.Info, rw any) any {
 	if d.SessionStats {
 		if r, ok := rw.(i.DeadlineRW); ok {
-			rw = &StatsDeadlineRW{
-				DeadlineRW: r,
-				upCounter: session.AtomicCounter{
+			rw = variants.NewStatsDeadlineRW(r,
+				session.AtomicCounter{
 					Counter: &info.SessionUpCounter,
 				},
-				downCounter: session.AtomicCounter{
+				session.AtomicCounter{
 					Counter: &info.SessionDownCounter,
-				},
-			}
+				}, nil)
 		} else if r, ok := rw.(buf.ReaderWriter); ok {
-			rw = &StatsReaderWriter{
-				ReaderWriter: r,
-				upCounter: session.AtomicCounter{
+			rw = variants.NewStatsReaderWriter(r,
+				session.AtomicCounter{
 					Counter: &info.SessionUpCounter,
 				},
-				downCounter: session.AtomicCounter{
+				session.AtomicCounter{
 					Counter: &info.SessionDownCounter,
-				},
-			}
+				}, nil)
 		} else {
-			rw = &StatsPacketConn{
-				PacketReaderWriter: rw.(udp.PacketReaderWriter),
-				upCounter: session.AtomicCounter{
+			rw = variants.NewStatsPacketConn(rw.(udp.PacketReaderWriter),
+				session.AtomicCounter{
 					Counter: &info.SessionUpCounter,
 				},
-				downCounter: session.AtomicCounter{
+				session.AtomicCounter{
 					Counter: &info.SessionDownCounter,
-				},
-			}
+				}, nil)
 		}
 	}
 	return rw
 }
 
-func (d *Dispatcher) handler(ctx context.Context, info *session.Info, rw any, handler i.Outbound) any {
+func (d *Dispatcher) getDst(ctx context.Context, info *session.Info, handler i.Outbound) net.Destination {
 	if d.RewriteIpv6ToDomain && info.Target.Address.Family().IsIP() && info.Target.Address.Family().IsIPv6() {
 		if handlerSupport6, ok := handler.(i.HandlerWith6Info); ok && !handlerSupport6.Support6() && info.SniffedDomain != "" {
 			log.Ctx(ctx).Debug().Str("handler", handler.Tag()).Str("dst", info.Target.String()).Msg("ipv6 not supported, replace it with the domain")
-			info.Target.Address = net.DomainAddress(info.SniffedDomain)
+			return net.Destination{
+				Address: net.DomainAddress(info.SniffedDomain),
+				Port:    info.Target.Port,
+				Network: info.Target.Network,
+			}
 		}
 	}
 
-	if d.OutStats == nil {
-		return rw
-	}
-	stats := d.OutStats.Get(handler.Tag())
-
-	var ups session.UpCounters
-	var downs session.DownCounters
-
-	// link status
-	if d.HandlerLinkStats {
-		ls := &linkStats{
-			ctx:     ctx,
-			ohStats: stats,
-		}
-		ups = append(ups, ls)
-		downs = append(downs, ls)
-	}
-
-	if d.HandlerMeter {
-		ups = append(ups, session.AtomicCounter{
-			Counter: &stats.UpCounter,
-		})
-		downs = append(downs, session.AtomicCounter{
-			Counter: &stats.DownCounter,
-		})
-	}
-
-	if r, ok := rw.(i.DeadlineRW); ok {
-		rw = &StatsDeadlineRW{
-			DeadlineRW:    r,
-			upCounter:     ups,
-			downCounter:   downs,
-			activeChecker: &stats.ActiveTime,
-		}
-	} else if r, ok := rw.(buf.ReaderWriter); ok {
-		rw = &StatsReaderWriter{
-			ReaderWriter:  r,
-			upCounter:     ups,
-			downCounter:   downs,
-			activeChecker: &stats.ActiveTime,
-		}
-	} else {
-		rw = &StatsPacketConn{
-			PacketReaderWriter: rw.(udp.PacketReaderWriter),
-			upCounter:          ups,
-			downCounter:        downs,
-			activeChecker:      &stats.ActiveTime,
-		}
-	}
-
-	return rw
+	return info.Target
 }

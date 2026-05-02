@@ -1,12 +1,13 @@
 // Copyright 2025 5V Network LLC
 // SPDX-License-Identifier: AGPL-3.0
 
-package dispatcher
+package hooks
 
 import (
 	"context"
 	"time"
 
+	"github.com/5vnetwork/vx-core/app/dispatcher/variants"
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/errors"
 	mynet "github.com/5vnetwork/vx-core/common/net"
@@ -46,22 +47,24 @@ func (p *IdleHook) BeforeHandlerSelection(ctx context.Context, info *session.Inf
 			log.Ctx(ctx).Debug().Msg("idle timeout")
 		}, idleTimeout)
 		if r, ok := rw.(i.DeadlineRW); ok {
-			rw = &TimeoutDeadlineRW{
-				timeout:    p.TimeoutPolicy,
-				idle:       idleChecker,
+			rw = &variants.TimeoutDeadlineRW{
+				Ctx:        ctx,
+				Timeout:    p.TimeoutPolicy,
+				Idle:       idleChecker,
 				DeadlineRW: r,
-				upOnly:     info.Target.Network == mynet.Network_UDP,
+				UpOnly:     info.Target.Network == mynet.Network_UDP,
 			}
 		} else if r, ok := rw.(buf.ReaderWriter); ok {
-			rw = &TimeoutReaderWriter{
-				timeout:      p.TimeoutPolicy,
-				idle:         idleChecker,
+			rw = &variants.TimeoutReaderWriter{
+				Ctx:          ctx,
+				Timeout:      p.TimeoutPolicy,
+				Idle:         idleChecker,
 				ReaderWriter: r,
-				upOnly:       info.Target.Network == mynet.Network_UDP,
+				UpOnly:       info.Target.Network == mynet.Network_UDP,
 			}
 		} else if pc, ok := rw.(udp.PacketReaderWriter); ok {
-			rw = &TimeoutPacketConn{
-				idle:               idleChecker,
+			rw = &variants.TimeoutPacketConn{
+				Idle:               idleChecker,
 				PacketReaderWriter: pc,
 			}
 		}

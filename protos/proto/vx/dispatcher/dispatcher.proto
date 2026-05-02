@@ -10,6 +10,4 @@ message DispatcherConfig {
   bool ipv6_use_domain = 7;
   uint32 fallback_timeout = 8;
   bool session_stats = 9;
-  bool handler_link_stats = 10;
-  bool handler_meter = 11;
 }
