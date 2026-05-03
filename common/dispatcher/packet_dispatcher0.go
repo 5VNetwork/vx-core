@@ -152,8 +152,9 @@ func (s *PacketDispatcher0) getTimeoutLink(dest net.Destination) ([]*tLink0, err
 	}()
 	go s.handleResponsePakcets(ctx, tLink, dest)
 
+	result := s.tLinks[dest]
 	s.Unlock()
-	return s.tLinks[dest], nil
+	return result, nil
 }
 
 // each ppEnd is associated with a ctx
