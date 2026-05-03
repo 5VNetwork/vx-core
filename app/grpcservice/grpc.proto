@@ -31,7 +31,7 @@ service GrpcService {
   rpc ChangeOutbound(ChangeOutboundRequest) returns (ChangeOutboundResponse);
   rpc CurrentOutbound(CurrentOutboundRequest) returns (CurrentOutboundResponse);
   // rpc SetLandHandler(SetLandHandlerRequest) returns (SetLandHandlerResponse);
-
+  rpc SelectedHandlers(SelectedHandlersRequest) returns (SelectedHandlersResponse);
   // routing
   rpc ChangeRoutingMode(ChangeRoutingModeRequest) returns (ChangeRoutingModeResponse);
   rpc ChangeSelector(ChangeSelectorRequest) returns (ChangeSelectorResponse);
@@ -123,6 +123,14 @@ message SetOutboundHandlerSpeedRequest {
   int32 speed = 2;
 }
 message SetOutboundHandlerSpeedResponse {}
+
+message SelectedHandlersRequest {}
+message SelectedHandlersResponse {
+  message Strings {
+    repeated string strings = 1;
+  }
+  map<string, Strings> selected_handlers = 1;
+}
 
 // log
 // message ChangeLogLevelRequest { x.Level level = 1; }

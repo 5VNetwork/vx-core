@@ -128,7 +128,7 @@ func NewMockTester() *MockTester {
 	}
 }
 
-func (t *MockTester) TestSpeed(ctx context.Context, h i.Outbound, _ bool) int64 {
+func (t *MockTester) TestSpeed(ctx context.Context, h i.Outbound, _ uint32, _ bool) int64 {
 	t.testSpeedCalls.Add(1)
 	if t.TestSpeedFunc != nil {
 		return t.TestSpeedFunc(h)
@@ -946,7 +946,7 @@ func TestTestHandlerSpeed(t *testing.T) {
 	}
 
 	// Act
-	TestHandlerSpeed(context.Background(), tester, handler)
+	TestHandlerSpeed(context.Background(), tester, handler, 0)
 
 	// Assert
 	assert.Equal(t, 1000, handler.GetSpeed())
@@ -965,7 +965,7 @@ func TestTestHandlerSpeed_Failure(t *testing.T) {
 	}
 
 	// Act
-	TestHandlerSpeed(context.Background(), tester, handler)
+	TestHandlerSpeed(context.Background(), tester, handler, 0)
 
 	// Assert
 	assert.Equal(t, -1, handler.GetSpeed())

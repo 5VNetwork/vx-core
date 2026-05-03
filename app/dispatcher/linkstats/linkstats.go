@@ -42,10 +42,9 @@ func (w *LinkStats) DownTraffic(n uint64) {
 		w.ohStats.AddPing(uint64(time.Since(w.initialReadTime).Milliseconds()))
 		w.hadAddedPing = true
 	}
-	if !w.hasDoneCalculatingRate && w.ohStats != nil {
+	if !w.hasDoneCalculatingRate {
 		if w.initialWriteTime.IsZero() {
 			w.initialWriteTime = time.Now()
-			// w.prevWriteTime = time.Now()
 		}
 		if !w.prevWriteTime.IsZero() && time.Since(w.prevWriteTime).Seconds() > 1 {
 			w.hasDoneCalculatingRate = true

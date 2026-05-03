@@ -90,6 +90,19 @@ func (s *GrpcService) CurrentOutbound(ctx context.Context, in *CurrentOutboundRe
 	}, nil
 }
 
+func (s *GrpcService) SelectedHandlers(ctx context.Context, in *SelectedHandlersRequest) (*SelectedHandlersResponse, error) {
+	selectors := s.Client.Selectors.GetAllSelectors()
+	selectedHandlers := make(map[string]*SelectedHandlersResponse_Strings)
+	for _, selector := range selectors {
+		selectedHandlers[selector.Tag()] = &SelectedHandlersResponse_Strings{
+			Strings: selector.GetHandlersBeingUsed(),
+		}
+	}
+	return &SelectedHandlersResponse{
+		SelectedHandlers: selectedHandlers,
+	}, nil
+}
+
 func (s *GrpcService) NotifyHandlerChange(context.Context, *HandlerChangeNotify) (*HandlerChangeNotifyResponse, error) {
 	log.Info().Msg("NotifyHandlerChange")
 	s.Client.Selectors.OnHandlerChanged()

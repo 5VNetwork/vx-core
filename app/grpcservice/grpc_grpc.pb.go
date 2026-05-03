@@ -29,6 +29,7 @@ const (
 	GrpcService_ResetUserLogging_FullMethodName          = "/vx.grpcservice.GrpcService/ResetUserLogging"
 	GrpcService_ChangeOutbound_FullMethodName            = "/vx.grpcservice.GrpcService/ChangeOutbound"
 	GrpcService_CurrentOutbound_FullMethodName           = "/vx.grpcservice.GrpcService/CurrentOutbound"
+	GrpcService_SelectedHandlers_FullMethodName          = "/vx.grpcservice.GrpcService/SelectedHandlers"
 	GrpcService_ChangeRoutingMode_FullMethodName         = "/vx.grpcservice.GrpcService/ChangeRoutingMode"
 	GrpcService_ChangeSelector_FullMethodName            = "/vx.grpcservice.GrpcService/ChangeSelector"
 	GrpcService_UpdateSelectorBalancer_FullMethodName    = "/vx.grpcservice.GrpcService/UpdateSelectorBalancer"
@@ -66,6 +67,8 @@ type GrpcServiceClient interface {
 	// outbound
 	ChangeOutbound(ctx context.Context, in *ChangeOutboundRequest, opts ...grpc.CallOption) (*ChangeOutboundResponse, error)
 	CurrentOutbound(ctx context.Context, in *CurrentOutboundRequest, opts ...grpc.CallOption) (*CurrentOutboundResponse, error)
+	// rpc SetLandHandler(SetLandHandlerRequest) returns (SetLandHandlerResponse);
+	SelectedHandlers(ctx context.Context, in *SelectedHandlersRequest, opts ...grpc.CallOption) (*SelectedHandlersResponse, error)
 	// routing
 	ChangeRoutingMode(ctx context.Context, in *ChangeRoutingModeRequest, opts ...grpc.CallOption) (*ChangeRoutingModeResponse, error)
 	ChangeSelector(ctx context.Context, in *ChangeSelectorRequest, opts ...grpc.CallOption) (*ChangeSelectorResponse, error)
@@ -207,6 +210,16 @@ func (c *grpcServiceClient) CurrentOutbound(ctx context.Context, in *CurrentOutb
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CurrentOutboundResponse)
 	err := c.cc.Invoke(ctx, GrpcService_CurrentOutbound_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *grpcServiceClient) SelectedHandlers(ctx context.Context, in *SelectedHandlersRequest, opts ...grpc.CallOption) (*SelectedHandlersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SelectedHandlersResponse)
+	err := c.cc.Invoke(ctx, GrpcService_SelectedHandlers_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -383,6 +396,8 @@ type GrpcServiceServer interface {
 	// outbound
 	ChangeOutbound(context.Context, *ChangeOutboundRequest) (*ChangeOutboundResponse, error)
 	CurrentOutbound(context.Context, *CurrentOutboundRequest) (*CurrentOutboundResponse, error)
+	// rpc SetLandHandler(SetLandHandlerRequest) returns (SetLandHandlerResponse);
+	SelectedHandlers(context.Context, *SelectedHandlersRequest) (*SelectedHandlersResponse, error)
 	// routing
 	ChangeRoutingMode(context.Context, *ChangeRoutingModeRequest) (*ChangeRoutingModeResponse, error)
 	ChangeSelector(context.Context, *ChangeSelectorRequest) (*ChangeSelectorResponse, error)
@@ -438,6 +453,9 @@ func (UnimplementedGrpcServiceServer) ChangeOutbound(context.Context, *ChangeOut
 }
 func (UnimplementedGrpcServiceServer) CurrentOutbound(context.Context, *CurrentOutboundRequest) (*CurrentOutboundResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CurrentOutbound not implemented")
+}
+func (UnimplementedGrpcServiceServer) SelectedHandlers(context.Context, *SelectedHandlersRequest) (*SelectedHandlersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SelectedHandlers not implemented")
 }
 func (UnimplementedGrpcServiceServer) ChangeRoutingMode(context.Context, *ChangeRoutingModeRequest) (*ChangeRoutingModeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ChangeRoutingMode not implemented")
@@ -641,6 +659,24 @@ func _GrpcService_CurrentOutbound_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GrpcServiceServer).CurrentOutbound(ctx, req.(*CurrentOutboundRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GrpcService_SelectedHandlers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SelectedHandlersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GrpcServiceServer).SelectedHandlers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GrpcService_SelectedHandlers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GrpcServiceServer).SelectedHandlers(ctx, req.(*SelectedHandlersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -945,6 +981,10 @@ var GrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CurrentOutbound",
 			Handler:    _GrpcService_CurrentOutbound_Handler,
+		},
+		{
+			MethodName: "SelectedHandlers",
+			Handler:    _GrpcService_SelectedHandlers_Handler,
 		},
 		{
 			MethodName: "ChangeRoutingMode",

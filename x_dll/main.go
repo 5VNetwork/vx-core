@@ -29,6 +29,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/redirect"
 	"github.com/5vnetwork/vx-core/common/service"
 	"github.com/5vnetwork/vx-core/transport/security/tls"
+	service2 "github.com/5vnetwork/vx-core/win_service/service"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc"
@@ -160,6 +161,27 @@ func GenerateTls() (unsafe.Pointer, C.int, *C.char) {
 	return C.CBytes(bytes), C.int(len(bytes)), C.CString("")
 }
 
+//export InstallService
+func InstallService(path *C.char, name *C.char) *C.char {
+	goPath := C.GoString(path)
+	serviceName := C.GoString(name)
+	err := service2.InstallService(serviceName, "umi service", goPath)
+	if err != nil {
+		return C.CString(err.Error())
+	}
+	return C.CString("")
+}
+
+//export RemoveService
+func RemoveService(name *C.char) *C.char {
+	serviceName := C.GoString(name)
+	err := service2.RemoveService(serviceName)
+	if err != nil {
+		return C.CString(err.Error())
+	}
+	return C.CString("")
+}
+
 //export StartService
 func StartService(path *C.char, name *C.char) *C.char {
 	goPath := C.GoString(path)
@@ -242,7 +264,7 @@ func getServiceStatus(name string) string {
 	s, err := service.OpenService(m, name, windows.SERVICE_QUERY_STATUS)
 	if err != nil {
 		if errors.Is(err, windows.ERROR_SERVICE_DOES_NOT_EXIST) {
-			return "stopped"
+			return "uninstalled"
 		}
 		log.Err(err).Msg("OpenService")
 		return "unknown"

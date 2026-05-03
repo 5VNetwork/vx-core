@@ -89,37 +89,45 @@ func (c *HandlerFactory) CreateHandler(hs ...*configs.HandlerConfig) (i.Outbound
 	}
 
 	if c.OutStats != nil && outbound.Tag() != "direct" && outbound.Tag() != "dns" {
-		stats := c.OutStats.Get(outbound.Tag())
-
-		var ups session.UpCounters
-		var downs session.DownCounters
-		if c.HandlerMeter {
-			ups = append(ups, session.AtomicCounter{
-				Counter: &stats.UpCounter,
-			})
-			downs = append(downs, session.AtomicCounter{
-				Counter: &stats.DownCounter,
-			})
-		}
-		if c.TotalUpCounter != nil {
-			ups = append(ups, session.AtomicCounter{
-				Counter: c.TotalUpCounter,
-			})
-		}
-		if c.TotalDownCounter != nil {
-			downs = append(downs, session.AtomicCounter{
-				Counter: c.TotalDownCounter,
-			})
-		}
-
 		so := &StatsOutbound{
-			Outbound:      outbound,
-			ups:           ups,
-			downs:         downs,
-			activeChecker: &stats.ActiveTime,
-		}
-		if c.HandlerLinkStats {
-			so.outStats = c.OutStats.Get(outbound.Tag())
+			Outbound: outbound,
+			statsFunc: func(ctx context.Context, a any) any {
+				stats := c.OutStats.Get(outbound.Tag())
+				var ups session.UpCounters
+				var downs session.DownCounters
+				if c.HandlerMeter {
+					ups = append(ups, session.AtomicCounter{
+						Counter: &stats.UpCounter,
+					})
+					downs = append(downs, session.AtomicCounter{
+						Counter: &stats.DownCounter,
+					})
+				}
+				if c.TotalUpCounter != nil {
+					ups = append(ups, session.AtomicCounter{
+						Counter: c.TotalUpCounter,
+					})
+				}
+				if c.TotalDownCounter != nil {
+					downs = append(downs, session.AtomicCounter{
+						Counter: c.TotalDownCounter,
+					})
+				}
+				if c.HandlerLinkStats {
+					ls := linkstats.NewLinkStats(ctx, stats)
+					ups = append(ups, ls)
+					downs = append(downs, ls)
+				}
+				if r, ok := a.(buf.ReaderWriter); ok {
+					return variants.NewStatsReaderWriter(r, ups, downs, &stats.ActiveTime)
+				} else if pc, ok := a.(i.DeadlineRW); ok {
+					return variants.NewStatsDeadlineRW(pc, ups, downs, &stats.ActiveTime)
+				} else if pc, ok := a.(udp.PacketReaderWriter); ok {
+					return variants.NewStatsPacketConn(pc, ups, downs, &stats.ActiveTime)
+				} else {
+					return a
+				}
+			},
 		}
 		return so, nil
 	}
@@ -129,10 +137,7 @@ func (c *HandlerFactory) CreateHandler(hs ...*configs.HandlerConfig) (i.Outbound
 
 type StatsOutbound struct {
 	i.Outbound
-	outStats      *outboundstats.OutboundHandlerStats
-	ups           session.UpCounters
-	downs         session.DownCounters
-	activeChecker *atomic.Value
+	statsFunc func(ctx context.Context, a any) any
 }
 
 func (s *StatsOutbound) Support6() bool {
@@ -144,38 +149,10 @@ func (s *StatsOutbound) Support6() bool {
 
 func (s *StatsOutbound) HandleFlow(ctx context.Context,
 	dst net.Destination, rw buf.ReaderWriter) error {
-	var ups session.UpCounters
-	var downs session.DownCounters
-	if s.outStats != nil {
-		ups = append(ups, s.ups...)
-		downs = append(downs, s.downs...)
-		ups = append(ups, linkstats.NewLinkStats(ctx, s.outStats))
-		downs = append(downs, linkstats.NewLinkStats(ctx, s.outStats))
-	} else {
-		ups = s.ups
-		downs = s.downs
-	}
-	if r, ok := rw.(i.DeadlineRW); ok {
-		rw = variants.NewStatsDeadlineRW(r, ups, downs, s.activeChecker)
-	} else {
-		rw = variants.NewStatsReaderWriter(r, ups, downs, s.activeChecker)
-	}
-	return s.Outbound.HandleFlow(ctx, dst, rw)
+	return s.Outbound.HandleFlow(ctx, dst, s.statsFunc(ctx, rw).(buf.ReaderWriter))
 }
 
 func (s *StatsOutbound) HandlePacketConn(ctx context.Context,
 	dst net.Destination, pc udp.PacketReaderWriter) error {
-	var ups session.UpCounters
-	var downs session.DownCounters
-	if s.outStats != nil {
-		ups = append(ups, s.ups...)
-		downs = append(downs, s.downs...)
-		ups = append(ups, linkstats.NewLinkStats(ctx, s.outStats))
-		downs = append(downs, linkstats.NewLinkStats(ctx, s.outStats))
-	} else {
-		ups = s.ups
-		downs = s.downs
-	}
-	rw := variants.NewStatsPacketConn(pc, ups, downs, s.activeChecker)
-	return s.Outbound.HandlePacketConn(ctx, dst, rw)
+	return s.Outbound.HandlePacketConn(ctx, dst, s.statsFunc(ctx, pc).(udp.PacketReaderWriter))
 }

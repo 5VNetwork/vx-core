@@ -17,7 +17,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/5vnetwork/vx-core/win_service/service"
 )
 
 func usage(errmsg string) {
@@ -33,9 +36,6 @@ func usage(errmsg string) {
 var svcName = "vx"
 
 func main() {
-	// flag.StringVar(&svcName, "name", svcName, "name of the service")
-	// flag.Parse()
-
 	if len(os.Args) < 2 {
 		usage("no enough command specified")
 	}
@@ -44,12 +44,18 @@ func main() {
 	cmd := strings.ToLower(os.Args[1])
 	switch cmd {
 	case "install":
-		// if len(os.Args) < 3 {
-		// 	usage("no enough commands specified")
-		// }
-		err = installService(svcName, "vx service")
+		var exepath string
+		if len(os.Args) == 3 {
+			exepath = os.Args[2]
+		} else {
+			exepath, err = exePath()
+			if err != nil {
+				log.Fatalf("failed to get exe path: %v", err)
+			}
+		}
+		err = service.InstallService(svcName, "vx service", exepath)
 	case "remove":
-		err = removeService(svcName)
+		err = service.RemoveService(svcName)
 	// case "start":
 	// 	err = startService(svcName)
 	// case "stop":
@@ -64,4 +70,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to %s %s: %v", cmd, svcName, err)
 	}
+}
+
+func exePath() (string, error) {
+	prog := os.Args[0]
+	abs, err := filepath.Abs(prog)
+	if err != nil {
+		return "", err
+	}
+	p := filepath.Join(filepath.Dir(abs), "vx_service.exe")
+	fi, err := os.Stat(p)
+	if err == nil {
+		if !fi.Mode().IsDir() {
+			return p, nil
+		}
+		err = fmt.Errorf("%s is directory", p)
+	}
+	return "", err
 }

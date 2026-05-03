@@ -4,12 +4,10 @@
 
 //go:build windows
 
-package main
+package service
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"syscall"
 	"time"
 	"unsafe"
@@ -31,34 +29,6 @@ var (
 	procConvertStringSecurityDescriptorToSecurityDescriptor = advapi32.NewProc("ConvertStringSecurityDescriptorToSecurityDescriptorW")
 	procSetServiceObjectSecurity                            = advapi32.NewProc("SetServiceObjectSecurity")
 )
-
-func exePath() (string, error) {
-	prog := os.Args[0]
-	abs, err := filepath.Abs(prog)
-	if err != nil {
-		return "", err
-	}
-	p := filepath.Join(filepath.Dir(abs), "vx_service.exe")
-	fi, err := os.Stat(p)
-	if err == nil {
-		if !fi.Mode().IsDir() {
-			return p, nil
-		}
-		err = fmt.Errorf("%s is directory", p)
-	}
-	// if filepath.Ext(p) == "" {
-	// 	p += ".exe"
-	// 	fi, err := os.Stat(p)
-	// 	if err == nil {
-	// 		if !fi.Mode().IsDir() {
-	// 			return p, nil
-	// 		}
-	// 		err = fmt.Errorf("%s is directory", p)
-	// 		return "", err
-	// 	}
-	// }
-	return "", err
-}
 
 // ModifyServicePermissions modifies the service security descriptor to allow non-admin users to access it
 func ModifyServicePermissions(handle windows.Handle) error {
@@ -103,14 +73,7 @@ func ModifyServicePermissions(handle windows.Handle) error {
 }
 
 // install service. If already installed, remove it then install
-func installService(name, desc string) error {
-	exepath, err := exePath()
-	if err != nil {
-		return err
-	}
-	// exepath := "C:\\Program Files\\vx\\vx_core.exe"
-	// exepath := filepath.Join(installFolder, "data", "flutter_assets", "packages",
-	// 	"tm_windows", "assets", "vx_core.exe")
+func InstallService(name, desc, path string) error {
 	m, err := mgr.Connect()
 	if err != nil {
 		return err
@@ -119,13 +82,13 @@ func installService(name, desc string) error {
 	s, err := m.OpenService(name)
 	if err == nil {
 		s.Close()
-		err = removeService(name)
+		err = RemoveService(name)
 		if err != nil {
 			return err
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
-	s, err = m.CreateService(name, exepath, mgr.Config{
+	s, err = m.CreateService(name, path, mgr.Config{
 		DisplayName: desc,
 		// ServiceStartName: "LocalSystem",
 	})
@@ -141,6 +104,13 @@ func installService(name, desc string) error {
 		return fmt.Errorf("failed to modify service permissions: %v", err)
 	}
 
+	// Event log source can outlive the SCM entry (e.g. sc delete, partial uninstall).
+	// InstallAsEventCreate fails with "registry key already exists" if we skip this.
+	err = eventlog.Remove(name)
+	if err != nil {
+		fmt.Printf("failed to remove event log source: %v", err)
+	}
+
 	err = eventlog.InstallAsEventCreate(name, eventlog.Error|eventlog.Warning|eventlog.Info)
 	if err != nil {
 		s.Delete()
@@ -150,7 +120,7 @@ func installService(name, desc string) error {
 	return nil
 }
 
-func removeService(name string) error {
+func RemoveService(name string) error {
 	m, err := mgr.Connect()
 	if err != nil {
 		return err

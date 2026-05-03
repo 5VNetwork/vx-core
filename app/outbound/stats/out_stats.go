@@ -16,7 +16,6 @@ type OutStats struct {
 	sync.Mutex
 	Map  map[string]*OutboundHandlerStats
 	task *task.PeriodicTask
-	
 }
 
 func NewOutStats() *OutStats {
