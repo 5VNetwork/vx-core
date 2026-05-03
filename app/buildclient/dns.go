@@ -231,6 +231,7 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 		client.AllDnsServers = allDnsServers
 		common.Must(fc.addComponent(allDnsServers))
 		common.Must(fc.addComponent(&dns.GoDnsResolver{}))
+		common.Must(fc.addFeature(client.Dns))
 	}
 
 	return nil

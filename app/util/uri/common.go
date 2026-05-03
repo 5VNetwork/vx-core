@@ -44,6 +44,8 @@ func addQueryParameters(queryParameters url.Values, outboundConfig *configs.Outb
 		}
 		if t.GetPbk() != "" {
 			queryParameters.Add("pbk", t.GetPbk())
+		} else if t.GetPublicKey() != nil {
+			queryParameters.Add("pbk", base64.StdEncoding.EncodeToString(t.GetPublicKey()))
 		}
 		if t.GetFingerprint() != "" {
 			queryParameters.Add("fp", t.GetFingerprint())
