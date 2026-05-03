@@ -1,4 +1,4 @@
-package main
+package service
 
 // func TestInstallService(t *testing.T) {
 // 	err := installService("vx", "vxTest")
