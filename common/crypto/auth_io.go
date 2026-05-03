@@ -226,6 +226,10 @@ func (w *AuthenticationWriterIO) seal(b []byte) (*buf.Buffer, error) {
 	}
 
 	eb := buf.New()
+	if totalSize > eb.WritableSpace() {
+		eb.Release()
+		eb = buf.NewForMinWritable(totalSize)
+	}
 	w.sizeParser.Encode(uint16(encryptedSize+paddingSize), eb.Extend(sizeBytes))
 	if _, err := w.auth.Seal(eb.Extend(encryptedSize)[:0], b); err != nil {
 		eb.Release()

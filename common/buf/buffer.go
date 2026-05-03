@@ -46,6 +46,22 @@ func New() *Buffer {
 	}
 }
 
+// NewForMinWritable returns a buffer that can grow by at least minWritable bytes
+// from the current write position (same as after New), without reallocation.
+// For minWritable <= Size this is equivalent to New().
+func NewForMinWritable(minWritable int32) *Buffer {
+	if minWritable <= Size {
+		return New()
+	}
+	v := bytespool.Alloc(Offset + minWritable)
+	return &Buffer{
+		v:         v,
+		start:     Offset,
+		end:       Offset,
+		ownership: bytespools,
+	}
+}
+
 // NewWithSize creates a Buffer with 0 length and capacity with at least the given size.
 func NewWithSize(size int32) *Buffer {
 	return &Buffer{
@@ -272,6 +288,15 @@ func (b *Buffer) Cap() int32 {
 		return 0
 	}
 	return int32(len(b.v)) - b.start
+}
+
+// WritableSpace returns how many bytes can still be appended (e.g. via Extend)
+// without growing the underlying slice.
+func (b *Buffer) WritableSpace() int32 {
+	if b == nil || b.v == nil {
+		return 0
+	}
+	return int32(len(b.v)) - b.end
 }
 
 // IsEmpty returns true if the buffer is empty.

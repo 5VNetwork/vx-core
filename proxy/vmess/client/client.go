@@ -183,14 +183,9 @@ func (h *Client) handleSwitchAccount(cmd *protocol.CommandSwitchAccount) {
 		Security: protocol.SecurityType_LEGACY,
 	}
 	rawAccount.AlterIDs = protocol.NewAlterIDs(rawAccount.ID, uint16(cmd.AlterIds))
-	user := &protocol.MemoryUser{
-		Email:   "",
-		Level:   cmd.Level,
-		Account: rawAccount,
-	}
 	dest := nethelper.TCPDestination(cmd.Host, cmd.Port)
 	until := time.Now().Add(time.Duration(cmd.ValidMin) * time.Minute)
-	h.ServerPicker.AddServer(protocol.NewServerSpec(dest, protocol.BeforeTime(until), user))
+	h.ServerPicker.AddServer(protocol.NewServerSpec(dest, protocol.BeforeTime(until), rawAccount))
 }
 
 func (h *Client) handleCommand(dest nethelper.Destination, cmd protocol.ResponseCommand) {

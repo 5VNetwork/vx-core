@@ -229,6 +229,73 @@ func TestAuthenticationReader_PropagatesOpenError(t *testing.T) {
 	}
 }
 
+// TestAuthenticationWriterPacket_SplitsOversizedBuffer exercises the
+// packet-mode writer with a single buffer bigger than what fits in one AEAD
+// frame. Before the writePacket chunking fix this caused seal to fail and the
+// payload to be silently dropped (or in some cases for buf.Extend to panic).
+func TestAuthenticationWriterPacket_SplitsOversizedBuffer(t *testing.T) {
+	t.Parallel()
+
+	key := make([]byte, 16)
+	common.Must2(rand.Read(key))
+	block, err := aes.NewCipher(key)
+	common.Must(err)
+	aead, err := cipher.NewGCM(block)
+	common.Must(err)
+
+	iv := make([]byte, 12)
+	common.Must2(rand.Read(iv))
+
+	// Single logical datagram well above the 8 KB frame limit.
+	rawPayload := make([]byte, int(buf.Size)*3+137)
+	common.Must2(rand.Read(rawPayload))
+
+	pb := buf.New()
+	_, werr := pb.Write(rawPayload[:buf.Size-2048])
+	common.Must(werr)
+	big := buf.NewWithSize(int32(len(rawPayload)))
+	_, werr = big.Write(rawPayload[buf.Size-2048:])
+	common.Must(werr)
+
+	cache := bytes.NewBuffer(nil)
+
+	writer := NewAuthenticationWriter(&AEADAuthenticator{
+		AEAD:                    aead,
+		NonceGenerator:          GenerateStaticBytes(iv),
+		AdditionalDataGenerator: GenerateEmptyBytes(),
+	}, PlainChunkSizeParser{}, cache, protocol.TransferTypePacket, nil)
+
+	common.Must(writer.WriteMultiBuffer(buf.MultiBuffer{pb, big}))
+	common.Must(writer.WriteMultiBuffer(buf.MultiBuffer{}))
+
+	reader := NewAuthenticationReader(context.Background(), &AEADAuthenticator{
+		AEAD:                    aead,
+		NonceGenerator:          GenerateStaticBytes(iv),
+		AdditionalDataGenerator: GenerateEmptyBytes(),
+	}, PlainChunkSizeParser{}, cache, protocol.TransferTypePacket, nil)
+
+	var mb buf.MultiBuffer
+	for mb.Len() < int32(len(rawPayload)) {
+		rmb, rerr := reader.ReadMultiBuffer()
+		common.Must(rerr)
+		mb, _ = buf.MergeMulti(mb, rmb)
+	}
+
+	if int(mb.Len()) != len(rawPayload) {
+		t.Fatalf("read back %d bytes, want %d", mb.Len(), len(rawPayload))
+	}
+
+	out := make([]byte, len(rawPayload))
+	buf.SplitBytes(mb, out)
+	if diff := cmp.Diff(out, rawPayload); diff != "" {
+		t.Fatal(diff)
+	}
+
+	if _, err := reader.ReadMultiBuffer(); err != io.EOF {
+		t.Fatalf("expected EOF, got %v", err)
+	}
+}
+
 func TestAuthenticationReader_UsesLargeBufferPathWhenOffsetExceedsBufSize(t *testing.T) {
 	t.Parallel()
 
