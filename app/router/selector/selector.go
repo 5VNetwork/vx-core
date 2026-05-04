@@ -82,17 +82,20 @@ type selectorConfig struct {
 func newSelector(config selectorConfig) *Selector {
 	ctx, cancel := context.WithCancel(context.Background())
 	s := &Selector{
-		tag:                config.Tag,
-		strategy:           config.Strategy,
-		balancer:           config.Balancer,
-		tester:             config.Tester,
-		onUpdate:           config.OnHandlerBeingUsedChange,
-		dispatcher:         config.Dispatcher,
-		ctx:                ctx,
-		cancel:             cancel,
-		handlerInfo:        config.HandlerInfo,
-		handlerBeingTested: make(map[string]struct{}),
-		speedTestSize:      config.SpeedTestSize,
+		tag:                  config.Tag,
+		strategy:             config.Strategy,
+		balancer:             config.Balancer,
+		tester:               config.Tester,
+		onUpdate:             config.OnHandlerBeingUsedChange,
+		dispatcher:           config.Dispatcher,
+		ctx:                  ctx,
+		cancel:               cancel,
+		handlerInfo:          config.HandlerInfo,
+		handlerBeingTested:   make(map[string]struct{}),
+		speedTestSize:        config.SpeedTestSize,
+		speedTestInterval:    config.SpeedTestInterval,
+		pingTestInterval:     config.PingTestInterval,
+		unusableTestInterval: config.UnusableTestInterval,
 	}
 	if s.speedTestSize == 0 {
 		s.speedTestSize = 1024 * 1024 // 1MB

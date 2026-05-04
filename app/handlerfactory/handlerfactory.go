@@ -17,6 +17,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/session"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/transport"
+	"github.com/rs/zerolog/log"
 )
 
 type HandlerFactory struct {
@@ -91,7 +92,7 @@ func (c *HandlerFactory) CreateHandler(hs ...*configs.HandlerConfig) (i.Outbound
 	if c.OutStats != nil && outbound.Tag() != "direct" && outbound.Tag() != "dns" {
 		so := &StatsOutbound{
 			Outbound: outbound,
-			statsFunc: func(ctx context.Context, a any) any {
+			statsFunc: func(ctx context.Context, a any, flow bool) any {
 				stats := c.OutStats.Get(outbound.Tag())
 				var ups session.UpCounters
 				var downs session.DownCounters
@@ -118,15 +119,19 @@ func (c *HandlerFactory) CreateHandler(hs ...*configs.HandlerConfig) (i.Outbound
 					ups = append(ups, ls)
 					downs = append(downs, ls)
 				}
-				if r, ok := a.(buf.ReaderWriter); ok {
-					return variants.NewStatsReaderWriter(r, ups, downs, &stats.ActiveTime)
-				} else if pc, ok := a.(i.DeadlineRW); ok {
-					return variants.NewStatsDeadlineRW(pc, ups, downs, &stats.ActiveTime)
-				} else if pc, ok := a.(udp.PacketReaderWriter); ok {
-					return variants.NewStatsPacketConn(pc, ups, downs, &stats.ActiveTime)
+				if flow {
+					if pc, ok := a.(i.DeadlineRW); ok {
+						return variants.NewStatsDeadlineRW(pc, ups, downs, &stats.ActiveTime)
+					} else if r, ok := a.(buf.ReaderWriter); ok {
+						return variants.NewStatsReaderWriter(r, ups, downs, &stats.ActiveTime)
+					}
 				} else {
-					return a
+					if pc, ok := a.(udp.PacketReaderWriter); ok {
+						return variants.NewStatsPacketConn(pc, ups, downs, &stats.ActiveTime)
+					}
 				}
+				log.Panic().Msg("unexpected type")
+				return nil
 			},
 		}
 		return so, nil
@@ -137,7 +142,7 @@ func (c *HandlerFactory) CreateHandler(hs ...*configs.HandlerConfig) (i.Outbound
 
 type StatsOutbound struct {
 	i.Outbound
-	statsFunc func(ctx context.Context, a any) any
+	statsFunc func(ctx context.Context, a any, flow bool) any
 }
 
 func (s *StatsOutbound) Support6() bool {
@@ -149,10 +154,10 @@ func (s *StatsOutbound) Support6() bool {
 
 func (s *StatsOutbound) HandleFlow(ctx context.Context,
 	dst net.Destination, rw buf.ReaderWriter) error {
-	return s.Outbound.HandleFlow(ctx, dst, s.statsFunc(ctx, rw).(buf.ReaderWriter))
+	return s.Outbound.HandleFlow(ctx, dst, s.statsFunc(ctx, rw, true).(buf.ReaderWriter))
 }
 
 func (s *StatsOutbound) HandlePacketConn(ctx context.Context,
 	dst net.Destination, pc udp.PacketReaderWriter) error {
-	return s.Outbound.HandlePacketConn(ctx, dst, s.statsFunc(ctx, pc).(udp.PacketReaderWriter))
+	return s.Outbound.HandlePacketConn(ctx, dst, s.statsFunc(ctx, pc, false).(udp.PacketReaderWriter))
 }
