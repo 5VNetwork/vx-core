@@ -213,10 +213,11 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 			}
 			//
 			allDnsServers := idns.NewAllDnsServers(dnsServers)
+			client.AllDnsServers = allDnsServers
 			if err := fc.addComponent(allDnsServers); err != nil {
 				return err
 			}
-			client.AllDnsServers = allDnsServers
+
 			return nil
 		})
 		if err != nil {
@@ -229,9 +230,9 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 		client.Dns = idns.NewHijackDns(staticDnsServer, nil, false)
 		allDnsServers := idns.NewAllDnsServers(nil)
 		client.AllDnsServers = allDnsServers
-		common.Must(fc.addComponent(allDnsServers))
 		common.Must(fc.addComponent(&dns.GoDnsResolver{}))
 		common.Must(fc.addFeature(client.Dns))
+		common.Must(fc.addComponent(allDnsServers))
 	}
 
 	return nil

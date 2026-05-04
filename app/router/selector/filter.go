@@ -68,7 +68,7 @@ func (f *omFilter) GetHandlers() ([]outHandler, error) {
 		}
 
 		o := oStats{}
-		if handlerWithSupport6Info, ok := h.(*outbound.HandlerWithSupport6Info); ok {
+		if handlerWithSupport6Info, ok := h.(i.HandlerWith6Info); ok {
 			if handlerWithSupport6Info.Support6() {
 				o.support6 = 1
 			} else {

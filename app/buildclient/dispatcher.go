@@ -126,7 +126,7 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 
 	// router
 	err := fc.requireFeature(func(om *outbound.Manager, g i.GeoHelper,
-		_ *idns.HijackDns) error {
+		_ *idns.AllDnsServers) error {
 		r, err := router.NewRouter(&router.RouterConfig{
 			RouterConfig:    config.Router,
 			GeoHelper:       g,
