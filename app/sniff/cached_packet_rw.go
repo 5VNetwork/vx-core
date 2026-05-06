@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/5vnetwork/vx-core/common/net/udp"
-	"github.com/rs/zerolog/log"
 )
 
 type CachedPacketConn struct {
@@ -32,7 +31,6 @@ func (r *CachedPacketConn) read(b []byte) (copied bool, len int, err error) {
 			defer close(ch)
 			p, err := r.PacketReaderWriter.ReadPacket()
 			if p != nil {
-				log.Info().Int32("len", p.Payload.Len()).Msg("cache packet")
 				r.cache = append(r.cache, p)
 				ch <- readResult{
 					dataRead: true,
@@ -92,7 +90,6 @@ func (r *CachedPacketConn) ReadPacket() (*udp.Packet, error) {
 			<-r.waitCh
 		}
 		if p := r.readInternal(); p != nil {
-			log.Info().Int32("len", p.Payload.Len()).Msg("read packet from cache")
 			return p, nil
 		}
 	}

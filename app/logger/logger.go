@@ -75,7 +75,7 @@ func SetLog(config *vxlog.LoggerConfig) (*Logger, error) {
 	}
 
 	if config.ConsoleWriter {
-		writer := zerolog.ConsoleWriter{Out: output, NoColor: !config.ShowColor, TimeFormat: time.TimeOnly}
+		writer := zerolog.ConsoleWriter{Out: output, NoColor: !config.ShowColor, TimeFormat: time.DateTime}
 		if config.Redact {
 
 			l.redactionRegex = regexp.MustCompile(ipv4Pattern + "|" + ipv6Pattern + "|" + domainPattern)

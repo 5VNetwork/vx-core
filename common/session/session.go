@@ -12,6 +12,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/signal"
 	"github.com/5vnetwork/vx-core/common/uuid"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -31,12 +32,20 @@ func IDFromContext(ctx context.Context) (uint32, bool) {
 	id, ok := ctx.Value(IDKey).(uint32)
 	return id, ok
 }
+
+// add a logger with sid to the context
 func GetCtx(ctx context.Context) context.Context {
 	oid, hasExistingId := IDFromContext(ctx)
 
 	id := rand.Uint32()
 	ctx = ContextWithID(ctx, id)
-	l := log.Ctx(ctx).With().Uint32("sid", id)
+
+	var l zerolog.Context
+	if log.Ctx(ctx) == nil {
+		l = log.With().Uint32("sid", id)
+	} else {
+		l = log.Ctx(ctx).With().Uint32("sid", id)
+	}
 	if hasExistingId {
 		l = l.Uint32("oid", oid)
 	}

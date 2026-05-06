@@ -45,7 +45,6 @@ func GatewayFromContext(ctx context.Context) (net.Destination, bool) {
 
 func GetCtx(src, gateway net.Destination, tag string) (context.Context, context.CancelCauseFunc) {
 	ctx, cancel := context.WithCancelCause(context.Background())
-	ctx = log.Logger.WithContext(ctx)
 	ctx = session.GetCtx(ctx)
 	ctx = ContextWithInboundTag(ctx, tag)
 	ctx = ContextWithSrc(ctx, src)

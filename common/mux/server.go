@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"sync"
 	"sync/atomic"
 
@@ -46,9 +45,6 @@ func (w *server) run(ctx context.Context) error {
 		default:
 			err := w.handleFrame(ctx, reader)
 			if err != nil {
-				if errors.Is(err, io.EOF) {
-					rw.CloseWrite()
-				}
 				w.sessionLock.RLock()
 				defer w.sessionLock.RUnlock()
 				for _, s := range w.sessions {
@@ -106,7 +102,7 @@ func (w *server) handleStatusNew(ctx context.Context, meta *FrameMetadata, reade
 		if err != nil {
 			log.Ctx(newCtx).Error().Err(err).Msg("HandleFlow failed")
 		}
-
+		oLink.Interrupt(err)
 		w.sessionLock.Lock()
 		delete(w.sessions, meta.SessionID)
 		w.sessionLock.Unlock()
