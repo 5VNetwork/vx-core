@@ -6,22 +6,15 @@
 package buildserver
 
 import (
-	"context"
-	"fmt"
 	"net"
-	"time"
 
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/create"
-	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
-	"github.com/5vnetwork/vx-core/app/geo"
 	"github.com/5vnetwork/vx-core/app/inbound/monitor"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
-	"github.com/5vnetwork/vx-core/app/inbound/proxy/multi"
 	"github.com/5vnetwork/vx-core/app/memmon"
 	"github.com/5vnetwork/vx-core/app/outbound"
-	"github.com/5vnetwork/vx-core/app/router"
 	"github.com/5vnetwork/vx-core/app/user"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/proxy/freedom"
@@ -39,16 +32,17 @@ func NewX(config *configs.ServerConfig) (*fx.App, error) {
 	fxOptions = append(fxOptions, fx.Supply(config.Geo))
 	fxOptions = append(fxOptions, fx.Supply(config.Router))
 	fxOptions = append(fxOptions, fx.Supply(config.Policy))
+	fxOptions = append(fxOptions, fx.Supply(config.Dns))
+	fxOptions = append(fxOptions, fx.Supply(config.Outbound))
 
+	// use default dialer factory for now
+	fxOptions = append(fxOptions, fx.Provide(func() transport.DialerFactory {
+		return transport.DefaultDialerFactory()
+	}))
 	fxOptions = append(fxOptions, fx.Provide(func() i.IPResolver {
-		return &dns.DnsResolver{
+		return &dns.GoDnsResolver{
 			Resolver: net.DefaultResolver,
 		}
-	}))
-	fxOptions = append(fxOptions, fx.Provide(func(ipr i.IPResolver) transport.DialerFactory {
-		return transport.NewDialerFactoryImp(transport.DialerFactoryOption{
-			IpResolver: ipr,
-		})
 	}))
 
 	fxOptions = append(fxOptions, fx.Provide(NewInboundManager))
@@ -102,191 +96,4 @@ func NewX(config *configs.ServerConfig) (*fx.App, error) {
 	return fx.New(
 		fxOptions...,
 	), nil
-}
-
-type UserManagerParams struct {
-	fx.In
-	Configs []*configs.UserConfig
-}
-type UserManagerResult struct {
-	fx.Out
-	UserManager *user.Manager
-}
-
-func NewUserManager(lc fx.Lifecycle, params UserManagerParams) (UserManagerResult, error) {
-	um := user.NewManager()
-	for _, userConfig := range params.Configs {
-		u := user.NewUser(userConfig.Id, userConfig.Secret)
-		um.AddUser(u)
-	}
-	return UserManagerResult{UserManager: um}, nil
-}
-
-type OutboundManagerParams struct {
-	fx.In
-	Configs       []*configs.OutboundHandlerConfig
-	DialerFactory transport.DialerFactory
-	IpResolver    i.IPResolver
-	Policy        i.TimeoutSetting
-}
-type OutboundManagerResult struct {
-	fx.Out
-	OutboundManager *outbound.Manager
-}
-
-func NewOutboundManager(lc fx.Lifecycle, params OutboundManagerParams) (OutboundManagerResult, error) {
-	om := outbound.NewManager()
-	lc.Append(fx.Hook{
-		OnStart: func(ctx context.Context) error {
-			return om.Start()
-		},
-		OnStop: func(ctx context.Context) error {
-			return om.Close()
-		},
-	})
-	for _, handlerConfig := range params.Configs {
-		h, err := create.NewOutHandler(&create.Config{
-			OutboundHandlerConfig: handlerConfig,
-			DialerFactory:         params.DialerFactory,
-			Policy:                params.Policy,
-			IPResolver:            params.IpResolver,
-		})
-		if err != nil {
-			return OutboundManagerResult{}, fmt.Errorf("failed to create outbound proxy handler: %w", err)
-		}
-		om.AddHandlers(h)
-	}
-	return OutboundManagerResult{OutboundManager: om}, nil
-}
-
-type GeoHelperParams struct {
-	fx.In
-	Config *configs.GeoConfig
-}
-type GeoHelperResult struct {
-	fx.Out
-	GeoHelper *geo.Geo
-}
-
-func NewGeoHelper(params GeoHelperParams) (GeoHelperResult, error) {
-	geoHelper, err := geo.NewGeo(params.Config)
-	if err != nil {
-		return GeoHelperResult{}, fmt.Errorf("failed to create geo helper: %w", err)
-	}
-	return GeoHelperResult{GeoHelper: geoHelper}, nil
-}
-
-type RouterParams struct {
-	fx.In
-	Config          *configs.RouterConfig
-	OutboundManager *outbound.Manager
-	GeoHelper       *geo.Geo
-	IpResolver      i.IPResolver
-}
-type RouterResult struct {
-	fx.Out
-	Router i.Router
-}
-
-func NewRouter(lc fx.Lifecycle, params RouterParams) (RouterResult, error) {
-	router, err := router.NewRouter(&router.RouterConfig{
-		RouterConfig:    params.Config,
-		OutboundManager: params.OutboundManager,
-		GeoHelper:       params.GeoHelper,
-		IpResolver:      params.IpResolver,
-	})
-	if err != nil {
-		return RouterResult{}, fmt.Errorf("failed to create router: %w", err)
-	}
-
-	return RouterResult{Router: router}, nil
-}
-
-type DispatcherParams struct {
-	fx.In
-	Timeout i.TimeoutSetting
-	Router  i.Router
-}
-type DispatcherResult struct {
-	fx.Out
-	Handler    i.Handler
-	Dispatcher *dispatcher.Dispatcher
-}
-
-func NewDispatcher(params DispatcherParams) (DispatcherResult, error) {
-	dp := &dispatcher.Dispatcher{}
-	dp.AddBeforeHandlerSelectionHook(&dispatcher.IdleHook{
-		TimeoutPolicy: params.Timeout,
-	})
-	dp.Router = params.Router
-	return DispatcherResult{Handler: dp, Dispatcher: dp}, nil
-}
-
-type InboundManagerParams struct {
-	fx.In
-	Configs      []*configs.ProxyInboundConfig
-	MultiConfigs []*configs.MultiProxyInboundConfig
-	Handler      i.Handler
-	Policy       i.TimeoutSetting
-	OnUnauth     i.UnauthorizedReport `optional:"true"`
-}
-type InboundManagerResult struct {
-	fx.Out
-	InboundManager *proxy.InboundManager
-}
-
-func NewInboundManager(lc fx.Lifecycle, params InboundManagerParams) (InboundManagerResult, error) {
-	im := proxy.NewManager()
-	lc.Append(fx.Hook{
-		OnStart: func(ctx context.Context) error {
-			return im.Start()
-		},
-		OnStop: func(ctx context.Context) error {
-			return im.Close()
-		},
-	})
-	for _, config := range params.Configs {
-		h, err := create.NewInboundServer(config, params.Handler, params.Policy,
-			params.OnUnauth)
-		if err != nil {
-			return InboundManagerResult{}, fmt.Errorf("failed to create inbound proxy handler: %w", err)
-		}
-		im.AddInbound(h)
-	}
-	for _, config := range params.MultiConfigs {
-		h, err := multi.NewMultiInboundServer(config, params.Handler, params.Policy,
-			params.OnUnauth)
-		if err != nil {
-			return InboundManagerResult{}, fmt.Errorf("failed to create inbound proxy handler: %w", err)
-		}
-		im.AddInbound(h)
-	}
-	return InboundManagerResult{InboundManager: im}, nil
-}
-
-type MonitorParams struct {
-	fx.In
-	Dispatcher *dispatcher.Dispatcher
-}
-
-type MonitorResult struct {
-	fx.Out
-	Monitor *memmon.Monitor
-}
-
-func NewMonitor(lc fx.Lifecycle, params MonitorParams) (MonitorResult, error) {
-	monitor := memmon.NewMonitor(&memmon.MonitorConfig{
-		Interval:      time.Second * 1,
-		ListenAddress: "127.0.0.1:6060",
-	})
-	monitor.Dispatcher = params.Dispatcher
-	lc.Append(fx.Hook{
-		OnStart: func(ctx context.Context) error {
-			return monitor.Start()
-		},
-		OnStop: func(ctx context.Context) error {
-			return monitor.Close()
-		},
-	})
-	return MonitorResult{Monitor: monitor}, nil
 }

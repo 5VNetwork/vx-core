@@ -1,0 +1,52 @@
+//go:build server || test
+
+package buildserver
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/create"
+	"github.com/5vnetwork/vx-core/app/outbound"
+	"github.com/5vnetwork/vx-core/i"
+	"github.com/5vnetwork/vx-core/transport"
+	"go.uber.org/fx"
+)
+
+type OutboundManagerParams struct {
+	fx.In
+	Configs       []*configs.OutboundHandlerConfig
+	DialerFactory transport.DialerFactory
+	IpResolver    i.IPResolver
+	Policy        i.TimeoutSetting
+}
+type OutboundManagerResult struct {
+	fx.Out
+	OutboundManager *outbound.Manager
+}
+
+func NewOutboundManager(lc fx.Lifecycle, params OutboundManagerParams) (OutboundManagerResult, error) {
+	om := outbound.NewManager()
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			return om.Start()
+		},
+		OnStop: func(ctx context.Context) error {
+			return om.Close()
+		},
+	})
+	for _, handlerConfig := range params.Configs {
+		h, err := create.NewOutHandler(&create.Config{
+			OutboundHandlerConfig: handlerConfig,
+			DialerFactory:         params.DialerFactory,
+			Policy:                params.Policy,
+			IPResolver:            params.IpResolver,
+		})
+		if err != nil {
+			return OutboundManagerResult{}, fmt.Errorf("failed to create outbound proxy handler: %w", err)
+		}
+		om.AddHandlers(h)
+	}
+	return OutboundManagerResult{OutboundManager: om}, nil
+}
