@@ -12,7 +12,6 @@ import (
 	"github.com/5vnetwork/vx-core/common/signal"
 	"github.com/5vnetwork/vx-core/common/uuid"
 
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -40,12 +39,7 @@ func GetCtx(ctx context.Context) context.Context {
 	id := rand.Uint32()
 	ctx = ContextWithID(ctx, id)
 
-	var l zerolog.Context
-	if log.Ctx(ctx) == nil {
-		l = log.With().Uint32("sid", id)
-	} else {
-		l = log.Ctx(ctx).With().Uint32("sid", id)
-	}
+	l := log.With().Uint32("sid", id)
 	if hasExistingId {
 		l = l.Uint32("oid", oid)
 	}
