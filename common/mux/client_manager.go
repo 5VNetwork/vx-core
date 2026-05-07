@@ -38,6 +38,12 @@ func (m *ClientManager) Close() error {
 }
 
 func NewClientManager(strategy ClientStrategy, oh i.FlowHandler) *ClientManager {
+	if strategy.MaxConcurrency == 0 {
+		strategy.MaxConcurrency = DefaultClientStrategy.MaxConcurrency
+	}
+	if strategy.MaxConnection == 0 {
+		strategy.MaxConnection = DefaultClientStrategy.MaxConnection
+	}
 	return &ClientManager{
 		Strategy: strategy,
 		handler:  oh,
@@ -86,7 +92,7 @@ func (m *ClientManager) HandleReaderWriter(ctx context.Context, dst net.Destinat
 	client.AddSession(sm)
 	defer client.RemoveSession(sm)
 
-	log.Ctx(client.ctx).Debug().Uint16("mux_sid", sm.ID).Msg("new mux session")
+	log.Ctx(client.ctx).Debug().Uint32("num", client.count.Load()).Uint16("mux_sid", sm.ID).Msg("new mux session")
 	log.Ctx(ctx).Debug().Uint16("mux_sid", sm.ID).Msg("mux session")
 
 	defer m.tryRetire(client)
