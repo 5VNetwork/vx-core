@@ -150,6 +150,8 @@ func (p *RealIpPacketConn) ReadPacket() (*udp.Packet, error) {
 					return nil, errors.New("failed to find ip for a domain")
 				}
 				newTarget := net.IPAddress(ips[0])
+				log.Ctx(p.ctx).Debug().IPAddr("original target", originalTarget.IP()).
+					IPAddr("new target", newTarget.IP()).Msg("rewrite destination")
 				packet.Target.Address = newTarget
 				p.m[originalTarget] = newTarget
 				p.realIpToFakeIp.Store(newTarget, originalTarget)

@@ -187,7 +187,7 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 					if ds, ok := dnsServerMap[name]; ok {
 						servers = append(servers, ds)
 					} else {
-						return fmt.Errorf("internal dns server %s not found", name)
+						return fmt.Errorf("dns server %s not found", name)
 					}
 				}
 				resolver := idns.NewDnsServerToResolver(
@@ -203,12 +203,12 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 					if ds, ok := dnsServerMap[name]; ok {
 						servers = append(servers, ds)
 					} else {
-						return fmt.Errorf("internal dns server %s not found", name)
+						return fmt.Errorf("dns server %s not found", name)
 					}
 				}
 				resolver := idns.NewDnsServerToResolver(
 					idns.DnsServerToResolverOption{DnsServers: servers,
-						Interval: time.Duration(config.Dns.InternalResolver.Interval) * time.Second})
+						Interval: time.Duration(config.Dns.RequestDomainResolver.Interval) * time.Second})
 				client.IPResolverForRequestAddress = resolver
 			}
 			//
