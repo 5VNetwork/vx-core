@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -102,8 +103,16 @@ func (in *Inbound) Start() error {
 		config.Addresses = []string{""}
 	}
 	for _, addr := range config.Addresses {
+		network := "udp"
+		if strings.HasPrefix(addr, "udp6:") {
+			network = "udp6"
+			addr = strings.TrimPrefix(addr, "udp6:")
+		} else if strings.HasPrefix(addr, "udp4:") {
+			network = "udp4"
+			addr = strings.TrimPrefix(addr, "udp4:")
+		}
 		for _, p := range config.Ports {
-			pc, err := net.ListenPacket("udp", net.JoinHostPort(addr, fmt.Sprintf("%d", p)))
+			pc, err := net.ListenPacket(network, net.JoinHostPort(addr, fmt.Sprintf("%d", p)))
 			if err != nil {
 				return err
 			}
