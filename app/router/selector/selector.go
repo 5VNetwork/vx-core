@@ -134,6 +134,18 @@ func (s *Selector) Start() error {
 	if _, ok := s.strategy.(*allStrategy); !ok && s.dispatcher != nil {
 		s.dispatcher.AddHandlerErrorObserver(s)
 	}
+	if s.periodicTestSpeed != nil {
+		s.periodicTestSpeed.Start()
+	}
+	if s.periodicTestPing != nil {
+		s.periodicTestPing.Start()
+	}
+	if s.periodicTestUnusableHandlers != nil {
+		s.periodicTestUnusableHandlers.Start()
+	}
+	if s.periodicTestUnusableHandlersInFastRevovery != nil {
+		s.periodicTestUnusableHandlersInFastRevovery.Start()
+	}
 	s.Load()
 	return nil
 }
