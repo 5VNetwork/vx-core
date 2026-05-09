@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -324,6 +325,41 @@ func (c *Client) DownloadRemoteFileToMemory(remotePath string) ([]byte, error) {
 	}
 
 	return buffer.Bytes(), nil
+}
+
+// DownloadRemoteFileToMemorySudo reads remotePath with elevated privileges via
+// the remote shell (sudo cat). Use when the file is not readable by the SSH
+// user and SFTP (DownloadRemoteFileToMemory) fails. Binary-safe.
+func (c *Client) DownloadRemoteFileToMemorySudo(remotePath string) ([]byte, error) {
+	session, err := c.NewSession()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create session: %w", err)
+	}
+	defer session.Close()
+
+	cmd := "cat " + strconv.Quote(remotePath)
+	if !c.isRoot {
+		cmd = c.getSudoCmd(cmd)
+	}
+
+	out, err := session.Output(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read remote file %s: %w", remotePath, err)
+	}
+	return out, nil
+}
+
+// DownloadRemoteFileToLocalSudo writes the contents of a root-only (or
+// otherwise privileged) remote file to localPath. See DownloadRemoteFileToMemorySudo.
+func (c *Client) DownloadRemoteFileToLocalSudo(remotePath, localPath string) error {
+	b, err := c.DownloadRemoteFileToMemorySudo(remotePath)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(localPath, b, 0o644); err != nil {
+		return fmt.Errorf("failed to write local file: %w", err)
+	}
+	return nil
 }
 
 // DownloadUrl downloads a file from the given URL to the given path on the remote machine.
