@@ -3,12 +3,14 @@ package server
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"io"
 	"net"
 	"net/http"
 	"sync/atomic"
 	"time"
 
 	"github.com/5vnetwork/vx-core/i"
+	"github.com/5vnetwork/vx-core/proxy/hysteria2/internal/internal/congestion"
 	"github.com/5vnetwork/vx-core/proxy/hysteria2/internal/internal/pmtud"
 	"github.com/5vnetwork/vx-core/proxy/hysteria2/internal/internal/utils"
 	"github.com/apernet/hysteria/core/v2/errors"
@@ -28,7 +30,9 @@ type Config struct {
 	TLSConfig             TLSConfig
 	QUICConfig            QUICConfig
 	Conn                  net.PacketConn
+	Cleanup               io.Closer
 	Outbound              i.Handler
+	CongestionConfig      CongestionConfig
 	BandwidthConfig       BandwidthConfig
 	IgnoreClientBandwidth bool
 	DisableUDP            bool
@@ -37,6 +41,11 @@ type Config struct {
 	EventLogger           EventLogger
 	TrafficLogger         TrafficLogger
 	MasqHandler           http.Handler
+}
+
+type CongestionConfig struct {
+	Type       string
+	BBRProfile string
 }
 
 // fill fills the fields that are not set by the user with default values when possible,
@@ -78,6 +87,17 @@ func (c *Config) fill() error {
 	c.QUICConfig.DisablePathMTUDiscovery = c.QUICConfig.DisablePathMTUDiscovery || pmtud.DisablePathMTUDiscovery
 	if c.Conn == nil {
 		return errors.ConfigError{Field: "Conn", Reason: "must be set"}
+	}
+	var err error
+	c.CongestionConfig.Type, err = congestion.NormalizeType(c.CongestionConfig.Type)
+	if err != nil {
+		return errors.ConfigError{Field: "CongestionConfig.Type", Reason: err.Error()}
+	}
+	if c.CongestionConfig.Type == congestion.TypeBBR {
+		c.CongestionConfig.BBRProfile, err = congestion.NormalizeBBRProfile(c.CongestionConfig.BBRProfile)
+		if err != nil {
+			return errors.ConfigError{Field: "CongestionConfig.BBRProfile", Reason: err.Error()}
+		}
 	}
 	if c.Outbound == nil {
 		return errors.ConfigError{Field: "Outbound", Reason: "must be set"}

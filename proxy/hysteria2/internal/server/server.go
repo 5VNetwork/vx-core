@@ -11,6 +11,7 @@ import (
 
 	"github.com/apernet/quic-go"
 	"github.com/apernet/quic-go/http3"
+	"github.com/apernet/quic-go/quicvarint"
 	"github.com/rs/zerolog/log"
 
 	"github.com/5vnetwork/vx-core/app/inbound"
@@ -64,21 +65,28 @@ func NewServer(config *Config) (Server, error) {
 		DisablePathMTUDiscovery:        config.QUICConfig.DisablePathMTUDiscovery,
 		EnableDatagrams:                true,
 		MaxDatagramFrameSize:           protocol.MaxDatagramFrameSize,
+		AssumePeerMaxDatagramFrameSize: protocol.MaxDatagramFrameSize,
 		DisablePathManager:             true,
 	}
-	listener, err := quic.Listen(config.Conn, tlsConfig, quicConfig)
+	tr := &quic.Transport{Conn: config.Conn}
+	listener, err := tr.Listen(tlsConfig, quicConfig)
 	if err != nil {
-		_ = config.Conn.Close()
+		err = errors.Join(err, tr.Close(), config.Conn.Close())
+		if config.Cleanup != nil {
+			err = errors.Join(err, config.Cleanup.Close())
+		}
 		return nil, err
 	}
 	return &serverImpl{
 		config:   config,
+		tr:       tr,
 		listener: listener,
 	}, nil
 }
 
 type serverImpl struct {
 	config   *Config
+	tr       *quic.Transport
 	listener *quic.Listener
 }
 
@@ -93,16 +101,18 @@ func (s *serverImpl) Serve() error {
 }
 
 func (s *serverImpl) Close() error {
-	err := s.listener.Close()
-	_ = s.config.Conn.Close()
+	err := errors.Join(s.listener.Close(), s.tr.Close(), s.config.Conn.Close())
+	if s.config.Cleanup != nil {
+		err = errors.Join(err, s.config.Cleanup.Close())
+	}
 	return err
 }
 
 func (s *serverImpl) handleClient(conn *quic.Conn) {
 	handler := newH3sHandler(s.config, conn)
 	h3s := http3.Server{
-		Handler:        handler,
-		StreamHijacker: handler.ProxyStreamHijacker,
+		Handler:          handler,
+		StreamDispatcher: handler.ProxyStreamHijacker,
 	}
 	err := h3s.ServeQUICConn(conn)
 	// If the client is authenticated, we need to log the disconnect event
@@ -161,7 +171,7 @@ func (h *h3sHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.user = user
 			if h.config.IgnoreClientBandwidth {
 				// Ignore client bandwidth, always use BBR
-				congestion.UseBBR(h.conn)
+				congestion.UseConfigured(h.conn, h.config.CongestionConfig.Type, h.config.CongestionConfig.BBRProfile)
 				actualTx = 0
 			} else {
 				// actualTx = min(serverTx, clientRx)
@@ -174,7 +184,7 @@ func (h *h3sHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					congestion.UseBrutal(h.conn, actualTx)
 				} else {
 					// Client doesn't know its own bandwidth, use BBR
-					congestion.UseBBR(h.conn)
+					congestion.UseConfigured(h.conn, h.config.CongestionConfig.Type, h.config.CongestionConfig.BBRProfile)
 				}
 			}
 			// Auth OK, send response
@@ -216,16 +226,20 @@ func (h *h3sHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *h3sHandler) ProxyStreamHijacker(ft http3.FrameType, id quic.ConnectionTracingID, stream *quic.Stream, err error) (bool, error) {
+func (h *h3sHandler) ProxyStreamHijacker(ft http3.FrameType, stream *quic.Stream, err error) (bool, error) {
 	if err != nil || !h.authenticated {
 		return false, nil
 	}
 
-	// Wraps the stream with QStream, which handles Close() properly
-	qStream := &utils.QStream{Stream: stream}
-
 	switch ft {
 	case protocol.FrameTypeTCPRequest:
+		// StreamDispatcher only peeks the frame type. Consume it so ReadTCPRequest
+		// starts at address length, matching pre-upgrade StreamHijacker behavior.
+		if _, err := quicvarint.Read(quicvarint.NewReader(stream)); err != nil {
+			return false, err
+		}
+		// Wraps the stream with QStream, which handles Close() properly
+		qStream := &utils.QStream{Stream: stream}
 		go h.handleTCPRequest(qStream)
 		return true, nil
 	default:
