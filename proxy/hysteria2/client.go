@@ -48,16 +48,15 @@ type HysClient struct {
 }
 
 type Config struct {
-	Tag                        string
-	PacketListener             i.PacketListener
-	HysteriaClientConfig       *client.Config
-	SalamanderPassword         string
-	Address                    net.Address
-	PortSelector               i.PortSelector
-	IpResolverForNodeAddress   i.IPResolver
-	DomainStrategy             domain.DomainStrategy
-	IpResolverForTargetAddress i.IPResolver
-	RejectQuic                 bool
+	Tag                      string
+	PacketListener           i.PacketListener
+	HysteriaClientConfig     *client.Config
+	SalamanderPassword       string
+	Address                  net.Address
+	PortSelector             i.PortSelector
+	IpResolverForNodeAddress i.IPResolver
+	DomainStrategy           domain.DomainStrategy
+	RejectQuic               bool
 }
 
 func NewClient(config *Config) (*HysClient, error) {
@@ -78,14 +77,13 @@ func NewClient(config *Config) (*HysClient, error) {
 	log.Debug().Msgf("max idle timeout: %v", config.HysteriaClientConfig.QUICConfig.MaxIdleTimeout.Seconds())
 
 	d := &HysClient{
-		tag:                        config.Tag,
-		address:                    config.Address,
-		config:                     config.HysteriaClientConfig,
-		serverPicker:               config.PortSelector,
-		IpResolverForNodeAddress:   config.IpResolverForNodeAddress,
-		DomainStrategy:             config.DomainStrategy,
-		IpResolverForTargetAddress: config.IpResolverForTargetAddress,
-		RejectQuic:                 config.RejectQuic,
+		tag:                      config.Tag,
+		address:                  config.Address,
+		config:                   config.HysteriaClientConfig,
+		serverPicker:             config.PortSelector,
+		IpResolverForNodeAddress: config.IpResolverForNodeAddress,
+		DomainStrategy:           config.DomainStrategy,
+		RejectQuic:               config.RejectQuic,
 	}
 	return d, nil
 }

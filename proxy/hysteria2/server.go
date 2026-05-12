@@ -6,6 +6,7 @@
 package hysteria2
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/netip"
@@ -60,6 +61,7 @@ type InboundConfig struct {
 	Tag                   string
 	OnUnauthorizedRequest i.UnauthorizedReport
 	Handler               i.Handler
+	Listener              i.PacketListener
 }
 
 func (in *Inbound) Tag() string {
@@ -111,12 +113,19 @@ func (in *Inbound) Start() error {
 			network = "udp4"
 			addr = strings.TrimPrefix(addr, "udp4:")
 		}
+		log.Info().Msgf("hysteria2 listen on %s network %s", addr, network)
 		for _, p := range config.Ports {
-			pc, err := net.ListenPacket(network, net.JoinHostPort(addr, fmt.Sprintf("%d", p)))
+			var pc net.PacketConn
+			var err error
+			if in.config.Listener != nil {
+				pc, err = in.config.Listener.ListenPacket(context.Background(),
+					network, net.JoinHostPort(addr, fmt.Sprintf("%d", p)))
+			} else {
+				pc, err = net.ListenPacket(network, net.JoinHostPort(addr, fmt.Sprintf("%d", p)))
+			}
 			if err != nil {
 				return err
 			}
-			log.Info().Msgf("hysteria2 listen on %s:%d", addr, p)
 			pc = &statsPacketConn{
 				PacketConn: pc,
 				inbound:    in,
