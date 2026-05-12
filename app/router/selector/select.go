@@ -32,7 +32,7 @@ type Tester interface {
 	TestPing(context.Context, i.Outbound) int
 }
 
-type outHandler interface {
+type OutHandler interface {
 	GetHandler() (i.Outbound, error)
 	Name() string
 	GetOk() int
@@ -47,7 +47,7 @@ type outHandler interface {
 
 type handler struct {
 	i.Outbound
-	outHandler
+	OutHandler
 }
 
 func (h *handler) GetHandler() (i.Outbound, error) {
@@ -96,7 +96,7 @@ func (o *oStats) SetOk(ok int) {
 	o.ok = ok
 }
 
-func TestHandlerPing(ctx context.Context, s Tester, item outHandler) {
+func TestHandlerPing(ctx context.Context, s Tester, item OutHandler) {
 	logger := log.With().Uint32("sid", uint32(session.NewID())).
 		Str("handler", item.Name()).Logger()
 	logger.Debug().Msg("test ping start")
@@ -113,7 +113,7 @@ func TestHandlerPing(ctx context.Context, s Tester, item outHandler) {
 	logger.Debug().Int("ping", ping).Msg("test handler ping result")
 }
 
-func TestHandler6(ctx context.Context, s Tester, item outHandler) {
+func TestHandler6(ctx context.Context, s Tester, item OutHandler) {
 	logger := log.With().Uint32("sid", uint32(session.NewID())).
 		Str("handler", item.Name()).Logger()
 	logger.Debug().Msg("test 6 start")
@@ -139,7 +139,7 @@ func TestHandler6(ctx context.Context, s Tester, item outHandler) {
 }
 
 // used to test unusable handlers
-func TestHandlerUsable(ctx context.Context, s Tester, item outHandler) {
+func TestHandlerUsable(ctx context.Context, s Tester, item OutHandler) {
 	logger := log.With().Uint32("sid", uint32(session.NewID())).
 		Str("handler", item.Name()).Logger()
 	logger.Debug().Msg("usable test start")
@@ -163,7 +163,7 @@ func TestHandlerUsable(ctx context.Context, s Tester, item outHandler) {
 	logger.Debug().Bool("usable", usable).Msg("handler usable result")
 }
 
-func TestHandlerSpeed(ctx context.Context, s Tester, item outHandler, size uint32) {
+func TestHandlerSpeed(ctx context.Context, s Tester, item OutHandler, size uint32) {
 	logger := log.With().Uint32("sid", uint32(session.NewID())).
 		Str("handler", item.Name()).Logger()
 	logger.Debug().Msg("speed test start")

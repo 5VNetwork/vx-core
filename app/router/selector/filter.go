@@ -21,7 +21,7 @@ import (
 )
 
 type Filter interface {
-	GetHandlers() ([]outHandler, error)
+	GetHandlers() ([]OutHandler, error)
 }
 
 type FilterUpdate interface {
@@ -58,9 +58,9 @@ func (h *handlerWithStats) Name() string {
 	return h.Outbound.Tag()
 }
 
-func (f *omFilter) GetHandlers() ([]outHandler, error) {
+func (f *omFilter) GetHandlers() ([]OutHandler, error) {
 	handlers := f.om.GetAllHandlers()
-	var ret []outHandler
+	var ret []OutHandler
 	filterConfig := f.filterConfig.Load().(*router.SelectorConfig_Filter)
 	for _, h := range handlers {
 		if !inSubset(h, filterConfig) {
@@ -119,12 +119,12 @@ func (f *dbFilter) UpdateFilterConfig(filterConfig *router.SelectorConfig_Filter
 	f.filterConfig.Store(filterConfig)
 }
 
-func (f *dbFilter) GetHandlers() ([]outHandler, error) {
+func (f *dbFilter) GetHandlers() ([]OutHandler, error) {
 	handlers, err := f.getHandlersRetry()
 	if err != nil {
 		return nil, err
 	}
-	ret := make([]outHandler, 0, len(handlers))
+	ret := make([]OutHandler, 0, len(handlers))
 	for _, h := range handlers {
 		o := oStats{}
 		if len(f.landHandlers) > 0 {

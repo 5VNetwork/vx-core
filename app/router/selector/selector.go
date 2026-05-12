@@ -29,7 +29,7 @@ type Selector struct {
 
 	handlersLock      sync.RWMutex
 	handlersBeingUsed []*handler
-	filteredHandlers  []outHandler
+	filteredHandlers  []OutHandler
 
 	handlerBeingTestedLock sync.RWMutex
 	handlerBeingTested     map[string]struct{}
@@ -114,24 +114,22 @@ func newSelector(config selectorConfig) *Selector {
 }
 
 func (s *Selector) Start() error {
-	if _, ok := s.strategy.(*highestThroughputStrategy); ok {
+	if s.strategy.Speed() {
 		s.periodicTestSpeed = task.NewPeriodicTask(s.speedTestInterval, s.TestSpeedAll)
-		s.periodicTestUnusableHandlers = task.NewPeriodicTask(s.unusableTestInterval, s.TestAllUnusable)
 	}
-	if _, ok := s.strategy.(*topThroughputStrategy); ok {
-		s.periodicTestSpeed = task.NewPeriodicTask(s.speedTestInterval, s.TestSpeedAll)
-		s.periodicTestUnusableHandlers = task.NewPeriodicTask(s.unusableTestInterval, s.TestAllUnusable)
-	}
-	if _, ok := s.strategy.(*leastPingStrategy); ok {
+	if s.strategy.Ping() {
 		s.periodicTestPing = task.NewPeriodicTask(s.pingTestInterval, s.TestPingAll)
 	}
-	if _, ok := s.strategy.(*topPingStrategy); ok {
-		s.periodicTestPing = task.NewPeriodicTask(s.pingTestInterval, s.TestPingAll)
+	if s.strategy.Usable() || s.strategy.Speed() || s.strategy.Ping() {
+		if (s.periodicTestPing != nil && s.pingTestInterval <= s.unusableTestInterval) ||
+			(s.periodicTestSpeed != nil && s.speedTestInterval <= s.unusableTestInterval) {
+			// if ping/speed test is enabled and its interval is less than unusable test interval, there
+			// is no need to test unusable handlers
+		} else {
+			s.periodicTestUnusableHandlers = task.NewPeriodicTask(s.unusableTestInterval, s.TestAllUnusable)
+		}
 	}
-	if _, ok := s.strategy.(*allOkStrategy); ok {
-		s.periodicTestUnusableHandlers = task.NewPeriodicTask(s.unusableTestInterval, s.TestAllUnusable)
-	}
-	if _, ok := s.strategy.(*allStrategy); !ok && s.dispatcher != nil {
+	if (s.strategy.Speed() || s.strategy.Usable() || s.strategy.Ping()) && s.dispatcher != nil {
 		s.dispatcher.AddHandlerErrorObserver(s)
 	}
 	if s.periodicTestSpeed != nil {
@@ -142,9 +140,6 @@ func (s *Selector) Start() error {
 	}
 	if s.periodicTestUnusableHandlers != nil {
 		s.periodicTestUnusableHandlers.Start()
-	}
-	if s.periodicTestUnusableHandlersInFastRevovery != nil {
-		s.periodicTestUnusableHandlersInFastRevovery.Start()
 	}
 	s.Load()
 	return nil
@@ -196,11 +191,11 @@ func (s *Selector) Load() {
 	log.Debug().Int("len", len(handlers)).Msg("filtered handlers")
 
 	s.handlersLock.Lock()
-	handlersToBeTestedForSpeed := make([]outHandler, 0, len(handlers))
-	handlersToBeTestedForIpv6 := make([]outHandler, 0, len(handlers))
-	handlersToBeTestedForPing := make([]outHandler, 0, len(handlers))
+	handlersToBeTestedForSpeed := make([]OutHandler, 0, len(handlers))
+	handlersToBeTestedForIpv6 := make([]OutHandler, 0, len(handlers))
+	handlersToBeTestedForPing := make([]OutHandler, 0, len(handlers))
 	for _, os := range handlers {
-		index := slices.IndexFunc(s.filteredHandlers, func(h outHandler) bool {
+		index := slices.IndexFunc(s.filteredHandlers, func(h OutHandler) bool {
 			return h.Name() == os.Name()
 		})
 		if index != -1 {
@@ -221,19 +216,19 @@ func (s *Selector) Load() {
 		if os.GetSupport6() == 0 {
 			handlersToBeTestedForIpv6 = append(handlersToBeTestedForIpv6, os)
 		}
-		if _, ok := s.strategy.(*highestThroughputStrategy); ok && os.GetSpeed() == 0 {
+		if s.strategy.Speed() && os.GetSpeed() == 0 {
 			handlersToBeTestedForSpeed = append(handlersToBeTestedForSpeed, os)
 		}
-		if _, ok := s.strategy.(*topThroughputStrategy); ok && os.GetSpeed() == 0 {
+		if s.strategy.Speed() && os.GetSpeed() == 0 {
 			handlersToBeTestedForSpeed = append(handlersToBeTestedForSpeed, os)
 		}
-		if _, ok := s.strategy.(*leastPingStrategy); ok && os.GetPing() == 0 {
+		if s.strategy.Ping() && os.GetPing() == 0 {
 			handlersToBeTestedForPing = append(handlersToBeTestedForPing, os)
 		}
-		if _, ok := s.strategy.(*topPingStrategy); ok && os.GetPing() == 0 {
+		if s.strategy.Ping() && os.GetPing() == 0 {
 			handlersToBeTestedForPing = append(handlersToBeTestedForPing, os)
 		}
-		if _, ok := s.strategy.(*allOkStrategy); ok && os.GetOk() == 0 {
+		if s.strategy.Usable() && os.GetOk() == 0 {
 			handlersToBeTestedForPing = append(handlersToBeTestedForPing, os)
 		}
 	}
@@ -262,7 +257,7 @@ func (s *Selector) Load() {
 	s.setHandlers()
 }
 
-func (s *Selector) testSpeed(ctx context.Context, t Tester, item outHandler) {
+func (s *Selector) testSpeed(ctx context.Context, t Tester, item OutHandler) {
 	TestHandlerSpeed(ctx, t, item, s.speedTestSize)
 }
 
@@ -312,7 +307,7 @@ func (s *Selector) setHandlers() {
 			}
 			ha = &handler{
 				Outbound:   h,
-				outHandler: selectedHandler,
+				OutHandler: selectedHandler,
 			}
 		}
 		handlerToBeUsed = append(handlerToBeUsed, ha)
@@ -414,7 +409,7 @@ func (s *Selector) OnHandlerError(tag string, err error) {
 		}
 
 		TestHandlerUsable(s.ctx, s.tester, handler)
-		usable := handler.outHandler.GetOk() > 0
+		usable := handler.OutHandler.GetOk() > 0
 		if !usable {
 			s.setHandlers()
 			// since handler unusable might be temporary, test it again after 10 seconds
@@ -422,7 +417,8 @@ func (s *Selector) OnHandlerError(tag string, err error) {
 				select {
 				case <-time.After(time.Second * 10):
 					TestHandlerUsable(s.ctx, s.tester, handler)
-					usable = handler.outHandler.GetOk() > 0
+					usable = handler.OutHandler.GetOk() > 0
+					log.Debug().Bool("usable", usable).Msg("retry usable test done")
 					if usable {
 						s.setHandlers()
 					}
@@ -438,8 +434,8 @@ func (s *Selector) OnHandlerError(tag string, err error) {
 	}
 }
 
-func (s *Selector) testItems(items []outHandler,
-	testFunc func(ctx context.Context, s Tester, item outHandler)) {
+func (s *Selector) testItems(items []OutHandler,
+	testFunc func(ctx context.Context, s Tester, item OutHandler)) {
 	// Process in batches of 10
 	batchSize := 10
 	for i := 0; i < len(items); i += batchSize {
@@ -451,7 +447,7 @@ func (s *Selector) testItems(items []outHandler,
 		// Process current batch
 		for _, item := range items[i:end] {
 			wg.Add(1)
-			go func(item outHandler) {
+			go func(item OutHandler) {
 				defer wg.Done()
 				testFunc(s.ctx, s.tester, item)
 				if s.isRecovery && item.GetOk() > 0 {
@@ -464,7 +460,7 @@ func (s *Selector) testItems(items []outHandler,
 	}
 }
 
-func (s *Selector) getOutHandlers() []outHandler {
+func (s *Selector) getOutHandlers() []OutHandler {
 	s.handlersLock.RLock()
 	defer s.handlersLock.RUnlock()
 	return s.filteredHandlers
@@ -512,7 +508,7 @@ func (s *Selector) TestPingAll() {
 
 func (s *Selector) TestAllUnusable() {
 	handlers := s.getOutHandlers()
-	unusableHandlers := make([]outHandler, 0, len(handlers))
+	unusableHandlers := make([]OutHandler, 0, len(handlers))
 	for _, h := range handlers {
 		if h.GetOk() <= 0 {
 			unusableHandlers = append(unusableHandlers, h)
@@ -535,7 +531,7 @@ func (s *Selector) ResetTestAllUnusableInterval(interval time.Duration) {
 func (s *Selector) OnHandlerSpeedChanged(tag string, speed int32) {
 	log.Debug().Str("tag", tag).Int32("speed", speed).Msg("on handler speed changed")
 	s.handlersLock.RLock()
-	index := slices.IndexFunc(s.filteredHandlers, func(h outHandler) bool {
+	index := slices.IndexFunc(s.filteredHandlers, func(h OutHandler) bool {
 		return h.Name() == tag
 	})
 	if index == -1 {
@@ -550,22 +546,35 @@ func (s *Selector) OnHandlerSpeedChanged(tag string, speed int32) {
 	if _, ok := s.strategy.(*highestThroughputStrategy); ok {
 		s.setHandlers()
 	}
-	if _, ok := s.strategy.(*topThroughputStrategy); ok {
+	if _, ok := s.strategy.(*TopThroughputStrategy); ok {
 		s.setHandlers()
 	}
 }
 
 type selectStrategy interface {
-	Select(handlers []outHandler) []outHandler
+	Select(handlers []OutHandler) []OutHandler
+	Usable() bool
+	Speed() bool
+	Ping() bool
 }
 
 type leastPingStrategy struct{}
 
-func (s *leastPingStrategy) Select(handlers []outHandler) []outHandler {
+func (s *leastPingStrategy) Usable() bool {
+	return false
+}
+func (s *leastPingStrategy) Speed() bool {
+	return false
+}
+func (s *leastPingStrategy) Ping() bool {
+	return true
+}
+
+func (s *leastPingStrategy) Select(handlers []OutHandler) []OutHandler {
 	if len(handlers) == 0 {
 		return nil
 	} else {
-		var best outHandler
+		var best OutHandler
 		for _, v := range handlers {
 			if (v.GetOk() > 0) && best == nil {
 				best = v
@@ -586,17 +595,27 @@ func (s *leastPingStrategy) Select(handlers []outHandler) []outHandler {
 		if best == nil {
 			return nil
 		}
-		return []outHandler{best}
+		return []OutHandler{best}
 	}
 }
 
 type highestThroughputStrategy struct{}
 
-func (s *highestThroughputStrategy) Select(handlers []outHandler) []outHandler {
+func (s *highestThroughputStrategy) Usable() bool {
+	return false
+}
+func (s *highestThroughputStrategy) Speed() bool {
+	return true
+}
+func (s *highestThroughputStrategy) Ping() bool {
+	return false
+}
+
+func (s *highestThroughputStrategy) Select(handlers []OutHandler) []OutHandler {
 	if len(handlers) == 0 {
 		return nil
 	} else {
-		var largest outHandler
+		var largest OutHandler
 		for _, v := range handlers {
 			if (v.GetOk() > 0) && largest == nil {
 				largest = v
@@ -617,20 +636,40 @@ func (s *highestThroughputStrategy) Select(handlers []outHandler) []outHandler {
 		if largest == nil {
 			return nil
 		}
-		return []outHandler{largest}
+		return []OutHandler{largest}
 	}
 }
 
 type allStrategy struct{}
 
-func (s *allStrategy) Select(handlers []outHandler) []outHandler {
+func (s *allStrategy) Select(handlers []OutHandler) []OutHandler {
 	return handlers
+}
+
+func (s *allStrategy) Usable() bool {
+	return false
+}
+func (s *allStrategy) Speed() bool {
+	return false
+}
+func (s *allStrategy) Ping() bool {
+	return false
 }
 
 type allOkStrategy struct{}
 
-func (s *allOkStrategy) Select(handlers []outHandler) []outHandler {
-	okHandlers := make([]outHandler, 0, len(handlers))
+func (s *allOkStrategy) Usable() bool {
+	return true
+}
+func (s *allOkStrategy) Speed() bool {
+	return false
+}
+func (s *allOkStrategy) Ping() bool {
+	return false
+}
+
+func (s *allOkStrategy) Select(handlers []OutHandler) []OutHandler {
+	okHandlers := make([]OutHandler, 0, len(handlers))
 	for _, h := range handlers {
 		if h.GetOk() > 0 {
 			okHandlers = append(okHandlers, h)
@@ -649,7 +688,17 @@ func (s *allOkStrategy) Select(handlers []outHandler) []outHandler {
 // topPingStrategy selects all nodes within 30% of the least ping (e.g. min 100ms -> select all with ping <= 130ms).
 type topPingStrategy struct{}
 
-func (s *topPingStrategy) Select(handlers []outHandler) []outHandler {
+func (s *topPingStrategy) Usable() bool {
+	return false
+}
+func (s *topPingStrategy) Speed() bool {
+	return false
+}
+func (s *topPingStrategy) Ping() bool {
+	return true
+}
+
+func (s *topPingStrategy) Select(handlers []OutHandler) []OutHandler {
 	if len(handlers) == 0 {
 		return nil
 	}
@@ -663,7 +712,7 @@ func (s *topPingStrategy) Select(handlers []outHandler) []outHandler {
 	}
 	if minPing < 0 {
 		// no usable ping data, fall back to all with GetOk >= 0
-		okHandlers := make([]outHandler, 0, len(handlers))
+		okHandlers := make([]OutHandler, 0, len(handlers))
 		for _, h := range handlers {
 			if h.GetOk() >= 0 {
 				okHandlers = append(okHandlers, h)
@@ -672,7 +721,7 @@ func (s *topPingStrategy) Select(handlers []outHandler) []outHandler {
 		return okHandlers
 	}
 	threshold := minPing + (minPing * 30 / 100) // 30% above least
-	selected := make([]outHandler, 0, len(handlers))
+	selected := make([]OutHandler, 0, len(handlers))
 	for _, h := range handlers {
 		if h.GetOk() > 0 && h.GetPing() > 0 && h.GetPing() <= threshold {
 			selected = append(selected, h)
@@ -688,10 +737,20 @@ func (s *topPingStrategy) Select(handlers []outHandler) []outHandler {
 	return selected
 }
 
-// topThroughputStrategy selects all nodes with throughput >= 70% of the highest (e.g. max 100 -> select all with speed >= 70).
-type topThroughputStrategy struct{}
+// TopThroughputStrategy selects all nodes with throughput >= 70% of the highest (e.g. max 100 -> select all with speed >= 70).
+type TopThroughputStrategy struct{}
 
-func (s *topThroughputStrategy) Select(handlers []outHandler) []outHandler {
+func (s *TopThroughputStrategy) Usable() bool {
+	return false
+}
+func (s *TopThroughputStrategy) Speed() bool {
+	return true
+}
+func (s *TopThroughputStrategy) Ping() bool {
+	return false
+}
+
+func (s *TopThroughputStrategy) Select(handlers []OutHandler) []OutHandler {
 	if len(handlers) == 0 {
 		return nil
 	}
@@ -703,7 +762,7 @@ func (s *topThroughputStrategy) Select(handlers []outHandler) []outHandler {
 	}
 	if maxSpeed == 0 {
 		// no usable speed data, fall back to all with GetOk >= 0
-		okHandlers := make([]outHandler, 0, len(handlers))
+		okHandlers := make([]OutHandler, 0, len(handlers))
 		for _, h := range handlers {
 			if h.GetOk() >= 0 {
 				okHandlers = append(okHandlers, h)
@@ -712,7 +771,7 @@ func (s *topThroughputStrategy) Select(handlers []outHandler) []outHandler {
 		return okHandlers
 	}
 	threshold := maxSpeed * 70 / 100 // 70% of highest
-	selected := make([]outHandler, 0, len(handlers))
+	selected := make([]OutHandler, 0, len(handlers))
 	for _, h := range handlers {
 		if h.GetOk() > 0 && h.GetSpeed() >= threshold {
 			selected = append(selected, h)

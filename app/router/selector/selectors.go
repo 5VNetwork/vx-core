@@ -126,6 +126,7 @@ type SelectorConfig struct {
 	Filter                    Filter
 	OnHandlerBeingUsedChange  HandlersBeingUsedUpdate
 	HandlerInfo               handlerInfo
+	SelectStrategy            selectStrategy
 }
 
 func NewSelector(config SelectorConfig) *Selector {
@@ -141,20 +142,25 @@ func NewSelector(config SelectorConfig) *Selector {
 	}
 
 	var se selectStrategy
-	switch sc.Strategy {
-	case router.SelectorConfig_ALL:
-		se = &allStrategy{}
-	case router.SelectorConfig_ALL_OK:
-		se = &allOkStrategy{}
-	case router.SelectorConfig_MOST_THROUGHPUT:
-		se = &highestThroughputStrategy{}
-	case router.SelectorConfig_LEAST_PING:
-		se = &leastPingStrategy{}
-	case router.SelectorConfig_TOP_PING:
-		se = &topPingStrategy{}
-	case router.SelectorConfig_TOP_THROUGHPUT:
-		se = &topThroughputStrategy{}
+	if config.SelectStrategy != nil {
+		se = config.SelectStrategy
+	} else {
+		switch sc.Strategy {
+		case router.SelectorConfig_ALL:
+			se = &allStrategy{}
+		case router.SelectorConfig_ALL_OK:
+			se = &allOkStrategy{}
+		case router.SelectorConfig_MOST_THROUGHPUT:
+			se = &highestThroughputStrategy{}
+		case router.SelectorConfig_LEAST_PING:
+			se = &leastPingStrategy{}
+		case router.SelectorConfig_TOP_PING:
+			se = &topPingStrategy{}
+		case router.SelectorConfig_TOP_THROUGHPUT:
+			se = &TopThroughputStrategy{}
+		}
 	}
+
 	selector0 := newSelector(selectorConfig{
 		Tag:                      sc.Tag,
 		Strategy:                 se,

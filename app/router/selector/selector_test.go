@@ -20,17 +20,17 @@ import (
 
 // MockFilter implements Filter interface for testing selector
 type MockFilter struct {
-	handlers []outHandler
+	handlers []OutHandler
 	err      error
 }
 
 func NewMockFilter() *MockFilter {
 	return &MockFilter{
-		handlers: make([]outHandler, 0),
+		handlers: make([]OutHandler, 0),
 	}
 }
 
-func (f *MockFilter) GetHandlers() ([]outHandler, error) {
+func (f *MockFilter) GetHandlers() ([]OutHandler, error) {
 	if f.err != nil {
 		return nil, f.err
 	}
@@ -537,7 +537,7 @@ func TestSelector_EnterRecovery(t *testing.T) {
 func TestLeastPingStrategy_Select(t *testing.T) {
 	strategy := &leastPingStrategy{}
 
-	handlers := []outHandler{
+	handlers := []OutHandler{
 		&testOutHandler{name: "handler1", oStats: oStats{ping: 100, ok: 1}},
 		&testOutHandler{name: "handler2", oStats: oStats{ping: 50, ok: 1}},
 		&testOutHandler{name: "handler3", oStats: oStats{ping: 200, ok: 1}},
@@ -554,7 +554,7 @@ func TestLeastPingStrategy_Select(t *testing.T) {
 func TestLeastPingStrategy_Select_UntestedHandler(t *testing.T) {
 	strategy := &leastPingStrategy{}
 
-	handlers := []outHandler{
+	handlers := []OutHandler{
 		&testOutHandler{name: "handler1", oStats: oStats{ping: 100, ok: -1}},
 		&testOutHandler{name: "handler2", oStats: oStats{ping: 0, ok: 0}}, // Untested
 	}
@@ -570,7 +570,7 @@ func TestLeastPingStrategy_Select_UntestedHandler(t *testing.T) {
 func TestHighestThroughputStrategy_Select(t *testing.T) {
 	strategy := &highestThroughputStrategy{}
 
-	handlers := []outHandler{
+	handlers := []OutHandler{
 		&testOutHandler{name: "handler1", oStats: oStats{speed: 100, ok: 1}},
 		&testOutHandler{name: "handler2", oStats: oStats{speed: 500, ok: 1}},
 		&testOutHandler{name: "handler3", oStats: oStats{speed: 200, ok: 1}},
@@ -587,7 +587,7 @@ func TestHighestThroughputStrategy_Select(t *testing.T) {
 func TestAllStrategy_Select(t *testing.T) {
 	strategy := &allStrategy{}
 
-	handlers := []outHandler{
+	handlers := []OutHandler{
 		&testOutHandler{name: "handler1", oStats: oStats{ok: 1}},
 		&testOutHandler{name: "handler2", oStats: oStats{ok: -1}},
 		&testOutHandler{name: "handler3", oStats: oStats{ok: 1}},
@@ -603,7 +603,7 @@ func TestAllStrategy_Select(t *testing.T) {
 func TestAllOkStrategy_Select(t *testing.T) {
 	strategy := &allOkStrategy{}
 
-	handlers := []outHandler{
+	handlers := []OutHandler{
 		&testOutHandler{name: "handler1", oStats: oStats{ok: 1}},
 		&testOutHandler{name: "handler2", oStats: oStats{ok: -1}},
 		&testOutHandler{name: "handler3", oStats: oStats{ok: 0}},
@@ -620,7 +620,7 @@ func TestTopPingStrategy_Select(t *testing.T) {
 	strategy := &topPingStrategy{}
 
 	// Min ping = 100ms, 30% above = 130. Select all with ping <= 130.
-	handlers := []outHandler{
+	handlers := []OutHandler{
 		&testOutHandler{name: "handler1", oStats: oStats{ping: 100, ok: 1}}, // best, in
 		&testOutHandler{name: "handler2", oStats: oStats{ping: 120, ok: 1}}, // in
 		&testOutHandler{name: "handler3", oStats: oStats{ping: 130, ok: 1}}, // in (boundary)
@@ -640,7 +640,7 @@ func TestTopPingStrategy_Select_ThresholdBoundary(t *testing.T) {
 	strategy := &topPingStrategy{}
 
 	// Min ping = 100ms, 30% = 30, threshold = 130. Only handlers with ping <= 130.
-	handlers := []outHandler{
+	handlers := []OutHandler{
 		&testOutHandler{name: "best", oStats: oStats{ping: 100, ok: 1}},
 		&testOutHandler{name: "in1", oStats: oStats{ping: 130, ok: 1}},
 		&testOutHandler{name: "out", oStats: oStats{ping: 131, ok: 1}},
@@ -660,7 +660,7 @@ func TestTopPingStrategy_Select_NoPingData(t *testing.T) {
 	strategy := &topPingStrategy{}
 
 	// No handler with ok>0 and ping>0 -> fallback to all with ok >= 0
-	handlers := []outHandler{
+	handlers := []OutHandler{
 		&testOutHandler{name: "handler1", oStats: oStats{ping: 0, ok: 1}},
 		&testOutHandler{name: "handler2", oStats: oStats{ping: 0, ok: 0}},
 		&testOutHandler{name: "handler3", oStats: oStats{ping: 0, ok: -1}},
@@ -680,15 +680,15 @@ func TestTopPingStrategy_Select_Empty(t *testing.T) {
 	strategy := &topPingStrategy{}
 	selected := strategy.Select(nil)
 	assert.Nil(t, selected)
-	selected = strategy.Select([]outHandler{})
+	selected = strategy.Select([]OutHandler{})
 	assert.Nil(t, selected)
 }
 
 func TestTopThroughputStrategy_Select(t *testing.T) {
-	strategy := &topThroughputStrategy{}
+	strategy := &TopThroughputStrategy{}
 
 	// Max speed = 100, 70% = 70. Select all with speed >= 70.
-	handlers := []outHandler{
+	handlers := []OutHandler{
 		&testOutHandler{name: "handler1", oStats: oStats{speed: 100, ok: 1}}, // max, in
 		&testOutHandler{name: "handler2", oStats: oStats{speed: 80, ok: 1}},  // in
 		&testOutHandler{name: "handler3", oStats: oStats{speed: 70, ok: 1}},  // boundary, in
@@ -706,10 +706,10 @@ func TestTopThroughputStrategy_Select(t *testing.T) {
 }
 
 func TestTopThroughputStrategy_Select_ThresholdBoundary(t *testing.T) {
-	strategy := &topThroughputStrategy{}
+	strategy := &TopThroughputStrategy{}
 
 	// Max speed = 100, 70% = 70. Select speed >= 70.
-	handlers := []outHandler{
+	handlers := []OutHandler{
 		&testOutHandler{name: "max", oStats: oStats{speed: 100, ok: 1}},
 		&testOutHandler{name: "in", oStats: oStats{speed: 70, ok: 1}},
 		&testOutHandler{name: "out", oStats: oStats{speed: 69, ok: 1}},
@@ -726,10 +726,10 @@ func TestTopThroughputStrategy_Select_ThresholdBoundary(t *testing.T) {
 }
 
 func TestTopThroughputStrategy_Select_NoSpeedData(t *testing.T) {
-	strategy := &topThroughputStrategy{}
+	strategy := &TopThroughputStrategy{}
 
 	// All speed 0 -> fallback to all with ok >= 0
-	handlers := []outHandler{
+	handlers := []OutHandler{
 		&testOutHandler{name: "handler1", oStats: oStats{speed: 0, ok: 1}},
 		&testOutHandler{name: "handler2", oStats: oStats{speed: 0, ok: 0}},
 		&testOutHandler{name: "handler3", oStats: oStats{speed: 0, ok: -1}},
@@ -746,10 +746,10 @@ func TestTopThroughputStrategy_Select_NoSpeedData(t *testing.T) {
 }
 
 func TestTopThroughputStrategy_Select_Empty(t *testing.T) {
-	strategy := &topThroughputStrategy{}
+	strategy := &TopThroughputStrategy{}
 	selected := strategy.Select(nil)
 	assert.Nil(t, selected)
-	selected = strategy.Select([]outHandler{})
+	selected = strategy.Select([]OutHandler{})
 	assert.Nil(t, selected)
 }
 
@@ -786,7 +786,7 @@ func TestSelector_Start_WithTopThroughputStrategy(t *testing.T) {
 
 	config := selectorConfig{
 		Tag:      "test-selector",
-		Strategy: &topThroughputStrategy{},
+		Strategy: &TopThroughputStrategy{},
 		Filter:   filter,
 		Balancer: balancer,
 		Tester:   tester,
@@ -1918,7 +1918,7 @@ func TestSelector_RecoveryMode_ExitWhenHandlerBecomesUsable(t *testing.T) {
 
 	// Verify handler1 became usable
 	sel.handlersLock.RLock()
-	var handler1 outHandler
+	var handler1 OutHandler
 	for _, h := range sel.filteredHandlers {
 		if h.Name() == "handler1" {
 			handler1 = h
