@@ -1,19 +1,19 @@
 syntax = "proto3";
 package vx.transport;
-option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
-import "vx/transport/security/tls/tls.proto";
-import "vx/transport/security/reality/config.proto";
-import "vx/transport/protocols/tcp/config.proto";
-import "vx/transport/protocols/kcp/config.proto";
-import "vx/transport/protocols/websocket/config.proto";
-import "vx/transport/protocols/http/config.proto";
-import "vx/transport/protocols/grpc/config.proto";
-import "vx/transport/protocols/httpupgrade/config.proto";
-import "vx/transport/protocols/splithttp/config.proto";
-
-import "vx/transport/dlhelper.proto";
 import "google/protobuf/any.proto";
+import "vx/transport/dlhelper.proto";
+import "vx/transport/protocols/grpc/config.proto";
+import "vx/transport/protocols/http/config.proto";
+import "vx/transport/protocols/httpupgrade/config.proto";
+import "vx/transport/protocols/kcp/config.proto";
+import "vx/transport/protocols/splithttp/config.proto";
+import "vx/transport/protocols/tcp/config.proto";
+import "vx/transport/protocols/websocket/config.proto";
+import "vx/transport/security/reality/config.proto";
+import "vx/transport/security/tls/tls.proto";
+
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
 message TransportConfig {
   vx.transport.SocketConfig socket = 3;
@@ -33,4 +33,5 @@ message TransportConfig {
   }
 
   google.protobuf.Any transport_protocol = 30;
+  google.protobuf.Any security_protocol = 31;
 }

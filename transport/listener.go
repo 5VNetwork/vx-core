@@ -197,6 +197,9 @@ func (l *ListenerImpl) Listen(ctx context.Context, addr net.Addr) (net.Listener,
 	if err != nil {
 		return nil, err
 	}
+	if l.SecurityConfig == nil {
+		return listener, nil
+	}
 	if t, ok := l.SecurityConfig.(*tls.TlsConfig); ok {
 		var opts []tls.Option
 		if l.useH2 {
@@ -211,6 +214,22 @@ func (l *ListenerImpl) Listen(ctx context.Context, addr net.Addr) (net.Listener,
 		return gotls.NewListener(listener, tlsConfig), nil
 	} else if rcfg, ok := l.SecurityConfig.(*reality.RealityConfig); ok {
 		return goreality.NewListener(listener, reality.GetREALITYConfig(rcfg)), nil
+	} else {
+		creator, ok := AnySecurityListenerCreator[reflect.TypeOf(l.SecurityConfig)]
+		if !ok {
+			return nil, fmt.Errorf("invalid security config: %v", l.SecurityConfig)
+		}
+		return creator(listener, l.SecurityConfig)
 	}
-	return listener, nil
+}
+
+type SecurityListenerCreator func(listener net.Listener, securityConfig interface{}) (net.Listener, error)
+
+var AnySecurityListenerCreator = make(map[reflect.Type]SecurityListenerCreator)
+
+func RegisterSecurityListenerCreator(name reflect.Type, creator SecurityListenerCreator) {
+	if _, ok := AnySecurityListenerCreator[name]; ok {
+		panic(fmt.Sprintf("security listener creator for %s already registered", name))
+	}
+	AnySecurityListenerCreator[name] = creator
 }

@@ -50,16 +50,30 @@ type Config struct {
 type DialerCreator func(protocolConfig, securityConfig interface{},
 	dl i.DialerListener, echResolver i.ECHResolver) (i.Dialer, error)
 
-var AnyCreator = make(map[reflect.Type]DialerCreator)
+var AnyDialerCreator = make(map[reflect.Type]DialerCreator)
 
 func RegisterDialerCreator(name reflect.Type, creator DialerCreator) {
-	if _, ok := AnyCreator[name]; ok {
+	if _, ok := AnyDialerCreator[name]; ok {
 		panic(fmt.Sprintf("dialer creator for %s already registered", name))
 	}
-	AnyCreator[name] = creator
+	AnyDialerCreator[name] = creator
+}
+
+type SecurityCreator func(securityConfig interface{}) (security.Engine, error)
+
+var AnySecurityCreator = make(map[reflect.Type]SecurityCreator)
+
+func RegisterSecurityCreator(name reflect.Type, creator SecurityCreator) {
+	if _, ok := AnySecurityCreator[name]; ok {
+		panic(fmt.Sprintf("security creator for %s already registered", name))
+	}
+	AnySecurityCreator[name] = creator
 }
 
 func GetSecurityEngine(securityConfig interface{}, echResolver i.ECHResolver) (security.Engine, error) {
+	if securityConfig == nil {
+		return nil, nil
+	}
 	var securityEngine security.Engine
 	var err error
 	switch sc := securityConfig.(type) {
@@ -73,7 +87,17 @@ func GetSecurityEngine(securityConfig interface{}, echResolver i.ECHResolver) (s
 		if err != nil {
 			return nil, fmt.Errorf("failed to create reality engine: %w", err)
 		}
+	default:
+		creator, ok := AnySecurityCreator[reflect.TypeOf(sc)]
+		if !ok {
+			return nil, fmt.Errorf("invalid security config: %v", sc)
+		}
+		securityEngine, err = creator(sc)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	return securityEngine, nil
 }
 
@@ -115,7 +139,7 @@ func NewDialer(protocolConfig, securityConfig interface{},
 	case *httpupgrade.HttpUpgradeConfig:
 		d = httpupgrade.NewHttpUpgradeDialer(transportConfig, securityEngine, dl)
 	default:
-		creator, ok := AnyCreator[reflect.TypeOf(protocolConfig)]
+		creator, ok := AnyDialerCreator[reflect.TypeOf(protocolConfig)]
 		if !ok {
 			return nil, fmt.Errorf("invalid transport config: %v", protocolConfig)
 		}

@@ -66,15 +66,22 @@ func TransportProtocolConfig(tc *configs.TransportConfig) interface{} {
 	return protocolConfig
 }
 
-func TransportSecurityConfig(config interface{}) interface{} {
-	var securityConfig interface{}
-	switch c := config.(type) {
-	case *configs.TransportConfig_Reality:
-		securityConfig = c.Reality
-	case *configs.TransportConfig_Tls:
-		securityConfig = c.Tls
+func TransportSecurityConfig(tc *configs.TransportConfig) interface{} {
+	if config := tc.GetSecurity(); config != nil {
+		var securityConfig interface{}
+		switch c := config.(type) {
+		case *configs.TransportConfig_Reality:
+			securityConfig = c.Reality
+		case *configs.TransportConfig_Tls:
+			securityConfig = c.Tls
+		}
+		return securityConfig
+	} else if tc.SecurityProtocol != nil {
+		msg, err := serial.GetInstanceOf(tc.SecurityProtocol)
+		common.Must(err)
+		return msg
 	}
-	return securityConfig
+	return nil
 }
 
 func TransportConfigToMemoryConfig(config *configs.TransportConfig,
@@ -89,7 +96,7 @@ func TransportConfigToMemoryConfig(config *configs.TransportConfig,
 	return &transport.Config{
 		Socket:    SocketConfigToMemoryConfig(config.GetSocket(), readCounter, writeCounter),
 		Protocol:  TransportProtocolConfig(config),
-		Security:  TransportSecurityConfig(config.GetSecurity()),
+		Security:  TransportSecurityConfig(config),
 		DnsServer: dnsServer,
 	}
 }
