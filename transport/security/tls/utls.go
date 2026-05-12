@@ -11,7 +11,7 @@ import (
 )
 
 func GetUClient(c *TlsConfig, conn net.Conn, tlsConfig *tls.Config) (net.Conn, error) {
-	utlsConfig, err := uTLSConfigFromTLSConfig(tlsConfig)
+	utlsConfig, err := UTLSConfigFromTLSConfig(tlsConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate utls config from tls config %w", err)
 	}
@@ -75,14 +75,18 @@ func (u UConn) GetConnectionApplicationProtocol() (string, error) {
 	return u.ConnectionState().NegotiatedProtocol, nil
 }
 
-func uTLSConfigFromTLSConfig(config *tls.Config) (*utls.Config, error) { // nolint: unparam
+func UTLSConfigFromTLSConfig(config *tls.Config) (*utls.Config, error) { // nolint: unparam
 	uconfig := &utls.Config{
-		Rand:               config.Rand,
-		Time:               config.Time,
-		RootCAs:            config.RootCAs,
-		NextProtos:         config.NextProtos,
-		InsecureSkipVerify: config.InsecureSkipVerify,
-		ServerName:         config.ServerName,
+		Rand:                           config.Rand,
+		Time:                           config.Time,
+		RootCAs:                        config.RootCAs,
+		ClientCAs:                      config.ClientCAs,
+		NextProtos:                     config.NextProtos,
+		InsecureSkipVerify:             config.InsecureSkipVerify,
+		ServerName:                     config.ServerName,
+		VerifyPeerCertificate:          config.VerifyPeerCertificate,
+		KeyLogWriter:                   config.KeyLogWriter,
+		EncryptedClientHelloConfigList: config.EncryptedClientHelloConfigList,
 	}
 	return uconfig, nil
 }
