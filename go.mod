@@ -7,7 +7,7 @@ require (
 	github.com/anytls/sing-anytls v0.0.11
 	github.com/apernet/hysteria/core/v2 v2.0.0-00010101000000-000000000000
 	github.com/apernet/hysteria/extras/v2 v2.6.5
-	github.com/apernet/quic-go v0.57.2-0.20260111184307-eec823306178
+	github.com/apernet/quic-go v0.59.1-0.20260425001925-6c6cc9bcb716
 	github.com/bits-and-blooms/bloom/v3 v3.7.0
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/golang/mock v1.7.0-rc.1
@@ -42,6 +42,7 @@ require (
 	golang.org/x/exp v0.0.0-20251125195548-87e1e737ad39
 	golang.org/x/net v0.53.0
 	golang.org/x/sync v0.20.0
+	golang.org/x/time v0.12.0
 	golang.zx2c4.com/wireguard v0.0.0-20250521234502-f333402bd9cb
 	golang.zx2c4.com/wireguard/windows v0.5.3
 	google.golang.org/grpc v1.75.1
@@ -88,7 +89,6 @@ require (
 	golang.org/x/exp/typeparams v0.0.0-20240314144324-c7f7c6466f7f // indirect
 	golang.org/x/mobile v0.0.0-20260410095206-2cfb76559b7b // indirect
 	golang.org/x/mod v0.35.0 // indirect
-	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.44.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251014184007-4626949a642f // indirect
@@ -104,4 +104,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-replace github.com/apernet/hysteria/core/v2 => github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260113111745-7754c3d7fd99
+replace github.com/apernet/hysteria/core/v2 => github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260510171949-b46964b7c610
+
