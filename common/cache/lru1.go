@@ -48,6 +48,17 @@ func (l *lru1) GetKeyFromValue(value interface{}) (interface{}, bool) {
 	return nil, false
 }
 
+func (l *lru1) ForEach(fn func(key, value interface{}) bool) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for e := l.list.Front(); e != nil; e = e.Next() {
+		entry := e.Value.(*lru1Entry)
+		if !fn(entry.key, entry.value) {
+			return
+		}
+	}
+}
+
 func (l *lru1) Put(key, value interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()

@@ -52,12 +52,17 @@ func (b *MemoryBalancer) UpdateHandlers(handlers []i.HandlerWith6Info) {
 		}
 		newAllHandlers = append(newAllHandlers, h)
 	}
-	for _, h := range handlers {
-		appId, ok := b.appDomainToHandler.GetKeyFromValue(h.Tag())
-		if ok {
-			newAppToHandler.Put(appId, h.Tag())
+	old := b.appDomainToHandler
+	old.ForEach(func(key, value interface{}) bool {
+		tag, ok := value.(string)
+		if !ok {
+			return true
 		}
-	}
+		if _, stillThere := newHandlers[tag]; stillThere {
+			newAppToHandler.Put(key, tag)
+		}
+		return true
+	})
 	b.appDomainToHandler = newAppToHandler
 	b.handlers = newHandlers
 	b.allHandlers = newAllHandlers

@@ -10,6 +10,8 @@ type Lru interface {
 	Get(key interface{}) (value interface{}, ok bool)
 	GetKeyFromValue(value interface{}) (key interface{}, ok bool)
 	Put(key, value interface{})
+	// ForEach visits entries from most-recently-used to least-recently-used. Stops early if fn returns false.
+	ForEach(fn func(key, value interface{}) bool)
 }
 
 type lru struct {
@@ -56,6 +58,17 @@ func (l *lru) GetKeyFromValue(value interface{}) (key interface{}, ok bool) {
 		return element.Value.(*lruElement).key, true
 	}
 	return nil, false
+}
+
+func (l *lru) ForEach(fn func(key, value interface{}) bool) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for e := l.doubleLinkedlist.Front(); e != nil; e = e.Next() {
+		el := e.Value.(*lruElement)
+		if !fn(el.key, el.value) {
+			return
+		}
+	}
 }
 
 func (l *lru) Put(key, value interface{}) {
