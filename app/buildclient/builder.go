@@ -17,6 +17,7 @@ import (
 	vxlog "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/log"
 	"github.com/5vnetwork/vx-core/app/client"
 	"github.com/5vnetwork/vx-core/app/create"
+	"github.com/5vnetwork/vx-core/app/create/inbound"
 	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/fallbackmon"

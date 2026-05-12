@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/create"
+	"github.com/5vnetwork/vx-core/app/create/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/common/session"
@@ -26,7 +26,7 @@ func (a *Api) HandlerCountryTest(ctx context.Context, req *HandlerCountryTestReq
 	url := util.TraceList[0]
 	logger.Debug().Str("handler", configs.HandlerTag(req.Handler)).Str("test", "country").Str("url", url).Send()
 
-	h, err := create.NewHandler(&create.HandlerConfig{
+	h, err := outbound.NewHandler(&outbound.HandlerConfig{
 		HandlerConfig:               req.Handler,
 		DialerFactory:               a.getDialerFactory(),
 		Policy:                      policy.New(),
