@@ -123,6 +123,36 @@ func TestExtractDomainsFromClashRules3(t *testing.T) {
 	}
 }
 
+func TestExtractDomainsFrom4(t *testing.T) {
+	file, err := os.Open("4.list")
+	if err != nil {
+		t.Fatalf("failed to open file: %v", err)
+	}
+	defer file.Close()
+
+	domains, err := clashconfig.ExtractDomainsFromClashRules(file)
+	if err != nil {
+		t.Fatalf("failed to extract domains: %v", err)
+	}
+	fmt.Println(domains)
+
+	if len(domains) != 2 {
+		t.Fatalf("expected 4 domains, got %d", len(domains))
+	}
+
+	m, err := geo.ToMphIndexMatcher(domains)
+	if err != nil {
+		t.Fatalf("failed to create mph index matcher: %v", err)
+	}
+
+	if !m.MatchAny("0.beer") {
+		t.Fatalf("failed to match voice.telephony.goog")
+	}
+	if !m.MatchAny("www.0.beer") {
+		t.Fatalf("failed to match www.0.beer")
+	}
+}
+
 func TestExtractCidrsFromClashRules1(t *testing.T) {
 	file, err := os.Open("1.yaml")
 	if err != nil {

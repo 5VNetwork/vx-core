@@ -7,10 +7,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/create"
+	"github.com/5vnetwork/vx-core/app/user"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/uuid"
+	"github.com/5vnetwork/vx-core/proxy/shadowsocks"
 )
 
 func TestAEADCipherUDP(t *testing.T) {
@@ -20,7 +21,9 @@ func TestAEADCipherUDP(t *testing.T) {
 			Secret: uuid.New().String(),
 		},
 	}
-	account, err := create.ShadowsocksAccountToMemoryAccount(rawAccount)
+	account, err := shadowsocks.NewMemoryAccount(
+		user.NewUser(rawAccount.User.Id, rawAccount.User.Secret),
+		shadowsocks.CipherType(rawAccount.CipherType), false, false)
 	common.Must(err)
 
 	cipher := account.Cipher

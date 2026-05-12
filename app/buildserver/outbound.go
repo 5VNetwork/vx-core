@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/create"
+	outboundcreate "github.com/5vnetwork/vx-core/app/create/outbound"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/transport"
@@ -37,7 +37,7 @@ func NewOutboundManager(lc fx.Lifecycle, params OutboundManagerParams) (Outbound
 		},
 	})
 	for _, handlerConfig := range params.Configs {
-		h, err := create.NewOutHandler(&create.Config{
+		h, err := outboundcreate.NewOutHandler(&outboundcreate.Config{
 			OutboundHandlerConfig: handlerConfig,
 			DialerFactory:         params.DialerFactory,
 			Policy:                params.Policy,

@@ -1,7 +1,7 @@
 // Copyright 2025 5V Network LLC
 // SPDX-License-Identifier: AGPL-3.0
 
-package create
+package outbound
 
 import (
 	"crypto/x509"
@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
@@ -119,7 +120,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 	}
 
 	if _, ok := m.(*configs.FreedomConfig); ok {
-		transportConfig := TransportConfigToMemoryConfig(config.Transport, nil, nil, config.ECHResolver)
+		transportConfig := create.TransportConfigToMemoryConfig(config.Transport, nil, nil, config.ECHResolver)
 		transportConfig.DomainStrategy = domain.DomainStrategy(config.DomainStrategy)
 		dialer, err := df.GetDialer(transportConfig)
 		if err != nil {
@@ -138,7 +139,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 	}
 
 	// dialer
-	transportConfig := TransportConfigToMemoryConfig(config.Transport,
+	transportConfig := create.TransportConfigToMemoryConfig(config.Transport,
 		readCounter, writeCounter, config.ECHResolver)
 	transportConfig.DomainStrategy = domain.DomainStrategy(config.DomainStrategy)
 	dialer, err := df.GetDialer(transportConfig)
@@ -250,7 +251,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 				return nil, err
 			}
 		}
-		lis, _ := df.GetPacketListener(TransportConfigToMemoryConfig(config.Transport,
+		lis, _ := df.GetPacketListener(create.TransportConfigToMemoryConfig(config.Transport,
 			readCounter, writeCounter, config.ECHResolver))
 		if ipr == nil {
 			ipr = &dns.GoDnsResolver{}
@@ -276,16 +277,10 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 		maxStreamReceiveWindow := uint64(m.Quic.GetMaxStreamReceiveWindow() * 1024 * 1024)
 		if maxStreamReceiveWindow == 0 {
 			maxStreamReceiveWindow = m.Quic.GetMaxStreamReceiveWindowBytes()
-			// if maxStreamReceiveWindow == 0 && runtime.GOOS == "ios" {
-			// 	maxStreamReceiveWindow = 800 * 1024
-			// }
 		}
 		maxConnectionReceiveWindow := uint64(m.Quic.GetMaxConnectionReceiveWindow() * 1024 * 1024)
 		if maxConnectionReceiveWindow == 0 {
 			maxConnectionReceiveWindow = m.Quic.GetMaxConnectionReceiveWindowBytes()
-			// if maxConnectionReceiveWindow == 0 && runtime.GOOS == "ios" {
-			// 	maxConnectionReceiveWindow = 2000 * 1024
-			// }
 		}
 		keepAlive := m.Quic.GetKeepAlivePeriod()
 		if keepAlive == 0 {
@@ -296,14 +291,13 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 			maxIdleTimeout = 30
 		}
 		hys, err := hysteria2.NewClient(&hysteria2.Config{
-			Tag:                        config.Tag,
-			Address:                    address,
-			PortSelector:               sp,
-			IpResolverForNodeAddress:   ipr,
-			DomainStrategy:             domain.DomainStrategy(config.DomainStrategy),
-			IpResolverForTargetAddress: config.IPResolverForRequestAddress,
-			PacketListener:             lis,
-			RejectQuic:                 config.RejectQuic,
+			Tag:                      config.Tag,
+			Address:                  address,
+			PortSelector:             sp,
+			IpResolverForNodeAddress: ipr,
+			DomainStrategy:           domain.DomainStrategy(config.DomainStrategy),
+			PacketListener:           lis,
+			RejectQuic:               config.RejectQuic,
 			HysteriaClientConfig: &client.Config{
 				Auth: m.Auth,
 				TLSConfig: client.TLSConfig{
@@ -379,6 +373,9 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 	)
 	return h, nil
 }
+
+type HandlerCreator func(config interface{}, address string, portSelector i.PortSelector,
+) (i.Outbound, error)
 
 func getSinglePort(config *configs.OutboundHandlerConfig) uint16 {
 	if len(config.Ports) > 0 {

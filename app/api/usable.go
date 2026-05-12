@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/create"
+	"github.com/5vnetwork/vx-core/app/create/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/common/net"
@@ -55,7 +55,7 @@ func (a *Api) HandlerTest(ctx context.Context, req *HandlerUsableRequest) (ret H
 		}
 	}
 
-	h, err := create.NewHandler(&create.HandlerConfig{
+	h, err := outbound.NewHandler(&outbound.HandlerConfig{
 		HandlerConfig:               req.Handler,
 		DialerFactory:               a.getDialerFactory(),
 		Policy:                      policy.New(),

@@ -5,8 +5,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/user"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/buf"
@@ -15,12 +13,6 @@ import (
 	"github.com/5vnetwork/vx-core/common/uuid"
 	. "github.com/5vnetwork/vx-core/proxy/shadowsocks"
 )
-
-func toAccount(a *configs.ShadowsocksAccount) protocol.Account {
-	account, err := create.ShadowsocksAccountToMemoryAccount(a)
-	common.Must(err)
-	return account
-}
 
 func equalRequestHeader(x, y *protocol.RequestHeader) bool {
 	return cmp.Equal(x, y, cmp.Comparer(func(x, y protocol.RequestHeader) bool {

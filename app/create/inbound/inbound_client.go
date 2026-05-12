@@ -1,7 +1,7 @@
 // Copyright 2025 5V Network LLC
 // SPDX-License-Identifier: AGPL-3.0
 
-package create
+package inbound
 
 import (
 	"math/rand"
@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/serial"
@@ -81,7 +82,7 @@ func NewInbound(config *configs.ProxyInboundConfig, ha i.Handler, tp i.TimeoutSe
 	// proxy inbound
 	h := proxy.NewProxyInbound(config.Tag)
 	address := net.ParseAddress(config.Address)
-	transport := TransportConfigToMemoryConfig(config.GetTransport(), nil, nil, nil)
+	transport := create.TransportConfigToMemoryConfig(config.GetTransport(), nil, nil, nil)
 	ports := make([]uint16, 0, 10)
 	if config.Port != 0 {
 		ports = append(ports, uint16(config.Port))

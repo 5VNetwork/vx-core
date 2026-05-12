@@ -6,14 +6,15 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"github.com/5vnetwork/vx-core/app/configs"
 	"log"
 	"testing"
 	"time"
 
+	"github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/create/outbound"
+
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
-	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/buf"
@@ -299,7 +300,7 @@ func TestShadowsocks2022FullCone(t *testing.T) {
 	common.Must(server.Start(context.Background()))
 	defer server.Stop(context.Background())
 
-	h, err := create.NewHandler(&create.HandlerConfig{
+	h, err := outbound.NewHandler(&outbound.HandlerConfig{
 		Policy:        policy.DefaultPolicy,
 		DialerFactory: transport.DefaultDialerFactory(),
 		HandlerConfig: &configs.HandlerConfig{

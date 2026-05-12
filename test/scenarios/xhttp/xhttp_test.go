@@ -1,3 +1,5 @@
+//go:build test
+
 package xhttp_test
 
 import (

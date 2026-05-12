@@ -8,7 +8,6 @@ import (
 	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/geo"
 	"github.com/5vnetwork/vx-core/app/grpcserver"
-	"github.com/5vnetwork/vx-core/app/handlerfactory"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/app/logger"
 	"github.com/5vnetwork/vx-core/app/outbound"
@@ -56,7 +55,7 @@ type Client struct {
 	// used to resolve domains of proxied connections, typically used for converting domain to real ip for udp connections
 	IPResolverForRequestAddress i.IPResolver
 	IPToDomain                  *dns.IPToDomain
-	HandlerFactory              *handlerfactory.HandlerFactory
+	HandlerFactory              i.HandlerFactory
 }
 
 func (c *Client) Start() error {

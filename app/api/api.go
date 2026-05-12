@@ -14,7 +14,7 @@ import (
 	sync "sync"
 	"time"
 
-	"github.com/5vnetwork/vx-core/app/create"
+	"github.com/5vnetwork/vx-core/app/create/outbound"
 	idns "github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/sysproxy"
 	"github.com/5vnetwork/vx-core/app/util"
@@ -334,7 +334,7 @@ func (a *Api) UpdateSubscription(ctx context.Context, req *UpdateSubscriptionReq
 	// 	handlers = append(handlers, freedomHandler)
 	// }
 	for _, h := range req.Handlers {
-		handler, err := create.NewHandler(&create.HandlerConfig{
+		handler, err := outbound.NewHandler(&outbound.HandlerConfig{
 			HandlerConfig: h,
 			DialerFactory: a.getDialerFactory(),
 			Policy:        policy.New(),
@@ -384,7 +384,7 @@ func (a *Api) UpdateSubscription(ctx context.Context, req *UpdateSubscriptionReq
 func (a *Api) FetchSubscriptionContent(ctx context.Context, req *FetchSubscriptionContentRequest) (*FetchSubscriptionContentResponse, error) {
 	handlers := make([]i.Outbound, 0, len(req.Handlers))
 	for _, h := range req.Handlers {
-		handler, err := create.NewHandler(&create.HandlerConfig{
+		handler, err := outbound.NewHandler(&outbound.HandlerConfig{
 			HandlerConfig: h,
 			DialerFactory: a.getDialerFactory(),
 			Policy:        policy.New(),

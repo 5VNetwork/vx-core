@@ -3,7 +3,7 @@
 
 //go:build server
 
-package create
+package inbound
 
 import (
 	"math/rand"
@@ -11,6 +11,7 @@ import (
 
 	"fmt"
 
+	"github.com/5vnetwork/vx-core/app/create"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
@@ -100,7 +101,7 @@ func NewInboundServer(config *configs.ProxyInboundConfig, ha i.Handler,
 		config.Address = net.AnyIP.String()
 	}
 	address := net.ParseAddress(config.Address)
-	transport := TransportConfigToMemoryConfig(config.GetTransport(), nil,
+	transport := create.TransportConfigToMemoryConfig(config.GetTransport(), nil,
 		nil, nil)
 	for _, port := range ports {
 		var tcpServers []proxy.ProxyServer
@@ -161,7 +162,7 @@ func NewInboundServer(config *configs.ProxyInboundConfig, ha i.Handler,
 }
 
 func getInstance(protocol *anypb.Any) (proto.Message, error) {
-	newTypeUrl := OldTypeUrlToNewTypeUrl[protocol.TypeUrl]
+	newTypeUrl := create.OldTypeUrlToNewTypeUrl[protocol.TypeUrl]
 	if newTypeUrl != "" {
 		protocol.TypeUrl = newTypeUrl
 	}

@@ -14,6 +14,7 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/create"
+	"github.com/5vnetwork/vx-core/app/create/inbound"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/app/sniff"
 	"github.com/5vnetwork/vx-core/transport"
@@ -46,7 +47,7 @@ func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler
 		ports = append(ports, uint16(port))
 	}
 
-	servers, hysteriaConfig, err := create.GetServers(config.Users, config.Protocols,
+	servers, hysteriaConfig, err := inbound.GetServers(config.Users, config.Protocols,
 		ha, tp, onUnauth)
 	if err != nil {
 		return nil, err
@@ -78,7 +79,7 @@ func NewMultiInboundServer(config *configs.MultiProxyInboundConfig, ha i.Handler
 			return nil, err
 		}
 		for _, u := range append(hysteriaConfig.Users, config.Users...) {
-			user, err := create.UserConfigToUser(u)
+			user, err := inbound.UserConfigToUser(u)
 			if err != nil {
 				return nil, err
 			}

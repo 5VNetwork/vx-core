@@ -7,13 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/5vnetwork/vx-core/app/create"
+	"github.com/5vnetwork/vx-core/app/create/inbound"
 	"github.com/rs/zerolog/log"
 )
 
 func (s *GrpcService) AddInbound(ctx context.Context, req *AddInboundRequest) (*AddInboundResponse, error) {
 	log.Info().Str("tag", req.HandlerConfig.Tag).Msg("AddInbound")
-	in, err := create.NewInbound(req.HandlerConfig, s.Client.Dispatcher, s.Client.Policy)
+	in, err := inbound.NewInbound(req.HandlerConfig, s.Client.Dispatcher, s.Client.Policy)
 	if err != nil {
 		return nil, err
 	}

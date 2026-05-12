@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/create"
+	"github.com/5vnetwork/vx-core/app/create/inbound"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy/multi"
 	"github.com/5vnetwork/vx-core/i"
@@ -38,7 +38,7 @@ func NewInboundManager(lc fx.Lifecycle, params InboundManagerParams) (InboundMan
 		},
 	})
 	for _, config := range params.Configs {
-		h, err := create.NewInboundServer(config, params.Handler, params.Policy,
+		h, err := inbound.NewInboundServer(config, params.Handler, params.Policy,
 			params.OnUnauth)
 		if err != nil {
 			return InboundManagerResult{}, fmt.Errorf("failed to create inbound proxy handler: %w", err)

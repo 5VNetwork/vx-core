@@ -1,0 +1,13 @@
+# Title: HaGeZi's Light DNS Blocklist
+# Description: Hand brush - Cleans the Internet and protects your privacy! Blocks Ads, Tracking, Metrics and some Badware.
+# Homepage: https://github.com/hagezi/dns-blocklists
+# License: https://github.com/hagezi/dns-blocklists/blob/main/LICENSE
+# Issues: https://github.com/hagezi/dns-blocklists/issues
+# Disclaimer: https://github.com/hagezi/dns-blocklists/blob/main/README.md#disclaimer
+# Expires: 1 day
+# Last modified: 08 May 2026 09:00 UTC
+# Version: 2026.0508.0900.58
+# Syntax: Domains (including possible subdomains)
+#
+0.beer
+www.0.beer

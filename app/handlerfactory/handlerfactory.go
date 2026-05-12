@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 
 	"github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/create"
+	outboundcreate "github.com/5vnetwork/vx-core/app/create/outbound"
 	"github.com/5vnetwork/vx-core/app/dispatcher/linkstats"
 	"github.com/5vnetwork/vx-core/app/dispatcher/variants"
 	outboundstats "github.com/5vnetwork/vx-core/app/outbound/stats"
@@ -57,7 +57,7 @@ func (c *HandlerFactory) CreateHandler(hs ...*configs.HandlerConfig) (i.Outbound
 		}
 		tag := strings.Join(tags, "-")
 
-		ch, err := create.NewChainHandler(&create.ChainHandlerConfig{
+		ch, err := outboundcreate.NewChainHandler(&outboundcreate.ChainHandlerConfig{
 			ChainHandlerConfig: &configs.ChainHandlerConfig{
 				Tag:      tag,
 				Handlers: handlers,
@@ -74,7 +74,7 @@ func (c *HandlerFactory) CreateHandler(hs ...*configs.HandlerConfig) (i.Outbound
 		}
 		outbound = ch
 	} else {
-		handler, err := create.NewHandler(&create.HandlerConfig{
+		handler, err := outboundcreate.NewHandler(&outboundcreate.HandlerConfig{
 			HandlerConfig:               hs[0],
 			DialerFactory:               df,
 			Policy:                      c.Policy,

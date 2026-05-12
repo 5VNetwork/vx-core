@@ -4,11 +4,12 @@ package scenarios
 
 import (
 	"context"
-	"github.com/5vnetwork/vx-core/app/configs"
 	"log"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/5vnetwork/vx-core/app/configs"
 
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"

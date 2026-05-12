@@ -19,6 +19,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/client"
 	configs "github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/dns"
+	"github.com/5vnetwork/vx-core/app/handlerfactory"
 	"github.com/5vnetwork/vx-core/app/inbound/gvisor"
 	"github.com/5vnetwork/vx-core/app/inbound/reject"
 	"github.com/5vnetwork/vx-core/app/inbound/system"
@@ -87,16 +88,18 @@ func New(configBytes []byte, aai AndroidApiInterface) (Tm, error) {
 		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
 	tm.Client = client
-	if client.HandlerFactory != nil &&
-		client.HandlerFactory.TotalUpCounter != nil &&
-		client.HandlerFactory.TotalDownCounter != nil {
-		trafficNotifier := &trafficNotifier{
-			aa:          aai,
-			upCounter:   client.HandlerFactory.TotalUpCounter,
-			downCounter: client.HandlerFactory.TotalDownCounter,
-			done:        make(chan struct{}),
+	if client.HandlerFactory != nil {
+		fac := client.HandlerFactory.(*handlerfactory.HandlerFactory)
+		if fac.TotalUpCounter != nil &&
+			fac.TotalDownCounter != nil {
+			trafficNotifier := &trafficNotifier{
+				aa:          aai,
+				upCounter:   fac.TotalUpCounter,
+				downCounter: fac.TotalDownCounter,
+				done:        make(chan struct{}),
+			}
+			client.Components.AddComponent(trafficNotifier)
 		}
-		client.Components.AddComponent(trafficNotifier)
 	}
 
 	log.Debug().Bool("enable6", enable6).Msg("tun enable6")
