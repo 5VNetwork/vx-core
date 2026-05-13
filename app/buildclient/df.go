@@ -29,6 +29,7 @@ func DialerFactory(config *configs.TmConfig, fc *Builder, client *client.Client)
 			if config.GetDialerFactory().GetShouldBindDevice() && runtime.GOOS == "android" {
 				fdFunc := fc.getFeature(reflect.TypeOf((*transport.FdFunc)(nil)).Elem())
 				opt.FdFunc = fdFunc.(transport.FdFunc)
+				opt.BindToDefaultNIC = false
 			}
 
 			df := transport.NewDialerFactoryImp(opt)
