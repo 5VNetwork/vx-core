@@ -219,16 +219,10 @@ func (s *Selector) Load() {
 		if s.strategy.Speed() && os.GetSpeed() == 0 {
 			handlersToBeTestedForSpeed = append(handlersToBeTestedForSpeed, os)
 		}
-		if s.strategy.Speed() && os.GetSpeed() == 0 {
-			handlersToBeTestedForSpeed = append(handlersToBeTestedForSpeed, os)
-		}
 		if s.strategy.Ping() && os.GetPing() == 0 {
 			handlersToBeTestedForPing = append(handlersToBeTestedForPing, os)
 		}
-		if s.strategy.Ping() && os.GetPing() == 0 {
-			handlersToBeTestedForPing = append(handlersToBeTestedForPing, os)
-		}
-		if s.strategy.Usable() && os.GetOk() == 0 {
+		if os.GetOk() == 0 {
 			handlersToBeTestedForPing = append(handlersToBeTestedForPing, os)
 		}
 	}
@@ -436,8 +430,8 @@ func (s *Selector) OnHandlerError(tag string, err error) {
 
 func (s *Selector) testItems(items []OutHandler,
 	testFunc func(ctx context.Context, s Tester, item OutHandler)) {
-	// Process in batches of 10
-	batchSize := 10
+	// Process in batches of 50
+	batchSize := 50
 	for i := 0; i < len(items); i += batchSize {
 		var wg sync.WaitGroup
 		end := i + batchSize
