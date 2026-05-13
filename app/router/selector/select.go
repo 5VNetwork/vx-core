@@ -153,12 +153,16 @@ func TestHandlerUsable(ctx context.Context, s Tester, item OutHandler) {
 	usable := s.TestUsable(ctx, oh, false)
 	if usable {
 		item.SetOk(1)
-		item.SetPing(0)
-		item.SetSpeed(0)
+		if item.GetPing() < 0 {
+			item.SetPing(0)
+		}
+		if item.GetSpeed() < 0 {
+			item.SetSpeed(0)
+		}
 	} else {
 		item.SetOk(-1)
-		item.SetSpeed(-1)
-		item.SetPing(-1)
+		// item.SetSpeed(-1)
+		// item.SetPing(-1)
 	}
 	logger.Debug().Bool("usable", usable).Msg("handler usable result")
 }
@@ -176,7 +180,7 @@ func TestHandlerSpeed(ctx context.Context, s Tester, item OutHandler, size uint3
 	}
 	speed := s.TestSpeed(ctx, oh, size, false)
 	if speed <= 0 {
-		item.SetSpeed(-1)
+		// item.SetSpeed(-1)
 		item.SetOk(-1)
 	} else {
 		item.SetSpeed(int(speed))

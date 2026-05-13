@@ -527,12 +527,6 @@ func TestSelector_OnHandlerError_UnknownHandler(t *testing.T) {
 	assert.Equal(t, int32(0), tester.testUsableCalls.Load())
 }
 
-func TestSelector_EnterRecovery(t *testing.T) {
-	// Skip this test as it requires handlers that are actually unusable
-	// and triggers complex recovery logic that has issues with the test setup
-	t.Skip("Skipping recovery mode test due to complex interaction with handler types")
-}
-
 // Test strategy implementations
 func TestLeastPingStrategy_Select(t *testing.T) {
 	strategy := &leastPingStrategy{}
