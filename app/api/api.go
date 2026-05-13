@@ -152,7 +152,10 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 
 	// subscription
 	if config.DbPath != "" {
-		db, err := gorm.Open(sqlite.Open(config.DbPath),
+		// PRAGMA foreign_keys and busy_timeout are per-connection in SQLite. Put
+		// them in the DSN so every connection GORM opens in its pool inherits them
+		// (a plain db.Exec("PRAGMA ...") after Open only configures one connection).
+		db, err := gorm.Open(sqlite.Open(config.DbPath+"?_foreign_keys=on&_busy_timeout=5000"),
 			&gorm.Config{})
 		if err != nil {
 			return nil, fmt.Errorf("failed to connect database: %w", err)
@@ -160,8 +163,6 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 		if runtime.GOOS != "android" {
 			db.Exec("PRAGMA journal_mode = WAL")
 		}
-		db.Exec("PRAGMA foreign_keys = ON")
-		db.Exec("PRAGMA busy_timeout = 5000")
 		api.db = db
 	}
 
@@ -453,7 +454,9 @@ func (a *Api) CloseDb(ctx context.Context, req *CloseDbRequest) (*Receipt, error
 }
 
 func (a *Api) OpenDb(ctx context.Context, req *OpenDbRequest) (*Receipt, error) {
-	db, err := gorm.Open(sqlite.Open(req.Path),
+	// PRAGMA foreign_keys and busy_timeout are per-connection in SQLite. Put
+	// them in the DSN so every connection GORM opens in its pool inherits them.
+	db, err := gorm.Open(sqlite.Open(req.Path+"?_foreign_keys=on&_busy_timeout=5000"),
 		&gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
@@ -461,8 +464,6 @@ func (a *Api) OpenDb(ctx context.Context, req *OpenDbRequest) (*Receipt, error) 
 	if runtime.GOOS != "android" {
 		db.Exec("PRAGMA journal_mode = WAL")
 	}
-	db.Exec("PRAGMA foreign_keys = ON")
-	db.Exec("PRAGMA busy_timeout = 5000")
 
 	a.dbLock.Lock()
 	defer a.dbLock.Unlock()

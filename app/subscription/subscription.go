@@ -17,6 +17,7 @@ import (
 	outbound "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/outbound"
 	"github.com/5vnetwork/vx-core/app/util"
 	"github.com/5vnetwork/vx-core/app/util/sub"
+	"github.com/5vnetwork/vx-core/app/util/uri"
 	"github.com/5vnetwork/vx-core/app/xsqlite"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
@@ -261,13 +262,33 @@ func FetchSubscription(ctx context.Context, link string, downloader downloader, 
 
 // return success parsed nodes, failed parsed nodes, error
 // error means cannot get data from server
+//
+// All database writes after the network download happen inside a single
+// transaction that first refetches the subscription by ID. This prevents the
+// race where the user (Flutter side) deletes a subscription while this update
+// is in flight: without the refetch, this function would happily insert new
+// outbound_handlers rows whose sub_id points at a row that just got deleted,
+// either failing with a foreign-key violation or producing orphan handlers
+// that block the user's next delete attempt.
 func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloader downloader) (int, []string, error) {
 	logger := log.With().Int("id", subscription.ID).Str("name", subscription.Name).Str("link", subscription.Link).Logger()
 	ctx := logger.WithContext(context.Background())
 	logger.Debug().Msg("start")
 
-	subscription.LastUpdate = int(time.Now().UnixMilli())
-	db.Model(subscription).Update("last_update", subscription.LastUpdate)
+	// Mark "we attempted now" before downloading so that periodicUpdate doesn't
+	// immediately retry this subscription on the next tick if the download
+	// stalls. Use an explicit Where so a zero ID can't accidentally update all
+	// rows, and check RowsAffected to detect a sub that's already been deleted.
+	now := int(time.Now().UnixMilli())
+	preflight := db.Model(&xsqlite.Subscription{}).Where("id = ?", subscription.ID).Update("last_update", now)
+	if preflight.Error != nil {
+		return 0, nil, fmt.Errorf("failed to mark last_update for subscription %d: %w", subscription.ID, preflight.Error)
+	}
+	if preflight.RowsAffected == 0 {
+		logger.Debug().Msg("subscription no longer exists, skipping update")
+		return 0, nil, fmt.Errorf("subscription %d no longer exists", subscription.ID)
+	}
+	subscription.LastUpdate = now
 
 	link := subscription.Link
 	// add vx flag
@@ -278,6 +299,8 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 		link = parsedUrl.String()
 	}
 
+	// Network download happens OUTSIDE the transaction so we don't hold a
+	// SQLite write lock during slow network I/O.
 	var uriContent *sub.DecodeResult
 	// try no user agent first
 	body, header, err := downloader.Download(ctx, link, map[string]string{
@@ -301,86 +324,12 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 		}
 	}
 
-	subscription.Description = header.Get("subscription-userinfo")
-	if subscription.Description == "" {
-		subscription.Description = uriContent.Description
+	description := header.Get("subscription-userinfo")
+	if description == "" {
+		description = uriContent.Description
 	}
-	// get all handlers of current subscription
-	var existingHandlers []*xsqlite.OutboundHandler
-	db.Where("sub_id = ?", subscription.ID).Find(&existingHandlers)
-	var updatedHandlers []*xsqlite.OutboundHandler
-
-	id := rand.Intn(math.MaxInt)
-
-	for _, config := range uriContent.Configs {
-		existing := false
-		for _, existingHandler := range existingHandlers {
-			// try find if there is any existing handler with the same config
-			// if bytes.Equal(configBytes, existingHandler.Config) {
-			// 	logger.Debug().Str("existing_handler", config.Tag).
-			// 		Msg("replace existing handler's config")
-			// 	db.Model(&existingHandler).Update("config", configBytes)
-			// 	updatedHandlers = append(updatedHandlers, existingHandler)
-			// 	existing = true
-			// 	break
-			// }
-			var existingConfig outbound.HandlerConfig
-			err := proto.Unmarshal(existingHandler.Config, &existingConfig)
-			if err == nil && existingConfig.GetOutbound().GetTag() == config.Tag {
-				logger.Debug().Str("existing_handler", existingConfig.GetOutbound().GetTag()).
-					Msg("replace existing handler's config")
-				// update existing handler's config
-				config.EnableMux = existingConfig.GetOutbound().EnableMux
-				config.Uot = existingConfig.GetOutbound().Uot
-				config.DomainStrategy = existingConfig.GetOutbound().DomainStrategy
-				configBytes, err := proto.Marshal(&outbound.HandlerConfig{
-					Type: &outbound.HandlerConfig_Outbound{
-						Outbound: config,
-					},
-				})
-				if err != nil {
-					fmt.Printf("Failed to marshal config: %v\n", err)
-					break
-				}
-				db.Model(&existingHandler).Update("config", configBytes)
-				updatedHandlers = append(updatedHandlers, existingHandler)
-				existing = true
-				break
-			}
-		}
-		if !existing {
-			configBytes, err := proto.Marshal(&outbound.HandlerConfig{
-				Type: &outbound.HandlerConfig_Outbound{
-					Outbound: config,
-				},
-			})
-			if err != nil {
-				fmt.Printf("Failed to marshal config: %v\n", err)
-				continue
-			}
-			newHandler := xsqlite.OutboundHandler{
-				ID:     id,
-				Config: configBytes,
-				SubId:  &subscription.ID,
-			}
-			id++
-			// add new handler to database
-			db.Create(&newHandler)
-		}
-	}
-
-	//TODO: make this a preference
-	// delete handlers that are not in the new configs
-	for _, existingHandler := range existingHandlers {
-		if !slices.Contains(updatedHandlers, existingHandler) {
-			if err := db.Delete(existingHandler).Error; err != nil {
-				log.Error().Err(err).Msg("failed to delete handler")
-			}
-		}
-	}
-
-	// get description
-	if subscription.Description == "" {
+	// fallback description fetch is also network I/O; keep it outside the tx
+	if description == "" {
 		if parsedUrl1, err := url.Parse(subscription.Link); err == nil {
 			q := parsedUrl1.Query()
 			q.Set("flag", "shadowrocket")
@@ -390,19 +339,110 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 			if err == nil {
 				uriContent1, err := util.Decode(string(content1), sub.ShareLinkQueryExtraFromStored(subscription.ShareLinkQueryExtra))
 				if err == nil {
-					subscription.Description = uriContent1.Description
+					description = uriContent1.Description
 				}
 			}
 		}
 	}
 
-	subscription.LastSuccessUpdate = subscription.LastUpdate
-	if err := db.Model(subscription).Updates(map[string]interface{}{
-		"last_success_update": subscription.LastSuccessUpdate,
-		"description":         subscription.Description,
-	}).Error; err != nil {
-		log.Error().Err(err).Msg("failed to update subscription")
+	txErr := db.Transaction(func(tx *gorm.DB) error {
+		// Refetch under the write lock: if the user just deleted the
+		// subscription, abort instead of inserting handlers that would
+		// either violate FK or become orphans.
+		var fresh xsqlite.Subscription
+		if err := tx.First(&fresh, subscription.ID).Error; err != nil {
+			return fmt.Errorf("subscription %d no longer exists: %w", subscription.ID, err)
+		}
+
+		var existingHandlers []*xsqlite.OutboundHandler
+		if err := tx.Where("sub_id = ?", fresh.ID).Find(&existingHandlers).Error; err != nil {
+			return fmt.Errorf("failed to load existing handlers: %w", err)
+		}
+		var updatedHandlers []*xsqlite.OutboundHandler
+
+		id := rand.Intn(math.MaxInt)
+
+		for _, config := range uriContent.Configs {
+			existing := false
+			for _, existingHandler := range existingHandlers {
+				var existingConfig outbound.HandlerConfig
+				err := proto.Unmarshal(existingHandler.Config, &existingConfig)
+				if err == nil && existingConfig.GetOutbound().GetTag() == config.Tag &&
+					existingConfig.GetOutbound().GetAddress() == config.Address &&
+					existingConfig.GetOutbound().GetPort() == config.Port &&
+					uri.PortRangesToString(existingConfig.GetOutbound().GetPorts()) == uri.PortRangesToString(config.GetPorts()) &&
+					existingConfig.GetOutbound().GetProtocol().GetTypeUrl() == config.GetProtocol().GetTypeUrl() {
+					logger.Debug().Str("existing_handler", existingConfig.GetOutbound().GetTag()).
+						Msg("replace existing handler's config")
+					config.EnableMux = existingConfig.GetOutbound().EnableMux
+					config.Uot = existingConfig.GetOutbound().Uot
+					config.DomainStrategy = existingConfig.GetOutbound().DomainStrategy
+					configBytes, err := proto.Marshal(&outbound.HandlerConfig{
+						Type: &outbound.HandlerConfig_Outbound{
+							Outbound: config,
+						},
+					})
+					if err != nil {
+						logger.Error().Err(err).Msg("failed to marshal config")
+						break
+					}
+					if err := tx.Model(&existingHandler).Update("config", configBytes).Error; err != nil {
+						return fmt.Errorf("failed to update handler %d: %w", existingHandler.ID, err)
+					}
+					updatedHandlers = append(updatedHandlers, existingHandler)
+					existing = true
+					break
+				}
+			}
+			if !existing {
+				configBytes, err := proto.Marshal(&outbound.HandlerConfig{
+					Type: &outbound.HandlerConfig_Outbound{
+						Outbound: config,
+					},
+				})
+				if err != nil {
+					logger.Error().Err(err).Msg("failed to marshal config")
+					continue
+				}
+				newHandler := xsqlite.OutboundHandler{
+					ID:     id,
+					Config: configBytes,
+					SubId:  &fresh.ID,
+				}
+				id++
+				if err := tx.Create(&newHandler).Error; err != nil {
+					return fmt.Errorf("failed to create handler: %w", err)
+				}
+			}
+		}
+
+		//TODO: make this a preference
+		// delete handlers that are not in the new configs
+		for _, existingHandler := range existingHandlers {
+			if !slices.Contains(updatedHandlers, existingHandler) {
+				if err := tx.Delete(existingHandler).Error; err != nil {
+					return fmt.Errorf("failed to delete handler %d: %w", existingHandler.ID, err)
+				}
+			}
+		}
+
+		if err := tx.Model(&xsqlite.Subscription{}).Where("id = ?", fresh.ID).Updates(map[string]interface{}{
+			"last_success_update": now,
+			"description":         description,
+		}).Error; err != nil {
+			return fmt.Errorf("failed to update subscription: %w", err)
+		}
+
+		// keep the caller's struct in sync with what we just wrote.
+		subscription.LastSuccessUpdate = now
+		subscription.Description = description
+		return nil
+	})
+	if txErr != nil {
+		logger.Error().Err(txErr).Msg("update subscription transaction failed")
+		return 0, nil, txErr
 	}
+
 	logger.Debug().Msg("done")
 	return len(uriContent.Configs), uriContent.FailedNodes, nil
 }
