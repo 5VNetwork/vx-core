@@ -55,22 +55,37 @@ func (sp *Timeout) UpLinkOnlyTimeout() time.Duration {
 }
 
 func (sp *Timeout) SetHandshakeTimeout(d time.Duration) {
+	if d < 0 {
+		d = 0
+	}
 	sp.handshakeTimeout = d
 }
 
 func (sp *Timeout) SetTcpIdleTimeout(d time.Duration) {
+	if d < 0 {
+		d = 0
+	}
 	sp.tcpConnectionIdleTimeout = d
 }
 
 func (sp *Timeout) SetUdpIdleTimeout(d time.Duration) {
+	if d < 0 {
+		d = 0
+	}
 	sp.udpIdleTimeout = d
 }
 
 func (sp *Timeout) SetDownLinkOnlyTimeout(d time.Duration) {
+	if d < 0 {
+		d = 0
+	}
 	sp.downLinkOnlyTimeout = d
 }
 
 func (sp *Timeout) SetUpLinkOnlyTimeout(d time.Duration) {
+	if d < 0 {
+		d = 0
+	}
 	sp.upLinkOnlyTimeout = d
 }
 

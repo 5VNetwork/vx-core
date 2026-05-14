@@ -4,6 +4,8 @@
 package api
 
 import (
+	"strconv"
+
 	"github.com/5vnetwork/vx-core/app/create/outbound"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/app/util"
@@ -19,8 +21,16 @@ type SpeedTestResult struct {
 
 func (a *Api) SpeedTest(req *SpeedTestRequest, in Api_SpeedTestServer) error {
 	const batchSize = 100
+	const maxSpeedtestBytes = 100_000_000 // 100 MiB download cap per request
 	handlers := req.GetHandlers()
-	url := util.SpeedtestURL1
+	bytes := req.GetSize()
+	if bytes == 0 {
+		bytes = 1_000_000
+	}
+	if bytes > maxSpeedtestBytes {
+		bytes = maxSpeedtestBytes
+	}
+	url := util.SpeedTestUrlBasic + strconv.FormatUint(uint64(bytes), 10)
 
 	for start := 0; start < len(handlers); start += batchSize {
 		end := start + batchSize
