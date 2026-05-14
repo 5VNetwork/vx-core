@@ -18,8 +18,12 @@ type IpMatcher struct {
 	MatchSourceIp bool
 	IpSet         i.IPSet
 	IpResolver    i.IPResolver
-	ResolveHard   bool
-	ResolveSoft   bool
+	// all resolved ips must match the ip set
+	ResolveHard bool
+	// if any resolved ip matches the ip set, rewrite the target ip to the first matched ip
+	ResolveSoftAndRewrite bool
+	// if any resolved ip matches the ip set, matches
+	ResolveSoftNoRewrite bool
 }
 
 func (m *IpMatcher) Apply(c context.Context, info *session.Info, rw interface{}) (interface{}, bool) {
@@ -28,7 +32,8 @@ func (m *IpMatcher) Apply(c context.Context, info *session.Info, rw interface{})
 		ip = info.GetSourceIPs()
 	} else {
 		ip = info.GetTargetIP()
-		if ip == nil && (m.ResolveHard || m.ResolveSoft) && info.GetTargetDomain() != "" {
+		if ip == nil && (m.ResolveHard || m.ResolveSoftAndRewrite || m.ResolveSoftNoRewrite) &&
+			info.GetTargetDomain() != "" {
 			ips, _ := m.IpResolver.LookupIP(c, info.GetTargetDomain())
 			if len(ips) > 0 {
 				for i, ip := range ips {
@@ -40,14 +45,16 @@ func (m *IpMatcher) Apply(c context.Context, info *session.Info, rw interface{})
 						continue
 					} else {
 						log.Ctx(c).Info().Int("index", i).Any("ip", ip).Msg("ip matched")
-						if m.ResolveSoft {
+						if m.ResolveSoftAndRewrite {
 							info.Target.Address = net.IPAddress(ips[i])
+							return rw, true
+						} else if m.ResolveSoftNoRewrite {
 							return rw, true
 						}
 					}
 				}
 				// this means no ip matches
-				if m.ResolveSoft {
+				if m.ResolveSoftAndRewrite || m.ResolveSoftNoRewrite {
 					return rw, false
 				}
 				// this means all ips match

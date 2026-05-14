@@ -161,6 +161,16 @@ func NewSelector(config SelectorConfig) *Selector {
 		}
 	}
 
+	var speedTestUseRange bool
+	var speedTestMin, speedTestMax uint32
+	if r := sc.GetSpeedTestSizeRange(); r != nil {
+		speedTestMin = r.GetMin()
+		speedTestMax = r.GetMax()
+		if speedTestMin > 0 && speedTestMax >= speedTestMin {
+			speedTestUseRange = true
+		}
+	}
+
 	selector0 := newSelector(selectorConfig{
 		Tag:                      sc.Tag,
 		Strategy:                 se,
@@ -171,6 +181,9 @@ func NewSelector(config SelectorConfig) *Selector {
 		Dispatcher:               config.HandlerErrorChangeSubject,
 		HandlerInfo:              config.HandlerInfo,
 		SpeedTestSize:            sc.GetSpeedTestSize(),
+		SpeedTestUseRange:        speedTestUseRange,
+		SpeedTestSizeMin:         speedTestMin,
+		SpeedTestSizeMax:         speedTestMax,
 		SpeedTestInterval:        time.Duration(sc.GetSpeedTestInterval()) * time.Minute,
 		PingTestInterval:         time.Duration(sc.GetPingTestInterval()) * time.Minute,
 		UnusableTestInterval:     time.Duration(sc.GetUnusableTestInterval()) * time.Minute,

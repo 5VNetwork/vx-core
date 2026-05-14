@@ -48,6 +48,7 @@ type (
 	QuicDnsServer                  = dnspb.QuicDnsServer
 	Record                         = dnspb.Record
 	TlsDnsServer                   = dnspb.TlsDnsServer
+	DnsResolverConfig              = dnspb.Resolver
 )
 
 // Geo
@@ -58,6 +59,7 @@ type (
 	DomainSetConfig       = geopb.DomainSetConfig
 	GeoConfig             = geopb.GeoConfig
 	GeoIPConfig           = geopb.GeoIPConfig
+	GeoRemoteFile         = geopb.GeoRemoteFile
 	GeositeConfig         = geopb.GeositeConfig
 	GreatDomainSetConfig  = geopb.GreatDomainSetConfig
 	GreatIPSetConfig      = geopb.GreatIPSetConfig
@@ -100,6 +102,7 @@ type (
 	AppId_Type                       = routerpb.AppId_Type
 	RouterConfig                     = routerpb.RouterConfig
 	RuleConfig                       = routerpb.RuleConfig
+	Condition                        = routerpb.Condition
 	RuleConfig_Fallback              = routerpb.RuleConfig_Fallback
 	RuleConfig_Fallback_Action       = routerpb.RuleConfig_Fallback_Action
 	SelectorConfig                   = routerpb.SelectorConfig

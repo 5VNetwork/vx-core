@@ -18,7 +18,7 @@ func TestRttTest(t *testing.T) {
 
 	rtt, err := util.RttTest(context.Background(), dest,
 		transport.DefaultDialer, transport.DefaultPacketListener,
-		dns.NewGoIpResolver())
+		dns.NewGoIpResolver(dns.GoDnsResolverOption{}))
 	if err != nil {
 		t.Error(err)
 	}

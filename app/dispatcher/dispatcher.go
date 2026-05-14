@@ -216,10 +216,13 @@ loop:
 						Uint64("downCounter", info.SessionDownCounter.Load()).
 						Msg("cacheHandle err and fallbackable")
 					// try to find next handler
-					for len(retries) > 0 { 
-						nextHandler := retries[0].GetHandler(ctx, info)
+					for len(retries) > 0 {
+						nextHandler, final := retries[0].GetHandler(ctx, info, err)
 						retries = retries[1:]
 						if nextHandler != nil {
+							if final {
+								retries = retries[:0]
+							}
 							for _, fallback := range d.OnFallbacks {
 								fallback.OnFallback(info, handler.Tag(), nextHandler.Tag())
 							}

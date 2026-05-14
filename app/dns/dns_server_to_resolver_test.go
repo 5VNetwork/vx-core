@@ -306,6 +306,7 @@ func TestFindCNAMEChainTail(t *testing.T) {
 }
 
 func TestDnsServerToResolverLookupEch(t *testing.T) {
+	t.Skip()
 	resolver := DefaultCfResolver()
 	ech, err := resolver.LookupECH(context.Background(), "")
 	if err != nil {

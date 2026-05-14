@@ -205,3 +205,20 @@ func TestExtractCidrsFromClashRules3(t *testing.T) {
 		t.Fatalf("expected 2 cidrs, got %d", len(cidrs))
 	}
 }
+
+func TestExtractCidrsFromClashRules5(t *testing.T) {
+	file, err := os.Open("5.list")
+	if err != nil {
+		t.Fatalf("failed to open file: %v", err)
+	}
+	defer file.Close()
+
+	cidrs, err := clashconfig.ExtractCidrFromClashRules(file)
+	if err != nil {
+		t.Fatalf("failed to extract cidrs: %v", err)
+	}
+
+	if len(cidrs) != 15 {
+		t.Fatalf("expected 15 cidrs, got %d", len(cidrs))
+	}
+}

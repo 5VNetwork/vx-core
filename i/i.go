@@ -223,8 +223,11 @@ type Router interface {
 }
 
 type Fallback interface {
-	// handler might be nil, si might be changed
-	GetHandler(ctx context.Context, si *session.Info) (handler Outbound)
+	// if handler is nil, this means the condition is not satisfied. Continue to try next fallback.
+	// if handler is not nil, this means the condition is satisfied, and in this case, final means
+	// this is should be the last fallback
+	// err is the error returned by the previous handler
+	GetHandler(ctx context.Context, si *session.Info, err error) (handler Outbound, final bool)
 }
 
 type IpToDomain interface {

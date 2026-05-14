@@ -176,8 +176,8 @@ func TestIpMatcher_resolveSoft_firstMatchingIP_updatesTarget(t *testing.T) {
 	first := cnet.ParseIP("192.0.2.1")
 	second := cnet.ParseIP("192.0.2.2")
 	m := &IpMatcher{
-		MatchSourceIp: false,
-		ResolveSoft:   true,
+		MatchSourceIp:         false,
+		ResolveSoftAndRewrite: true,
 		IpResolver: &resolverStub{
 			lookupIP: func(ctx context.Context, domain string) ([]cnet.IP, error) {
 				if domain != "example.com" {
@@ -207,8 +207,8 @@ func TestIpMatcher_resolveSoft_firstMatchingIP_updatesTarget(t *testing.T) {
 
 func TestIpMatcher_resolveSoft_noMatchingIP(t *testing.T) {
 	m := &IpMatcher{
-		MatchSourceIp: false,
-		ResolveSoft:   true,
+		MatchSourceIp:         false,
+		ResolveSoftAndRewrite: true,
 		IpResolver: &resolverStub{
 			lookupIP: func(ctx context.Context, domain string) ([]cnet.IP, error) {
 				return []cnet.IP{cnet.ParseIP("192.0.2.1")}, nil
@@ -249,8 +249,8 @@ func TestIpMatcher_resolveHard_rejectsOnFirstNonMatch(t *testing.T) {
 
 func TestIpMatcher_resolveEmpty(t *testing.T) {
 	m := &IpMatcher{
-		MatchSourceIp: false,
-		ResolveSoft:   true,
+		MatchSourceIp:         false,
+		ResolveSoftAndRewrite: true,
 		IpResolver: &resolverStub{
 			lookupIP: func(ctx context.Context, domain string) ([]cnet.IP, error) {
 				return nil, nil
@@ -270,8 +270,8 @@ func TestIpMatcher_resolveEmpty(t *testing.T) {
 func TestIpMatcher_targetIP_skipsResolver_evenWithSniffedDomain(t *testing.T) {
 	lookupCalled := false
 	m := &IpMatcher{
-		MatchSourceIp: false,
-		ResolveSoft:   true,
+		MatchSourceIp:         false,
+		ResolveSoftAndRewrite: true,
 		IpResolver: &resolverStub{
 			lookupIP: func(ctx context.Context, domain string) ([]cnet.IP, error) {
 				lookupCalled = true
@@ -297,9 +297,9 @@ func TestIpMatcher_targetIP_skipsResolver_evenWithSniffedDomain(t *testing.T) {
 
 func TestIpMatcher_resolveAllMatchWithoutSoft(t *testing.T) {
 	m := &IpMatcher{
-		MatchSourceIp: false,
-		ResolveHard:   true,
-		ResolveSoft:   false,
+		MatchSourceIp:         false,
+		ResolveHard:           true,
+		ResolveSoftAndRewrite: false,
 		IpResolver: &resolverStub{
 			lookupIP: func(ctx context.Context, domain string) ([]cnet.IP, error) {
 				return []cnet.IP{cnet.ParseIP("192.0.2.1"), cnet.ParseIP("192.0.2.2")}, nil
@@ -319,8 +319,8 @@ func TestIpMatcher_resolveAllMatchWithoutSoft(t *testing.T) {
 func TestIpMatcher_targetAddressUnchangedWhenResolveSoftNoHit(t *testing.T) {
 	orig := cnet.DomainAddress("keep.example")
 	m := &IpMatcher{
-		MatchSourceIp: false,
-		ResolveSoft:   true,
+		MatchSourceIp:         false,
+		ResolveSoftAndRewrite: true,
 		IpResolver: &resolverStub{
 			lookupIP: func(ctx context.Context, domain string) ([]cnet.IP, error) {
 				return []cnet.IP{cnet.ParseIP("192.0.2.1")}, nil

@@ -87,6 +87,14 @@ func TestDNSUDPTunnel(t *testing.T) {
 					Name:   "dns",
 				},
 			},
+			RequestDomainResolver: &configs.DnsResolverConfig{
+				DnsServers: []string{"hijack"},
+				Interval:   1,
+			},
+			InternalResolver: &configs.DnsResolverConfig{
+				DnsServers: []string{"dns"},
+				Interval:   1,
+			},
 		},
 		Geo: &configs.GeoConfig{
 			AtomicIpSets: []*configs.AtomicIPSetConfig{

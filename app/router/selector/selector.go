@@ -5,6 +5,7 @@ package selector
 
 import (
 	"context"
+	"math/rand/v2"
 	"slices"
 	"strconv"
 	"sync"
@@ -55,6 +56,9 @@ type Selector struct {
 	handlerInfo handlerInfo
 
 	speedTestSize        uint32
+	speedTestSizeMin     uint32
+	speedTestSizeMax     uint32
+	speedTestUseRange    bool
 	speedTestInterval    time.Duration
 	pingTestInterval     time.Duration
 	unusableTestInterval time.Duration
@@ -74,6 +78,9 @@ type selectorConfig struct {
 	Dispatcher               HandlerErrorChangeSubject
 	HandlerInfo              handlerInfo
 	SpeedTestSize            uint32
+	SpeedTestSizeMin         uint32
+	SpeedTestSizeMax         uint32
+	SpeedTestUseRange        bool
 	SpeedTestInterval        time.Duration
 	PingTestInterval         time.Duration
 	UnusableTestInterval     time.Duration
@@ -93,11 +100,14 @@ func newSelector(config selectorConfig) *Selector {
 		handlerInfo:          config.HandlerInfo,
 		handlerBeingTested:   make(map[string]struct{}),
 		speedTestSize:        config.SpeedTestSize,
+		speedTestSizeMin:     config.SpeedTestSizeMin,
+		speedTestSizeMax:     config.SpeedTestSizeMax,
+		speedTestUseRange:    config.SpeedTestUseRange,
 		speedTestInterval:    config.SpeedTestInterval,
 		pingTestInterval:     config.PingTestInterval,
 		unusableTestInterval: config.UnusableTestInterval,
 	}
-	if s.speedTestSize == 0 {
+	if !s.speedTestUseRange && s.speedTestSize == 0 {
 		s.speedTestSize = 1024 * 1024 // 1MB
 	}
 	if s.speedTestInterval == 0 {
@@ -251,8 +261,20 @@ func (s *Selector) Load() {
 	s.setHandlers()
 }
 
+func (s *Selector) pickSpeedTestSize() uint32 {
+	if !s.speedTestUseRange {
+		return s.speedTestSize
+	}
+	minB, maxB := s.speedTestSizeMin, s.speedTestSizeMax
+	if minB >= maxB {
+		return minB
+	}
+	span := uint64(maxB) - uint64(minB) + 1
+	return minB + uint32(rand.Uint64N(span))
+}
+
 func (s *Selector) testSpeed(ctx context.Context, t Tester, item OutHandler) {
-	TestHandlerSpeed(ctx, t, item, s.speedTestSize)
+	TestHandlerSpeed(ctx, t, item, s.pickSpeedTestSize())
 }
 
 func (s *Selector) getBalancer() Balancer {

@@ -65,11 +65,12 @@ type Fallback struct {
 	conditions []Condition
 	om         i.OutboundManager
 	selectors  *selector.Selectors
+	final      bool
 }
 
 func NewFallbacker(selectorTag, outboundTag string,
 	action *configs.RuleConfig_Fallback_Action, om i.OutboundManager,
-	selectors *selector.Selectors, conditions ...Condition) *Fallback {
+	selectors *selector.Selectors, final bool, conditions ...Condition) *Fallback {
 	return &Fallback{
 		selectorTag: selectorTag,
 		outboundTag: outboundTag,
@@ -77,17 +78,18 @@ func NewFallbacker(selectorTag, outboundTag string,
 		conditions:  conditions,
 		om:          om,
 		selectors:   selectors,
+		final:       final,
 	}
 }
 
-func (f *Fallback) GetHandler(ctx context.Context, info *session.Info) i.Outbound {
+func (f *Fallback) GetHandler(ctx context.Context, info *session.Info, err error) (i.Outbound, bool) {
 	if len(f.conditions) == 0 {
-		return nil
+		return nil, false
 	}
 	for _, cond := range f.conditions {
 		_, match := cond.Apply(ctx, info, nil)
 		if !match {
-			return nil
+			return nil, false
 		}
 	}
 	if f.action != nil {
@@ -97,11 +99,11 @@ func (f *Fallback) GetHandler(ctx context.Context, info *session.Info) i.Outboun
 	}
 	if f.selectorTag != "" {
 		if se := f.selectors.GetSelector(f.selectorTag); se != nil {
-			return se.GetHandler(info)
+			return se.GetHandler(info), f.final
 		} else {
-			return nil
+			return nil, false
 		}
 	} else {
-		return f.om.GetHandler(f.outboundTag)
+		return f.om.GetHandler(f.outboundTag), f.final
 	}
 }

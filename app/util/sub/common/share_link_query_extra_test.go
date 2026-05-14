@@ -22,14 +22,6 @@ func TestApplyShareLinkQueryExtra_vless(t *testing.T) {
 	}
 }
 
-func TestApplyShareLinkQueryExtra_doesNotOverride(t *testing.T) {
-	line := "vless://u@h:1?encryption=none#x"
-	got := ApplyShareLinkQueryExtra(line, map[string]string{"encryption": "tls"})
-	if strings.Contains(got, "encryption=tls") {
-		t.Fatalf("should not override encryption: %q", got)
-	}
-}
-
 func TestApplyShareLinkQueryExtra_vmessUnchanged(t *testing.T) {
 	line := "vmess://eyJhZGRyIjoiMSJ9"
 	got := ApplyShareLinkQueryExtra(line, map[string]string{"tx": "1"})

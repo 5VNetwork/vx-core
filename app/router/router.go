@@ -87,203 +87,21 @@ func NewRouter(config *RouterConfig) (*Router, error) {
 		selectors: config.Selectors,
 	}
 	for _, routerRuleConfig := range config.Rules {
-		conditions := make([]Condition, 0, 20)
-		if routerRuleConfig.InboundTags != nil {
-			conditions = append(conditions, NewInboundTagMatcher(routerRuleConfig.InboundTags))
+		conditions, err := getCondition(toConditionConfig(routerRuleConfig),
+			config.GeoHelper, config.IpResolver)
+		if err != nil {
+			return nil, err
 		}
-		if routerRuleConfig.Ipv6 {
-			conditions = append(conditions, &Ipv6Matcher{})
-		}
-		if len(routerRuleConfig.SrcCidrs) > 0 || len(routerRuleConfig.SrcIpTags) > 0 {
-			var cidrs []*cgeo.CIDR
-			for _, cidr := range routerRuleConfig.SrcCidrs {
-				prefix, err := netip.ParsePrefix(cidr)
-				if err != nil {
-					return nil, err
-				}
-				cidrs = append(cidrs, &cgeo.CIDR{
-					Ip:     prefix.Addr().AsSlice(),
-					Prefix: uint32(prefix.Bits()),
-				})
-			}
-			srcIPSet, err := geo.NewIPSet(routerRuleConfig.SrcIpTags, config.GeoHelper, cidrs...)
-			if err != nil {
-				return nil, err
-			}
-			conditions = append(conditions, &IpMatcher{
-				MatchSourceIp: true,
-				IpSet:         srcIPSet,
-			})
-		}
-		if len(routerRuleConfig.DstCidrs) > 0 || len(routerRuleConfig.DstIpTags) > 0 {
-			var cidrs []*cgeo.CIDR
-			for _, cidr := range routerRuleConfig.DstCidrs {
-				prefix, err := netip.ParsePrefix(cidr)
-				if err != nil {
-					return nil, err
-				}
-				cidrs = append(cidrs, &cgeo.CIDR{
-					Ip:     prefix.Addr().AsSlice(),
-					Prefix: uint32(prefix.Bits()),
-				})
-			}
-			dstIPSet, err := geo.NewIPSet(routerRuleConfig.DstIpTags, config.GeoHelper, cidrs...)
-			if err != nil {
-				return nil, err
-			}
-			conditions = append(conditions, &IpMatcher{
-				IpSet:       dstIPSet,
-				IpResolver:  config.IpResolver,
-				ResolveHard: routerRuleConfig.ResolveDomain,
-				ResolveSoft: routerRuleConfig.ResolveRewrite,
-			})
-		}
-		if len(routerRuleConfig.Protocols) > 0 {
-			sniffers := make([]sniff.ProtocolSnifferWithNetwork, 0, len(routerRuleConfig.Protocols))
-			for _, protocol := range routerRuleConfig.Protocols {
-				switch protocol {
-				case "tls":
-					sniffers = append(sniffers, sniff.TlsSniff)
-				case "http1":
-					sniffers = append(sniffers, sniff.HTTP1Sniff)
-				case "quic":
-					sniffers = append(sniffers, sniff.QUICSniff)
-				case "bittorrent":
-					sniffers = append(sniffers, sniff.BTScniff)
-					sniffers = append(sniffers, sniff.UTPSniff)
-				default:
-					log.Warn().Str("protocol", protocol).Msg("unknown protocol")
-					continue
-				}
-			}
-			conditions = append(conditions, &ConditionProtocol{
-				protocols: routerRuleConfig.Protocols,
-				Sniffer: sniff.NewSniffer(sniff.SniffSetting{
-					Interval: 10 * time.Millisecond,
-					Sniffers: sniffers,
-				}),
-			})
-		}
-		if len(routerRuleConfig.GeoDomains) > 0 || len(routerRuleConfig.DomainTags) > 0 {
-			domainSet, err := geo.NewDomainSet(routerRuleConfig.DomainTags, config.GeoHelper,
-				routerRuleConfig.GeoDomains...)
-			if err != nil {
-				return nil, err
-			}
-			conditions = append(conditions, &DomainMatcher{
-				DomainSet: domainSet,
-				SkipSniff: routerRuleConfig.SkipSniff,
-				Sniffer: sniff.NewSniffer(sniff.SniffSetting{
-					Interval: 10 * time.Millisecond,
-					Sniffers: []sniff.ProtocolSnifferWithNetwork{
-						sniff.TlsSniff,
-						sniff.HTTP1Sniff,
-						sniff.QUICSniff,
-						sniff.BTScniff,
-						sniff.UTPSniff,
-					},
-				}),
-			})
-		}
-		if len(routerRuleConfig.Networks) > 0 {
-			conditions = append(conditions, NewNetworkMatcher(routerRuleConfig.Networks))
-		}
-		if len(routerRuleConfig.SrcPortRanges) > 0 {
-			conditions = append(conditions, NewPortMatcher(routerRuleConfig.SrcPortRanges, true))
-		}
-		if len(routerRuleConfig.DstPortRanges) > 0 {
-			conditions = append(conditions, NewPortMatcher(routerRuleConfig.DstPortRanges, false))
-		}
-		if len(routerRuleConfig.Usernames) > 0 {
-			conditions = append(conditions, NewUserMatcher(routerRuleConfig.Usernames))
-		}
-		if len(routerRuleConfig.AppIds) > 0 || len(routerRuleConfig.AppTags) > 0 {
-			appSet, err := geo.NewAppSet(routerRuleConfig.AppTags, config.GeoHelper, routerRuleConfig.AppIds...)
-			if err != nil {
-				return nil, err
-			}
-			conditions = append(conditions, &AppIdMatcher{
-				AppSet: appSet,
-			})
-		}
-		if routerRuleConfig.FakeIp {
-			conditions = append(conditions, &ConditionFakeIp{})
-		}
-		if len(routerRuleConfig.AllTags) > 0 {
-			domainSet, err := geo.NewDomainSet(routerRuleConfig.AllTags, config.GeoHelper)
-			if err != nil {
-				return nil, err
-			}
-			ipSet, err := geo.NewIPSet(routerRuleConfig.AllTags, config.GeoHelper)
-			if err != nil {
-				return nil, err
-			}
-			appSet, err := geo.NewAppSet(routerRuleConfig.AllTags, config.GeoHelper)
-			if err != nil {
-				return nil, err
-			}
-			conditions = append(conditions, &AllMatcher{
-				domainMatcher: &DomainMatcher{
-					DomainSet: domainSet,
-					SkipSniff: routerRuleConfig.SkipSniff,
-					Sniffer: sniff.NewSniffer(
-						sniff.SniffSetting{
-							Interval: 10 * time.Millisecond,
-							Sniffers: []sniff.ProtocolSnifferWithNetwork{
-								sniff.TlsSniff,
-								sniff.HTTP1Sniff,
-								sniff.QUICSniff,
-								sniff.BTScniff,
-								sniff.UTPSniff,
-							}}),
-				},
-				ipMatcher: &IpMatcher{
-					IpSet:       ipSet,
-					IpResolver:  config.IpResolver,
-					ResolveHard: routerRuleConfig.ResolveDomain,
-					ResolveSoft: routerRuleConfig.ResolveRewrite,
-				},
-				appIdMatcher: &AppIdMatcher{
-					AppSet: appSet,
-				},
-			})
-		}
-		if routerRuleConfig.MatchAll {
-			conditions = []Condition{
-				&ConditionTrue{},
-			}
-		}
-
 		fallbackers := make([]i.Fallback, 0, len(routerRuleConfig.Fallbacks))
 		for _, fallbackerConfig := range routerRuleConfig.Fallbacks {
-			var fallbackConditions []Condition
-			if fallbackerConfig.MatchAll {
-				fallbackConditions = []Condition{
-					&ConditionTrue{},
-				}
-			} else {
-				if len(fallbackerConfig.DomainTags) > 0 {
-					domainSet, err := geo.NewDomainSet(fallbackerConfig.DomainTags, config.GeoHelper)
-					if err != nil {
-						return nil, err
-					}
-					fallbackConditions = append(fallbackConditions, &DomainMatcher{
-						DomainSet: domainSet,
-					})
-				}
-				if len(fallbackerConfig.DstIpTags) > 0 {
-					ipSet, err := geo.NewIPSet(fallbackerConfig.DstIpTags, config.GeoHelper)
-					if err != nil {
-						return nil, err
-					}
-					fallbackConditions = append(fallbackConditions, &IpMatcher{
-						IpSet: ipSet,
-					})
-				}
+			conditions, err := getCondition(fallbackCondition(fallbackerConfig),
+				config.GeoHelper, config.IpResolver)
+			if err != nil {
+				return nil, err
 			}
 			fallbackers = append(fallbackers, NewFallbacker(
 				fallbackerConfig.SelectorTag, fallbackerConfig.OutboundTag,
-				fallbackerConfig.Action, r.om, r.selectors, fallbackConditions...))
+				fallbackerConfig.Action, r.om, r.selectors, fallbackerConfig.Last, conditions...))
 		}
 		rule := NewRule(routerRuleConfig.RuleName, routerRuleConfig.OutboundTag,
 			routerRuleConfig.SelectorTag, fallbackers,
@@ -291,6 +109,222 @@ func NewRouter(config *RouterConfig) (*Router, error) {
 		r.AddRule(rule)
 	}
 	return r, nil
+}
+
+func fallbackCondition(fallbackerConfig *configs.RuleConfig_Fallback) *configs.Condition {
+	if fallbackerConfig.Condition != nil {
+		return fallbackerConfig.Condition
+	}
+	conditionConfig := &configs.Condition{
+		DomainTags: fallbackerConfig.DomainTags,
+		DstIpTags:  fallbackerConfig.DstIpTags,
+		MatchAll:   fallbackerConfig.MatchAll,
+	}
+	return conditionConfig
+}
+
+func toConditionConfig(ruleConfig *configs.RuleConfig) *configs.Condition {
+	if ruleConfig.Condition != nil {
+		return ruleConfig.Condition
+	}
+	conditionConfig := &configs.Condition{
+		SrcCidrs:             ruleConfig.SrcCidrs,
+		SrcIpTags:            ruleConfig.SrcIpTags,
+		DstCidrs:             ruleConfig.DstCidrs,
+		DstIpTags:            ruleConfig.DstIpTags,
+		ResolveDomain:        ruleConfig.ResolveDomain,
+		ResolveSoftRewrite:   ruleConfig.ResolveSoftRewrite,
+		ResolveSoftNoRewrite: ruleConfig.ResolveSoftNoRewrite,
+		GeoDomains:           ruleConfig.GeoDomains,
+		DomainTags:           ruleConfig.DomainTags,
+		SkipSniff:            ruleConfig.SkipSniff,
+		Usernames:            ruleConfig.Usernames,
+		InboundTags:          ruleConfig.InboundTags,
+		Networks:             ruleConfig.Networks,
+		SrcPortRanges:        ruleConfig.SrcPortRanges,
+		DstPortRanges:        ruleConfig.DstPortRanges,
+		AppIds:               ruleConfig.AppIds,
+		Ipv6:                 ruleConfig.Ipv6,
+		FakeIp:               ruleConfig.FakeIp,
+		MatchAll:             ruleConfig.MatchAll,
+		AppTags:              ruleConfig.AppTags,
+		AllTags:              ruleConfig.AllTags,
+		Protocols:            ruleConfig.Protocols,
+	}
+	return conditionConfig
+}
+
+func getCondition(conditionConfig *configs.Condition, gh i.GeoHelper, ipResolver i.IPResolver) ([]Condition, error) {
+	conditions := make([]Condition, 0, 20)
+	if conditionConfig.InboundTags != nil {
+		conditions = append(conditions, NewInboundTagMatcher(conditionConfig.InboundTags))
+	}
+	if conditionConfig.Ipv6 {
+		conditions = append(conditions, &Ipv6Matcher{})
+	}
+	if len(conditionConfig.SrcCidrs) > 0 || len(conditionConfig.SrcIpTags) > 0 {
+		var cidrs []*cgeo.CIDR
+		for _, cidr := range conditionConfig.SrcCidrs {
+			prefix, err := netip.ParsePrefix(cidr)
+			if err != nil {
+				return nil, err
+			}
+			cidrs = append(cidrs, &cgeo.CIDR{
+				Ip:     prefix.Addr().AsSlice(),
+				Prefix: uint32(prefix.Bits()),
+			})
+		}
+		srcIPSet, err := geo.NewIPSet(conditionConfig.SrcIpTags, gh, cidrs...)
+		if err != nil {
+			return nil, err
+		}
+		conditions = append(conditions, &IpMatcher{
+			MatchSourceIp: true,
+			IpSet:         srcIPSet,
+		})
+	}
+	if len(conditionConfig.DstCidrs) > 0 || len(conditionConfig.DstIpTags) > 0 {
+		var cidrs []*cgeo.CIDR
+		for _, cidr := range conditionConfig.DstCidrs {
+			prefix, err := netip.ParsePrefix(cidr)
+			if err != nil {
+				return nil, err
+			}
+			cidrs = append(cidrs, &cgeo.CIDR{
+				Ip:     prefix.Addr().AsSlice(),
+				Prefix: uint32(prefix.Bits()),
+			})
+		}
+		dstIPSet, err := geo.NewIPSet(conditionConfig.DstIpTags, gh, cidrs...)
+		if err != nil {
+			return nil, err
+		}
+		conditions = append(conditions, &IpMatcher{
+			IpSet:                 dstIPSet,
+			IpResolver:            ipResolver,
+			ResolveHard:           conditionConfig.ResolveDomain,
+			ResolveSoftAndRewrite: conditionConfig.ResolveSoftRewrite,
+			ResolveSoftNoRewrite:  conditionConfig.ResolveSoftNoRewrite,
+		})
+	}
+	if len(conditionConfig.Protocols) > 0 {
+		sniffers := make([]sniff.ProtocolSnifferWithNetwork, 0, len(conditionConfig.Protocols))
+		for _, protocol := range conditionConfig.Protocols {
+			switch protocol {
+			case "tls":
+				sniffers = append(sniffers, sniff.TlsSniff)
+			case "http1":
+				sniffers = append(sniffers, sniff.HTTP1Sniff)
+			case "quic":
+				sniffers = append(sniffers, sniff.QUICSniff)
+			case "bittorrent":
+				sniffers = append(sniffers, sniff.BTScniff)
+				sniffers = append(sniffers, sniff.UTPSniff)
+			default:
+				log.Warn().Str("protocol", protocol).Msg("unknown protocol")
+				continue
+			}
+		}
+		conditions = append(conditions, &ConditionProtocol{
+			protocols: conditionConfig.Protocols,
+			Sniffer: sniff.NewSniffer(sniff.SniffSetting{
+				Interval: 10 * time.Millisecond,
+				Sniffers: sniffers,
+			}),
+		})
+	}
+	if len(conditionConfig.GeoDomains) > 0 || len(conditionConfig.DomainTags) > 0 {
+		domainSet, err := geo.NewDomainSet(conditionConfig.DomainTags, gh,
+			conditionConfig.GeoDomains...)
+		if err != nil {
+			return nil, err
+		}
+		conditions = append(conditions, &DomainMatcher{
+			DomainSet: domainSet,
+			SkipSniff: conditionConfig.SkipSniff,
+			Sniffer: sniff.NewSniffer(sniff.SniffSetting{
+				Interval: 10 * time.Millisecond,
+				Sniffers: []sniff.ProtocolSnifferWithNetwork{
+					sniff.TlsSniff,
+					sniff.HTTP1Sniff,
+					sniff.QUICSniff,
+					sniff.BTScniff,
+					sniff.UTPSniff,
+				},
+			}),
+		})
+	}
+	if len(conditionConfig.Networks) > 0 {
+		conditions = append(conditions, NewNetworkMatcher(conditionConfig.Networks))
+	}
+	if len(conditionConfig.SrcPortRanges) > 0 {
+		conditions = append(conditions, NewPortMatcher(conditionConfig.SrcPortRanges, true))
+	}
+	if len(conditionConfig.DstPortRanges) > 0 {
+		conditions = append(conditions, NewPortMatcher(conditionConfig.DstPortRanges, false))
+	}
+	if len(conditionConfig.Usernames) > 0 {
+		conditions = append(conditions, NewUserMatcher(conditionConfig.Usernames))
+	}
+	if len(conditionConfig.AppIds) > 0 || len(conditionConfig.AppTags) > 0 {
+		appSet, err := geo.NewAppSet(conditionConfig.AppTags, gh, conditionConfig.AppIds...)
+		if err != nil {
+			return nil, err
+		}
+		conditions = append(conditions, &AppIdMatcher{
+			AppSet: appSet,
+		})
+	}
+	if conditionConfig.FakeIp {
+		conditions = append(conditions, &ConditionFakeIp{})
+	}
+	if len(conditionConfig.AllTags) > 0 {
+		domainSet, err := geo.NewDomainSet(conditionConfig.AllTags, gh)
+		if err != nil {
+			return nil, err
+		}
+		ipSet, err := geo.NewIPSet(conditionConfig.AllTags, gh)
+		if err != nil {
+			return nil, err
+		}
+		appSet, err := geo.NewAppSet(conditionConfig.AllTags, gh)
+		if err != nil {
+			return nil, err
+		}
+		conditions = append(conditions, &AllMatcher{
+			domainMatcher: &DomainMatcher{
+				DomainSet: domainSet,
+				SkipSniff: conditionConfig.SkipSniff,
+				Sniffer: sniff.NewSniffer(
+					sniff.SniffSetting{
+						Interval: 10 * time.Millisecond,
+						Sniffers: []sniff.ProtocolSnifferWithNetwork{
+							sniff.TlsSniff,
+							sniff.HTTP1Sniff,
+							sniff.QUICSniff,
+							sniff.BTScniff,
+							sniff.UTPSniff,
+						}}),
+			},
+			ipMatcher: &IpMatcher{
+				IpSet:                 ipSet,
+				IpResolver:            ipResolver,
+				ResolveHard:           conditionConfig.ResolveDomain,
+				ResolveSoftAndRewrite: conditionConfig.ResolveSoftRewrite,
+				ResolveSoftNoRewrite:  conditionConfig.ResolveSoftNoRewrite,
+			},
+			appIdMatcher: &AppIdMatcher{
+				AppSet: appSet,
+			},
+		})
+	}
+
+	if conditionConfig.MatchAll {
+		conditions = []Condition{
+			&ConditionTrue{},
+		}
+	}
+	return conditions, nil
 }
 
 func (r *Router) AddRule(rule *rule) {
