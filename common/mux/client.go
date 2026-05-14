@@ -112,6 +112,7 @@ func (m *client) IsFull() bool {
 func (m *client) merge(ctx context.Context, dest net.Destination, s *clientSession) {
 	if !dest.IsValid() {
 		s.onError(errors.New("invalid target"))
+		return
 	}
 
 	transferType := TransferTypeStream

@@ -5,13 +5,13 @@ option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
 message PolicyConfig {
   map<uint32, UserPolicy> user_policy_map = 11;
-  uint32 handshake_timeout = 1;
+  int32 handshake_timeout = 1;
   // tcp
-  uint32 connection_idle_timeout = 2;
-  uint32 upLink_only_timeout = 4;
-  uint32 downLink_only_timeout = 5;
+  int32 connection_idle_timeout = 2;
+  int32 upLink_only_timeout = 4;
+  int32 downLink_only_timeout = 5;
   // udp
-  uint32 udp_idle_timeout = 3;
+  int32 udp_idle_timeout = 3;
   int32 default_buffer_size = 12;
 }
 

@@ -52,6 +52,7 @@ func ApiHandlerUsable1(ctx context.Context, h i.Outbound, url string) (bool, err
 	}
 	rsp, err := httpClient.Do(request)
 	if err != nil {
+		log.Ctx(ctx).Debug().Err(err).Msg("http request err")
 		return false, nil
 	} else {
 		rsp.Body.Close()
