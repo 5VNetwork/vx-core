@@ -679,20 +679,20 @@ func (s *allOkStrategy) Select(handlers []OutHandler) []OutHandler {
 	return okHandlers
 }
 
-// topPingStrategy selects all nodes within 30% of the least ping (e.g. min 100ms -> select all with ping <= 130ms).
-type topPingStrategy struct{}
+// TopPingStrategy selects all nodes within 30% of the least ping (e.g. min 100ms -> select all with ping <= 130ms).
+type TopPingStrategy struct{}
 
-func (s *topPingStrategy) Usable() bool {
+func (s *TopPingStrategy) Usable() bool {
 	return false
 }
-func (s *topPingStrategy) Speed() bool {
+func (s *TopPingStrategy) Speed() bool {
 	return false
 }
-func (s *topPingStrategy) Ping() bool {
+func (s *TopPingStrategy) Ping() bool {
 	return true
 }
 
-func (s *topPingStrategy) Select(handlers []OutHandler) []OutHandler {
+func (s *TopPingStrategy) Select(handlers []OutHandler) []OutHandler {
 	if len(handlers) == 0 {
 		return nil
 	}

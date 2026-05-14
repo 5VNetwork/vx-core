@@ -611,7 +611,7 @@ func TestAllOkStrategy_Select(t *testing.T) {
 }
 
 func TestTopPingStrategy_Select(t *testing.T) {
-	strategy := &topPingStrategy{}
+	strategy := &TopPingStrategy{}
 
 	// Min ping = 100ms, 30% above = 130. Select all with ping <= 130.
 	handlers := []OutHandler{
@@ -631,7 +631,7 @@ func TestTopPingStrategy_Select(t *testing.T) {
 }
 
 func TestTopPingStrategy_Select_ThresholdBoundary(t *testing.T) {
-	strategy := &topPingStrategy{}
+	strategy := &TopPingStrategy{}
 
 	// Min ping = 100ms, 30% = 30, threshold = 130. Only handlers with ping <= 130.
 	handlers := []OutHandler{
@@ -651,7 +651,7 @@ func TestTopPingStrategy_Select_ThresholdBoundary(t *testing.T) {
 }
 
 func TestTopPingStrategy_Select_NoPingData(t *testing.T) {
-	strategy := &topPingStrategy{}
+	strategy := &TopPingStrategy{}
 
 	// No handler with ok>0 and ping>0 -> fallback to all with ok >= 0
 	handlers := []OutHandler{
@@ -671,7 +671,7 @@ func TestTopPingStrategy_Select_NoPingData(t *testing.T) {
 }
 
 func TestTopPingStrategy_Select_Empty(t *testing.T) {
-	strategy := &topPingStrategy{}
+	strategy := &TopPingStrategy{}
 	selected := strategy.Select(nil)
 	assert.Nil(t, selected)
 	selected = strategy.Select([]OutHandler{})
@@ -756,7 +756,7 @@ func TestSelector_Start_WithTopPingStrategy(t *testing.T) {
 
 	config := selectorConfig{
 		Tag:      "test-selector",
-		Strategy: &topPingStrategy{},
+		Strategy: &TopPingStrategy{},
 		Filter:   filter,
 		Balancer: balancer,
 		Tester:   tester,
@@ -928,6 +928,34 @@ func TestSelector_OnUpdateCallback(t *testing.T) {
 	assert.Len(t, callbackHandlers, 2)
 }
 
+func TestPickSpeedTestSize_Range(t *testing.T) {
+	f := NewMockFilter()
+	s := newSelector(selectorConfig{
+		Tag:               "t",
+		Strategy:          &allStrategy{},
+		Filter:            f,
+		SpeedTestUseRange: true,
+		SpeedTestSizeMin:  100,
+		SpeedTestSizeMax:  105,
+	})
+	for range 200 {
+		n := s.pickSpeedTestSize()
+		assert.GreaterOrEqual(t, n, uint32(100))
+		assert.LessOrEqual(t, n, uint32(105))
+	}
+}
+
+func TestPickSpeedTestSize_Fixed(t *testing.T) {
+	f := NewMockFilter()
+	s := newSelector(selectorConfig{
+		Tag:           "t",
+		Strategy:      &allStrategy{},
+		Filter:        f,
+		SpeedTestSize: 999,
+	})
+	assert.Equal(t, uint32(999), s.pickSpeedTestSize())
+}
+
 func TestTestHandlerSpeed(t *testing.T) {
 	tester := NewMockTester()
 	tester.testSpeedResults = map[string]int64{
@@ -961,8 +989,8 @@ func TestTestHandlerSpeed_Failure(t *testing.T) {
 	// Act
 	TestHandlerSpeed(context.Background(), tester, handler, 0)
 
-	// Assert
-	assert.Equal(t, -1, handler.GetSpeed())
+	// Assert — failed speed clears ok only; speed is left unchanged (see TestHandlerSpeed).
+	assert.Equal(t, 0, handler.GetSpeed())
 	assert.Equal(t, -1, handler.GetOk())
 }
 
@@ -1017,10 +1045,10 @@ func TestTestHandlerUsable_Failure(t *testing.T) {
 	// Act
 	TestHandlerUsable(context.Background(), tester, handler)
 
-	// Assert
+	// Assert — unusable only updates ok (speed/ping unchanged).
 	assert.Equal(t, -1, handler.GetOk())
-	assert.Equal(t, -1, handler.GetSpeed())
-	assert.Equal(t, -1, handler.GetPing())
+	assert.Equal(t, 0, handler.GetSpeed())
+	assert.Equal(t, 0, handler.GetPing())
 }
 
 func TestTestHandler6(t *testing.T) {

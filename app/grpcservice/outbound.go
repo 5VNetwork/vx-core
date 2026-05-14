@@ -137,7 +137,7 @@ func (s *GrpcService) ChangeSelector(ctx context.Context, in *ChangeSelectorRequ
 			SelectorConfig:            selectorConfig,
 			CreateHandler:             s.Client.HandlerFactory,
 			HandlerErrorChangeSubject: s.Client.Dispatcher,
-			Tester:                    s.Client.Tetser,
+			Tester:                    s.Client.Tester,
 			Filter:                    filter,
 			HandlerInfo:               s.Client.OutStats,
 		}))

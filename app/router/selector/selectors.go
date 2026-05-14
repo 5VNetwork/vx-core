@@ -155,7 +155,7 @@ func NewSelector(config SelectorConfig) *Selector {
 		case router.SelectorConfig_LEAST_PING:
 			se = &leastPingStrategy{}
 		case router.SelectorConfig_TOP_PING:
-			se = &topPingStrategy{}
+			se = &TopPingStrategy{}
 		case router.SelectorConfig_TOP_THROUGHPUT:
 			se = &TopThroughputStrategy{}
 		}

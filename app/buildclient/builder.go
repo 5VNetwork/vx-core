@@ -268,7 +268,7 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 			return util.ApiHandlerPing(ctx, h, util.UsableTestUrlCf)
 		},
 	}
-	x.Tetser = t
+	x.Tester = t
 	if err := builder.addComponent(t); err != nil {
 		return nil, fmt.Errorf("failed to add tester: %w", err)
 	}

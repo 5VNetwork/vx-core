@@ -16,7 +16,6 @@ import (
 	"github.com/5vnetwork/vx-core/app/router"
 	"github.com/5vnetwork/vx-core/app/router/selector"
 	"github.com/5vnetwork/vx-core/app/subscription"
-	"github.com/5vnetwork/vx-core/app/tester"
 	"github.com/5vnetwork/vx-core/app/userlogger"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/i"
@@ -40,7 +39,7 @@ type Client struct {
 	OutStats        *outboundstats.OutStats
 	// might be nil
 	DB         Db
-	Tetser     *tester.Tester
+	Tester     selector.Tester
 	Router     *router.RouterWrapper
 	Selectors  *selector.Selectors
 	Logger     *logger.Logger
