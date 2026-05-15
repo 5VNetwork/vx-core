@@ -110,7 +110,7 @@ func TestHandlerPing(ctx context.Context, s Tester, item OutHandler) {
 	ping := s.TestPing(ctx, oh)
 	item.SetPing(ping)
 	item.SetOk(ping)
-	logger.Debug().Int("ping", ping).Msg("test handler ping result")
+	logger.Debug().Int("ping", ping).Msg("test ping result")
 }
 
 func TestHandler6(ctx context.Context, s Tester, item OutHandler) {
@@ -164,7 +164,7 @@ func TestHandlerUsable(ctx context.Context, s Tester, item OutHandler) {
 		// item.SetSpeed(-1)
 		// item.SetPing(-1)
 	}
-	logger.Debug().Bool("usable", usable).Msg("handler usable result")
+	logger.Debug().Bool("usable", usable).Msg("usable test result")
 }
 
 func TestHandlerSpeed(ctx context.Context, s Tester, item OutHandler, size uint32) {
@@ -186,5 +186,5 @@ func TestHandlerSpeed(ctx context.Context, s Tester, item OutHandler, size uint3
 		item.SetSpeed(int(speed))
 		item.SetOk(int(speed))
 	}
-	logger.Debug().Int64("speed", speed).Msg("handler speed result")
+	logger.Debug().Int64("speed", speed).Msg("speed test result")
 }

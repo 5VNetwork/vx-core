@@ -299,8 +299,10 @@ func (s *Selector) setHandlers() {
 		log.Warn().Msg("no handlers")
 		return
 	}
+	log.Debug().Int("len", len(filteredHandlers)).Msg("filtered handlers")
 
 	selectedHandlers := s.strategy.Select(filteredHandlers)
+	log.Debug().Int("len", len(selectedHandlers)).Msg("selected handlers")
 
 	if len(selectedHandlers) == 0 {
 		s.enterRecoveryIfNot()
