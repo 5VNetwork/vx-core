@@ -1,7 +1,8 @@
 syntax = "proto3";
 
 package vx.userlogger;
-option go_package = "github.com/5vnetwork/vx-core/app/userlogger";
+
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
 message UserLogMessage {
   oneof message {
@@ -49,11 +50,11 @@ message SessionError {
   uint32 sid = 3;
   uint32 up = 4;
   uint32 down = 5;
-  // if the session dst is ip, this is the dns server 
+  // if the session dst is ip, this is the dns server
   // handles the dns query that resolves to the ip
   string dns = 6;
   // TODO: domain geo tags?
-  // reason, analysis, route name? 
+  // reason, analysis, route name?
 }
 
 message RejectMessage {

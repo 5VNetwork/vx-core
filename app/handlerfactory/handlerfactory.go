@@ -11,6 +11,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/dispatcher/variants"
 	outboundstats "github.com/5vnetwork/vx-core/app/outbound/stats"
 	"github.com/5vnetwork/vx-core/app/policy"
+	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/net/udp"
@@ -115,7 +116,7 @@ func (c *HandlerFactory) CreateHandler(hs ...*configs.HandlerConfig) (i.Outbound
 					})
 				}
 				if c.HandlerLinkStats {
-					ls := linkstats.NewLinkStats(ctx, stats)
+					ls := linkstats.NewLinkStats(ctx, stats, common.OneKB*10)
 					ups = append(ups, ls)
 					downs = append(downs, ls)
 				}

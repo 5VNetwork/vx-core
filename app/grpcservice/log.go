@@ -6,8 +6,7 @@ package grpcservice
 import (
 	"context"
 
-	"github.com/5vnetwork/vx-core/app/userlogger"
-
+	vx "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/userlogger"
 	"github.com/rs/zerolog/log"
 )
 
@@ -68,7 +67,7 @@ func (s *GrpcService) UserLogStream(in *UserLogStreamRequest, stream GrpcService
 	log.Debug().Msg("user log stream request received")
 	ul := s.Client.UserLogger
 	ul.SetEnabled(true)
-	slice := make([]*userlogger.UserLogMessage, 100)
+	slice := make([]*vx.UserLogMessage, 100)
 	for {
 		if s.Done.Done() {
 			return nil

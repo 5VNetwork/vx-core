@@ -22,12 +22,17 @@ type LinkStats struct {
 	hasDoneCalculatingRate bool
 	initialReadTime        time.Time
 	hadAddedPing           bool
+	size                   uint64
 }
 
-func NewLinkStats(ctx context.Context, ohStats linkStatsAdder) *LinkStats {
+func NewLinkStats(ctx context.Context, ohStats linkStatsAdder, size uint64) *LinkStats {
+	if size == 0 {
+		size = common.OneKB * 10
+	}
 	return &LinkStats{
 		ctx:     ctx,
 		ohStats: ohStats,
+		size:    size,
 	}
 }
 
@@ -51,7 +56,7 @@ func (w *LinkStats) DownTraffic(n uint64) {
 		} else {
 			w.prevWriteTime = time.Now()
 			w.writeCounter.Add(n)
-			if w.writeCounter.Load() >= common.OneKB*10 {
+			if w.writeCounter.Load() >= w.size {
 				elapsed := time.Since(w.initialWriteTime).Seconds()
 				rate := float64(w.writeCounter.Swap(0)) / elapsed
 				if rate > 1024*1024*100 {

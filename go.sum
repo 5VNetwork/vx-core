@@ -1,7 +1,5 @@
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260512205348-faf28f1d32e5.1 h1:je6/58rK//2t4m0wp1vzHPDDwVQtVgvM6uKvW+zYzfo=
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260512205348-faf28f1d32e5.1/go.mod h1:dElz5P1GgVs3z2p9u3xGM8xRJG+VcCpxZkkn8izmP7g=
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260514180230-43c0f81d7f00.1 h1:Isnjaw5mc5Ud86UW+/Oy8en0N2T1tAIAVjDiix0juGg=
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260514180230-43c0f81d7f00.1/go.mod h1:dElz5P1GgVs3z2p9u3xGM8xRJG+VcCpxZkkn8izmP7g=
+buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260522104013-930bd6c0fcbe.1 h1:WLw4jQ1sr5tlZxmXzDo/Jtx83XERl8RryGZqkHS63Uk=
+buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260522104013-930bd6c0fcbe.1/go.mod h1:dElz5P1GgVs3z2p9u3xGM8xRJG+VcCpxZkkn8izmP7g=
 github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260510171949-b46964b7c610 h1:KHemlR05HW8O26XuKUUOYTfWCKg+5QoKWK+sV1JrheU=
 github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260510171949-b46964b7c610/go.mod h1:b9dPkAisksVDpmqc4+7L9/S/ox0CEAJh/+Pfljac5gA=
 github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c h1:pxW6RcqyfI9/kWtOwnv/G+AzdKuy2ZrqINhenH4HyNs=

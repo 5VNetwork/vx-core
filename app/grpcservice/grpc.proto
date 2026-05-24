@@ -2,12 +2,12 @@ syntax = "proto3";
 
 package vx.grpcservice;
 
-import "app/userlogger/config.proto";
 import "vx/common/geo/geo.proto";
 import "vx/geo/geo.proto";
 import "vx/inbound/inbound.proto";
 import "vx/outbound/outbound.proto";
 import "vx/router/router.proto";
+import "vx/userlogger/userlogger.proto";
 
 option go_package = "github.com/5vnetwork/vx-core/app/grpcservice";
 

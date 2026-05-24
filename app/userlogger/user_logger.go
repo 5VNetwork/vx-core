@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	vx "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/userlogger"
 	"github.com/5vnetwork/vx-core/app/router"
 	"github.com/5vnetwork/vx-core/common/appid"
 	"github.com/5vnetwork/vx-core/common/buf"
@@ -31,7 +32,7 @@ type UserLogger struct {
 
 	ch   chan struct{}
 	done *done.Instance
-	buf  *buf.RingBuffer[*UserLogMessage]
+	buf  *buf.RingBuffer[*vx.UserLogMessage]
 
 	dns ipToDomain
 }
@@ -44,7 +45,7 @@ type ipToDomain interface {
 func NewUserLogger(enabled bool, logAppId bool, size int) *UserLogger {
 	ul := &UserLogger{
 		enabled: atomic.Bool{},
-		buf:     buf.NewRingBuffer[*UserLogMessage](size),
+		buf:     buf.NewRingBuffer[*vx.UserLogMessage](size),
 		done:    done.New(),
 		ch:      make(chan struct{}),
 	}
@@ -80,13 +81,12 @@ func (s *UserLogger) OnFallback(info *session.Info, previous, tag string) {
 		return
 	}
 
-	msg := &UserLogMessage{
-		Message: &UserLogMessage_Fallback{
-			Fallback: &Fallback{
+	msg := &vx.UserLogMessage{
+		Message: &vx.UserLogMessage_Fallback{
+			Fallback: &vx.Fallback{
 				Tag: tag,
 				Sid: uint32(info.ID),
-			},
-		},
+			}},
 	}
 	s.buf.Add(msg)
 	select {
@@ -119,9 +119,9 @@ func (s *UserLogger) LogReject(info *session.Info, reason string) {
 		info.AppId = appId
 	}
 
-	msg := &UserLogMessage{
-		Message: &UserLogMessage_RejectMessage{
-			RejectMessage: &RejectMessage{
+	msg := &vx.UserLogMessage{
+		Message: &vx.UserLogMessage_RejectMessage{
+			RejectMessage: &vx.RejectMessage{
 				Dst:       info.Target.Address.String(),
 				Domain:    info.SniffedDomain,
 				Timestamp: time.Now().Unix(),
@@ -167,9 +167,9 @@ func (s *UserLogger) logSessionUsageLoop(ctx context.Context, info *session.Info
 			up := info.SessionUpCounter.Load()
 			down := info.SessionDownCounter.Load()
 
-			msg := &UserLogMessage{
-				Message: &UserLogMessage_SessionUsage{
-					SessionUsage: &SessionUsage{
+			msg := &vx.UserLogMessage{
+				Message: &vx.UserLogMessage_SessionUsage{
+					SessionUsage: &vx.SessionUsage{
 						Sid:  uint32(info.ID),
 						Up:   up,
 						Down: down,
@@ -219,9 +219,9 @@ func (s *UserLogger) LogRoute(info *session.Info, tag string) {
 		ipToDomain = strings.Join(s.dns.GetDomain(info.Target.Address.IP()), ",")
 	}
 
-	msg := &UserLogMessage{
-		Message: &UserLogMessage_RouteMessage{
-			RouteMessage: &RouteMessage{
+	msg := &vx.UserLogMessage{
+		Message: &vx.UserLogMessage_RouteMessage{
+			RouteMessage: &vx.RouteMessage{
 				Sid:           uint32(info.ID),
 				Dst:           info.Target.Address.String(),
 				Tag:           tag,
@@ -271,7 +271,7 @@ func (s *UserLogger) logSessionEndMessage(info *session.Info) {
 		return
 	}
 
-	se := &SessionEnd{
+	se := &vx.SessionEnd{
 		Sid:   uint32(info.ID),
 		Up:    info.SessionUpCounter.Load(),
 		Down:  info.SessionDownCounter.Load(),
@@ -279,8 +279,8 @@ func (s *UserLogger) logSessionEndMessage(info *session.Info) {
 		End:   time.Now().Unix(),
 	}
 
-	msg := &UserLogMessage{
-		Message: &UserLogMessage_SessionEnd{
+	msg := &vx.UserLogMessage{
+		Message: &vx.UserLogMessage_SessionEnd{
 			SessionEnd: se,
 		},
 	}
@@ -317,7 +317,7 @@ func (s *UserLogger) logSessionError(info *session.Info, err error) {
 		if errors.Is(err, io.EOF) {
 			return
 		}
-		se := &SessionError{
+		se := &vx.SessionError{
 			Up:   uint32(info.SessionUpCounter.Load()),
 			Down: uint32(info.SessionDownCounter.Load()),
 			Sid:  uint32(info.ID),
@@ -339,8 +339,8 @@ func (s *UserLogger) logSessionError(info *session.Info, err error) {
 			}
 		}
 
-		msg := &UserLogMessage{
-			Message: &UserLogMessage_SessionError{
+		msg := &vx.UserLogMessage{
+			Message: &vx.UserLogMessage_SessionError{
 				SessionError: se,
 			},
 		}
@@ -360,9 +360,9 @@ func (s *UserLogger) LogError(err error) {
 	if s.done.Done() {
 		return
 	}
-	msg := &UserLogMessage{
-		Message: &UserLogMessage_ErrorMessage{
-			ErrorMessage: &ErrorMessage{
+	msg := &vx.UserLogMessage{
+		Message: &vx.UserLogMessage_ErrorMessage{
+			ErrorMessage: &vx.ErrorMessage{
 				Message:   err.Error(),
 				Timestamp: time.Now().Unix(),
 			},
@@ -384,7 +384,7 @@ func (s *UserLogger) Close() error {
 	return nil
 }
 
-func (s *UserLogger) ReadLog(ctx context.Context, slice []*UserLogMessage) (int, error) {
+func (s *UserLogger) ReadLog(ctx context.Context, slice []*vx.UserLogMessage) (int, error) {
 	for {
 		if !s.enabled.Load() {
 			return 0, errors.New("user logger disabled")

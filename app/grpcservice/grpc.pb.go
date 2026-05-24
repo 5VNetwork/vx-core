@@ -12,7 +12,7 @@ import (
 	inbound "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/inbound"
 	outbound "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/outbound"
 	router "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
-	userlogger "github.com/5vnetwork/vx-core/app/userlogger"
+	userlogger "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/userlogger"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -2412,7 +2412,7 @@ var File_app_grpcservice_grpc_proto protoreflect.FileDescriptor
 
 const file_app_grpcservice_grpc_proto_rawDesc = "" +
 	"\n" +
-	"\x1aapp/grpcservice/grpc.proto\x12\x0evx.grpcservice\x1a\x1bapp/userlogger/config.proto\x1a\x17vx/common/geo/geo.proto\x1a\x10vx/geo/geo.proto\x1a\x18vx/inbound/inbound.proto\x1a\x1avx/outbound/outbound.proto\x1a\x16vx/router/router.proto\"8\n" +
+	"\x1aapp/grpcservice/grpc.proto\x12\x0evx.grpcservice\x1a\x17vx/common/geo/geo.proto\x1a\x10vx/geo/geo.proto\x1a\x18vx/inbound/inbound.proto\x1a\x1avx/outbound/outbound.proto\x1a\x16vx/router/router.proto\x1a\x1evx/userlogger/userlogger.proto\"8\n" +
 	"\x0eRttTestRequest\x12\x12\n" +
 	"\x04addr\x18\x01 \x01(\tR\x04addr\x12\x12\n" +
 	"\x04port\x18\x02 \x01(\rR\x04port\"%\n" +
