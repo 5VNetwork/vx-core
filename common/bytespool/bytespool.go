@@ -22,7 +22,7 @@ var (
 	poolSize [numPools]int32
 )
 
-// four pools with size 2kb, 4kb, 6kb, 8kb
+// four pools with size 2kb, 8kb, 32kb, 128kb
 func init() {
 	size := int32(2048)
 	for i := 0; i < numPools; i++ {

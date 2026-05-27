@@ -17,6 +17,7 @@ import (
 
 	"github.com/5vnetwork/vx-core/app/inbound"
 	"github.com/5vnetwork/vx-core/app/util"
+	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/net/udp"
@@ -173,6 +174,7 @@ func (ns *DnsServerConcurrent) Close() error {
 	ns.closeOnce.Do(func() {
 		ns.dnsConnImpl.Close()
 		ns.rrCache.Close()
+		common.Close(ns.dispatcher)
 		for _, t2 := range ns.t2s {
 			t2.lock.Lock()
 			if t2.conn != nil {

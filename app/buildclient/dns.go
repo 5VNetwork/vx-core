@@ -182,6 +182,9 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 
 			// resolver used in dialing
 			{
+				if len(config.GetDns().GetInternalResolver().GetDnsServers()) == 0 {
+					return fmt.Errorf("no dns servers found in internal resolver")
+				}
 				var servers []idns.DnsServer
 				for _, name := range config.Dns.InternalResolver.DnsServers {
 					if ds, ok := dnsServerMap[name]; ok {

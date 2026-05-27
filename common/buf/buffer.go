@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync/atomic"
 
 	"github.com/5vnetwork/vx-core/common/bytespool"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -36,6 +38,10 @@ type Buffer struct {
 	end       int32
 	ownership ownership
 	release   func()
+	// released is a single-shot guard for Release: it CASes 0 -> 1, so only
+	// one goroutine ever runs the release body for a given Buffer even if
+	// the same *Buffer is shared and Released concurrently.
+	released uint32
 }
 
 func New() *Buffer {
@@ -99,7 +105,20 @@ func StackNew() Buffer {
 // Release recycles the buffer.v into an internal buffer pool
 // and resets start and end to 0.
 func (b *Buffer) Release() {
-	if b == nil || b.v == nil {
+	if b == nil {
+		return
+	}
+	// Single-shot guard: only the first caller proceeds. Without this, two
+	// concurrent Release() calls on a shared *Buffer can both observe b.v
+	// as non-nil, both do `p := b.v; b.v = nil`, and either (a) Put a
+	// typed-nil []byte into the pool, or (b) Put the same real slice
+	// twice. (a) poisons the pool and produces the
+	// `slice bounds out of range [60:0]` / `[0:0]` panics in Write/ReadOnce;
+	// (b) silently hands the same backing array to two future buffers.
+	if !atomic.CompareAndSwapUint32(&b.released, 0, 1) {
+		return
+	}
+	if b.v == nil {
 		return
 	}
 
@@ -118,7 +137,12 @@ func (b *Buffer) Release() {
 	b.start = 0
 	switch b.ownership {
 	case defaultPool:
-		pool.Put(p)
+		// Belt-and-suspenders: pool only stores BufferSize-cap slices.
+		if cap(p) == BufferSize {
+			pool.Put(p)
+		} else {
+			log.Warn().Int("cap", cap(p)).Msg("buffer is not of size BufferSize")
+		}
 	case bytespools:
 		bytespool.Free(p)
 	}
