@@ -1,5 +1,3 @@
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260522104013-930bd6c0fcbe.1 h1:WLw4jQ1sr5tlZxmXzDo/Jtx83XERl8RryGZqkHS63Uk=
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260522104013-930bd6c0fcbe.1/go.mod h1:dElz5P1GgVs3z2p9u3xGM8xRJG+VcCpxZkkn8izmP7g=
 github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260510171949-b46964b7c610 h1:KHemlR05HW8O26XuKUUOYTfWCKg+5QoKWK+sV1JrheU=
 github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260510171949-b46964b7c610/go.mod h1:b9dPkAisksVDpmqc4+7L9/S/ox0CEAJh/+Pfljac5gA=
 github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c h1:pxW6RcqyfI9/kWtOwnv/G+AzdKuy2ZrqINhenH4HyNs=
@@ -112,6 +110,8 @@ github.com/refraction-networking/utls v1.8.2 h1:j4Q1gJj0xngdeH+Ox/qND11aEfhpgoEv
 github.com/refraction-networking/utls v1.8.2/go.mod h1:jkSOEkLqn+S/jtpEHPOsVv/4V4EVnelwbMQl4vCWXAM=
 github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 h1:f/FNXud6gA3MNr8meMVVGxhp+QBTqY91tM8HjEuMjGg=
 github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3/go.mod h1:HgjTstvQsPGkxUsCd2KWxErBblirPizecHcpD3ffK+s=
+github.com/robfig/cron/v3 v3.0.1 h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=
+github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
 github.com/rogpeppe/go-internal v1.12.0 h1:exVL4IDcn6na9z1rAb56Vxr+CgyK3nn3O+epU5NdKM8=
 github.com/rogpeppe/go-internal v1.12.0/go.mod h1:E+RYuTGaKKdloAfM02xzb0FW3Paa99yedzYV+kq4uf4=
 github.com/rs/xid v1.5.0/go.mod h1:trrq9SKmegXys3aeAKXMUTdJsYXVwGY3RLcfgqegfbg=

@@ -135,14 +135,24 @@ type loader interface {
 	LoadAppsClash(filename string) ([]*configs.AppId, error)
 }
 
+// AtomicDomainGeosites returns singular geosite plus repeated geosites, in order.
+func AtomicDomainGeosites(ad *configs.AtomicDomainSetConfig) []*configs.GeositeConfig {
+	var out []*configs.GeositeConfig
+	if gs := ad.GetGeosite(); gs != nil {
+		out = append(out, gs)
+	}
+	out = append(out, ad.GetGeosites()...)
+	return out
+}
+
 func AtomicDomainSetToIndexMatcher(atomicSet *configs.AtomicDomainSetConfig, l loader) (strmatcher.IndexMatcher, error) {
 	var domains []*cgeo.Domain
-	var err error
-	if geosite := atomicSet.Geosite; geosite != nil {
-		domains, err = GeositeConfigToGeoDomains(geosite, l)
+	for _, geosite := range AtomicDomainGeosites(atomicSet) {
+		d, err := GeositeConfigToGeoDomains(geosite, l)
 		if err != nil {
 			return nil, fmt.Errorf("geosite.ToGeoDomains failed: %w", err)
 		}
+		domains = append(domains, d...)
 	}
 	if atomicSet.Domains != nil {
 		for _, domain := range atomicSet.Domains {

@@ -3,7 +3,7 @@ module github.com/5vnetwork/vx-core
 go 1.25.5
 
 require (
-	buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260522104013-930bd6c0fcbe.1
+	buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260529202748-86714cfa5e40.1
 	github.com/anytls/sing-anytls v0.0.11
 	github.com/apernet/hysteria/core/v2 v2.0.0-00010101000000-000000000000
 	github.com/apernet/hysteria/extras/v2 v2.6.5
@@ -23,6 +23,7 @@ require (
 	github.com/pkg/sftp v1.13.6
 	github.com/quic-go/quic-go v0.59.0
 	github.com/refraction-networking/utls v1.8.2
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/zerolog v1.33.0
 	github.com/sagernet/sing v0.7.6
 	github.com/sagernet/sing-shadowsocks v0.2.9
@@ -42,7 +43,6 @@ require (
 	golang.org/x/exp v0.0.0-20251125195548-87e1e737ad39
 	golang.org/x/net v0.53.0
 	golang.org/x/sync v0.20.0
-	golang.org/x/time v0.12.0
 	golang.zx2c4.com/wireguard v0.0.0-20250521234502-f333402bd9cb
 	golang.zx2c4.com/wireguard/windows v0.5.3
 	google.golang.org/grpc v1.75.1
@@ -89,6 +89,7 @@ require (
 	golang.org/x/exp/typeparams v0.0.0-20240314144324-c7f7c6466f7f // indirect
 	golang.org/x/mobile v0.0.0-20260410095206-2cfb76559b7b // indirect
 	golang.org/x/mod v0.35.0 // indirect
+	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.44.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251014184007-4626949a642f // indirect

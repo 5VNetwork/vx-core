@@ -1,9 +1,10 @@
 syntax = "proto3";
 package vx.geo;
-option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
 import "vx/common/geo/geo.proto";
 import "vx/router/router.proto";
+
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
 message GreatDomainSetConfig {
   string name = 3;
@@ -12,14 +13,24 @@ message GreatDomainSetConfig {
   repeated string in_names = 6;
 }
 
+// Remote geo data file: HTTPS download into filepath on a cron schedule.
+message GeoRemoteFile {
+  string filepath = 1;
+  string source_url = 2;
+  // Standard 5-field cron (minute hour day month weekday). Empty = prefetch only at startup / reconfigure.
+  string refresh_cron = 3;
+}
+
 message AtomicDomainSetConfig {
   string name = 1;
   // either one of the following two fields should be set
   repeated vx.common.geo.Domain domains = 2;
   GeositeConfig geosite = 3;
+  repeated GeositeConfig geosites = 8;
   bool use_bloom_filter = 4;
   repeated string clash_files = 5;
   bool inverse = 6;
+  repeated GeoRemoteFile remote_geo_files = 7;
 }
 
 message DomainSetConfig {
@@ -40,6 +51,7 @@ message AtomicIPSetConfig {
   GeoIPConfig geoip = 1;
   bool inverse = 4;
   repeated string clash_files = 5;
+  repeated GeoRemoteFile remote_geo_files = 6;
 }
 
 message GeoConfig {
@@ -57,11 +69,15 @@ message GeositeConfig {
   repeated string codes = 1;
   repeated string attributes = 2;
   string filepath = 3;
+  string remote_url = 4;
+  string refresh_cron = 5;
 }
 
 message GeoIPConfig {
   string filepath = 1;
   repeated string codes = 2;
+  string remote_url = 3;
+  string refresh_cron = 4;
 }
 
 message AppSetConfig {
