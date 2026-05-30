@@ -87,7 +87,7 @@ func TestCollectJobs_geositesAndLegacyRemoteGeoFiles(t *testing.T) {
 	require.Equal(t, "/data/extra.dat", jobs[0].Filepath)
 	require.Equal(t, "multi", jobs[0].DomainAtomicName)
 	require.Equal(t, "/data/legacy.dat", jobs[1].Filepath)
-	require.Empty(t, jobs[1].DomainAtomicName)
+	require.Equal(t, "multi", jobs[1].DomainAtomicName)
 }
 
 func TestFetchViaDirectHTTP_rejectsHTTP(t *testing.T) {

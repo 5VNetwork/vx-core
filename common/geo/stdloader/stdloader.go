@@ -72,7 +72,7 @@ func (s *StandartLoader) LoadSite(filepath, siteName string) (*commongeo.GeoSite
 	return nil, errors.New("list not found in " + filepath + ": " + siteName)
 }
 
-func (s *StandartLoader) LoadDomainsClash(filepath string) ([]*commongeo.Domain, error) {
+func (s *StandartLoader) LoadDomains(filepath string) ([]*commongeo.Domain, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (s *StandartLoader) LoadDomainsClash(filepath string) ([]*commongeo.Domain,
 	return clashconfig.ExtractDomainsFromClashRules(file)
 }
 
-func (s *StandartLoader) LoadCidrsClash(filepath string) ([]*commongeo.CIDR, error) {
+func (s *StandartLoader) LoadCidrs(filepath string) ([]*commongeo.CIDR, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func (s *StandartLoader) LoadCidrsClash(filepath string) ([]*commongeo.CIDR, err
 	return clashconfig.ExtractCidrFromClashRules(file)
 }
 
-func (s *StandartLoader) LoadAppsClash(filepath string) ([]*vxrouter.AppId, error) {
+func (s *StandartLoader) LoadApps(filepath string) ([]*vxrouter.AppId, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err

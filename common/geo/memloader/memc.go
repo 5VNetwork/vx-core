@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	commongeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
+	vxrouter "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
 	"github.com/5vnetwork/vx-core/common/clashconfig"
 	"github.com/5vnetwork/vx-core/common/errors"
-	vxrouter "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -96,7 +96,7 @@ func (m *MemLoader) LoadSite(filepath, code string) (*commongeo.GeoSite, error) 
 	return nil, errors.New("list ", code, " not found in ", filepath)
 }
 
-func (s *MemLoader) LoadDomainsClash(filepath string) ([]*commongeo.Domain, error) {
+func (s *MemLoader) LoadDomains(filepath string) ([]*commongeo.Domain, error) {
 	defer runtime.GC()
 
 	file, err := os.Open(filepath)
@@ -108,7 +108,7 @@ func (s *MemLoader) LoadDomainsClash(filepath string) ([]*commongeo.Domain, erro
 	return clashconfig.ExtractDomainsFromClashRules(file)
 }
 
-func (s *MemLoader) LoadCidrsClash(filepath string) ([]*commongeo.CIDR, error) {
+func (s *MemLoader) LoadCidrs(filepath string) ([]*commongeo.CIDR, error) {
 	defer runtime.GC()
 
 	file, err := os.Open(filepath)
@@ -120,7 +120,7 @@ func (s *MemLoader) LoadCidrsClash(filepath string) ([]*commongeo.CIDR, error) {
 	return clashconfig.ExtractCidrFromClashRules(file)
 }
 
-func (s *MemLoader) LoadAppsClash(filepath string) ([]*vxrouter.AppId, error) {
+func (s *MemLoader) LoadApps(filepath string) ([]*vxrouter.AppId, error) {
 	defer runtime.GC()
 
 	file, err := os.Open(filepath)

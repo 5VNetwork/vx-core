@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	configs "github.com/5vnetwork/vx-core/app/configs"
 	cgeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
+	configs "github.com/5vnetwork/vx-core/app/configs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,21 +33,21 @@ func (m *MockLoader) LoadSite(filename, list string) (*cgeo.GeoSite, error) {
 	return &cgeo.GeoSite{}, nil
 }
 
-func (m *MockLoader) LoadDomainsClash(filename string) ([]*cgeo.Domain, error) {
+func (m *MockLoader) LoadDomains(filename string) ([]*cgeo.Domain, error) {
 	if m.loadDomainsClashFunc != nil {
 		return m.loadDomainsClashFunc(filename)
 	}
 	return []*cgeo.Domain{}, nil
 }
 
-func (m *MockLoader) LoadCidrsClash(filename string) ([]*cgeo.CIDR, error) {
+func (m *MockLoader) LoadCidrs(filename string) ([]*cgeo.CIDR, error) {
 	if m.loadCidrsClashFunc != nil {
 		return m.loadCidrsClashFunc(filename)
 	}
 	return []*cgeo.CIDR{}, nil
 }
 
-func (m *MockLoader) LoadAppsClash(filename string) ([]*configs.AppId, error) {
+func (m *MockLoader) LoadApps(filename string) ([]*configs.AppId, error) {
 	if m.loadAppsClashFunc != nil {
 		return m.loadAppsClashFunc(filename)
 	}
@@ -803,6 +803,62 @@ func TestAtomicDomainSetToIndexMatcher_ClashFileError(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to extract domains from clash file")
 }
 
+func TestAtomicDomainSetToIndexMatcher_WithRemoteGeoFiles(t *testing.T) {
+	mockDomains := []*cgeo.Domain{
+		{Type: cgeo.Domain_Full, Value: "remote.example.com"},
+	}
+	loader := &MockLoader{
+		loadDomainsClashFunc: func(filename string) ([]*cgeo.Domain, error) {
+			if filename == "remote.yaml" {
+				return mockDomains, nil
+			}
+			return nil, errors.New("file not found")
+		},
+	}
+	config := &configs.AtomicDomainSetConfig{
+		Name: "test",
+		RemoteGeoFiles: []*configs.GeoRemoteFile{
+			{Filepath: "remote.yaml", SourceUrl: "https://example.com/remote.yaml"},
+		},
+	}
+
+	matcher, err := AtomicDomainSetToIndexMatcher(config, loader)
+
+	require.NoError(t, err)
+	require.NotNil(t, matcher)
+}
+
+func TestAtomicDomainSetToIndexMatcher_RemoteGeoFileSkippedWhenGeositeUsesPath(t *testing.T) {
+	loadClashCalls := 0
+	loader := &MockLoader{
+		loadSiteFunc: func(filename, list string) (*cgeo.GeoSite, error) {
+			return &cgeo.GeoSite{CountryCode: list, Domain: []*cgeo.Domain{
+				{Type: cgeo.Domain_Full, Value: "geosite.example.com"},
+			}}, nil
+		},
+		loadDomainsClashFunc: func(filename string) ([]*cgeo.Domain, error) {
+			loadClashCalls++
+			return nil, errors.New("should not load as clash")
+		},
+	}
+	config := &configs.AtomicDomainSetConfig{
+		Name: "test",
+		Geosite: &configs.GeositeConfig{
+			Filepath: "geosite.dat",
+			Codes:    []string{"cn"},
+		},
+		RemoteGeoFiles: []*configs.GeoRemoteFile{
+			{Filepath: "geosite.dat", SourceUrl: "https://example.com/geosite.dat"},
+		},
+	}
+
+	matcher, err := AtomicDomainSetToIndexMatcher(config, loader)
+
+	require.NoError(t, err)
+	require.NotNil(t, matcher)
+	require.Equal(t, 0, loadClashCalls)
+}
+
 // =============================================================================
 // AtomicIpSetToIPMatcher Tests
 // =============================================================================
@@ -911,6 +967,31 @@ func TestAtomicIpSetToIPMatcher_ClashFileError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, matcher)
 	assert.Contains(t, err.Error(), "failed to extract cidrs from clash file")
+}
+
+func TestAtomicIpSetToIPMatcher_WithRemoteGeoFiles(t *testing.T) {
+	mockCidrs := []*cgeo.CIDR{
+		{Ip: []byte{10, 0, 0, 0}, Prefix: 8},
+	}
+	loader := &MockLoader{
+		loadCidrsClashFunc: func(filename string) ([]*cgeo.CIDR, error) {
+			if filename == "chinanet.txt" {
+				return mockCidrs, nil
+			}
+			return nil, errors.New("file not found")
+		},
+	}
+	config := &configs.AtomicIPSetConfig{
+		Name: "chinanet",
+		RemoteGeoFiles: []*configs.GeoRemoteFile{
+			{Filepath: "chinanet.txt", SourceUrl: "https://example.com/chinanet.txt"},
+		},
+	}
+
+	matcher, err := AtomicIpSetToIPMatcher(config, loader)
+
+	require.NoError(t, err)
+	require.NotNil(t, matcher)
 }
 
 func TestAtomicIpSetToIPMatcher_GeoIPLoadError(t *testing.T) {

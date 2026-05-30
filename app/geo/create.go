@@ -106,7 +106,7 @@ func AppSetConfigToAppSet(c *configs.AppSetConfig, l loader) (i.AppSet, error) {
 	var appIds []*configs.AppId
 	appIds = append(appIds, c.AppIds...)
 	for _, clashFile := range c.ClashFiles {
-		values, err := l.LoadAppsClash(clashFile)
+		values, err := l.LoadApps(clashFile)
 		if err != nil {
 			return nil, fmt.Errorf("failed to extract apps from clash file: %w", err)
 		}
@@ -130,9 +130,9 @@ func AppSetConfigToAppSet(c *configs.AppSetConfig, l loader) (i.AppSet, error) {
 type loader interface {
 	LoadIP(filename, country string) (*cgeo.GeoIP, error)
 	LoadSite(filename, list string) (*cgeo.GeoSite, error)
-	LoadDomainsClash(filename string) ([]*cgeo.Domain, error)
-	LoadCidrsClash(filename string) ([]*cgeo.CIDR, error)
-	LoadAppsClash(filename string) ([]*configs.AppId, error)
+	LoadDomains(filename string) ([]*cgeo.Domain, error)
+	LoadCidrs(filename string) ([]*cgeo.CIDR, error)
+	LoadApps(filename string) ([]*configs.AppId, error)
 }
 
 // AtomicDomainGeosites returns singular geosite plus repeated geosites, in order.
@@ -142,6 +142,20 @@ func AtomicDomainGeosites(ad *configs.AtomicDomainSetConfig) []*configs.GeositeC
 		out = append(out, gs)
 	}
 	out = append(out, ad.GetGeosites()...)
+	return out
+}
+
+// domainRemoteFiles returns remote_geo_files filepaths not already loaded
+// via geosite or clash_files entries.
+func domainRemoteFiles(ad *configs.AtomicDomainSetConfig) []string {
+	var out []string
+	for _, rf := range ad.GetRemoteGeoFiles() {
+		fp := rf.GetFilepath()
+		if fp == "" {
+			continue
+		}
+		out = append(out, fp)
+	}
 	return out
 }
 
@@ -164,12 +178,19 @@ func AtomicDomainSetToIndexMatcher(atomicSet *configs.AtomicDomainSetConfig, l l
 	}
 	if atomicSet.ClashFiles != nil {
 		for _, clashFile := range atomicSet.ClashFiles {
-			values, err := l.LoadDomainsClash(clashFile)
+			values, err := l.LoadDomains(clashFile)
 			if err != nil {
 				return nil, fmt.Errorf("failed to extract domains from clash file: %w", err)
 			}
 			domains = append(domains, values...)
 		}
+	}
+	for _, f := range domainRemoteFiles(atomicSet) {
+		values, err := l.LoadDomains(f)
+		if err != nil {
+			return nil, fmt.Errorf("failed to extract domains from remote geo file: %w", err)
+		}
+		domains = append(domains, values...)
 	}
 	var opts []strmatcher.MphIndexMatcherOption
 	if atomicSet.UseBloomFilter {
@@ -243,6 +264,18 @@ func GeoIpConfigToCidrs(config *configs.GeoIPConfig, l loader) ([]*cgeo.CIDR, er
 	return cidrs, nil
 }
 
+func ipRemoteFiles(ai *configs.AtomicIPSetConfig) []string {
+	var out []string
+	for _, rf := range ai.GetRemoteGeoFiles() {
+		fp := rf.GetFilepath()
+		if fp == "" {
+			continue
+		}
+		out = append(out, fp)
+	}
+	return out
+}
+
 func AtomicIpSetToIPMatcher(c *configs.AtomicIPSetConfig, l loader) (*cgeo.IPMatcher, error) {
 	var cidrs []*cgeo.CIDR
 	if geoip := c.Geoip; geoip != nil {
@@ -265,12 +298,19 @@ func AtomicIpSetToIPMatcher(c *configs.AtomicIPSetConfig, l loader) (*cgeo.IPMat
 	}
 	if c.ClashFiles != nil {
 		for _, clashFile := range c.ClashFiles {
-			values, err := l.LoadCidrsClash(clashFile)
+			values, err := l.LoadCidrs(clashFile)
 			if err != nil {
 				return nil, fmt.Errorf("failed to extract cidrs from clash file: %w", err)
 			}
 			cidrs = append(cidrs, values...)
 		}
+	}
+	for _, f := range ipRemoteFiles(c) {
+		values, err := l.LoadCidrs(f)
+		if err != nil {
+			return nil, fmt.Errorf("failed to extract cidrs from remote geo file: %w", err)
+		}
+		cidrs = append(cidrs, values...)
 	}
 	m, err := cgeo.NewIPMatcherFromGeoCidrs(cidrs, c.Inverse)
 	if err != nil {

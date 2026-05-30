@@ -30,11 +30,7 @@ func CollectJobs(cfg *configs.GeoConfig) []Job {
 	}
 	var jobs []Job
 	for _, ad := range cfg.GetAtomicDomainSets() {
-		geositePaths := make(map[string]struct{})
 		for _, gs := range geo.AtomicDomainGeosites(ad) {
-			if fp := gs.GetFilepath(); fp != "" {
-				geositePaths[fp] = struct{}{}
-			}
 			if url := strings.TrimSpace(gs.GetRemoteUrl()); url != "" {
 				if fp := gs.GetFilepath(); fp != "" {
 					jobs = append(jobs, Job{
@@ -55,29 +51,25 @@ func CollectJobs(cfg *configs.GeoConfig) []Job {
 			if fp == "" {
 				continue
 			}
-			domainAtomic := ""
-			if _, ok := geositePaths[fp]; ok {
-				domainAtomic = ad.GetName()
-			}
 			jobs = append(jobs, Job{
 				URL:              url,
 				Filepath:         fp,
 				CronExpr:         strings.TrimSpace(rf.GetRefreshCron()),
-				DomainAtomicName: domainAtomic,
+				DomainAtomicName: ad.GetName(),
 			})
 		}
 	}
 	for _, ai := range cfg.GetAtomicIpSets() {
-		var ipPath string
 		if gip := ai.GetGeoip(); gip != nil {
-			ipPath = gip.GetFilepath()
-			if url := strings.TrimSpace(gip.GetRemoteUrl()); url != "" && ipPath != "" {
-				jobs = append(jobs, Job{
-					URL:          url,
-					Filepath:     ipPath,
-					CronExpr:     strings.TrimSpace(gip.GetRefreshCron()),
-					IPAtomicName: ai.GetName(),
-				})
+			if url := strings.TrimSpace(gip.GetRemoteUrl()); url != "" {
+				if ipPath := gip.GetFilepath(); ipPath != "" {
+					jobs = append(jobs, Job{
+						URL:          url,
+						Filepath:     ipPath,
+						CronExpr:     strings.TrimSpace(gip.GetRefreshCron()),
+						IPAtomicName: ai.GetName(),
+					})
+				}
 			}
 		}
 		for _, rf := range ai.GetRemoteGeoFiles() {
@@ -89,15 +81,11 @@ func CollectJobs(cfg *configs.GeoConfig) []Job {
 			if fp == "" {
 				continue
 			}
-			ipAtomic := ""
-			if ipPath != "" && ipPath == fp {
-				ipAtomic = ai.GetName()
-			}
 			jobs = append(jobs, Job{
 				URL:          url,
 				Filepath:     fp,
 				CronExpr:     strings.TrimSpace(rf.GetRefreshCron()),
-				IPAtomicName: ipAtomic,
+				IPAtomicName: ai.GetName(),
 			})
 		}
 	}
