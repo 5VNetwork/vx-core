@@ -20,20 +20,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type GeoWrapper struct {
-	sync.RWMutex
-	geo *Geo // *Geo
-}
-
-func (g *GeoWrapper) GetGeo() *Geo {
-	g.RLock()
-	defer g.RUnlock()
-	return g.geo
-}
-
-func (g *GeoWrapper) UpdateGeo(geoConfig *configs.GeoConfig) error {
-	g.Lock()
-	defer g.Unlock()
+func (g *Geo) UpdateGeo(geoConfig *configs.GeoConfig) error {
 	common.Log()
 	runtime.GC()
 	common.Log()
@@ -41,44 +28,30 @@ func (g *GeoWrapper) UpdateGeo(geoConfig *configs.GeoConfig) error {
 	if err != nil {
 		return err
 	}
-	g.geo = geo
+	g.Lock()
+	defer g.Unlock()
+	g.AppSets = geo.AppSets
+	g.DomainSets = geo.DomainSets
+	g.IpSets = geo.IpSets
+	g.OppositeDomainTags = geo.OppositeDomainTags
+	g.OppositeIpTags = geo.OppositeIpTags
 	return nil
 }
 
-func (g *GeoWrapper) AddDomainSet(name string, set i.DomainSet) {
+func (g *Geo) AddDomainSet(name string, set i.DomainSet) {
 	g.Lock()
 	defer g.Unlock()
-	g.geo.DomainSets[name] = set
+	g.DomainSets[name] = set
 }
 
-func (g *GeoWrapper) AddIPSet(name string, set i.IPSet) {
+func (g *Geo) AddIPSet(name string, set i.IPSet) {
 	g.Lock()
 	defer g.Unlock()
-	g.geo.IpSets[name] = set
-}
-
-func (g *GeoWrapper) MatchDomain(domain string, tag string) (bool, error) {
-	g.RLock()
-	defer g.RUnlock()
-
-	matched, err := g.geo.MatchDomain(domain, tag)
-	return matched, err
-}
-
-func (g *GeoWrapper) MatchAppId(appId string, tag string) (bool, error) {
-	g.RLock()
-	defer g.RUnlock()
-	return g.geo.MatchAppId(appId, tag)
-}
-
-func (g *GeoWrapper) MatchIP(ip net.IP, tag string) (bool, error) {
-	g.RLock()
-	defer g.RUnlock()
-	matched, err := g.geo.MatchIP(ip, tag)
-	return matched, err
+	g.IpSets[name] = set
 }
 
 type Geo struct {
+	sync.RWMutex
 	// domain
 	OppositeDomainTags map[string]string
 	DomainSets         map[string]i.DomainSet
@@ -91,6 +64,8 @@ type Geo struct {
 
 // if the domain set is not found, do nothing
 func (g *Geo) AddDomain(name string, domain *commongeo.Domain) error {
+	g.RLock()
+	defer g.RUnlock()
 	matcher, err := cgeo.ToStrMatcher(domain)
 	if err != nil {
 		return err
@@ -108,6 +83,8 @@ func (g *Geo) AddDomain(name string, domain *commongeo.Domain) error {
 }
 
 func (g *Geo) RemoveDomain(name string, domain *commongeo.Domain) error {
+	g.RLock()
+	defer g.RUnlock()
 	matcher, err := cgeo.ToStrMatcher(domain)
 	if err != nil {
 		return err
@@ -125,6 +102,8 @@ func (g *Geo) RemoveDomain(name string, domain *commongeo.Domain) error {
 }
 
 func (g *Geo) MatchDomain(domain string, tag string) (bool, error) {
+	g.RLock()
+	defer g.RUnlock()
 	if m, found := g.DomainSets[tag]; found {
 		ret := m.Match(domain)
 		log.Debug().Str("domain", domain).Str("tag", tag).Bool("matched", ret).Msg("geo match domain")
@@ -143,6 +122,8 @@ func (g *Geo) MatchDomain(domain string, tag string) (bool, error) {
 }
 
 func (g *Geo) MatchIP(ip net.IP, tag string) (bool, error) {
+	g.RLock()
+	defer g.RUnlock()
 	if m, found := g.IpSets[tag]; found {
 		ret := m.Match(ip)
 		log.Debug().IPAddr("ip", ip).Str("tag", tag).Bool("matched", ret).Msg("geo match ip")
@@ -161,6 +142,8 @@ func (g *Geo) MatchIP(ip net.IP, tag string) (bool, error) {
 }
 
 func (g *Geo) MatchAppId(appId string, tag string) (bool, error) {
+	g.RLock()
+	defer g.RUnlock()
 	if m, found := g.AppSets[tag]; found {
 		ret := m.Match(appId)
 		log.Debug().Str("appId", appId).Str("tag", tag).Bool("matched", ret).Msg("geo match appId")

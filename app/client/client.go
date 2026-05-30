@@ -29,7 +29,7 @@ type Client struct {
 
 	NetMon          i.DefaultInterfaceInfo
 	Dispatcher      *dispatcher.Dispatcher
-	Geo             *geo.GeoWrapper
+	Geo             *geo.Geo
 	Subscription    *subscription.SubscriptionManager
 	DialerFactory   transport.DialerFactory
 	Policy          *policy.Policy

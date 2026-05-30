@@ -55,10 +55,10 @@ func greatIPSetReferencesAtoms(c *configs.GreatIPSetConfig, atoms map[string]str
 // names after on-disk geo files were updated. Any great IP set that includes a changed
 // atomic IP set is rebuilt as well. Great domain sets resolve atomics by name on each match,
 // so they pick up domain atomic updates without rebuilding.
-func (g *GeoWrapper) ReloadAtomicSetsAfterRemoteGeoFile(cfg *configs.GeoConfig, domainAtomicNames []string, ipAtomicNames []string) error {
+func (g *Geo) ReloadAtomicSetsAfterRemoteGeoFile(cfg *configs.GeoConfig, domainAtomicNames []string, ipAtomicNames []string) error {
 	g.Lock()
 	defer g.Unlock()
-	if cfg == nil || g.geo == nil {
+	if cfg == nil {
 		return nil
 	}
 	l := defaultGeoFileLoader()
@@ -74,7 +74,7 @@ func (g *GeoWrapper) ReloadAtomicSetsAfterRemoteGeoFile(cfg *configs.GeoConfig, 
 		if err != nil {
 			return fmt.Errorf("reload domain set %q: %w", name, err)
 		}
-		g.geo.DomainSets[name] = &IndexMatcherToDomainSet{
+		g.DomainSets[name] = &IndexMatcherToDomainSet{
 			IndexMatcher: m, reverseMatch: atomic.Inverse,
 		}
 	}
@@ -91,7 +91,7 @@ func (g *GeoWrapper) ReloadAtomicSetsAfterRemoteGeoFile(cfg *configs.GeoConfig, 
 		if err != nil {
 			return fmt.Errorf("reload ip set %q: %w", name, err)
 		}
-		g.geo.IpSets[name] = m
+		g.IpSets[name] = m
 		changedAtoms[name] = struct{}{}
 	}
 	if len(changedAtoms) == 0 {
@@ -101,11 +101,11 @@ func (g *GeoWrapper) ReloadAtomicSetsAfterRemoteGeoFile(cfg *configs.GeoConfig, 
 		if !greatIPSetReferencesAtoms(greatCfg, changedAtoms) {
 			continue
 		}
-		m, err := getGreatIPSet(greatCfg, g.geo.IpSets)
+		m, err := getGreatIPSet(greatCfg, g.IpSets)
 		if err != nil {
 			return fmt.Errorf("reload great ip set %q: %w", greatCfg.GetName(), err)
 		}
-		g.geo.IpSets[greatCfg.GetName()] = m
+		g.IpSets[greatCfg.GetName()] = m
 	}
 	return nil
 }

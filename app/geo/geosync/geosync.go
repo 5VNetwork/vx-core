@@ -22,7 +22,7 @@ import (
 
 // GeoSync runs periodic HTTPS downloads for geo data files (cron from GeoRemoteFile).
 type GeoSync struct {
-	geo *geo.GeoWrapper
+	geo *geo.Geo
 	dl  *downloader.Downloader
 
 	mu         sync.Mutex
@@ -34,7 +34,7 @@ type GeoSync struct {
 }
 
 // New returns a GeoSync that uses the given GeoWrapper for periodic refreshes.
-func New(gw *geo.GeoWrapper) *GeoSync {
+func New(gw *geo.Geo) *GeoSync {
 	return &GeoSync{geo: gw}
 }
 

@@ -25,7 +25,7 @@ func (s *GrpcService) UpdateGeo(ctx context.Context, in *UpdateGeoRequest) (*Upd
 
 func (s *GrpcService) AddGeoDomain(ctx context.Context, in *AddGeoDomainRequest) (*Receipt, error) {
 	log.Info().Msg("add geo domain")
-	g := s.Client.Geo.GetGeo()
+	g := s.Client.Geo
 	if g == nil {
 		return nil, errors.New("geo not found")
 	}
@@ -38,7 +38,7 @@ func (s *GrpcService) AddGeoDomain(ctx context.Context, in *AddGeoDomainRequest)
 
 func (s *GrpcService) RemoveGeoDomain(ctx context.Context, in *RemoveGeoDomainRequest) (*Receipt, error) {
 	log.Info().Msg("remove geo domain")
-	g := s.Client.Geo.GetGeo()
+	g := s.Client.Geo
 	if g == nil {
 		return nil, errors.New("geo not found")
 	}

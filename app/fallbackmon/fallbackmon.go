@@ -22,7 +22,7 @@ type FallbackMon struct {
 type FallbackMonSetting struct {
 	Db            Db
 	DomainSetName string
-	Geo           *geo.GeoWrapper
+	Geo           *geo.Geo
 	// local file to store the fallback domains
 	LocalFile string
 }
@@ -91,7 +91,7 @@ func (r *FallbackMon) FlowSessionEnd(ctx context.Context, info *session.Info, er
 		// save to local file
 		if r.localFile != nil {
 			if r.Geo != nil {
-				existed, _ := r.Geo.GetGeo().MatchDomain(s.GetTargetDomain(), r.DomainSetName)
+				existed, _ := r.Geo.MatchDomain(s.GetTargetDomain(), r.DomainSetName)
 				if existed {
 					// this means the domain has been added to the fallback list
 					return
@@ -105,7 +105,7 @@ func (r *FallbackMon) FlowSessionEnd(ctx context.Context, info *session.Info, er
 
 		// add to set
 		if r.Geo != nil {
-			err = r.Geo.GetGeo().AddDomain(r.DomainSetName, &commongeo.Domain{
+			err = r.Geo.AddDomain(r.DomainSetName, &commongeo.Domain{
 				Value: s.GetTargetDomain(),
 				Type:  commongeo.Domain_RootDomain,
 			})
