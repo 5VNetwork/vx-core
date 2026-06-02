@@ -212,7 +212,7 @@ func FetchSubscription(ctx context.Context, link string, downloader downloader, 
 	var uriContent *sub.DecodeResult
 	// try no user agent first
 	body, header, err := downloader.Download(ctx, link, map[string]string{
-		"User-Agent": "shadowrocket",
+		"User-Agent": "v2ray-core",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to download subscription: %v", err)
@@ -221,7 +221,7 @@ func FetchSubscription(ctx context.Context, link string, downloader downloader, 
 	// if failed to decode, try again with user agent
 	if err != nil || len(uriContent.Configs) == 0 {
 		body, header, err = downloader.Download(ctx, link, map[string]string{
-			"User-Agent": "v2ray-core",
+			"User-Agent": "shadowrocket",
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to download subscription: %v", err)
@@ -304,7 +304,7 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 	var uriContent *sub.DecodeResult
 	// try no user agent first
 	body, header, err := downloader.Download(ctx, link, map[string]string{
-		"User-Agent": "shadowrocket",
+		"User-Agent": "v2ray-core",
 	})
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to download subscription: %v", err)
@@ -313,7 +313,7 @@ func UpdateSubscription(subscription *xsqlite.Subscription, db *gorm.DB, downloa
 	// if failed to decode, try again with user agent
 	if err != nil || len(uriContent.Configs) == 0 {
 		body, header, err = downloader.Download(ctx, link, map[string]string{
-			"User-Agent": "v2ray-core",
+			"User-Agent": "shadowrocket",
 		})
 		if err != nil {
 			return 0, nil, fmt.Errorf("failed to download subscription: %v", err)
