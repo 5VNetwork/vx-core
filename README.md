@@ -47,7 +47,7 @@ The server proto config can be found at protos/server/server.proto
             "tag": "vmess",
             "ports": [10000],
             "protocol": {
-                "@type": "type.googleapis.com/x.proxy.VmessServerConfig",
+                "@type": "type.googleapis.com/vx.proxy.vmess.VmessServerConfig",
                 "secureEncryptionOnly": true
             }
         }
@@ -64,7 +64,7 @@ The server proto config can be found at protos/server/server.proto
         {
             "tag": "direct",
             "protocol": {
-                "@type": "type.googleapis.com/x.proxy.FreedomConfig"
+                "@type": "type.googleapis.com/vx.proxy.freedom .FreedomConfig"
             }
         }
     ]
