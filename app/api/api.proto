@@ -43,6 +43,9 @@ service Api {
   rpc VX(VXRequest) returns (Receipt);
   rpc ServerConfig(ServerConfigRequest) returns (ServerConfigResponse);
   rpc UpdateServerConfig(UpdateServerConfigRequest) returns (UpdateServerConfigResponse);
+  // Raw /usr/local/etc/vx/config.json over SSH (no client-side protobuf Any handling).
+  rpc ServerConfigJson(ServerConfigRequest) returns (ServerConfigJsonResponse);
+  rpc UpdateServerConfigJson(UpdateServerConfigJsonRequest) returns (UpdateServerConfigResponse);
   // rpc XStatusChangeNotify(XStatusChangeNotifyRequest) returns (XStatusChangeNotifyResponse);
   // rpc SetSubscriptionInterval(SetSubscriptionIntervalRequest) returns (SetSubscriptionIntervalResponse);
   rpc UpdateSubscription(UpdateSubscriptionRequest) returns (UpdateSubscriptionResponse);
@@ -171,7 +174,7 @@ message HandlerCountryTestResponse {
 // speed test
 message SpeedTestRequest {
   repeated vx.outbound.HandlerConfig handlers = 1;
-  // 1 or 10
+  // Cloudflare __down payload size in bytes (e.g. 1000000). Zero defaults to 1 MiB.
   uint32 size = 2;
 }
 message SpeedTestResponse {
@@ -272,6 +275,15 @@ message UpdateServerConfigRequest {
   vx.ServerConfig config = 2;
 }
 message UpdateServerConfigResponse {}
+
+message ServerConfigJsonResponse {
+  string config_json = 1;
+}
+
+message UpdateServerConfigJsonRequest {
+  ServerSshConfig ssh_config = 1;
+  string config_json = 2;
+}
 
 message ProcessGeoFilesRequest {
   repeated string geosite_codes = 1;

@@ -414,6 +414,34 @@ func (a *Api) ServerConfig(ctx context.Context, req *ServerConfigRequest) (*Serv
 	return &ServerConfigResponse{Config: &config}, nil
 }
 
+func (a *Api) ServerConfigJson(ctx context.Context, req *ServerConfigRequest) (*ServerConfigJsonResponse, error) {
+	sshClientCache, err := a.getSshClient(ctx, req.SshConfig)
+	if err != nil {
+		return nil, err
+	}
+	defer a.DecreaseClientUser(sshClientCache)
+
+	configBytes, err := sshClientCache.client.DownloadRemoteFileToMemory(vxConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ServerConfigJsonResponse{ConfigJson: string(configBytes)}, nil
+}
+
+func (a *Api) UpdateServerConfigJson(ctx context.Context, req *UpdateServerConfigJsonRequest) (*UpdateServerConfigResponse, error) {
+	sshClientCache, err := a.getSshClient(ctx, req.SshConfig)
+	if err != nil {
+		return nil, err
+	}
+	defer a.DecreaseClientUser(sshClientCache)
+
+	if err := updateVXConfigJSON(sshClientCache.client, req.ConfigJson); err != nil {
+		return nil, fmt.Errorf("failed to update vx config: %w", err)
+	}
+	return &UpdateServerConfigResponse{}, nil
+}
+
 const vxConfigPath = "/usr/local/etc/vx/config.json"
 
 func (a *Api) UpdateServerConfig(ctx context.Context, req *UpdateServerConfigRequest) (*UpdateServerConfigResponse, error) {
@@ -439,8 +467,29 @@ func updateVXConfig(sshClient *sshhelper.Client, config *vx.ServerConfig) error 
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
+	return writeVXConfigAndRestart(sshClient, configJson)
+}
 
-	err = sshClient.CopyContentToRemoteSudo(bytes.NewReader(configJson), "/usr/local/etc/vx/config.json", 644)
+func updateVXConfigJSON(sshClient *sshhelper.Client, configJSON string) error {
+	jsonString := configJSON
+	for oldTypeUrl, newTypeUrl := range create.OldTypeUrlToNewTypeUrl {
+		jsonString = strings.ReplaceAll(jsonString, oldTypeUrl, newTypeUrl)
+	}
+
+	var config vx.ServerConfig
+	if err := protojson.Unmarshal([]byte(jsonString), &config); err != nil {
+		return fmt.Errorf("invalid config json: %w", err)
+	}
+
+	configJson, err := protojson.MarshalOptions{Indent: "  "}.Marshal(&config)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+	return writeVXConfigAndRestart(sshClient, configJson)
+}
+
+func writeVXConfigAndRestart(sshClient *sshhelper.Client, configJson []byte) error {
+	err := sshClient.CopyContentToRemoteSudo(bytes.NewReader(configJson), vxConfigPath, 644)
 	if err != nil {
 		return fmt.Errorf("failed to copy config to remote: %w", err)
 	}
