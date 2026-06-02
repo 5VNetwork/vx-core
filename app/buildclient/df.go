@@ -22,9 +22,11 @@ func DialerFactory(config *configs.TmConfig, fc *Builder, client *client.Client)
 		err := fc.requireFeature(func(bdl i.DefaultInterfaceInfo, ipResolver i.IPResolver) error {
 			opt := transport.DialerFactoryOption{
 				BindToDefaultNIC:        config.GetDialerFactory().GetShouldBindDevice(),
-				IpResolver:              ipResolver,
 				DefaultInterfaceMonitor: bdl,
 				DialTimeout:             time.Duration(config.GetDialerFactory().GetDialTimeout()) * time.Second,
+			}
+			if config.GetDialerFactory().GetResolveDomain() {
+				opt.IpResolver = ipResolver
 			}
 			if config.GetDialerFactory().GetShouldBindDevice() && runtime.GOOS == "android" {
 				fdFunc := fc.getFeature(reflect.TypeOf((*transport.FdFunc)(nil)).Elem())

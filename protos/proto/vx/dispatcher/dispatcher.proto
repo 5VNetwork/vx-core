@@ -4,10 +4,18 @@ package vx.dispatcher;
 option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
 message DispatcherConfig {
+  // if protocol is in one of the following list,
+  // the destination will be overridden by the sniffed domain
+  // If not empty, sniffing will be done for each connection
   repeated string destination_override = 4;
+  // Whether to sniff the connection. This can provide more info
+  // about the connection which can help in debug logging
   bool sniff = 5;
   reserved 6;
+  // Client only
   bool ipv6_use_domain = 7;
+  // how long to wait for resposne data before considering the connection failed
   uint32 fallback_timeout = 8;
+  // Whether to meter session stats
   bool session_stats = 9;
 }

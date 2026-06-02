@@ -10,15 +10,19 @@ option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 message OutboundHandlerConfig {
   string tag = 1;
   vx.transport.TransportConfig transport = 3;
+  // Whether to enable mux
   bool enable_mux = 4;
+  // Mux config
   MuxConfig mux_config = 12;
+  // Address of the outbound handler
   string address = 5;
   uint32 port = 6;
   repeated vx.common.net.PortRange ports = 7;
   google.protobuf.Any protocol = 8;
+  // Whether to use Udp over Tcp
   bool uot = 9;
+  // How to resolve domain if address is domain
   DomainStrategy domain_strategy = 10;
-  // bool pre_connect = 11;
   oneof port_select_strategy {
     RandomPortSelectStrategy random = 30;
     OnePortSelectStrategy one = 31;

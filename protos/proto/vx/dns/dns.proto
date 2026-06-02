@@ -16,6 +16,7 @@ message DnsConfig {
   repeated ConcurrentDnsServer concurrent_dns_servers = 9;
   repeated SerialDnsServer serial_dns_servers = 10;
   DnsHijackConfig dns_hijack = 11;
+  repeated Resolver resolvers = 12;
 }
 
 message DnsHijackConfig {
@@ -72,6 +73,7 @@ message ConcurrentDnsServer {
 message Resolver {
   repeated string dns_servers = 1;
   uint32 interval = 2;
+  string name = 3;
 }
 
 message DnsServerConfig {

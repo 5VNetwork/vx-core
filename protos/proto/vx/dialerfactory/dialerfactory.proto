@@ -2,6 +2,10 @@ syntax = "proto3";
 package vx.dialerfactory;
 
 message DialerFactoryConfig {
+  // Timeout for dialing a connection
   uint32 dial_timeout = 1;
+  // Should bind sockets to default nic.
   bool should_bind_device = 2;
+  // Use internal resolver to resolve domain.
+  bool resolve_domain = 3;
 }

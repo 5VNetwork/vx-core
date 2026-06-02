@@ -1,5 +1,5 @@
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260529202748-86714cfa5e40.1 h1:KtsPT27xS8wjNFayUajNQKQ3EykuyNoyGv0EzYAaVoM=
-buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260529202748-86714cfa5e40.1/go.mod h1:dElz5P1GgVs3z2p9u3xGM8xRJG+VcCpxZkkn8izmP7g=
+buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260602154728-c0b51c7669fd.1 h1:RtS5bAgl2Kj8vbpJmeBqYl5VlfMLhsZhK2sSiRKDbkE=
+buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260602154728-c0b51c7669fd.1/go.mod h1:dElz5P1GgVs3z2p9u3xGM8xRJG+VcCpxZkkn8izmP7g=
 github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260510171949-b46964b7c610 h1:KHemlR05HW8O26XuKUUOYTfWCKg+5QoKWK+sV1JrheU=
 github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260510171949-b46964b7c610/go.mod h1:b9dPkAisksVDpmqc4+7L9/S/ox0CEAJh/+Pfljac5gA=
 github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c h1:pxW6RcqyfI9/kWtOwnv/G+AzdKuy2ZrqINhenH4HyNs=

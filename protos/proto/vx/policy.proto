@@ -5,13 +5,20 @@ option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
 message PolicyConfig {
   map<uint32, UserPolicy> user_policy_map = 11;
+  // If incoming connection does not send any data within this timeout,
+  // it will be closed
   int32 handshake_timeout = 1;
-  // tcp
+  // If there is no data transfer for this timeout, the connection will be closed
   int32 connection_idle_timeout = 2;
+  // If downlink has finished, and there is no uplink data transfer for this timeout,
+  // the connection will be closed
   int32 upLink_only_timeout = 4;
+  // If uplink has finished, and there is no downlink data transfer for this timeout,
+  // the connection will be closed
   int32 downLink_only_timeout = 5;
-  // udp
+  // If there is no uplink data transfer for this timeout, the connection will be closed
   int32 udp_idle_timeout = 3;
+  // Default buffer size for each connection. Only several proxy protocols respect this.
   int32 default_buffer_size = 12;
 }
 

@@ -8,7 +8,6 @@ import "vx/common/net/net.proto";
 option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
 message RouterConfig {
-  // defaults to As_Is
   repeated RuleConfig rules = 1;
 }
 
@@ -17,7 +16,7 @@ message SelectorsConfig {
 }
 
 message RuleConfig {
-  // either outbound_tag or banlancer_tag should be specified but not both
+  // either outbound_tag or selector_tag should be specified but not both
   // when both are empty, it means blocks
   string outbound_tag = 1;
   string selector_tag = 2;
@@ -31,15 +30,22 @@ message RuleConfig {
   // used to match dst ip
   repeated string dst_ip_tags = 9;
   // resolve domain to ip when ip is not available
+  // All ips must be in the dst ip set.
   bool resolve_domain = 26;
-  // resolve and rewrite domain to ip
+  // resolve domain target to ip, and change the target to an ip address that is
+  // in the dst ip set .
+  // Any ip in the dst ip set is okay.
   bool resolve_soft_rewrite = 30;
+  // resolve domain target to ip, but do not change the target to ip.
+  // Any ip in the dst ip set is okay.
   bool resolve_soft_no_rewrite = 31;
-  // used to match domain
+  // used to match target domain
   repeated vx.common.geo.Domain geo_domains = 11;
   repeated string domain_tags = 13;
-  // skip sniff for connectiosn use ip targets
+  // skip sniff for connectiosn use ip targets.
+  // By default, sniffing is enabled for connections with ip targets.
   bool skip_sniff = 27;
+  // used to match user id
   repeated string usernames = 14;
   repeated string inbound_tags = 15;
   repeated vx.common.net.Network networks = 16;
@@ -86,15 +92,22 @@ message Condition {
   // used to match dst ip
   repeated string dst_ip_tags = 9;
   // resolve domain to ip when ip is not available
+  // All ips must be in the dst ip set.
   bool resolve_domain = 26;
-  // resolve and rewrite domain to ip
+  // resolve domain target to ip, and change the target to an ip address that is
+  // in the dst ip set .
+  // Any ip in the dst ip set is okay.
   bool resolve_soft_rewrite = 30;
+  // resolve domain target to ip, but do not change the target to ip.
+  // Any ip in the dst ip set is okay.
   bool resolve_soft_no_rewrite = 31;
-  // used to match domain
+  // used to match target domain
   repeated vx.common.geo.Domain geo_domains = 11;
   repeated string domain_tags = 13;
-  // skip sniff for connectiosn use ip targets
+  // skip sniff for connectiosn use ip targets.
+  // By default, sniffing is enabled for connections with ip targets.
   bool skip_sniff = 27;
+  // used to match user id
   repeated string usernames = 14;
   repeated string inbound_tags = 15;
   repeated vx.common.net.Network networks = 16;
@@ -117,14 +130,16 @@ message SelectorConfig {
     repeated string prefixes = 1;
     // A outbound handler will match if its tag is one of the tags
     repeated string tags = 2;
-    repeated string group_tags = 3;
     // If true, a handler will be selected if it does not match all conditions
+    repeated string sub_strings = 9;
     bool inverse = 4;
+
+    // These are client only. Since server does not use database
     repeated int64 sub_ids = 5;
     repeated int64 handler_ids = 6;
     bool selected = 7;
     bool all = 8;
-    repeated string sub_strings = 9;
+    repeated string group_tags = 3;
     repeated string country_codes = 10;
   }
   // how to select handlers to be used
@@ -149,6 +164,7 @@ message SelectorConfig {
   // if not empty, these handlers will be used as land handlers
   // ids of the outbound handler
   repeated int64 land_handlers = 6;
+  // This should be true when not using database
   bool select_from_om = 7;
   // Download size in bytes for periodic speed tests when speed_test_size_range is unset.
   uint32 speed_test_size = 8;

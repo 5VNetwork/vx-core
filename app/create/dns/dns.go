@@ -1,0 +1,250 @@
+package dns
+
+import (
+	"context"
+	"fmt"
+	"net"
+	"sort"
+	"time"
+
+	"github.com/5vnetwork/vx-core/app/dns"
+	idns "github.com/5vnetwork/vx-core/app/dns"
+	"github.com/5vnetwork/vx-core/app/geo"
+	"github.com/5vnetwork/vx-core/app/inbound"
+	"github.com/5vnetwork/vx-core/common"
+	pd "github.com/5vnetwork/vx-core/common/dispatcher"
+	mynet "github.com/5vnetwork/vx-core/common/net"
+	"github.com/rs/zerolog/log"
+
+	mdns "github.com/miekg/dns"
+
+	"github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/i"
+)
+
+func NewDnsServer(config *configs.DnsServerConfig, handler i.Handler,
+	ipToDomain *idns.IPToDomain, defaultNicInfo i.DefaultInterfaceInfo,
+	dailer i.Dialer, ipResolver i.IPResolver,
+	gh i.GeoHelper) (idns.DnsServer, error) {
+	duration := config.CacheDuration
+	rrCache := idns.NewRrCache(idns.RrCacheSetting{Duration: duration})
+
+	var dnsRewriter idns.MsgRewriter
+	if len(config.IpTags) > 0 {
+		ipSet, err := geo.NewIPSet(config.IpTags, gh)
+		if err != nil {
+			return nil, err
+		}
+		dnsRewriter = idns.NewMsgRewriter(idns.MsgRewriterOption{IPSet: ipSet})
+	}
+
+	switch c := config.Type.(type) {
+	case *configs.DnsServerConfig_EmptyDnsServer:
+		return &dns.EmptyDnsResolver{}, nil
+	case *configs.DnsServerConfig_GoDnsServer:
+		return dns.NewGoIpResolver(dns.GoDnsResolverOption{
+			Cache:      rrCache,
+			IpToDomain: ipToDomain,
+			Rewriter:   dnsRewriter,
+		}), nil
+	case *configs.DnsServerConfig_DohDnsServer:
+		return idns.NewDoHNameServer(idns.DoHNameServerOption{
+			Handler:    handler,
+			Name:       config.Name,
+			Url:        c.DohDnsServer.Url,
+			IpToDomain: ipToDomain,
+			RrCache:    rrCache,
+			ClientIP:   net.ParseIP(config.ClientIp),
+			Rewriter:   dnsRewriter,
+		})
+	case *configs.DnsServerConfig_FakeDnsServer:
+		pools, err := idns.NewPools(c.FakeDnsServer.GetPoolConfigs())
+		if err != nil {
+			return nil, fmt.Errorf("failed to create fake dns pool: %w", err)
+		}
+		fakeDns := dns.NewFakeDns(pools)
+		return fakeDns, nil
+	case *configs.DnsServerConfig_PlainDnsServer:
+		var addressPorts []mynet.AddressPort
+		for _, addr := range c.PlainDnsServer.Addresses {
+			address, port, _ := net.SplitHostPort(addr)
+			addressPorts = append(addressPorts, mynet.AddressPort{
+				Address: mynet.ParseAddress(address),
+				Port:    common.Must2(mynet.PortFromString(port)).(mynet.Port),
+			})
+		}
+		ctx := inbound.ContextWithInboundTag(log.With().Str("tag", config.Name).Logger().WithContext(
+			context.Background()), config.Name)
+		dis := pd.NewPacketDispatcher0(ctx,
+			handler)
+
+		ns := idns.NewDnsServerConcurrent(idns.DnsServerConcurrentOption{
+			Name:            config.Name,
+			Handler:         handler,
+			IPToDomain:      ipToDomain,
+			NameserverAddrs: addressPorts,
+			ClientIp:        net.ParseIP(config.ClientIp),
+			Dispatcher:      dis,
+			RrCache:         rrCache,
+			Rewriter:        dnsRewriter,
+		})
+		if c.PlainDnsServer.UseDefaultDns {
+			setDefaultNICNameservers(ns, defaultNicInfo, addressPorts, dailer)
+		}
+		return ns, nil
+	case *configs.DnsServerConfig_TlsDnsServer:
+		var addressPorts []mynet.AddressPort
+		for _, addr := range c.TlsDnsServer.Addresses {
+			address, port, _ := net.SplitHostPort(addr)
+			addressPorts = append(addressPorts, mynet.AddressPort{
+				Address: mynet.ParseAddress(address),
+				Port:    common.Must2(mynet.PortFromString(port)).(mynet.Port),
+			})
+		}
+		ctx := inbound.ContextWithInboundTag(
+			log.With().Str("tag", config.Name).Logger().WithContext(
+				context.Background()), config.Name)
+		dis := pd.NewPacketDispatcher(ctx,
+			handler,
+			// pd.WithRequestTimeout(time.Second*4),
+			pd.WithResponseTimeout(time.Second*4),
+			pd.WithLinkLifetime(time.Minute*5),
+		)
+		return idns.NewDnsServerConcurrent(idns.DnsServerConcurrentOption{
+			Name:            config.Name,
+			Handler:         handler,
+			Dispatcher:      dis,
+			IPToDomain:      ipToDomain,
+			Tls:             true,
+			NameserverAddrs: addressPorts,
+			RrCache:         rrCache,
+			ClientIp:        net.ParseIP(config.ClientIp),
+			Rewriter:        dnsRewriter,
+		}), nil
+	case *configs.DnsServerConfig_QuicDnsServer:
+		dst, _ := mynet.ParseDestination(c.QuicDnsServer.Address)
+		dst.Network = mynet.Network_UDP
+		return idns.NewQUICNameServer(idns.QuicNameServerOption{
+			Name:        config.Name,
+			Destination: dst,
+			Handler:     handler,
+			IpToDomain:  ipToDomain,
+			IPResolver:  ipResolver,
+			ClientIp:    net.ParseIP(config.ClientIp),
+			RrCache:     rrCache,
+			Rewriter:    dnsRewriter,
+		})
+	default:
+		return nil, fmt.Errorf("unsupported DNS server type: %s", config.Type)
+	}
+}
+
+type setDests interface {
+	SetDests(dests []mynet.AddressPort)
+	RemoveDest(remove mynet.AddressPort, fallback []mynet.AddressPort)
+}
+
+func setDefaultNICNameservers(ns setDests, info i.DefaultInterfaceInfo,
+	fallbackNameservers []mynet.AddressPort, dailer i.Dialer) {
+	var onInterfaceChange i.OnDefaultInterfaceChanged = func() {
+		var newDests []mynet.AddressPort
+		for _, dns := range info.DefaultDns4() {
+			newDests = append(newDests, mynet.AddressPort{
+				Address: mynet.AddressFromNetIpAddr(dns),
+				Port:    mynet.Port(53),
+			})
+		}
+		if info.DefaultInterfaceName6() != info.DefaultInterfaceName4() {
+			for _, dns := range info.DefaultDns6() {
+				newDests = append(newDests, mynet.AddressPort{
+					Address: mynet.AddressFromNetIpAddr(dns),
+					Port:    mynet.Port(53),
+				})
+			}
+		}
+		log.Info().Any("servers", newDests).Msg("default dns servers")
+		if len(newDests) > 0 {
+			// make ipv4 dests first
+			// since some nic might contain ipv6 dns server but acutally does not support ipv6
+			sort.Slice(newDests, func(i, j int) bool {
+				return newDests[i].Address.Family() == mynet.AddressFamilyIPv4 && newDests[j].Address.Family() != mynet.AddressFamilyIPv4
+			})
+			ns.SetDests(newDests)
+
+			// this is to remove unusable dns servers to reduce error logs. (Some
+			// default dns servers might be unusable)
+			if dailer != nil {
+				msg := &mdns.Msg{}
+				msg.SetQuestion("www.baidu.com.", mdns.TypeA)
+				for _, dnsServer := range newDests {
+					go func(ap mynet.AddressPort) {
+						conn, err := dailer.Dial(context.Background(), mynet.UDPDestination(ap.Address, ap.Port))
+						if err != nil {
+							log.Debug().Err(err).Str("server", ap.String()).Msg("test dns server of default nic failed to dial")
+							ns.RemoveDest(ap, fallbackNameservers)
+							log.Info().Str("server", ap.String()).Msg("dns server removed")
+							return
+						}
+						defer conn.Close()
+						client := &mdns.Client{
+							Net: "udp",
+						}
+						dnsConn := &mdns.Conn{
+							Conn:    conn,
+							UDPSize: client.UDPSize,
+						}
+						_, _, err = client.ExchangeWithConn(msg, dnsConn)
+						if err != nil {
+							log.Error().Err(err).Str("server", ap.String()).Msg("test dns server failed to exchange dns")
+							ns.RemoveDest(ap, fallbackNameservers)
+							log.Info().Str("server", ap.String()).Msg("dns server removed")
+						}
+					}(dnsServer)
+				}
+			}
+
+		} else {
+			ns.SetDests(fallbackNameservers)
+			log.Info().Interface("nameservers", fallbackNameservers).Msg("use config nameservers for direct")
+		}
+	}
+	onInterfaceChange()
+	info.Register(onInterfaceChange)
+}
+
+func NewDnsRule(config *configs.DnsRuleConfig, dnsServer idns.DnsServer, gh i.GeoHelper,
+) (*dns.DnsRule, error) {
+	var conditions []dns.Condition
+	if len(config.DomainTags) > 0 || len(config.Domains) > 0 {
+		domainSet, err := geo.NewDomainSet(config.DomainTags, gh, config.Domains...)
+		if err != nil {
+			return nil, err
+		}
+		conditions = append(conditions, &idns.PreferDomainCondition{
+			DomainSet: domainSet,
+		})
+	}
+	if _, ok := dnsServer.(*dns.FakeDns); ok {
+		conditions = append(conditions, &idns.HasSrcCondition{})
+	}
+	if len(config.IncludedTypes) > 0 {
+		c := &idns.IncludedTypesCondition{}
+		for _, t := range config.IncludedTypes {
+			c.Types = append(c.Types, typeToNumber(t))
+		}
+		conditions = append(conditions, c)
+	}
+
+	return idns.NewDnsRule(dnsServer, conditions...), nil
+}
+
+func typeToNumber(t configs.DnsType) uint16 {
+	switch t {
+	case configs.DnsType_DnsType_A:
+		return mdns.TypeA
+	case configs.DnsType_DnsType_AAAA:
+		return mdns.TypeAAAA
+	default:
+		panic("not supported dns type")
+	}
+}

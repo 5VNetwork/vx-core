@@ -94,7 +94,7 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Netmon failed")
 		}
-
+		log.Debug().Msg("Netmon created")
 	}
 
 	// monitor
@@ -201,7 +201,7 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 
 	// geo
 	log.Print("NewGeo")
-	gw := &geo.GeoWrapper{}
+	gw := &geo.Geo{}
 	x.Geo = gw
 	if err := gw.UpdateGeo(config.Geo); err != nil {
 		return nil, fmt.Errorf("failed to UpdateGeo: %w", err)
@@ -280,7 +280,7 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 
 	// fallback mon
 	if config.FallbackMon != nil {
-		err := builder.requireFeature(func(dispatcher *dispatcher.Dispatcher, geo *geo.GeoWrapper) error {
+		err := builder.requireFeature(func(dispatcher *dispatcher.Dispatcher, geo *geo.Geo) error {
 			fallbackMon := fallbackmon.NewFallbackMon(&fallbackmon.FallbackMonSetting{
 				DomainSetName: config.FallbackMon.DomainSetName,
 				Geo:           geo,

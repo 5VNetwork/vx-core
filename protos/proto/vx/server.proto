@@ -1,6 +1,8 @@
 syntax = "proto3";
 package vx;
 
+import "vx/dialerfactory/dialerfactory.proto";
+import "vx/dispatcher/dispatcher.proto";
 import "vx/dns/dns.proto";
 import "vx/geo/geo.proto";
 import "vx/inbound/inbound.proto";
@@ -13,7 +15,6 @@ import "vx/user/user.proto";
 option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/server";
 
 message ServerConfig {
-  reserved 1;
   repeated vx.inbound.ProxyInboundConfig inbounds = 3;
   repeated vx.inbound.MultiProxyInboundConfig multi_inbounds = 11;
   vx.PolicyConfig policy = 4;
@@ -23,5 +24,6 @@ message ServerConfig {
   repeated vx.outbound.OutboundHandlerConfig outbounds = 9;
   vx.geo.GeoConfig geo = 10;
   vx.dns.DnsConfig dns = 12;
-  vx.outbound.OutboundConfig outbound = 13;
+  vx.dispatcher.DispatcherConfig dispatcher = 14;
+  vx.dialerfactory.DialerFactoryConfig dialer_factory = 15;
 }

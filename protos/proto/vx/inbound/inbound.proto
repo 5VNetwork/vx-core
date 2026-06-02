@@ -1,30 +1,36 @@
 syntax = "proto3";
 package vx.inbound;
-option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
 
-import "vx/transport/transport.proto";
 import "google/protobuf/any.proto";
-
-import "vx/transport/security/tls/tls.proto";
-import "vx/transport/security/reality/config.proto";
-import "vx/transport/protocols/websocket/config.proto";
-import "vx/transport/protocols/http/config.proto";
+import "vx/transport/dlhelper.proto";
 import "vx/transport/protocols/grpc/config.proto";
+import "vx/transport/protocols/http/config.proto";
 import "vx/transport/protocols/httpupgrade/config.proto";
 import "vx/transport/protocols/splithttp/config.proto";
 import "vx/transport/protocols/tcp/config.proto";
-import "vx/transport/dlhelper.proto";
+import "vx/transport/protocols/websocket/config.proto";
+import "vx/transport/security/reality/config.proto";
+import "vx/transport/security/tls/tls.proto";
+import "vx/transport/transport.proto";
 import "vx/user/user.proto";
 
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx";
+
 message ProxyInboundConfig {
+  // Listen address. If empty, will listen on all addresses
   string address = 1;
+  // Name of the inbound. Can be used in routing rules.
   string tag = 2;
-  // if both port and ports are null, 5 random ports will be used
+  // If both port and ports are specified, both will be used.
   uint32 port = 3;
   repeated uint32 ports = 4;
   vx.transport.TransportConfig transport = 6;
+  // Both protocol and protocols will be considered.
+  // Should be config of a proxy protocol
   google.protobuf.Any protocol = 7;
+  // Should be configs of proxy protocols
   repeated google.protobuf.Any protocols = 8;
+  // All users will be added to all proxy inbound handlers
   repeated vx.user.UserConfig users = 9;
 }
 
@@ -34,7 +40,9 @@ message InboundManagerConfig {
 }
 
 message MultiProxyInboundConfig {
+  // Listen address. If empty, will listen on all addresses
   string address = 1;
+  // Name of the inbound. Can be used in routing rules.
   string tag = 2;
   repeated uint32 ports = 3;
   repeated google.protobuf.Any protocols = 4;
@@ -44,8 +52,11 @@ message MultiProxyInboundConfig {
       vx.transport.security.tls.TlsConfig tls = 20;
       vx.transport.security.reality.RealityConfig reality = 21;
     }
+    // Sni in this domains will be handled by this security config
     repeated string domains = 1;
+    // Sni matching this regular expression will be handled by this security config
     string regular_expression = 2;
+    // If true, this security config will be used for all connections
     bool always = 3;
   }
   repeated Security security_configs = 5;
@@ -59,10 +70,15 @@ message MultiProxyInboundConfig {
       vx.transport.protocols.splithttp.SplitHttpConfig splithttp = 12;
       vx.transport.protocols.tcp.TcpConfig tcp = 13;
     }
+    // Alpn in this protocol will be handled by this protocol config
     string alpn = 1;
+    // Sni of the connection
     string sni = 2;
+    // Http1 path
     string path = 3;
+    // Whether connection is using h2
     bool h2 = 4;
+    // If true, this protocol config will be used for all connections
     bool always = 5;
   }
   repeated Protocol transport_protocols = 6;
@@ -71,7 +87,6 @@ message MultiProxyInboundConfig {
 }
 
 message WfpConfig {
-   uint32 tcp_port = 1;
-   uint32 udp_port = 2;
+  uint32 tcp_port = 1;
+  uint32 udp_port = 2;
 }
-
