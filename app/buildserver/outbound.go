@@ -9,6 +9,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/configs"
 	outboundcreate "github.com/5vnetwork/vx-core/app/create/outbound"
 	"github.com/5vnetwork/vx-core/app/outbound"
+	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/transport"
 	"go.uber.org/fx"
@@ -16,10 +17,11 @@ import (
 
 type OutboundManagerParams struct {
 	fx.In
-	Configs       []*configs.OutboundHandlerConfig
-	DialerFactory transport.DialerFactory
-	IpResolver    i.IPResolver
-	Policy        i.TimeoutSetting
+	Configs          []*configs.OutboundHandlerConfig
+	DialerFactory    transport.DialerFactory
+	IpResolver       i.IPResolver `name:"internal_resolver"`
+	Policy           i.TimeoutSetting
+	HijackDnsHandler i.Handler `name:"hijack_dns_handler" optional:"true"`
 }
 type OutboundManagerResult struct {
 	fx.Out
@@ -36,6 +38,16 @@ func NewOutboundManager(lc fx.Lifecycle, params OutboundManagerParams) (Outbound
 			return om.Close()
 		},
 	})
+
+	if len(params.Configs) == 0 {
+		params.Configs = []*configs.OutboundHandlerConfig{
+			{
+				Tag:      "direct",
+				Protocol: serial.ToTypedMessage(&configs.FreedomConfig{}),
+			},
+		}
+	}
+
 	for _, handlerConfig := range params.Configs {
 		h, err := outboundcreate.NewOutHandler(&outboundcreate.Config{
 			OutboundHandlerConfig: handlerConfig,
@@ -48,5 +60,10 @@ func NewOutboundManager(lc fx.Lifecycle, params OutboundManagerParams) (Outbound
 		}
 		om.AddHandlers(h)
 	}
+
+	if params.HijackDnsHandler != nil {
+		om.AddHandlers(params.HijackDnsHandler.(i.Outbound))
+	}
+
 	return OutboundManagerResult{OutboundManager: om}, nil
 }

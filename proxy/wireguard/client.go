@@ -112,7 +112,6 @@ func New(settings HandlerSettings) (*Handler, error) {
 	if settings.Conf.Reserved == nil {
 		settings.Conf.Reserved = []byte{0x00, 0x00, 0x00}
 	}
-	settings.Conf.IsClient = true
 
 	ctx, cancel := context.WithCancel(context.Background())
 	ctx = log.With().Str("handler", settings.Name).Logger().WithContext(ctx)
@@ -274,11 +273,6 @@ func (h *Handler) createIPCRequest() string {
 	var request strings.Builder
 
 	request.WriteString(fmt.Sprintf("private_key=%s\n", h.Conf.SecretKey))
-
-	if !h.Conf.IsClient {
-		// placeholder, we'll handle actual port listening on Xray
-		request.WriteString("listen_port=1337\n")
-	}
 
 	for _, peer := range h.Conf.Peers {
 		if peer.PublicKey != "" {

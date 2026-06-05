@@ -6,11 +6,6 @@ import (
 )
 
 func createTun(c *wireguard.DeviceConfig) tunCreator {
-	if !c.IsClient {
-		// See tun_linux.go createKernelTun()
-		log.Warn().Msg("Using gVisor TUN. WG inbound doesn't support kernel TUN yet.")
-		return createGVisorTun
-	}
 	if c.NoKernelTun {
 		log.Warn().Msg("Using gVisor TUN. NoKernelTun is set to true.")
 		return createGVisorTun

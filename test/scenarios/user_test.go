@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-			"github.com/5vnetwork/vx-core/app/buildclient"
+	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/buildserver"
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/user"
@@ -166,7 +166,6 @@ func TestVMessUserManagement(t *testing.T) {
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(serverPort),
 					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
-						Special:  true,
 						Id:       userID1.String(),
 						Security: configs.SecurityType_SecurityType_AES128_GCM,
 					}),
@@ -216,7 +215,6 @@ func TestVMessUserManagement(t *testing.T) {
 					Address: nethelper.LocalHostIP.String(),
 					Port:    uint32(serverPort),
 					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
-						Special:  true,
 						Id:       userID2.String(),
 						Security: configs.SecurityType_SecurityType_AES128_GCM,
 					}),
@@ -722,7 +720,6 @@ func TestMultipleUsersVMess(t *testing.T) {
 						Address: nethelper.LocalHostIP.String(),
 						Port:    uint32(serverPort),
 						Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
-							Special:  true,
 							Id:       userID.String(),
 							Security: configs.SecurityType_SecurityType_AES128_GCM,
 						}),
@@ -917,7 +914,6 @@ func TestVMessMultipleCipherTypes(t *testing.T) {
 							Address: nethelper.LocalHostIP.String(),
 							Port:    uint32(serverPort),
 							Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
-								Special:  true,
 								Id:       userID.String(),
 								Security: cipherType,
 							}),

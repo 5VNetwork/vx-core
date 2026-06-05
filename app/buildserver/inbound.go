@@ -18,7 +18,7 @@ type InboundManagerParams struct {
 	fx.In
 	Configs      []*configs.ProxyInboundConfig
 	MultiConfigs []*configs.MultiProxyInboundConfig
-	Handler      i.Handler
+	Handler      i.Handler `name:"dispatcher"`
 	Policy       i.TimeoutSetting
 	OnUnauth     i.UnauthorizedReport `optional:"true"`
 }

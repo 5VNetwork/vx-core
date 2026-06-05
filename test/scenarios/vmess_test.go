@@ -186,7 +186,6 @@ func TestVMessGCMUDP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
 					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
-						Special:  true,
 						Id:       userID.String(),
 						Security: configs.SecurityType_SecurityType_AES128_GCM,
 					}),
@@ -268,7 +267,6 @@ func TestVMessChacha20(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
 					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
-						Special:  true,
 						Id:       userID.String(),
 						Security: configs.SecurityType_SecurityType_CHACHA20_POLY1305,
 					}),
@@ -350,7 +348,6 @@ func TestVMessNone(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
 					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
-						Special:  true,
 						Id:       userID.String(),
 						Security: configs.SecurityType_SecurityType_NONE,
 					}),
@@ -443,7 +440,6 @@ func TestVMessKCP(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
 					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
-						Special:  true,
 						Id:       userID.String(),
 						Security: configs.SecurityType_SecurityType_NONE,
 					}),
@@ -540,8 +536,6 @@ func TestVMessKCPLarge(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
 					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
-
-						Special:  true,
 						Id:       userID.String(),
 						Security: configs.SecurityType_SecurityType_NONE,
 					}),
@@ -656,8 +650,6 @@ func TestVMessGCMMux(t *testing.T) {
 					Port:      uint32(serverPort),
 					EnableMux: true,
 					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
-
-						Special:  true,
 						Id:       userID.String(),
 						Security: configs.SecurityType_SecurityType_AES128_GCM,
 					}),
@@ -743,8 +735,6 @@ func TestVMessZero(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
 					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
-
-						Special:  true,
 						Id:       userID.String(),
 						Security: configs.SecurityType_SecurityType_ZERO,
 					}),
@@ -828,7 +818,6 @@ func TestVMessGCMLengthAuth(t *testing.T) {
 					Address: net.LocalHostIP.String(),
 					Port:    uint32(serverPort),
 					Protocol: serial.ToTypedMessage(&configs.VmessClientConfig{
-						Special:  true,
 						Id:       userID.String(),
 						Security: configs.SecurityType_SecurityType_AES128_GCM,
 						// TestsEnabled: "AuthenticatedLength|NoTerminationSignal",

@@ -1,7 +1,9 @@
 syntax = "proto3";
 package vx.proxy.vmess;
-option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/proxy";
+
 import "vx/user/user.proto";
+
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/proxy";
 
 enum SecurityType {
   SecurityType_UNKNOWN = 0;
@@ -16,10 +18,8 @@ enum SecurityType {
 message VmessClientConfig {
   string id = 3;
   SecurityType security = 4;
-  bool special = 6;
   uint32 alter_id = 7;
 }
-
 
 message VmessServerConfig {
   repeated vx.user.UserConfig accounts = 1;

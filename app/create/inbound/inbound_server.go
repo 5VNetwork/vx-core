@@ -6,7 +6,6 @@
 package inbound
 
 import (
-	"math/rand"
 	"slices"
 
 	"fmt"
@@ -39,17 +38,14 @@ func NewInboundServer(config *configs.ProxyInboundConfig, ha i.Handler,
 	ports := make([]uint16, 0, 10)
 	if config.Port != 0 {
 		ports = append(ports, uint16(config.Port))
-	} else if len(config.Ports) > 0 {
+	}
+	if len(config.Ports) > 0 {
 		for _, port := range config.Ports {
 			ports = append(ports, uint16(port))
 		}
-	} else {
-		for i := 0; i < 5; i++ {
-			ports = append(ports, uint16(rand.Intn(40000-1024)+1024))
-		}
 	}
 
-	if len(config.Protocols) == 0 {
+	if config.Protocol != nil {
 		config.Protocols = append(config.Protocols, config.Protocol)
 	}
 

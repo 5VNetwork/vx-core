@@ -120,7 +120,6 @@ message Condition {
   repeated string app_tags = 24;
   repeated string all_tags = 25;
   repeated string protocols = 28;
-  bool has_domain = 32;
 }
 
 message SelectorConfig {

@@ -29,7 +29,6 @@ type (
 	Hysteria2ClientConfig       = hysteriapb.Hysteria2ClientConfig
 	Shadowsocks2022ClientConfig = shadowsocks2022pb.Shadowsocks2022ClientConfig
 	WireguardClientConfig       = wireguardpb.DeviceConfig
-	ShadowsocksAccount          = sspb.ShadowsocksAccount
 	ShadowsocksClientConfig     = sspb.ShadowsocksClientConfig
 	SocksClientConfig           = sockspb.SocksClientConfig
 	TrojanClientConfig          = trojanpb.TrojanClientConfig

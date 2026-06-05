@@ -19,6 +19,5 @@ message DeviceConfig {
   int32 mtu = 4;
   int32 num_workers = 5;
   bytes reserved = 6;
-  bool is_client = 8;
   bool no_kernel_tun = 9;
 }

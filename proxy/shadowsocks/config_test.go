@@ -15,15 +15,10 @@ import (
 )
 
 func TestAEADCipherUDP(t *testing.T) {
-	rawAccount := &configs.ShadowsocksAccount{
-		CipherType: configs.ShadowsocksCipherType_AES_128_GCM,
-		User: &configs.UserConfig{
-			Secret: uuid.New().String(),
-		},
-	}
+
 	account, err := shadowsocks.NewMemoryAccount(
-		user.NewUser(rawAccount.User.Id, rawAccount.User.Secret),
-		shadowsocks.CipherType(rawAccount.CipherType), false, false)
+		user.NewUser("", uuid.New().String()),
+		shadowsocks.CipherType(configs.ShadowsocksCipherType_AES_128_GCM), false, false)
 	common.Must(err)
 
 	cipher := account.Cipher

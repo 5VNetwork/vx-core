@@ -55,7 +55,7 @@ message AtomicIPSetConfig {
 }
 
 message GeoConfig {
-  repeated DomainSetConfig domain_sets = 1;
+  reserved 1;
   // There should be no same name in great_domain_sets and atomic_domain_sets.
   // Same for great_ip_sets and atomic_ip_sets.
   repeated GreatDomainSetConfig great_domain_sets = 3;

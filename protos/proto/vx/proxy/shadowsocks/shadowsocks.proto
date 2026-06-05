@@ -1,7 +1,9 @@
 syntax = "proto3";
 package vx.proxy.shadowsocks;
-option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/proxy";
+
 import "vx/user/user.proto";
+
+option go_package = "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/proxy";
 
 enum ShadowsocksCipherType {
   AES_128_GCM = 0;
@@ -10,14 +12,7 @@ enum ShadowsocksCipherType {
   NONE = 3;
 }
 
-message ShadowsocksAccount {
-  ShadowsocksCipherType cipher_type = 2;
-  bool iv_check = 3;
-  vx.user.UserConfig user = 4;
-  bool experiment_reduced_iv_head_entropy = 90001;
-}
-
-message ShadowsocksServerConfig { 
+message ShadowsocksServerConfig {
   reserved 2;
   ShadowsocksCipherType cipher_type = 3;
   bool iv_check = 4;

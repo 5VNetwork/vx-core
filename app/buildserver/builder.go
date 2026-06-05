@@ -6,19 +6,19 @@
 package buildserver
 
 import (
-	"net"
+	"context"
 
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/create"
-	"github.com/5vnetwork/vx-core/app/dns"
+	"github.com/5vnetwork/vx-core/app/dispatcher"
+	"github.com/5vnetwork/vx-core/app/dispatcher/hooks"
+	"github.com/5vnetwork/vx-core/app/geo/geosync"
 	"github.com/5vnetwork/vx-core/app/inbound/monitor"
 	"github.com/5vnetwork/vx-core/app/inbound/proxy"
 	"github.com/5vnetwork/vx-core/app/memmon"
-	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/app/user"
 	"github.com/5vnetwork/vx-core/i"
-	"github.com/5vnetwork/vx-core/proxy/freedom"
-	"github.com/5vnetwork/vx-core/transport"
+	"github.com/5vnetwork/vx-core/nic"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
 )
@@ -33,25 +33,15 @@ func NewX(config *configs.ServerConfig) (*fx.App, error) {
 	fxOptions = append(fxOptions, fx.Supply(config.Router))
 	fxOptions = append(fxOptions, fx.Supply(config.Policy))
 	fxOptions = append(fxOptions, fx.Supply(config.Dns))
-	fxOptions = append(fxOptions, fx.Supply(config.Outbound))
+	fxOptions = append(fxOptions, fx.Supply(config.Dispatcher))
+	fxOptions = append(fxOptions, fx.Supply(config.DialerFactory))
 
-	// use default dialer factory for now
-	fxOptions = append(fxOptions, fx.Provide(func() transport.DialerFactory {
-		return transport.DefaultDialerFactory()
-	}))
-	fxOptions = append(fxOptions, fx.Provide(func() i.IPResolver {
-		return &dns.GoDnsResolver{
-			Resolver: net.DefaultResolver,
-		}
-	}))
-
+	fxOptions = append(fxOptions, DialerFactoryOption(config.GetDialerFactory()))
 	fxOptions = append(fxOptions, fx.Provide(NewInboundManager))
 	fxOptions = append(fxOptions, fx.Provide(NewOutboundManager))
 	fxOptions = append(fxOptions, fx.Provide(NewGeoHelper))
 	fxOptions = append(fxOptions, fx.Provide(NewRouter))
-	fxOptions = append(fxOptions, fx.Provide(fx.Annotate(
-		NewDispatcher,
-	)))
+	fxOptions = append(fxOptions, fx.Provide(NewDispatcher))
 	fxOptions = append(fxOptions, fx.Provide(fx.Annotate(
 		create.NewPolicy,
 		fx.As(new(i.TimeoutSetting)),
@@ -59,9 +49,28 @@ func NewX(config *configs.ServerConfig) (*fx.App, error) {
 	fxOptions = append(fxOptions, fx.Provide(NewUserManager))
 	fxOptions = append(fxOptions, fx.Provide(monitor.NewInboundStats))
 	fxOptions = append(fxOptions, fx.Provide(NewMonitor))
+	fxOptions = append(fxOptions, fx.Provide(NewDNS))
+	fxOptions = append(fxOptions, fx.Provide(NewGeoSync))
+	fxOptions = append(fxOptions, fx.Provide(
+		func(lc fx.Lifecycle) i.DefaultInterfaceInfo {
+			m, err := nic.NewInterfaceMonitor("")
+			if err != nil {
+				panic(err)
+			}
+			lc.Append(fx.Hook{
+				OnStart: func(ctx context.Context) error {
+					return m.Start()
+				},
+				OnStop: func(ctx context.Context) error {
+					return m.Close()
+				},
+			})
+			return m
+		}))
 
 	// add users to inbounds
-	fxOptions = append(fxOptions, fx.Decorate(func(im *proxy.InboundManager, um *user.Manager) *proxy.InboundManager {
+	fxOptions = append(fxOptions, fx.Decorate(func(im *proxy.InboundManager,
+		um *user.Manager) *proxy.InboundManager {
 		for _, user := range um.Users {
 			for _, inbound := range im.GetInbounds() {
 				inbound.AddUser(user)
@@ -69,22 +78,24 @@ func NewX(config *configs.ServerConfig) (*fx.App, error) {
 		}
 		return im
 	}))
-	// add a freedom handler
-	fxOptions = append(fxOptions, fx.Decorate(func(om *outbound.Manager, ipr i.IPResolver) *outbound.Manager {
-		om.AddHandlers(freedom.New(
-			&transport.Prefer4Dialer{
-				Dialer:     transport.DefaultDialer,
-				IpResolver: ipr,
-			},
-			transport.DefaultPacketListener,
-			"direct",
-			ipr,
-		))
-		return om
-	}))
+	// add router to dispatcher to break circular dependency (single Decorate per type)
+	fxOptions = append(fxOptions,
+		fx.Decorate(func(dp *dispatcher.Dispatcher, router i.Router) *dispatcher.Dispatcher {
+			dp.Router = router
+			if config.GetLog().GetLogLevel() == configs.Level_DEBUG {
+				debugHook := &hooks.DebugHook{}
+				dp.AddBeforeHandlerSelectionHook(debugHook)
+				dp.AddAfterHandlerSelectionHook(debugHook)
+				dp.AddSessionEndHook(debugHook)
+			}
+			return dp
+		}))
 
 	fxOptions = append(fxOptions, fx.Invoke(func(im *proxy.InboundManager) {
 	}))
+	fxOptions = append(fxOptions, fx.Invoke(func(gs *geosync.GeoSync) {
+	}))
+
 	if config.GetLog().GetLogLevel() != configs.Level_DEBUG {
 		fxOptions = append(fxOptions, fx.WithLogger(func() fxevent.Logger {
 			return fxevent.NopLogger
@@ -93,6 +104,7 @@ func NewX(config *configs.ServerConfig) (*fx.App, error) {
 		fxOptions = append(fxOptions, fx.Invoke(func(monitor *memmon.Monitor) {
 		}))
 	}
+
 	return fx.New(
 		fxOptions...,
 	), nil

@@ -18,14 +18,14 @@ type RouterParams struct {
 	Config          *configs.RouterConfig
 	OutboundManager *outbound.Manager
 	GeoHelper       *geo.Geo
-	IpResolver      i.IPResolver
+	IpResolver      i.IPResolver `name:"request_domain_resolver"`
 }
 type RouterResult struct {
 	fx.Out
 	Router i.Router
 }
 
-func NewRouter(lc fx.Lifecycle, params RouterParams) (RouterResult, error) {
+func NewRouter(params RouterParams) (RouterResult, error) {
 	router, err := router.NewRouter(&router.RouterConfig{
 		RouterConfig:    params.Config,
 		OutboundManager: params.OutboundManager,
