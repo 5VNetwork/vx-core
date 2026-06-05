@@ -3,6 +3,8 @@ package nic
 import (
 	"log"
 	"testing"
+
+	"golang.org/x/sys/windows"
 )
 
 func TestNICMonitorName(t *testing.T) {
@@ -37,4 +39,12 @@ func TestNICMonitorStartClose(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestNICMonitorFindDefaultLUID1(t *testing.T) {
+	name, luid, index, err := FindDefaultLUID1(windows.AF_INET)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("name: %s, luid: %d, index: %d", name, luid, index)
 }

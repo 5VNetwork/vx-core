@@ -113,7 +113,16 @@ func (m *DefaultInterfaceMonitor) update() error {
 		}
 	}
 
-	n4, l, idx4, err := FindDefaultLUID(windows.AF_INET, myTunIndex)
+	var n4 string
+	var l winipcfg.LUID
+	var idx4 uint32
+	var err error
+	n4, l, idx4, err = FindDefaultLUID1(windows.AF_INET)
+	if myTunIndex != 0 {
+		n4, l, idx4, err = FindDefaultLUID(windows.AF_INET, myTunIndex)
+	} else {
+		n4, l, idx4, err = FindDefaultLUID1(windows.AF_INET)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to find default IPv4 interface: %w", err)
 	}
@@ -131,7 +140,14 @@ func (m *DefaultInterfaceMonitor) update() error {
 		m.dnsAddrs4 = dnsAddrs
 		shouldNotify = true
 	}
-	n6, l, idx6, err := FindDefaultLUID(windows.AF_INET6, myTunIndex)
+
+	var n6 string
+	var idx6 uint32
+	if myTunIndex != 0 {
+		n6, l, idx6, err = FindDefaultLUID(windows.AF_INET6, myTunIndex)
+	} else {
+		n6, l, idx6, err = FindDefaultLUID1(windows.AF_INET6)
+	}
 	if err != nil {
 		m.Unlock()
 		return fmt.Errorf("failed to find default IPv6 interface: %w", err)
@@ -297,6 +313,45 @@ func FindDefaultLUID(family winipcfg.AddressFamily, idx int) (string, winipcfg.L
 		}
 		ifrow, err := r[i].InterfaceLUID.Interface()
 		if err != nil || ifrow.OperStatus != winipcfg.IfOperStatusUp {
+			continue
+		}
+
+		iface, err := r[i].InterfaceLUID.IPInterface(family)
+		if err != nil {
+			continue
+		}
+
+		if r[i].Metric+iface.Metric < lowestMetric {
+			lowestMetric = r[i].Metric + iface.Metric
+			index = r[i].InterfaceIndex
+			luid = r[i].InterfaceLUID
+			name = ifrow.Alias()
+		}
+	}
+
+	return name, luid, index, nil
+}
+
+// find the default physical interface with the lowest metric
+func FindDefaultLUID1(family winipcfg.AddressFamily) (string, winipcfg.LUID, uint32, error) {
+	r, err := winipcfg.GetIPForwardTable2(family)
+	if err != nil {
+		return "", 0, 0, err
+	}
+	lowestMetric := ^uint32(0)
+	index := uint32(0)
+	luid := winipcfg.LUID(0)
+	name := ""
+	for i := range r {
+		if r[i].DestinationPrefix.PrefixLength != 0 || r[i].Loopback {
+			continue
+		}
+		ifrow, err := r[i].InterfaceLUID.Interface()
+		if err != nil || ifrow.OperStatus != winipcfg.IfOperStatusUp {
+			continue
+		}
+		switch ifrow.Type {
+		case winipcfg.IfTypeSoftwareLoopback, winipcfg.IfTypePropVirtual:
 			continue
 		}
 
