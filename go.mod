@@ -3,7 +3,7 @@ module github.com/5vnetwork/vx-core
 go 1.25.5
 
 require (
-	buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260605152653-fdfd6532b348.1
+	buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260607164820-31f26bfb3730.1
 	github.com/anytls/sing-anytls v0.0.11
 	github.com/apernet/hysteria/core/v2 v2.0.0-00010101000000-000000000000
 	github.com/apernet/hysteria/extras/v2 v2.6.5
