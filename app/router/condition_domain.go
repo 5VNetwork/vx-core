@@ -39,11 +39,11 @@ func (m *DomainMatcher) Apply(c context.Context, info *session.Info, rw interfac
 	return rw, false
 }
 
-type HasDomain struct {
+type HasNoDomain struct {
 }
 
-func (h *HasDomain) Apply(c context.Context, info *session.Info, rw interface{}) (interface{}, bool) {
-	if targetDomain := info.GetTargetDomain(); targetDomain != "" {
+func (h *HasNoDomain) Apply(c context.Context, info *session.Info, rw interface{}) (interface{}, bool) {
+	if targetDomain := info.GetTargetDomain(); targetDomain == "" {
 		return rw, true
 	}
 	return rw, false

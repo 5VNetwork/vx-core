@@ -84,7 +84,7 @@ func (w *server) handleFrame(ctx context.Context, reader *buf.BufferedReader) er
 
 func (w *server) handleResponseData(s *serverSession) {
 	if err := buf.Copy(s.link, s.writer); err != nil {
-		log.Ctx(s.ctx).Error().Err(err).Msg("failed to copy response data")
+		log.Ctx(s.ctx).Debug().Err(err).Msg("failed to copy response data")
 		w.onSessionError(s, err)
 		return
 	}
@@ -100,7 +100,7 @@ func (w *server) handleStatusNew(ctx context.Context, meta *FrameMetadata, reade
 	go func() {
 		err := w.Dispatcher.HandleFlow(newCtx, meta.Target, oLink)
 		if err != nil {
-			log.Ctx(newCtx).Error().Err(err).Msg("HandleFlow failed")
+			log.Ctx(newCtx).Debug().Err(err).Msg("HandleFlow failed")
 		}
 		oLink.Interrupt(err)
 		w.sessionLock.Lock()

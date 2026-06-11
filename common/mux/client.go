@@ -211,7 +211,7 @@ func (w *client) handleStatusKeep(meta *FrameMetadata, reader *buf.BufferedReade
 	rr := buf.NewSizedReader(reader)
 	err := buf.Copy(rr, s.rw)
 	if err != nil && buf.IsWriteError(err) {
-		log.Ctx(s.ctx).Error().Err(err).Msg("client failed to copy response data")
+		log.Ctx(s.ctx).Debug().Err(err).Msg("client failed to copy response data")
 		s.notifyPeerSessionError()
 		s.onError(err)
 		drainErr := buf.Copy(rr, buf.Discard)

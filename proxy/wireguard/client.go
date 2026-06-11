@@ -47,7 +47,6 @@ type Handler struct {
 	HandlerSettings
 	net  Tunnel
 	bind *netBindClient
-	// cached configuration
 	endpoints        []netip.Addr
 	hasIPv4, hasIPv6 bool
 	wgLock           sync.Mutex

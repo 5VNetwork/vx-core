@@ -304,7 +304,7 @@ func (m *udpSessionManager) feed(msg *protocol.UDPMessage) {
 			go func() {
 				err := m.io.HandlePacketConn(ctx, dest, p2)
 				if err != nil {
-					log.Ctx(ctx).Error().Err(err).Any("dest", dest).
+					log.Ctx(ctx).Debug().Err(err).Any("dest", dest).
 						Msg("failed to handle packet conn")
 				}
 				p2.Close()

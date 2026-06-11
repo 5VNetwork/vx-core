@@ -120,6 +120,8 @@ message Condition {
   repeated string app_tags = 24;
   repeated string all_tags = 25;
   repeated string protocols = 28;
+  // connection uses ip targets and has no sniffed domain
+  bool has_no_domain = 29;
 }
 
 message SelectorConfig {

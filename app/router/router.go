@@ -278,6 +278,9 @@ func getCondition(conditionConfig *configs.Condition, gh i.GeoHelper, ipResolver
 	if conditionConfig.FakeIp {
 		conditions = append(conditions, &ConditionFakeIp{})
 	}
+	if conditionConfig.HasNoDomain {
+		conditions = append(conditions, &HasNoDomain{})
+	}
 	if len(conditionConfig.AllTags) > 0 {
 		domainSet, err := geo.NewDomainSet(conditionConfig.AllTags, gh)
 		if err != nil {
