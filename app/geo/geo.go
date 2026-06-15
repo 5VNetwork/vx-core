@@ -62,6 +62,19 @@ type Geo struct {
 	AppSets map[string]i.AppSet
 }
 
+func (g *Geo) Start() error {
+	return nil
+}
+
+func (g *Geo) Close() error {
+	g.Lock()
+	defer g.Unlock()
+	g.DomainSets = nil
+	g.IpSets = nil
+	g.AppSets = nil
+	return nil
+}
+
 // if the domain set is not found, do nothing
 func (g *Geo) AddDomain(name string, domain *commongeo.Domain) error {
 	g.RLock()

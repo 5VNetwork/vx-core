@@ -53,6 +53,11 @@ func (m *Monitor) Close() error {
 	return nil
 }
 
+func (mon *Monitor) TakeHeapSnapshot() error {
+	_, err := TakeHeapSnapshot(mon.monitorConfig.Path)
+	return err
+}
+
 func (mon *Monitor) log() {
 	log.Debug().Msg("start monitor memory")
 	var m runtime.MemStats
@@ -122,5 +127,27 @@ func TakeHeapSnapshot(dir string) (string, error) {
 	}
 
 	log.Info().Str("file", filename).Msg("Heap snapshot saved")
+	return filename, nil
+}
+
+// TakeGoroutineSnapshot saves current goroutine stacks. Use alongside heap
+// snapshots to find what still references live objects after Close.
+func TakeGoroutineSnapshot(dir string) (string, error) {
+	filename := filepath.Join(dir, "goroutine-"+time.Now().Format("20060102-150405")+".prof")
+	f, err := os.Create(filename)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	profile := pprof.Lookup("goroutine")
+	if profile == nil {
+		return "", os.ErrNotExist
+	}
+	if err := profile.WriteTo(f, 0); err != nil {
+		return "", err
+	}
+
+	log.Info().Str("file", filename).Msg("Goroutine snapshot saved")
 	return filename, nil
 }
