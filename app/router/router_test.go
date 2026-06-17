@@ -26,7 +26,9 @@ func TestSimpleRouter(t *testing.T) {
 		"test",
 		"test", "",
 		nil,
-		NewNetworkMatcher([]net1.Network{net1.Network_TCP}),
+		[]Condition{
+			NewNetworkMatcher([]net1.Network{net1.Network_TCP}),
+		},
 	))
 
 	si := &session.Info{

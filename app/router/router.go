@@ -87,47 +87,63 @@ func NewRouter(config *RouterConfig) (*Router, error) {
 		selectors: config.Selectors,
 	}
 	for _, routerRuleConfig := range config.Rules {
-		conditions, err := getCondition(toConditionConfig(routerRuleConfig),
-			config.GeoHelper, config.IpResolver)
-		if err != nil {
-			return nil, err
-		}
-		fallbackers := make([]i.Fallback, 0, len(routerRuleConfig.Fallbacks))
-		for _, fallbackerConfig := range routerRuleConfig.Fallbacks {
-			conditions, err := getCondition(fallbackCondition(fallbackerConfig),
+		var conditions []Condition
+		if routerRuleConfig.MatchAll {
+			conditions = []Condition{&ConditionTrue{}}
+		} else {
+			var err error
+			conditions, err = getConditions(toConditionConfigs(routerRuleConfig),
 				config.GeoHelper, config.IpResolver)
 			if err != nil {
 				return nil, err
 			}
+		}
+		fallbackers := make([]i.Fallback, 0, len(routerRuleConfig.Fallbacks))
+		for _, fallbackerConfig := range routerRuleConfig.Fallbacks {
+			var conditions []Condition
+			if fallbackerConfig.MatchAll {
+				conditions = []Condition{&ConditionTrue{}}
+			} else {
+				var err error
+				conditions, err = getConditions(fallbackConditions(fallbackerConfig),
+					config.GeoHelper, config.IpResolver)
+				if err != nil {
+					return nil, err
+				}
+			}
 			fallbackers = append(fallbackers, NewFallbacker(
 				fallbackerConfig.SelectorTag, fallbackerConfig.OutboundTag,
-				fallbackerConfig.Action, r.om, r.selectors, fallbackerConfig.Last, conditions...))
+				fallbackerConfig.Action, r.om, r.selectors, fallbackerConfig.Last, conditions))
 		}
 		rule := NewRule(routerRuleConfig.RuleName, routerRuleConfig.OutboundTag,
 			routerRuleConfig.SelectorTag, fallbackers,
-			conditions...)
+			conditions)
 		r.AddRule(rule)
 	}
 	return r, nil
 }
 
-func fallbackCondition(fallbackerConfig *configs.RuleConfig_Fallback) *configs.Condition {
-	if fallbackerConfig.Condition != nil {
-		return fallbackerConfig.Condition
+func fallbackConditions(fallbackerConfig *configs.RuleConfig_Fallback) []*configs.Condition {
+	if len(fallbackerConfig.Conditions) > 0 {
+		return fallbackerConfig.Conditions
 	}
-	conditionConfig := &configs.Condition{
+	if fallbackerConfig.Condition != nil {
+		return []*configs.Condition{fallbackerConfig.Condition}
+	}
+	return []*configs.Condition{{
 		DomainTags: fallbackerConfig.DomainTags,
 		DstIpTags:  fallbackerConfig.DstIpTags,
-		MatchAll:   fallbackerConfig.MatchAll,
-	}
-	return conditionConfig
+	}}
 }
 
-func toConditionConfig(ruleConfig *configs.RuleConfig) *configs.Condition {
-	if ruleConfig.Condition != nil {
-		return ruleConfig.Condition
+func toConditionConfigs(ruleConfig *configs.RuleConfig) []*configs.Condition {
+	if len(ruleConfig.Conditions) > 0 {
+		return ruleConfig.Conditions
 	}
-	conditionConfig := &configs.Condition{
+	if ruleConfig.Condition != nil {
+		return []*configs.Condition{ruleConfig.Condition}
+	}
+	return []*configs.Condition{{
 		SrcCidrs:             ruleConfig.SrcCidrs,
 		SrcIpTags:            ruleConfig.SrcIpTags,
 		DstCidrs:             ruleConfig.DstCidrs,
@@ -146,15 +162,25 @@ func toConditionConfig(ruleConfig *configs.RuleConfig) *configs.Condition {
 		AppIds:               ruleConfig.AppIds,
 		Ipv6:                 ruleConfig.Ipv6,
 		FakeIp:               ruleConfig.FakeIp,
-		MatchAll:             ruleConfig.MatchAll,
 		AppTags:              ruleConfig.AppTags,
 		AllTags:              ruleConfig.AllTags,
 		Protocols:            ruleConfig.Protocols,
-	}
-	return conditionConfig
+	}}
 }
 
-func getCondition(conditionConfig *configs.Condition, gh i.GeoHelper, ipResolver i.IPResolver) ([]Condition, error) {
+func getConditions(conditionConfigs []*configs.Condition, gh i.GeoHelper, ipResolver i.IPResolver) ([]Condition, error) {
+	conditions := make([]Condition, 0, len(conditionConfigs))
+	for _, conditionConfig := range conditionConfigs {
+		conds, err := getCondition(conditionConfig, gh, ipResolver)
+		if err != nil {
+			return nil, err
+		}
+		conditions = append(conditions, conds)
+	}
+	return conditions, nil
+}
+
+func getCondition(conditionConfig *configs.Condition, gh i.GeoHelper, ipResolver i.IPResolver) (*Conditions, error) {
 	conditions := make([]Condition, 0, 20)
 	if conditionConfig.InboundTags != nil {
 		conditions = append(conditions, NewInboundTagMatcher(conditionConfig.InboundTags))
@@ -321,13 +347,9 @@ func getCondition(conditionConfig *configs.Condition, gh i.GeoHelper, ipResolver
 			},
 		})
 	}
-
-	if conditionConfig.MatchAll {
-		conditions = []Condition{
-			&ConditionTrue{},
-		}
-	}
-	return conditions, nil
+	return &Conditions{
+		conditions: conditions,
+	}, nil
 }
 
 func (r *Router) AddRule(rule *rule) {

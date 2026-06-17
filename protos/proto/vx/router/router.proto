@@ -62,6 +62,8 @@ message RuleConfig {
   repeated string protocols = 28;
 
   Condition condition = 32;
+  // all conditions must match for the rule to apply
+  repeated Condition conditions = 33;
 
   message Fallback {
     string selector_tag = 1;
@@ -78,6 +80,7 @@ message RuleConfig {
     Condition condition = 13;
     // if condition matched, this fallback will be the last one
     bool last = 14;
+    repeated Condition conditions = 15;
   }
   repeated Fallback fallbacks = 29;
 }
@@ -116,7 +119,6 @@ message Condition {
   repeated AppId app_ids = 19;
   bool ipv6 = 20;
   bool fake_ip = 22;
-  bool match_all = 23;
   repeated string app_tags = 24;
   repeated string all_tags = 25;
   repeated string protocols = 28;

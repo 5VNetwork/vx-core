@@ -17,6 +17,25 @@ type Condition interface {
 	Apply(c context.Context, info *session.Info, rw interface{}) (interface{}, bool)
 }
 
+type Conditions struct {
+	conditions []Condition
+}
+
+// return true only if all conditions are true
+func (c *Conditions) Apply(ctx context.Context, info *session.Info, rw interface{}) (interface{}, bool) {
+	if len(c.conditions) == 0 {
+		return rw, false
+	}
+	for _, cond := range c.conditions {
+		rw0, match := cond.Apply(ctx, info, rw)
+		rw = rw0
+		if !match {
+			return rw, false
+		}
+	}
+	return rw, true
+}
+
 type rule struct {
 	conditions  []Condition
 	outboundTag string
@@ -26,7 +45,7 @@ type rule struct {
 }
 
 func NewRule(name string, outboundTag, selectorTag string,
-	fallbackers []i.Fallback, conditions ...Condition) *rule {
+	fallbackers []i.Fallback, conditions []Condition) *rule {
 	r := &rule{
 		name:        name,
 		conditions:  conditions,
@@ -38,18 +57,23 @@ func NewRule(name string, outboundTag, selectorTag string,
 	return r
 }
 
-func (r *rule) Apply(c context.Context, info *session.Info, rw interface{}) (interface{}, bool) {
-	if len(r.conditions) == 0 {
+func applyConditionGroups(c context.Context, info *session.Info, rw interface{},
+	conditions []Condition) (interface{}, bool) {
+	if len(conditions) == 0 {
 		return rw, false
 	}
-	for _, cond := range r.conditions {
-		rw0, match := cond.Apply(c, info, rw)
+	for _, condition := range conditions {
+		rw0, match := condition.Apply(c, info, rw)
 		rw = rw0
-		if !match {
-			return rw, false
+		if match {
+			return rw, match
 		}
 	}
-	return rw, true
+	return rw, false
+}
+
+func (r *rule) Apply(c context.Context, info *session.Info, rw interface{}) (interface{}, bool) {
+	return applyConditionGroups(c, info, rw, r.conditions)
 }
 
 func (r *rule) Name() string {
@@ -61,16 +85,15 @@ type Fallback struct {
 	selectorTag string
 	outboundTag string
 	action      *configs.RuleConfig_Fallback_Action
-	// must have at least one condition
-	conditions []Condition
-	om         i.OutboundManager
-	selectors  *selector.Selectors
-	final      bool
+	conditions  []Condition
+	om          i.OutboundManager
+	selectors   *selector.Selectors
+	final       bool
 }
 
 func NewFallbacker(selectorTag, outboundTag string,
 	action *configs.RuleConfig_Fallback_Action, om i.OutboundManager,
-	selectors *selector.Selectors, final bool, conditions ...Condition) *Fallback {
+	selectors *selector.Selectors, final bool, conditions []Condition) *Fallback {
 	return &Fallback{
 		selectorTag: selectorTag,
 		outboundTag: outboundTag,
@@ -83,14 +106,9 @@ func NewFallbacker(selectorTag, outboundTag string,
 }
 
 func (f *Fallback) GetHandler(ctx context.Context, info *session.Info, err error) (i.Outbound, bool) {
-	if len(f.conditions) == 0 {
+	_, match := applyConditionGroups(ctx, info, nil, f.conditions)
+	if !match {
 		return nil, false
-	}
-	for _, cond := range f.conditions {
-		_, match := cond.Apply(ctx, info, nil)
-		if !match {
-			return nil, false
-		}
 	}
 	if f.action != nil {
 		if f.action.IpToDomain && info.GetTargetIP() != nil && info.GetTargetDomain() != "" {
