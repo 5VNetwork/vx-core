@@ -174,37 +174,44 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 
 			// resolver used in dialing
 			{
-				if len(config.GetDns().GetInternalResolver().GetDnsServers()) == 0 {
-					return fmt.Errorf("no dns servers found in internal resolver")
-				}
 				var servers []idns.DnsServer
-				for _, name := range config.Dns.InternalResolver.DnsServers {
+				for _, name := range config.GetDns().GetInternalResolver().GetDnsServers() {
 					if ds, ok := dnsServerMap[name]; ok {
 						servers = append(servers, ds)
 					} else {
 						return fmt.Errorf("dns server %s not found", name)
 					}
 				}
-				resolver := idns.NewDnsServerToResolver(
-					idns.DnsServerToResolverOption{DnsServers: servers,
-						Interval: time.Duration(config.Dns.InternalResolver.Interval) * time.Second})
-				internalDns.Resolver = resolver
+				if len(servers) == 0 {
+					resolver := idns.DefaultCfResolver()
+					internalDns.Resolver = resolver
+				} else {
+					resolver := idns.NewDnsServerToResolver(
+						idns.DnsServerToResolverOption{DnsServers: servers,
+							Interval: time.Duration(config.Dns.InternalResolver.Interval) * time.Second})
+					internalDns.Resolver = resolver
+				}
 			}
 
 			// resolver used to lookup request domains in router and dispatcher
 			{
 				var servers []idns.DnsServer
-				for _, name := range config.Dns.RequestDomainResolver.DnsServers {
+				for _, name := range config.GetDns().GetRequestDomainResolver().GetDnsServers() {
 					if ds, ok := dnsServerMap[name]; ok {
 						servers = append(servers, ds)
 					} else {
 						return fmt.Errorf("dns server %s not found", name)
 					}
 				}
-				resolver := idns.NewDnsServerToResolver(
-					idns.DnsServerToResolverOption{DnsServers: servers,
-						Interval: time.Duration(config.Dns.RequestDomainResolver.Interval) * time.Second})
-				client.IPResolverForRequestAddress = resolver
+				if len(servers) == 0 {
+					resolver := idns.DefaultCfResolver()
+					client.IPResolverForRequestAddress = resolver
+				} else {
+					resolver := idns.NewDnsServerToResolver(
+						idns.DnsServerToResolverOption{DnsServers: servers,
+							Interval: time.Duration(config.Dns.RequestDomainResolver.Interval) * time.Second})
+					client.IPResolverForRequestAddress = resolver
+				}
 			}
 			//
 			allDnsServers := idns.NewAllDnsServers(dnsServers)

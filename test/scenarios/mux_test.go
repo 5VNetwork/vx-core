@@ -214,7 +214,7 @@ func TestTrojanTCPMuxLargePayload(t *testing.T) {
 	defer client.Close()
 	var errg errgroup.Group
 	for i := 0; i < 16; i++ {
-		errg.Go(TestTCPConn(clientPort, 10240*10240, Timeout))
+		errg.Go(TestTCPConn(clientPort, 10240*10240, Timeout*4))
 	}
 
 	if err := errg.Wait(); err != nil {

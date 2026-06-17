@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"math/rand"
 	"sync"
@@ -295,7 +296,8 @@ func (m *udpSessionManager) feed(msg *protocol.UDPMessage) {
 	if entry == nil {
 		dialFunc := func(dest net.Destination) (conn *udp.PacketLink, err error) {
 			p1, p2 := udp.NewLink(8)
-			ctx, cancel := inbound.GetCtx(net.DestinationFromAddr(m.src),
+			ctx, cancel := inbound.GetCtx(
+				context.Background(), net.DestinationFromAddr(m.src),
 				net.DestinationFromAddr(m.gateway), m.tag)
 			ctx = proxy.ContextWithUser(ctx, m.io.(*udpIOImpl).User)
 			ctx = proxy.ContextWithInboundProxyProtocol(ctx, "hysteria2")

@@ -292,7 +292,8 @@ func (h *h3sHandler) handleTCPRequest(stream *utils.QStream) {
 	}
 	dest.Network = net.Network_TCP
 
-	ctx, cancel := inbound.GetCtx(net.DestinationFromAddr(h.conn.RemoteAddr()),
+	ctx, cancel := inbound.GetCtx(context.Background(),
+		net.DestinationFromAddr(h.conn.RemoteAddr()),
 		net.DestinationFromAddr(h.conn.LocalAddr()), h.config.Tag)
 	ctx = proxy.ContextWithUser(ctx, h.user)
 	ctx = proxy.ContextWithInboundProxyProtocol(ctx, "hysteria2")

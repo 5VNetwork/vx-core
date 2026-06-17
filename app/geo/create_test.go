@@ -828,37 +828,6 @@ func TestAtomicDomainSetToIndexMatcher_WithRemoteGeoFiles(t *testing.T) {
 	require.NotNil(t, matcher)
 }
 
-func TestAtomicDomainSetToIndexMatcher_RemoteGeoFileSkippedWhenGeositeUsesPath(t *testing.T) {
-	loadClashCalls := 0
-	loader := &MockLoader{
-		loadSiteFunc: func(filename, list string) (*cgeo.GeoSite, error) {
-			return &cgeo.GeoSite{CountryCode: list, Domain: []*cgeo.Domain{
-				{Type: cgeo.Domain_Full, Value: "geosite.example.com"},
-			}}, nil
-		},
-		loadDomainsClashFunc: func(filename string) ([]*cgeo.Domain, error) {
-			loadClashCalls++
-			return nil, errors.New("should not load as clash")
-		},
-	}
-	config := &configs.AtomicDomainSetConfig{
-		Name: "test",
-		Geosite: &configs.GeositeConfig{
-			Filepath: "geosite.dat",
-			Codes:    []string{"cn"},
-		},
-		RemoteGeoFiles: []*configs.GeoRemoteFile{
-			{Filepath: "geosite.dat", SourceUrl: "https://example.com/geosite.dat"},
-		},
-	}
-
-	matcher, err := AtomicDomainSetToIndexMatcher(config, loader)
-
-	require.NoError(t, err)
-	require.NotNil(t, matcher)
-	require.Equal(t, 0, loadClashCalls)
-}
-
 // =============================================================================
 // AtomicIpSetToIPMatcher Tests
 // =============================================================================

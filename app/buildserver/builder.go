@@ -95,6 +95,8 @@ func NewX(config *configs.ServerConfig) (*fx.App, error) {
 	}))
 	fxOptions = append(fxOptions, fx.Invoke(func(gs *geosync.GeoSync) {
 	}))
+	fxOptions = append(fxOptions, fx.Invoke(func(dp *dispatcher.Dispatcher) {
+	}))
 
 	if config.GetLog().GetLogLevel() != configs.Level_DEBUG {
 		fxOptions = append(fxOptions, fx.WithLogger(func() fxevent.Logger {
