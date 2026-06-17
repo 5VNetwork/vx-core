@@ -35,6 +35,9 @@ func (n *nicMonitor) Start() error {
 }
 
 func (n *nicMonitor) Close() error {
+	n.Lock()
+	defer n.Unlock()
+	n.DefaultInterfaceChangeNotifier = nic.DefaultInterfaceChangeNotifier{}
 	return nil
 }
 
