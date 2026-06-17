@@ -4,6 +4,7 @@
 package system
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -70,7 +71,9 @@ type TunSystemInbound struct {
 	startOnce sync.Once
 	closeOnce sync.Once
 	// closed is set to true when Close is called.
-	done *done.Instance
+	done   *done.Instance
+	ctx    context.Context
+	cancel context.CancelCauseFunc
 }
 
 type dnsConn interface {
@@ -85,12 +88,15 @@ type dnsConn interface {
 type Option func(*TunSystemInbound)
 
 func New(opts ...Option) *TunSystemInbound {
+	ctx, cancel := context.WithCancelCause(context.Background())
 	t := &TunSystemInbound{
 		tag:               "tun",
 		nat:               NewNat(),
 		done:              done.New(),
 		udpSessionManager: udp_session.NewManager(),
 		udpPackets:        make(chan *buf.Buffer, 1000),
+		ctx:               ctx,
+		cancel:            cancel,
 	}
 
 	for _, opt := range opts {
@@ -185,6 +191,8 @@ func (t *TunSystemInbound) Close() error {
 	t.closeOnce.Do(func() {
 		t.done.Close()
 
+		t.cancel(common.ErrClosed)
+
 		if t.listener4 != nil {
 			t.listener4.Close()
 		}
@@ -259,7 +267,7 @@ func (t *TunSystemInbound) handleConn(conn net.Conn) {
 		mynet.Port(t.listenPort4),
 	)
 
-	ctx, cancelCause := inbound.GetCtx(src, gateway, t.tag)
+	ctx, cancelCause := inbound.GetCtx(t.ctx, src, gateway, t.tag)
 	ctx = inbound.ContextWithRawConn(ctx, conn)
 
 	defer func() {
@@ -315,11 +323,13 @@ func (t *TunSystemInbound) processIPPakcet(p *buf.Buffer) {
 	isIpv4 := header.IPVersion(p.Bytes()) == header.IPv4Version
 	switch ipPacket.TransportProtocol() {
 	case header.ICMPv4ProtocolNumber:
-		log.Debug().Msg("drop icmpv4 packet")
+		log.Debug().Any("src", ipPacket.SourceAddress()).
+			Any("dst", ipPacket.DestinationAddress()).Msg("drop icmpv4 packet")
 		p.Release()
 		return
 	case header.ICMPv6ProtocolNumber:
-		log.Debug().Msg("drop icmpv6 packet")
+		log.Debug().Any("src", ipPacket.SourceAddress()).
+			Any("dst", ipPacket.DestinationAddress()).Msg("drop icmpv6 packet")
 		p.Release()
 		return
 	case header.TCPProtocolNumber:
@@ -518,7 +528,7 @@ func (t *TunSystemInbound) handleUdpPacket(b *buf.Buffer) {
 			}
 		}
 
-		ctx, cancelCause := inbound.GetCtx(p.Source, p.Target, t.tag)
+		ctx, cancelCause := inbound.GetCtx(t.ctx, p.Source, p.Target, t.tag)
 
 		if p.Target.Port != 443 {
 			s = udp_session.NewUdpSessionFullCone(ctx,

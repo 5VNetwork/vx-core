@@ -70,6 +70,7 @@ func (w *tcpWorker) keepAccepting() {
 
 func (w *tcpWorker) handleConn(conn net.Conn) {
 	ctx, cancel := inbound.GetCtx(
+		context.Background(),
 		net.DestinationFromAddr(conn.RemoteAddr()),
 		net.DestinationFromAddr(w.addr), w.tag)
 	ctx = inbound.ContextWithRawConn(ctx, conn)

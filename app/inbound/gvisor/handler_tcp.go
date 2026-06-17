@@ -66,7 +66,7 @@ func (h *TunGvisorInbound) Handle(conn tun_net.TCPConn) {
 	dest := net.TCPDestination(tun_net.AddressFromTCPIPAddr(id.LocalAddress), net.Port(id.LocalPort))
 	src := net.TCPDestination(tun_net.AddressFromTCPIPAddr(id.RemoteAddress), net.Port(id.RemotePort))
 
-	ctx, cancel := inbound.GetCtx(src, dest, h.Tag())
+	ctx, cancel := inbound.GetCtx(h.ctx, src, dest, h.Tag())
 	ctx = inbound.ContextWithRawConn(ctx, conn)
 	err := h.option.Handler.HandleFlow(ctx, dest, buf.NewRWD(buf.NewReader(conn), buf.NewWriter(conn), conn))
 	if err != nil {
