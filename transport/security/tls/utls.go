@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"net"
+	"slices"
 
 	utls "github.com/refraction-networking/utls"
 )
@@ -37,24 +38,35 @@ func GetUClient(c *TlsConfig, conn net.Conn, tlsConfig *tls.Config) (net.Conn, e
 
 	// ALPN is necessary for protocols like websocket to work. The uTLS setting may be overwritten on call into
 	// BuildHandshakeState, so we need to check the original tls settings.
+	modified := false
 	if tlsConfig.NextProtos != nil {
 		for n, v := range utlsClientConn.Extensions {
 			if aplnExtension, ok := v.(*utls.ALPNExtension); ok {
 				if c.ForceAlpn == ForceALPN_TRANSPORT_PREFERENCE_TAKE_PRIORITY {
-					aplnExtension.AlpnProtocols = tlsConfig.NextProtos
+					if !slices.Equal(aplnExtension.AlpnProtocols, tlsConfig.NextProtos) {
+						aplnExtension.AlpnProtocols = tlsConfig.NextProtos
+						modified = true
+					}
 					break
 				}
 				if c.ForceAlpn == ForceALPN_NO_ALPN {
 					utlsClientConn.Extensions = append(utlsClientConn.Extensions[:n], utlsClientConn.Extensions[n+1:]...)
+					modified = true
 					break
 				}
 			}
 		}
 	}
 
-	err = utlsClientConn.BuildHandshakeState()
-	if err != nil {
-		return nil, fmt.Errorf("unable to build utls handshake state after modification, %w", err)
+	// Only rebuild the handshake state when the extensions were actually
+	// modified. BuildHandshakeState regenerates all key shares (including the
+	// expensive post-quantum ML-KEM keypair), so skipping it when nothing
+	// changed avoids generating those keys twice per connection.
+	if modified {
+		err = utlsClientConn.BuildHandshakeState()
+		if err != nil {
+			return nil, fmt.Errorf("unable to build utls handshake state after modification, %w", err)
+		}
 	}
 
 	err = utlsClientConn.Handshake()

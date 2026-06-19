@@ -155,6 +155,9 @@ func (p *RealIpPacketConn) ReadPacket() (*udp.Packet, error) {
 				packet.Target.Address = newTarget
 				p.m[originalTarget] = newTarget
 				p.realIpToFakeIp.Store(newTarget, originalTarget)
+				if len(p.m) > 1024 {
+					log.Ctx(p.ctx).Warn().Int("len", len(p.m)).Msg("rewrite destination cache grew beyond threshold")
+				}
 			} else {
 				return nil, errors.New("failed to find domain for a fake ip")
 			}
