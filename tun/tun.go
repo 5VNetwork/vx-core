@@ -39,8 +39,7 @@ type TunOption struct {
 	Dns6   []netip.Addr
 	Route4 []netip.Prefix
 	Route6 []netip.Prefix
-	// path of "wintun", a dir containing dll for each architecture.
-	// Absolute or relative to cwd. windows only
+	// path of a dir containing wintun.dll
 	Path   string
 	Metric uint32
 	FD     int

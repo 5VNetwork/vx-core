@@ -11,7 +11,6 @@ import (
 	"net/netip"
 	"os"
 	"path/filepath"
-	"runtime"
 	sync "sync"
 	"sync/atomic"
 	"time"
@@ -69,18 +68,18 @@ func NewTun(config *TunOption) (TunDeviceWithInfo, error) {
 	var err error
 	/* create tun device */
 	path := config.Path
-	switch runtime.GOARCH {
-	case "amd64":
-		path = filepath.Join(path, "amd64")
-	case "386":
-		path = filepath.Join(path, "x86")
-	case "arm":
-		path = filepath.Join(path, "arm")
-	case "arm64":
-		path = filepath.Join(path, "arm64")
-	default:
-		return nil, fmt.Errorf("unsupported architecture: %s", runtime.GOARCH)
-	}
+	// switch runtime.GOARCH {
+	// case "amd64":
+	// 	path = filepath.Join(path, "amd64")
+	// case "386":
+	// 	path = filepath.Join(path, "x86")
+	// case "arm":
+	// 	path = filepath.Join(path, "arm")
+	// case "arm64":
+	// 	path = filepath.Join(path, "arm64")
+	// default:
+	// 	return nil, fmt.Errorf("unsupported architecture: %s", runtime.GOARCH)
+	// }
 	if !filepath.IsAbs(path) {
 		path, err = filepath.Abs(path)
 		if err != nil {
@@ -100,6 +99,7 @@ func NewTun(config *TunOption) (TunDeviceWithInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("createAdapter failed: %w", err)
 	}
+	log.Debug().Str("name", config.Name).Msg("create adapter")
 
 	tun := &NativeTun{
 		wt:        wt,
@@ -223,6 +223,7 @@ func NewTun(config *TunOption) (TunDeviceWithInfo, error) {
 	// 	log.Println("multicast address:", maddr.String())
 	// }
 
+	log.Debug().Msg("tun device created")
 	return tun, nil
 }
 

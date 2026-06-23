@@ -242,23 +242,23 @@ func (s *Selector) Load() {
 	if len(handlersToBeTestedForIpv6) > 0 {
 		go func() {
 			s.testItems(handlersToBeTestedForIpv6, TestHandler6)
-			s.setHandlers()
+			s.SetHandlers()
 		}()
 	}
 	if len(handlersToBeTestedForSpeed) > 0 {
 		go func() {
 			s.testItems(handlersToBeTestedForSpeed, s.testSpeed)
-			s.setHandlers()
+			s.SetHandlers()
 		}()
 	}
 	if len(handlersToBeTestedForPing) > 0 {
 		go func() {
 			s.testItems(handlersToBeTestedForPing, TestHandlerPing)
-			s.setHandlers()
+			s.SetHandlers()
 		}()
 	}
 
-	s.setHandlers()
+	s.SetHandlers()
 }
 
 func (s *Selector) pickSpeedTestSize() uint32 {
@@ -289,7 +289,8 @@ func (s *Selector) setBalancer(balancer Balancer) {
 	s.balancer = balancer
 }
 
-func (s *Selector) setHandlers() {
+// Select handlers based on the strategy
+func (s *Selector) SetHandlers() {
 	if s.closed {
 		return
 	}
@@ -429,7 +430,7 @@ func (s *Selector) OnHandlerError(tag string, err error) {
 		TestHandlerUsable(s.ctx, s.tester, handler)
 		usable := handler.OutHandler.GetOk() > 0
 		if !usable {
-			s.setHandlers()
+			s.SetHandlers()
 			// since handler unusable might be temporary, test it again after 10 seconds
 			go func() {
 				select {
@@ -438,7 +439,7 @@ func (s *Selector) OnHandlerError(tag string, err error) {
 					usable = handler.OutHandler.GetOk() > 0
 					log.Debug().Bool("usable", usable).Msg("retry usable test done")
 					if usable {
-						s.setHandlers()
+						s.SetHandlers()
 					}
 				case <-s.ctx.Done():
 					return
@@ -469,7 +470,7 @@ func (s *Selector) testItems(items []OutHandler,
 				defer wg.Done()
 				testFunc(s.ctx, s.tester, item)
 				if s.isRecovery && item.GetOk() > 0 {
-					s.setHandlers()
+					s.SetHandlers()
 				}
 			}(item)
 		}
@@ -516,12 +517,12 @@ func (s *Selector) exitRecovery() {
 
 func (s *Selector) TestSpeedAll() {
 	s.testItems(s.getOutHandlers(), s.testSpeed)
-	s.setHandlers()
+	s.SetHandlers()
 }
 
 func (s *Selector) TestPingAll() {
 	s.testItems(s.getOutHandlers(), TestHandlerPing)
-	s.setHandlers()
+	s.SetHandlers()
 }
 
 func (s *Selector) TestAllUnusable() {
@@ -533,7 +534,7 @@ func (s *Selector) TestAllUnusable() {
 		}
 	}
 	s.testItems(unusableHandlers, TestHandlerUsable)
-	s.setHandlers()
+	s.SetHandlers()
 }
 
 func (s *Selector) OnHandlerChanged() {
@@ -562,10 +563,10 @@ func (s *Selector) OnHandlerSpeedChanged(tag string, speed int32) {
 	handler.SetOk(int(speed))
 	handler.SetSpeed(int(speed))
 	if _, ok := s.strategy.(*highestThroughputStrategy); ok {
-		s.setHandlers()
+		s.SetHandlers()
 	}
 	if _, ok := s.strategy.(*TopThroughputStrategy); ok {
-		s.setHandlers()
+		s.SetHandlers()
 	}
 }
 
