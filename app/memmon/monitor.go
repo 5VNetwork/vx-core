@@ -58,9 +58,22 @@ func (mon *Monitor) TakeHeapSnapshot() error {
 	return err
 }
 
+const (
+	memoryThreshold = 25 * 1024 * 1024
+	// memoryRearmThreshold provides hysteresis: after a snapshot we only re-arm
+	// once memory falls back below this lower watermark, so the forced GC
+	// dropping just under memoryThreshold doesn't cause repeated snapshots when
+	// usage oscillates around the boundary.
+	memoryRearmThreshold = 22 * 1024 * 1024
+)
+
 func (mon *Monitor) log() {
 	log.Debug().Msg("start monitor memory")
 	var m runtime.MemStats
+	// overThreshold tracks whether we were already above the threshold on the
+	// previous tick, so the heap snapshot is taken once per crossing instead of
+	// on every interval while we stay above it.
+	var overThreshold bool
 
 	for {
 		select {
@@ -84,12 +97,17 @@ func (mon *Monitor) log() {
 				Int32("Conn", mon.Dispatcher.PacketConns.Load()).
 				Msg("Memory stats")
 
-			if (m.Alloc+m.StackInuse > 25*1024*1024) && runtime.GOOS == "ios" {
+			if (m.Alloc+m.StackInuse > memoryThreshold) && runtime.GOOS == "ios" {
 				log.Debug().Msg("Memory threshold exceeded, forcing GC")
 				runtime.GC()
-				if zerolog.GlobalLevel() == zerolog.DebugLevel {
+				// Only snapshot on the transition into the over-threshold
+				// state; taking it every tick would itself churn memory.
+				if !overThreshold && zerolog.GlobalLevel() == zerolog.DebugLevel {
 					TakeHeapSnapshot(mon.monitorConfig.Path)
 				}
+				overThreshold = true
+			} else if m.Alloc+m.StackInuse < memoryRearmThreshold {
+				overThreshold = false
 			}
 		}
 	}
