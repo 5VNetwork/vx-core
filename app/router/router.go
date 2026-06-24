@@ -234,28 +234,34 @@ func getCondition(conditionConfig *configs.Condition, gh i.GeoHelper, ipResolver
 		})
 	}
 	if len(conditionConfig.Protocols) > 0 {
-		sniffers := make([]sniff.ProtocolSnifferWithNetwork, 0, len(conditionConfig.Protocols))
-		for _, protocol := range conditionConfig.Protocols {
-			switch protocol {
-			case "tls":
-				sniffers = append(sniffers, sniff.TlsSniff)
-			case "http1":
-				sniffers = append(sniffers, sniff.HTTP1Sniff)
-			case "quic":
-				sniffers = append(sniffers, sniff.QUICSniff)
-			case "bittorrent":
-				sniffers = append(sniffers, sniff.BTScniff)
-				sniffers = append(sniffers, sniff.UTPSniff)
-			default:
-				log.Warn().Str("protocol", protocol).Msg("unknown protocol")
-				continue
-			}
-		}
+		// sniffers := make([]sniff.ProtocolSnifferWithNetwork, 0, len(conditionConfig.Protocols))
+		// for _, protocol := range conditionConfig.Protocols {
+		// 	switch protocol {
+		// 	case "tls":
+		// 		sniffers = append(sniffers, sniff.TlsSniff)
+		// 	case "http1":
+		// 		sniffers = append(sniffers, sniff.HTTP1Sniff)
+		// 	case "quic":
+		// 		sniffers = append(sniffers, sniff.QUICSniff)
+		// 	case "bittorrent":
+		// 		sniffers = append(sniffers, sniff.BTScniff)
+		// 		sniffers = append(sniffers, sniff.UTPSniff)
+		// 	default:
+		// 		log.Warn().Str("protocol", protocol).Msg("unknown protocol")
+		// 		continue
+		// 	}
+		// }
 		conditions = append(conditions, &ConditionProtocol{
 			protocols: conditionConfig.Protocols,
 			Sniffer: sniff.NewSniffer(sniff.SniffSetting{
 				Interval: 10 * time.Millisecond,
-				Sniffers: sniffers,
+				Sniffers: []sniff.ProtocolSnifferWithNetwork{
+					sniff.TlsSniff,
+					sniff.HTTP1Sniff,
+					sniff.QUICSniff,
+					sniff.BTScniff,
+					sniff.UTPSniff,
+				},
 			}),
 		})
 	}
