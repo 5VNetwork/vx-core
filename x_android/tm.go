@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/netip"
 	"reflect"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -226,9 +227,10 @@ func (t *tm) Close() error {
 	if t.Client == nil {
 		return nil
 	}
-
 	err := t.Client.Close()
 	t.Client = nil
+
+	runtime.GC()
 	return err
 }
 
