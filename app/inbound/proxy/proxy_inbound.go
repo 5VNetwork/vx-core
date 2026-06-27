@@ -86,6 +86,10 @@ func (h *ProxyInbound) AddUserManage(userManage UserManage) {
 	h.userManages = append(h.userManages, userManage)
 }
 
+func (h *ProxyInbound) GetWorkers() []common.Runnable {
+	return h.workers
+}
+
 // Start implements common.Runnable.
 func (h *ProxyInbound) Start() error {
 	for _, worker := range h.workers {

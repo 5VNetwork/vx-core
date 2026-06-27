@@ -13,7 +13,8 @@ import (
 
 func (s *GrpcService) AddInbound(ctx context.Context, req *AddInboundRequest) (*AddInboundResponse, error) {
 	log.Info().Str("tag", req.HandlerConfig.Tag).Msg("AddInbound")
-	in, err := inbound.NewInbound(req.HandlerConfig, s.Client.Dispatcher, s.Client.Policy)
+	in, err := inbound.NewInbound(req.HandlerConfig, s.Client.Dispatcher,
+		s.Client.Policy, s.Client.IPResolver, s.Client.DialerFactory)
 	if err != nil {
 		return nil, err
 	}

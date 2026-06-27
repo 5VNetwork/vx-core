@@ -23,6 +23,11 @@ func toHysteria(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
 	}
 	hysteriaConfig, _ := config.(*configs.Hysteria2ClientConfig)
 
+	// Realm mode: delegate to the dedicated builder.
+	if hysteriaConfig.GetRealm().GetRealmAddr() != "" {
+		return toHysteriaRealm(outboundConfig, hysteriaConfig)
+	}
+
 	queryParameters := url.Values{}
 	if tlsConfig := hysteriaConfig.GetTlsConfig(); tlsConfig != nil {
 		// queryParameters.Add("security", "tls")
@@ -62,6 +67,69 @@ func toHysteria(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
 		u.Host = net.JoinHostPort(outboundConfig.GetAddress(), PortRangesToString(ports))
 	} else {
 		u.Host = net.JoinHostPort(outboundConfig.GetAddress(), strconv.Itoa(int(outboundConfig.GetPort())))
+	}
+	return u.String(), nil
+}
+
+// toHysteriaRealm builds a hysteria2+realm:// URI following the official URI scheme:
+// https://v2.hysteria.network/docs/developers/URI-Scheme/#realm-mode
+//
+//	hysteria2+realm://token@rendezvous-host[:port]/realm-name?auth=...&[sni=...&insecure=1&pinSHA256=...]
+func toHysteriaRealm(outboundConfig *configs.OutboundHandlerConfig, hysteriaConfig *configs.Hysteria2ClientConfig) (string, error) {
+	realmAddr := hysteriaConfig.GetRealm().GetRealmAddr()
+	realmURL, err := url.Parse(realmAddr)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse realm addr %q: %w", realmAddr, err)
+	}
+
+	// Map the realm:// scheme to the official hysteria2+realm:// scheme.
+	scheme := "hysteria2+realm"
+	if realmURL.Scheme == "realm+http" {
+		scheme = "hysteria2+realm+http"
+	}
+
+	q := url.Values{}
+
+	// auth is the Hysteria2 password (userinfo slot is taken by the rendezvous token).
+	if auth := hysteriaConfig.GetAuth(); auth != "" {
+		q.Set("auth", auth)
+	}
+
+	// TLS parameters for the Hysteria2 connection over the punched hole.
+	if tlsCfg := hysteriaConfig.GetTlsConfig(); tlsCfg != nil {
+		if tlsCfg.GetServerName() != "" {
+			q.Set("sni", tlsCfg.GetServerName())
+		}
+		if tlsCfg.GetAllowInsecure() {
+			q.Set("insecure", "1")
+		}
+		if len(tlsCfg.PinnedPeerCertificateChainSha256) > 0 {
+			q.Set("pinSHA256", hex.EncodeToString(tlsCfg.PinnedPeerCertificateChainSha256[0]))
+		}
+	}
+
+	// Obfuscation.
+	if pw := hysteriaConfig.GetObfs().GetSalamander().GetPassword(); pw != "" {
+		q.Set("obfs", "salamander")
+		q.Set("obfs-password", pw)
+	}
+
+	// Realm-specific parameters.
+	realmCfg := hysteriaConfig.GetRealm()
+	for _, stun := range realmCfg.GetStunServers() {
+		q.Add("stun", stun)
+	}
+	if lport := realmCfg.GetLocalPort(); lport > 0 {
+		q.Set("lport", strconv.Itoa(int(lport)))
+	}
+
+	u := &url.URL{
+		Scheme:   scheme,
+		User:     url.User(realmURL.User.Username()), // rendezvous token
+		Host:     realmURL.Host,                      // rendezvous host[:port]
+		Path:     realmURL.Path,                      // /realm-name
+		RawQuery: q.Encode(),
+		Fragment: outboundConfig.GetTag(),
 	}
 	return u.String(), nil
 }

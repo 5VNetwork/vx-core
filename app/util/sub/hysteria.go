@@ -20,7 +20,16 @@ import (
 // TODO: pinSHA256
 // hysteria2://letmein@example.com:123,5000-6000/?insecure=1&obfs=
 // salamander&obfs-password=gawrgura&pinSHA256=deadbeef&sni=real.example.com
+// hysteria2+realm://token@rendezvous-host[:port]/realm-name?auth=...&sni=...&insecure=1&pinSHA256=...
 func ParseHysteriaFromLink(link string) (*configs.OutboundHandlerConfig, error) {
+	if strings.HasPrefix(link, "hysteria2+realm://") || strings.HasPrefix(link, "hysteria2+realm+http://") {
+		u, err := url.Parse(link)
+		if err != nil {
+			return nil, err
+		}
+		return parseHysteriaRealmFromLink(u)
+	}
+
 	port := extractHysteriaPortFromURL(link)
 	if port != "" {
 		link = strings.Replace(link, port, "", 1)
@@ -122,7 +131,7 @@ func ParseHysteriaFromLink(link string) (*configs.OutboundHandlerConfig, error) 
 			hysteriaConfig.Bandwidth.MaxTx = uint32(tx)
 		}
 	}
-	if query.Get("tx") != "" {
+	if query.Get("rx") != "" {
 		rx, err := strconv.Atoi(query.Get("rx"))
 		if err == nil {
 			hysteriaConfig.Bandwidth.MaxRx = uint32(rx)
@@ -130,6 +139,117 @@ func ParseHysteriaFromLink(link string) (*configs.OutboundHandlerConfig, error) 
 	}
 	config.Protocol = serial.ToTypedMessage(hysteriaConfig)
 	return config, nil
+}
+
+func parseHysteriaRealmFromLink(u *url.URL) (*configs.OutboundHandlerConfig, error) {
+	if u.Scheme != "hysteria2+realm" && u.Scheme != "hysteria2+realm+http" {
+		return nil, fmt.Errorf("not a valid hysteria2+realm link")
+	}
+	if u.User == nil || u.User.Username() == "" {
+		return nil, fmt.Errorf("missing realm token")
+	}
+
+	realmName := strings.TrimPrefix(u.Path, "/")
+	if realmName == "" || strings.Contains(realmName, "/") {
+		return nil, fmt.Errorf("invalid realm name")
+	}
+
+	query := u.Query()
+	auth := query.Get("auth")
+	if auth == "" {
+		return nil, fmt.Errorf("missing auth parameter")
+	}
+
+	realmScheme := "realm"
+	if u.Scheme == "hysteria2+realm+http" {
+		realmScheme = "realm+http"
+	}
+	realmAddr := (&url.URL{
+		Scheme: realmScheme,
+		User:   u.User,
+		Host:   u.Host,
+		Path:   u.Path,
+	}).String()
+
+	config := &configs.OutboundHandlerConfig{
+		Tag:     u.Fragment,
+		Address: u.Hostname(),
+	}
+	if u.Port() != "" {
+		port, err := mynet.PortFromString(u.Port())
+		if err != nil {
+			return nil, err
+		}
+		config.Ports = []*mynet.PortRange{{From: uint32(port), To: uint32(port)}}
+	} else {
+		config.Ports = []*mynet.PortRange{{From: 443, To: 443}}
+	}
+
+	realmCfg := &configs.RealmConfig{RealmAddr: realmAddr}
+	for _, stun := range query["stun"] {
+		if stun != "" {
+			realmCfg.StunServers = append(realmCfg.StunServers, stun)
+		}
+	}
+	if lport := query.Get("lport"); lport != "" {
+		port, err := strconv.Atoi(lport)
+		if err != nil || port < 1 || port > 65535 {
+			return nil, fmt.Errorf("invalid lport parameter")
+		}
+		realmCfg.LocalPort = uint32(port)
+	}
+
+	hysteriaConfig := &configs.Hysteria2ClientConfig{
+		Auth: auth,
+		TlsConfig: &tls.TlsConfig{
+			ServerName: query.Get("sni"),
+		},
+		Bandwidth: &configs.BandwidthConfig{},
+		Realm:     realmCfg,
+	}
+	hysteriaConfig = applyHysteriaQueryParams(hysteriaConfig, query)
+	config.Protocol = serial.ToTypedMessage(hysteriaConfig)
+	return config, nil
+}
+
+func applyHysteriaQueryParams(hysteriaConfig *configs.Hysteria2ClientConfig, query url.Values) *configs.Hysteria2ClientConfig {
+	if query.Get("echConfig") != "" {
+		echConfig, err := base64.StdEncoding.DecodeString(query.Get("echConfig"))
+		if err == nil {
+			hysteriaConfig.TlsConfig.EchConfig = echConfig
+		}
+	}
+	if query.Get("insecure") == "1" {
+		hysteriaConfig.TlsConfig.AllowInsecure = true
+	}
+	if query.Get("obfs") != "" {
+		hysteriaConfig.Obfs = &configs.ObfsConfig{
+			Obfs: &configs.ObfsConfig_Salamander{
+				Salamander: &configs.SalamanderConfig{
+					Password: query.Get("obfs-password"),
+				},
+			},
+		}
+	}
+	if query.Get("pinSHA256") != "" {
+		pinSHA256, err := hex.DecodeString(query.Get("pinSHA256"))
+		if err == nil {
+			hysteriaConfig.TlsConfig.PinnedPeerCertificateChainSha256 = [][]byte{pinSHA256}
+		}
+	}
+	if query.Get("tx") != "" {
+		tx, err := strconv.Atoi(query.Get("tx"))
+		if err == nil {
+			hysteriaConfig.Bandwidth.MaxTx = uint32(tx)
+		}
+	}
+	if query.Get("rx") != "" {
+		rx, err := strconv.Atoi(query.Get("rx"))
+		if err == nil {
+			hysteriaConfig.Bandwidth.MaxRx = uint32(rx)
+		}
+	}
+	return hysteriaConfig
 }
 
 // extractHysteriaPortFromURL extracts the port part if it contains "," or "-"

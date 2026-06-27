@@ -54,6 +54,9 @@ service GrpcService {
   rpc SetAutoSubscriptionUpdate(SetAutoSubscriptionUpdateRequest) returns (Receipt);
 
   rpc RttTest(RttTestRequest) returns (RttTestResponse);
+
+  // realm server status (only meaningful when a realm server inbound is active)
+  rpc GetRealmStatusStream(GetRealmStatusStreamRequest) returns (stream RealmServerStatus) {}
 }
 
 message RttTestRequest {
@@ -256,3 +259,25 @@ message SetProxyShareRequest {
   uint32 listen_port = 3;
 }
 message SetProxyShareResponse {}
+
+message GetRealmStatusStreamRequest {
+  // polling interval in seconds; 0 or omitted defaults to 3s
+  uint32 interval = 1;
+}
+message RealmServerStatus {
+  // true when a realm session is established with the rendezvous server
+  bool active = 1;
+  string realm_id = 2;
+  // STUN-discovered public UDP addresses (host:port) registered with the rendezvous server
+  repeated string public_addresses = 3;
+  // number of Hysteria clients currently connected through the realm inbound
+  int32 peers = 4;
+}
+
+message RealmInboundToUriRequest {
+  vx.inbound.ProxyInboundConfig inbound_config = 1;
+}
+message RealmInboundToUriResponse {
+  // hysteria2+realm:// share URI
+  string uri = 1;
+}

@@ -2364,6 +2364,211 @@ func (*SetProxyShareResponse) Descriptor() ([]byte, []int) {
 	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{49}
 }
 
+type GetRealmStatusStreamRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// polling interval in seconds; 0 or omitted defaults to 3s
+	Interval      uint32 `protobuf:"varint,1,opt,name=interval,proto3" json:"interval,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetRealmStatusStreamRequest) Reset() {
+	*x = GetRealmStatusStreamRequest{}
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[50]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetRealmStatusStreamRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetRealmStatusStreamRequest) ProtoMessage() {}
+
+func (x *GetRealmStatusStreamRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[50]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetRealmStatusStreamRequest.ProtoReflect.Descriptor instead.
+func (*GetRealmStatusStreamRequest) Descriptor() ([]byte, []int) {
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{50}
+}
+
+func (x *GetRealmStatusStreamRequest) GetInterval() uint32 {
+	if x != nil {
+		return x.Interval
+	}
+	return 0
+}
+
+type RealmServerStatus struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// true when a realm session is established with the rendezvous server
+	Active  bool   `protobuf:"varint,1,opt,name=active,proto3" json:"active,omitempty"`
+	RealmId string `protobuf:"bytes,2,opt,name=realm_id,json=realmId,proto3" json:"realm_id,omitempty"`
+	// STUN-discovered public UDP addresses (host:port) registered with the rendezvous server
+	PublicAddresses []string `protobuf:"bytes,3,rep,name=public_addresses,json=publicAddresses,proto3" json:"public_addresses,omitempty"`
+	// number of Hysteria clients currently connected through the realm inbound
+	Peers         int32 `protobuf:"varint,4,opt,name=peers,proto3" json:"peers,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RealmServerStatus) Reset() {
+	*x = RealmServerStatus{}
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RealmServerStatus) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RealmServerStatus) ProtoMessage() {}
+
+func (x *RealmServerStatus) ProtoReflect() protoreflect.Message {
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RealmServerStatus.ProtoReflect.Descriptor instead.
+func (*RealmServerStatus) Descriptor() ([]byte, []int) {
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{51}
+}
+
+func (x *RealmServerStatus) GetActive() bool {
+	if x != nil {
+		return x.Active
+	}
+	return false
+}
+
+func (x *RealmServerStatus) GetRealmId() string {
+	if x != nil {
+		return x.RealmId
+	}
+	return ""
+}
+
+func (x *RealmServerStatus) GetPublicAddresses() []string {
+	if x != nil {
+		return x.PublicAddresses
+	}
+	return nil
+}
+
+func (x *RealmServerStatus) GetPeers() int32 {
+	if x != nil {
+		return x.Peers
+	}
+	return 0
+}
+
+type RealmInboundToUriRequest struct {
+	state         protoimpl.MessageState      `protogen:"open.v1"`
+	InboundConfig *inbound.ProxyInboundConfig `protobuf:"bytes,1,opt,name=inbound_config,json=inboundConfig,proto3" json:"inbound_config,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RealmInboundToUriRequest) Reset() {
+	*x = RealmInboundToUriRequest{}
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RealmInboundToUriRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RealmInboundToUriRequest) ProtoMessage() {}
+
+func (x *RealmInboundToUriRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RealmInboundToUriRequest.ProtoReflect.Descriptor instead.
+func (*RealmInboundToUriRequest) Descriptor() ([]byte, []int) {
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{52}
+}
+
+func (x *RealmInboundToUriRequest) GetInboundConfig() *inbound.ProxyInboundConfig {
+	if x != nil {
+		return x.InboundConfig
+	}
+	return nil
+}
+
+type RealmInboundToUriResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// hysteria2+realm:// share URI
+	Uri           string `protobuf:"bytes,1,opt,name=uri,proto3" json:"uri,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RealmInboundToUriResponse) Reset() {
+	*x = RealmInboundToUriResponse{}
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RealmInboundToUriResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RealmInboundToUriResponse) ProtoMessage() {}
+
+func (x *RealmInboundToUriResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RealmInboundToUriResponse.ProtoReflect.Descriptor instead.
+func (*RealmInboundToUriResponse) Descriptor() ([]byte, []int) {
+	return file_app_grpcservice_grpc_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *RealmInboundToUriResponse) GetUri() string {
+	if x != nil {
+		return x.Uri
+	}
+	return ""
+}
+
 type SelectedHandlersResponse_Strings struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Strings       []string               `protobuf:"bytes,1,rep,name=strings,proto3" json:"strings,omitempty"`
@@ -2373,7 +2578,7 @@ type SelectedHandlersResponse_Strings struct {
 
 func (x *SelectedHandlersResponse_Strings) Reset() {
 	*x = SelectedHandlersResponse_Strings{}
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[50]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2385,7 +2590,7 @@ func (x *SelectedHandlersResponse_Strings) String() string {
 func (*SelectedHandlersResponse_Strings) ProtoMessage() {}
 
 func (x *SelectedHandlersResponse_Strings) ProtoReflect() protoreflect.Message {
-	mi := &file_app_grpcservice_grpc_proto_msgTypes[50]
+	mi := &file_app_grpcservice_grpc_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2533,7 +2738,18 @@ const file_app_grpcservice_grpc_proto_rawDesc = "" +
 	"listenAddr\x12\x1f\n" +
 	"\vlisten_port\x18\x03 \x01(\rR\n" +
 	"listenPort\"\x17\n" +
-	"\x15SetProxyShareResponse2\xcd\x12\n" +
+	"\x15SetProxyShareResponse\"9\n" +
+	"\x1bGetRealmStatusStreamRequest\x12\x1a\n" +
+	"\binterval\x18\x01 \x01(\rR\binterval\"\x87\x01\n" +
+	"\x11RealmServerStatus\x12\x16\n" +
+	"\x06active\x18\x01 \x01(\bR\x06active\x12\x19\n" +
+	"\brealm_id\x18\x02 \x01(\tR\arealmId\x12)\n" +
+	"\x10public_addresses\x18\x03 \x03(\tR\x0fpublicAddresses\x12\x14\n" +
+	"\x05peers\x18\x04 \x01(\x05R\x05peers\"a\n" +
+	"\x18RealmInboundToUriRequest\x12E\n" +
+	"\x0einbound_config\x18\x01 \x01(\v2\x1e.vx.inbound.ProxyInboundConfigR\rinboundConfig\"-\n" +
+	"\x19RealmInboundToUriResponse\x12\x10\n" +
+	"\x03uri\x18\x01 \x01(\tR\x03uri2\xa5\x14\n" +
 	"\vGrpcService\x12W\n" +
 	"\vCommunicate\x12\".vx.grpcservice.CommunicateRequest\x1a\".vx.grpcservice.CommunicateMessage0\x01\x12S\n" +
 	"\n" +
@@ -2560,7 +2776,9 @@ const file_app_grpcservice_grpc_proto_rawDesc = "" +
 	"\fUpdateRouter\x12#.vx.grpcservice.UpdateRouterRequest\x1a$.vx.grpcservice.UpdateRouterResponse\x12z\n" +
 	"\x17SetSubscriptionInterval\x12..vx.grpcservice.SetSubscriptionIntervalRequest\x1a/.vx.grpcservice.SetSubscriptionIntervalResponse\x12f\n" +
 	"\x19SetAutoSubscriptionUpdate\x120.vx.grpcservice.SetAutoSubscriptionUpdateRequest\x1a\x17.vx.grpcservice.Receipt\x12J\n" +
-	"\aRttTest\x12\x1e.vx.grpcservice.RttTestRequest\x1a\x1f.vx.grpcservice.RttTestResponseB\xa6\x01\n" +
+	"\aRttTest\x12\x1e.vx.grpcservice.RttTestRequest\x1a\x1f.vx.grpcservice.RttTestResponse\x12j\n" +
+	"\x14GetRealmStatusStream\x12+.vx.grpcservice.GetRealmStatusStreamRequest\x1a!.vx.grpcservice.RealmServerStatus\"\x000\x01\x12j\n" +
+	"\x11RealmInboundToUri\x12(.vx.grpcservice.RealmInboundToUriRequest\x1a).vx.grpcservice.RealmInboundToUriResponse\"\x00B\xa6\x01\n" +
 	"\x12com.vx.grpcserviceB\tGrpcProtoP\x01Z,github.com/5vnetwork/vx-core/app/grpcservice\xa2\x02\x03VGX\xaa\x02\x0eVx.Grpcservice\xca\x02\x0eVx\\Grpcservice\xe2\x02\x1aVx\\Grpcservice\\GPBMetadata\xea\x02\x0fVx::Grpcserviceb\x06proto3"
 
 var (
@@ -2575,7 +2793,7 @@ func file_app_grpcservice_grpc_proto_rawDescGZIP() []byte {
 	return file_app_grpcservice_grpc_proto_rawDescData
 }
 
-var file_app_grpcservice_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 52)
+var file_app_grpcservice_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 56)
 var file_app_grpcservice_grpc_proto_goTypes = []any{
 	(*RttTestRequest)(nil),                     // 0: vx.grpcservice.RttTestRequest
 	(*RttTestResponse)(nil),                    // 1: vx.grpcservice.RttTestResponse
@@ -2627,96 +2845,105 @@ var file_app_grpcservice_grpc_proto_goTypes = []any{
 	(*SetAutoSubscriptionUpdateRequest)(nil),   // 47: vx.grpcservice.SetAutoSubscriptionUpdateRequest
 	(*SetProxyShareRequest)(nil),               // 48: vx.grpcservice.SetProxyShareRequest
 	(*SetProxyShareResponse)(nil),              // 49: vx.grpcservice.SetProxyShareResponse
-	(*SelectedHandlersResponse_Strings)(nil),   // 50: vx.grpcservice.SelectedHandlersResponse.Strings
-	nil,                                        // 51: vx.grpcservice.SelectedHandlersResponse.SelectedHandlersEntry
-	(*inbound.ProxyInboundConfig)(nil),         // 52: vx.inbound.ProxyInboundConfig
-	(*outbound.HandlerConfig)(nil),             // 53: vx.outbound.HandlerConfig
-	(*router.RouterConfig)(nil),                // 54: vx.router.RouterConfig
-	(*geo.GeoConfig)(nil),                      // 55: vx.geo.GeoConfig
-	(*router.SelectorConfig)(nil),              // 56: vx.router.SelectorConfig
-	(router.SelectorConfig_BalanceStrategy)(0), // 57: vx.router.SelectorConfig.BalanceStrategy
-	(*router.SelectorConfig_Filter)(nil),       // 58: vx.router.SelectorConfig.Filter
-	(*geo1.Domain)(nil),                        // 59: vx.common.geo.Domain
-	(*geo.AtomicDomainSetConfig)(nil),          // 60: vx.geo.AtomicDomainSetConfig
-	(*geo.AtomicIPSetConfig)(nil),              // 61: vx.geo.AtomicIPSetConfig
-	(*userlogger.UserLogMessage)(nil),          // 62: vx.userlogger.UserLogMessage
+	(*GetRealmStatusStreamRequest)(nil),        // 50: vx.grpcservice.GetRealmStatusStreamRequest
+	(*RealmServerStatus)(nil),                  // 51: vx.grpcservice.RealmServerStatus
+	(*RealmInboundToUriRequest)(nil),           // 52: vx.grpcservice.RealmInboundToUriRequest
+	(*RealmInboundToUriResponse)(nil),          // 53: vx.grpcservice.RealmInboundToUriResponse
+	(*SelectedHandlersResponse_Strings)(nil),   // 54: vx.grpcservice.SelectedHandlersResponse.Strings
+	nil,                                        // 55: vx.grpcservice.SelectedHandlersResponse.SelectedHandlersEntry
+	(*inbound.ProxyInboundConfig)(nil),         // 56: vx.inbound.ProxyInboundConfig
+	(*outbound.HandlerConfig)(nil),             // 57: vx.outbound.HandlerConfig
+	(*router.RouterConfig)(nil),                // 58: vx.router.RouterConfig
+	(*geo.GeoConfig)(nil),                      // 59: vx.geo.GeoConfig
+	(*router.SelectorConfig)(nil),              // 60: vx.router.SelectorConfig
+	(router.SelectorConfig_BalanceStrategy)(0), // 61: vx.router.SelectorConfig.BalanceStrategy
+	(*router.SelectorConfig_Filter)(nil),       // 62: vx.router.SelectorConfig.Filter
+	(*geo1.Domain)(nil),                        // 63: vx.common.geo.Domain
+	(*geo.AtomicDomainSetConfig)(nil),          // 64: vx.geo.AtomicDomainSetConfig
+	(*geo.AtomicIPSetConfig)(nil),              // 65: vx.geo.AtomicIPSetConfig
+	(*userlogger.UserLogMessage)(nil),          // 66: vx.userlogger.UserLogMessage
 }
 var file_app_grpcservice_grpc_proto_depIdxs = []int32{
 	5,  // 0: vx.grpcservice.CommunicateMessage.handler_error:type_name -> vx.grpcservice.HandlerError
 	8,  // 1: vx.grpcservice.CommunicateMessage.subscription_update:type_name -> vx.grpcservice.SubscriptionUpdated
 	6,  // 2: vx.grpcservice.CommunicateMessage.handler_being_used:type_name -> vx.grpcservice.HandlerBeingUsed
 	7,  // 3: vx.grpcservice.CommunicateMessage.handler_updated:type_name -> vx.grpcservice.HandlerUpdated
-	52, // 4: vx.grpcservice.AddInboundRequest.handler_config:type_name -> vx.inbound.ProxyInboundConfig
+	56, // 4: vx.grpcservice.AddInboundRequest.handler_config:type_name -> vx.inbound.ProxyInboundConfig
 	13, // 5: vx.grpcservice.StatsResponse.stats:type_name -> vx.grpcservice.OutboundStats
-	51, // 6: vx.grpcservice.SelectedHandlersResponse.selected_handlers:type_name -> vx.grpcservice.SelectedHandlersResponse.SelectedHandlersEntry
-	53, // 7: vx.grpcservice.ChangeOutboundRequest.handlers:type_name -> vx.outbound.HandlerConfig
-	54, // 8: vx.grpcservice.ChangeRoutingModeRequest.router_config:type_name -> vx.router.RouterConfig
-	55, // 9: vx.grpcservice.ChangeRoutingModeRequest.geo_config:type_name -> vx.geo.GeoConfig
-	56, // 10: vx.grpcservice.ChangeSelectorRequest.selectors_to_add:type_name -> vx.router.SelectorConfig
-	57, // 11: vx.grpcservice.UpdateSelectorBalancerRequest.balance_strategy:type_name -> vx.router.SelectorConfig.BalanceStrategy
-	58, // 12: vx.grpcservice.UpdateSelectorFilterRequest.filter:type_name -> vx.router.SelectorConfig.Filter
-	55, // 13: vx.grpcservice.UpdateGeoRequest.geo:type_name -> vx.geo.GeoConfig
-	59, // 14: vx.grpcservice.AddGeoDomainRequest.domain:type_name -> vx.common.geo.Domain
-	59, // 15: vx.grpcservice.RemoveGeoDomainRequest.domain:type_name -> vx.common.geo.Domain
-	60, // 16: vx.grpcservice.ReplaceDomainSetRequest.set:type_name -> vx.geo.AtomicDomainSetConfig
-	61, // 17: vx.grpcservice.ReplaceIPSetRequest.set:type_name -> vx.geo.AtomicIPSetConfig
-	54, // 18: vx.grpcservice.UpdateRouterRequest.router_config:type_name -> vx.router.RouterConfig
-	50, // 19: vx.grpcservice.SelectedHandlersResponse.SelectedHandlersEntry.value:type_name -> vx.grpcservice.SelectedHandlersResponse.Strings
-	3,  // 20: vx.grpcservice.GrpcService.Communicate:input_type -> vx.grpcservice.CommunicateRequest
-	9,  // 21: vx.grpcservice.GrpcService.AddInbound:input_type -> vx.grpcservice.AddInboundRequest
-	11, // 22: vx.grpcservice.GrpcService.RemoveInbound:input_type -> vx.grpcservice.RemoveInboundRequest
-	14, // 23: vx.grpcservice.GrpcService.GetStatsStream:input_type -> vx.grpcservice.GetStatsRequest
-	16, // 24: vx.grpcservice.GrpcService.SetOutboundHandlerSpeed:input_type -> vx.grpcservice.SetOutboundHandlerSpeedRequest
-	20, // 25: vx.grpcservice.GrpcService.UserLogStream:input_type -> vx.grpcservice.UserLogStreamRequest
-	21, // 26: vx.grpcservice.GrpcService.ResetUserLogging:input_type -> vx.grpcservice.ResetUserLoggingRequest
-	23, // 27: vx.grpcservice.GrpcService.ChangeOutbound:input_type -> vx.grpcservice.ChangeOutboundRequest
-	25, // 28: vx.grpcservice.GrpcService.CurrentOutbound:input_type -> vx.grpcservice.CurrentOutboundRequest
-	18, // 29: vx.grpcservice.GrpcService.SelectedHandlers:input_type -> vx.grpcservice.SelectedHandlersRequest
-	27, // 30: vx.grpcservice.GrpcService.ChangeRoutingMode:input_type -> vx.grpcservice.ChangeRoutingModeRequest
-	29, // 31: vx.grpcservice.GrpcService.ChangeSelector:input_type -> vx.grpcservice.ChangeSelectorRequest
-	30, // 32: vx.grpcservice.GrpcService.UpdateSelectorBalancer:input_type -> vx.grpcservice.UpdateSelectorBalancerRequest
-	31, // 33: vx.grpcservice.GrpcService.UpdateSelectorFilter:input_type -> vx.grpcservice.UpdateSelectorFilterRequest
-	33, // 34: vx.grpcservice.GrpcService.NotifyHandlerChange:input_type -> vx.grpcservice.HandlerChangeNotify
-	35, // 35: vx.grpcservice.GrpcService.SwitchFakeDns:input_type -> vx.grpcservice.SwitchFakeDnsRequest
-	37, // 36: vx.grpcservice.GrpcService.UpdateGeo:input_type -> vx.grpcservice.UpdateGeoRequest
-	39, // 37: vx.grpcservice.GrpcService.AddGeoDomain:input_type -> vx.grpcservice.AddGeoDomainRequest
-	40, // 38: vx.grpcservice.GrpcService.RemoveGeoDomain:input_type -> vx.grpcservice.RemoveGeoDomainRequest
-	41, // 39: vx.grpcservice.GrpcService.ReplaceGeoDomains:input_type -> vx.grpcservice.ReplaceDomainSetRequest
-	42, // 40: vx.grpcservice.GrpcService.ReplaceGeoIPs:input_type -> vx.grpcservice.ReplaceIPSetRequest
-	43, // 41: vx.grpcservice.GrpcService.UpdateRouter:input_type -> vx.grpcservice.UpdateRouterRequest
-	45, // 42: vx.grpcservice.GrpcService.SetSubscriptionInterval:input_type -> vx.grpcservice.SetSubscriptionIntervalRequest
-	47, // 43: vx.grpcservice.GrpcService.SetAutoSubscriptionUpdate:input_type -> vx.grpcservice.SetAutoSubscriptionUpdateRequest
-	0,  // 44: vx.grpcservice.GrpcService.RttTest:input_type -> vx.grpcservice.RttTestRequest
-	4,  // 45: vx.grpcservice.GrpcService.Communicate:output_type -> vx.grpcservice.CommunicateMessage
-	10, // 46: vx.grpcservice.GrpcService.AddInbound:output_type -> vx.grpcservice.AddInboundResponse
-	12, // 47: vx.grpcservice.GrpcService.RemoveInbound:output_type -> vx.grpcservice.RemoveInboundResponse
-	15, // 48: vx.grpcservice.GrpcService.GetStatsStream:output_type -> vx.grpcservice.StatsResponse
-	17, // 49: vx.grpcservice.GrpcService.SetOutboundHandlerSpeed:output_type -> vx.grpcservice.SetOutboundHandlerSpeedResponse
-	62, // 50: vx.grpcservice.GrpcService.UserLogStream:output_type -> vx.userlogger.UserLogMessage
-	22, // 51: vx.grpcservice.GrpcService.ResetUserLogging:output_type -> vx.grpcservice.ResetUserLoggingResponse
-	24, // 52: vx.grpcservice.GrpcService.ChangeOutbound:output_type -> vx.grpcservice.ChangeOutboundResponse
-	26, // 53: vx.grpcservice.GrpcService.CurrentOutbound:output_type -> vx.grpcservice.CurrentOutboundResponse
-	19, // 54: vx.grpcservice.GrpcService.SelectedHandlers:output_type -> vx.grpcservice.SelectedHandlersResponse
-	28, // 55: vx.grpcservice.GrpcService.ChangeRoutingMode:output_type -> vx.grpcservice.ChangeRoutingModeResponse
-	32, // 56: vx.grpcservice.GrpcService.ChangeSelector:output_type -> vx.grpcservice.ChangeSelectorResponse
-	2,  // 57: vx.grpcservice.GrpcService.UpdateSelectorBalancer:output_type -> vx.grpcservice.Receipt
-	2,  // 58: vx.grpcservice.GrpcService.UpdateSelectorFilter:output_type -> vx.grpcservice.Receipt
-	34, // 59: vx.grpcservice.GrpcService.NotifyHandlerChange:output_type -> vx.grpcservice.HandlerChangeNotifyResponse
-	36, // 60: vx.grpcservice.GrpcService.SwitchFakeDns:output_type -> vx.grpcservice.SwitchFakeDnsResponse
-	38, // 61: vx.grpcservice.GrpcService.UpdateGeo:output_type -> vx.grpcservice.UpdateGeoResponse
-	2,  // 62: vx.grpcservice.GrpcService.AddGeoDomain:output_type -> vx.grpcservice.Receipt
-	2,  // 63: vx.grpcservice.GrpcService.RemoveGeoDomain:output_type -> vx.grpcservice.Receipt
-	2,  // 64: vx.grpcservice.GrpcService.ReplaceGeoDomains:output_type -> vx.grpcservice.Receipt
-	2,  // 65: vx.grpcservice.GrpcService.ReplaceGeoIPs:output_type -> vx.grpcservice.Receipt
-	44, // 66: vx.grpcservice.GrpcService.UpdateRouter:output_type -> vx.grpcservice.UpdateRouterResponse
-	46, // 67: vx.grpcservice.GrpcService.SetSubscriptionInterval:output_type -> vx.grpcservice.SetSubscriptionIntervalResponse
-	2,  // 68: vx.grpcservice.GrpcService.SetAutoSubscriptionUpdate:output_type -> vx.grpcservice.Receipt
-	1,  // 69: vx.grpcservice.GrpcService.RttTest:output_type -> vx.grpcservice.RttTestResponse
-	45, // [45:70] is the sub-list for method output_type
-	20, // [20:45] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	55, // 6: vx.grpcservice.SelectedHandlersResponse.selected_handlers:type_name -> vx.grpcservice.SelectedHandlersResponse.SelectedHandlersEntry
+	57, // 7: vx.grpcservice.ChangeOutboundRequest.handlers:type_name -> vx.outbound.HandlerConfig
+	58, // 8: vx.grpcservice.ChangeRoutingModeRequest.router_config:type_name -> vx.router.RouterConfig
+	59, // 9: vx.grpcservice.ChangeRoutingModeRequest.geo_config:type_name -> vx.geo.GeoConfig
+	60, // 10: vx.grpcservice.ChangeSelectorRequest.selectors_to_add:type_name -> vx.router.SelectorConfig
+	61, // 11: vx.grpcservice.UpdateSelectorBalancerRequest.balance_strategy:type_name -> vx.router.SelectorConfig.BalanceStrategy
+	62, // 12: vx.grpcservice.UpdateSelectorFilterRequest.filter:type_name -> vx.router.SelectorConfig.Filter
+	59, // 13: vx.grpcservice.UpdateGeoRequest.geo:type_name -> vx.geo.GeoConfig
+	63, // 14: vx.grpcservice.AddGeoDomainRequest.domain:type_name -> vx.common.geo.Domain
+	63, // 15: vx.grpcservice.RemoveGeoDomainRequest.domain:type_name -> vx.common.geo.Domain
+	64, // 16: vx.grpcservice.ReplaceDomainSetRequest.set:type_name -> vx.geo.AtomicDomainSetConfig
+	65, // 17: vx.grpcservice.ReplaceIPSetRequest.set:type_name -> vx.geo.AtomicIPSetConfig
+	58, // 18: vx.grpcservice.UpdateRouterRequest.router_config:type_name -> vx.router.RouterConfig
+	56, // 19: vx.grpcservice.RealmInboundToUriRequest.inbound_config:type_name -> vx.inbound.ProxyInboundConfig
+	54, // 20: vx.grpcservice.SelectedHandlersResponse.SelectedHandlersEntry.value:type_name -> vx.grpcservice.SelectedHandlersResponse.Strings
+	3,  // 21: vx.grpcservice.GrpcService.Communicate:input_type -> vx.grpcservice.CommunicateRequest
+	9,  // 22: vx.grpcservice.GrpcService.AddInbound:input_type -> vx.grpcservice.AddInboundRequest
+	11, // 23: vx.grpcservice.GrpcService.RemoveInbound:input_type -> vx.grpcservice.RemoveInboundRequest
+	14, // 24: vx.grpcservice.GrpcService.GetStatsStream:input_type -> vx.grpcservice.GetStatsRequest
+	16, // 25: vx.grpcservice.GrpcService.SetOutboundHandlerSpeed:input_type -> vx.grpcservice.SetOutboundHandlerSpeedRequest
+	20, // 26: vx.grpcservice.GrpcService.UserLogStream:input_type -> vx.grpcservice.UserLogStreamRequest
+	21, // 27: vx.grpcservice.GrpcService.ResetUserLogging:input_type -> vx.grpcservice.ResetUserLoggingRequest
+	23, // 28: vx.grpcservice.GrpcService.ChangeOutbound:input_type -> vx.grpcservice.ChangeOutboundRequest
+	25, // 29: vx.grpcservice.GrpcService.CurrentOutbound:input_type -> vx.grpcservice.CurrentOutboundRequest
+	18, // 30: vx.grpcservice.GrpcService.SelectedHandlers:input_type -> vx.grpcservice.SelectedHandlersRequest
+	27, // 31: vx.grpcservice.GrpcService.ChangeRoutingMode:input_type -> vx.grpcservice.ChangeRoutingModeRequest
+	29, // 32: vx.grpcservice.GrpcService.ChangeSelector:input_type -> vx.grpcservice.ChangeSelectorRequest
+	30, // 33: vx.grpcservice.GrpcService.UpdateSelectorBalancer:input_type -> vx.grpcservice.UpdateSelectorBalancerRequest
+	31, // 34: vx.grpcservice.GrpcService.UpdateSelectorFilter:input_type -> vx.grpcservice.UpdateSelectorFilterRequest
+	33, // 35: vx.grpcservice.GrpcService.NotifyHandlerChange:input_type -> vx.grpcservice.HandlerChangeNotify
+	35, // 36: vx.grpcservice.GrpcService.SwitchFakeDns:input_type -> vx.grpcservice.SwitchFakeDnsRequest
+	37, // 37: vx.grpcservice.GrpcService.UpdateGeo:input_type -> vx.grpcservice.UpdateGeoRequest
+	39, // 38: vx.grpcservice.GrpcService.AddGeoDomain:input_type -> vx.grpcservice.AddGeoDomainRequest
+	40, // 39: vx.grpcservice.GrpcService.RemoveGeoDomain:input_type -> vx.grpcservice.RemoveGeoDomainRequest
+	41, // 40: vx.grpcservice.GrpcService.ReplaceGeoDomains:input_type -> vx.grpcservice.ReplaceDomainSetRequest
+	42, // 41: vx.grpcservice.GrpcService.ReplaceGeoIPs:input_type -> vx.grpcservice.ReplaceIPSetRequest
+	43, // 42: vx.grpcservice.GrpcService.UpdateRouter:input_type -> vx.grpcservice.UpdateRouterRequest
+	45, // 43: vx.grpcservice.GrpcService.SetSubscriptionInterval:input_type -> vx.grpcservice.SetSubscriptionIntervalRequest
+	47, // 44: vx.grpcservice.GrpcService.SetAutoSubscriptionUpdate:input_type -> vx.grpcservice.SetAutoSubscriptionUpdateRequest
+	0,  // 45: vx.grpcservice.GrpcService.RttTest:input_type -> vx.grpcservice.RttTestRequest
+	50, // 46: vx.grpcservice.GrpcService.GetRealmStatusStream:input_type -> vx.grpcservice.GetRealmStatusStreamRequest
+	52, // 47: vx.grpcservice.GrpcService.RealmInboundToUri:input_type -> vx.grpcservice.RealmInboundToUriRequest
+	4,  // 48: vx.grpcservice.GrpcService.Communicate:output_type -> vx.grpcservice.CommunicateMessage
+	10, // 49: vx.grpcservice.GrpcService.AddInbound:output_type -> vx.grpcservice.AddInboundResponse
+	12, // 50: vx.grpcservice.GrpcService.RemoveInbound:output_type -> vx.grpcservice.RemoveInboundResponse
+	15, // 51: vx.grpcservice.GrpcService.GetStatsStream:output_type -> vx.grpcservice.StatsResponse
+	17, // 52: vx.grpcservice.GrpcService.SetOutboundHandlerSpeed:output_type -> vx.grpcservice.SetOutboundHandlerSpeedResponse
+	66, // 53: vx.grpcservice.GrpcService.UserLogStream:output_type -> vx.userlogger.UserLogMessage
+	22, // 54: vx.grpcservice.GrpcService.ResetUserLogging:output_type -> vx.grpcservice.ResetUserLoggingResponse
+	24, // 55: vx.grpcservice.GrpcService.ChangeOutbound:output_type -> vx.grpcservice.ChangeOutboundResponse
+	26, // 56: vx.grpcservice.GrpcService.CurrentOutbound:output_type -> vx.grpcservice.CurrentOutboundResponse
+	19, // 57: vx.grpcservice.GrpcService.SelectedHandlers:output_type -> vx.grpcservice.SelectedHandlersResponse
+	28, // 58: vx.grpcservice.GrpcService.ChangeRoutingMode:output_type -> vx.grpcservice.ChangeRoutingModeResponse
+	32, // 59: vx.grpcservice.GrpcService.ChangeSelector:output_type -> vx.grpcservice.ChangeSelectorResponse
+	2,  // 60: vx.grpcservice.GrpcService.UpdateSelectorBalancer:output_type -> vx.grpcservice.Receipt
+	2,  // 61: vx.grpcservice.GrpcService.UpdateSelectorFilter:output_type -> vx.grpcservice.Receipt
+	34, // 62: vx.grpcservice.GrpcService.NotifyHandlerChange:output_type -> vx.grpcservice.HandlerChangeNotifyResponse
+	36, // 63: vx.grpcservice.GrpcService.SwitchFakeDns:output_type -> vx.grpcservice.SwitchFakeDnsResponse
+	38, // 64: vx.grpcservice.GrpcService.UpdateGeo:output_type -> vx.grpcservice.UpdateGeoResponse
+	2,  // 65: vx.grpcservice.GrpcService.AddGeoDomain:output_type -> vx.grpcservice.Receipt
+	2,  // 66: vx.grpcservice.GrpcService.RemoveGeoDomain:output_type -> vx.grpcservice.Receipt
+	2,  // 67: vx.grpcservice.GrpcService.ReplaceGeoDomains:output_type -> vx.grpcservice.Receipt
+	2,  // 68: vx.grpcservice.GrpcService.ReplaceGeoIPs:output_type -> vx.grpcservice.Receipt
+	44, // 69: vx.grpcservice.GrpcService.UpdateRouter:output_type -> vx.grpcservice.UpdateRouterResponse
+	46, // 70: vx.grpcservice.GrpcService.SetSubscriptionInterval:output_type -> vx.grpcservice.SetSubscriptionIntervalResponse
+	2,  // 71: vx.grpcservice.GrpcService.SetAutoSubscriptionUpdate:output_type -> vx.grpcservice.Receipt
+	1,  // 72: vx.grpcservice.GrpcService.RttTest:output_type -> vx.grpcservice.RttTestResponse
+	51, // 73: vx.grpcservice.GrpcService.GetRealmStatusStream:output_type -> vx.grpcservice.RealmServerStatus
+	53, // 74: vx.grpcservice.GrpcService.RealmInboundToUri:output_type -> vx.grpcservice.RealmInboundToUriResponse
+	48, // [48:75] is the sub-list for method output_type
+	21, // [21:48] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_app_grpcservice_grpc_proto_init() }
@@ -2736,7 +2963,7 @@ func file_app_grpcservice_grpc_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_grpcservice_grpc_proto_rawDesc), len(file_app_grpcservice_grpc_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   52,
+			NumMessages:   56,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -45,6 +45,8 @@ const (
 	GrpcService_SetSubscriptionInterval_FullMethodName   = "/vx.grpcservice.GrpcService/SetSubscriptionInterval"
 	GrpcService_SetAutoSubscriptionUpdate_FullMethodName = "/vx.grpcservice.GrpcService/SetAutoSubscriptionUpdate"
 	GrpcService_RttTest_FullMethodName                   = "/vx.grpcservice.GrpcService/RttTest"
+	GrpcService_GetRealmStatusStream_FullMethodName      = "/vx.grpcservice.GrpcService/GetRealmStatusStream"
+	GrpcService_RealmInboundToUri_FullMethodName         = "/vx.grpcservice.GrpcService/RealmInboundToUri"
 )
 
 // GrpcServiceClient is the client API for GrpcService service.
@@ -89,6 +91,10 @@ type GrpcServiceClient interface {
 	SetSubscriptionInterval(ctx context.Context, in *SetSubscriptionIntervalRequest, opts ...grpc.CallOption) (*SetSubscriptionIntervalResponse, error)
 	SetAutoSubscriptionUpdate(ctx context.Context, in *SetAutoSubscriptionUpdateRequest, opts ...grpc.CallOption) (*Receipt, error)
 	RttTest(ctx context.Context, in *RttTestRequest, opts ...grpc.CallOption) (*RttTestResponse, error)
+	// realm server status (only meaningful when a realm server inbound is active)
+	GetRealmStatusStream(ctx context.Context, in *GetRealmStatusStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[RealmServerStatus], error)
+	// Convert a realm server inbound config to a hysteria2+realm:// share URI.
+	RealmInboundToUri(ctx context.Context, in *RealmInboundToUriRequest, opts ...grpc.CallOption) (*RealmInboundToUriResponse, error)
 }
 
 type grpcServiceClient struct {
@@ -376,6 +382,35 @@ func (c *grpcServiceClient) RttTest(ctx context.Context, in *RttTestRequest, opt
 	return out, nil
 }
 
+func (c *grpcServiceClient) GetRealmStatusStream(ctx context.Context, in *GetRealmStatusStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[RealmServerStatus], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &GrpcService_ServiceDesc.Streams[3], GrpcService_GetRealmStatusStream_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[GetRealmStatusStreamRequest, RealmServerStatus]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GrpcService_GetRealmStatusStreamClient = grpc.ServerStreamingClient[RealmServerStatus]
+
+func (c *grpcServiceClient) RealmInboundToUri(ctx context.Context, in *RealmInboundToUriRequest, opts ...grpc.CallOption) (*RealmInboundToUriResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RealmInboundToUriResponse)
+	err := c.cc.Invoke(ctx, GrpcService_RealmInboundToUri_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GrpcServiceServer is the server API for GrpcService service.
 // All implementations should embed UnimplementedGrpcServiceServer
 // for forward compatibility.
@@ -418,6 +453,10 @@ type GrpcServiceServer interface {
 	SetSubscriptionInterval(context.Context, *SetSubscriptionIntervalRequest) (*SetSubscriptionIntervalResponse, error)
 	SetAutoSubscriptionUpdate(context.Context, *SetAutoSubscriptionUpdateRequest) (*Receipt, error)
 	RttTest(context.Context, *RttTestRequest) (*RttTestResponse, error)
+	// realm server status (only meaningful when a realm server inbound is active)
+	GetRealmStatusStream(*GetRealmStatusStreamRequest, grpc.ServerStreamingServer[RealmServerStatus]) error
+	// Convert a realm server inbound config to a hysteria2+realm:// share URI.
+	RealmInboundToUri(context.Context, *RealmInboundToUriRequest) (*RealmInboundToUriResponse, error)
 }
 
 // UnimplementedGrpcServiceServer should be embedded to have
@@ -501,6 +540,12 @@ func (UnimplementedGrpcServiceServer) SetAutoSubscriptionUpdate(context.Context,
 }
 func (UnimplementedGrpcServiceServer) RttTest(context.Context, *RttTestRequest) (*RttTestResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RttTest not implemented")
+}
+func (UnimplementedGrpcServiceServer) GetRealmStatusStream(*GetRealmStatusStreamRequest, grpc.ServerStreamingServer[RealmServerStatus]) error {
+	return status.Error(codes.Unimplemented, "method GetRealmStatusStream not implemented")
+}
+func (UnimplementedGrpcServiceServer) RealmInboundToUri(context.Context, *RealmInboundToUriRequest) (*RealmInboundToUriResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RealmInboundToUri not implemented")
 }
 func (UnimplementedGrpcServiceServer) testEmbeddedByValue() {}
 
@@ -951,6 +996,35 @@ func _GrpcService_RttTest_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GrpcService_GetRealmStatusStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetRealmStatusStreamRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(GrpcServiceServer).GetRealmStatusStream(m, &grpc.GenericServerStream[GetRealmStatusStreamRequest, RealmServerStatus]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GrpcService_GetRealmStatusStreamServer = grpc.ServerStreamingServer[RealmServerStatus]
+
+func _GrpcService_RealmInboundToUri_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RealmInboundToUriRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GrpcServiceServer).RealmInboundToUri(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GrpcService_RealmInboundToUri_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GrpcServiceServer).RealmInboundToUri(ctx, req.(*RealmInboundToUriRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GrpcService_ServiceDesc is the grpc.ServiceDesc for GrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1046,6 +1120,10 @@ var GrpcService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "RttTest",
 			Handler:    _GrpcService_RttTest_Handler,
 		},
+		{
+			MethodName: "RealmInboundToUri",
+			Handler:    _GrpcService_RealmInboundToUri_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
@@ -1061,6 +1139,11 @@ var GrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "UserLogStream",
 			Handler:       _GrpcService_UserLogStream_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "GetRealmStatusStream",
+			Handler:       _GrpcService_GetRealmStatusStream_Handler,
 			ServerStreams: true,
 		},
 	},

@@ -199,7 +199,7 @@ func (h *h3sHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				tl.LogOnlineState(h.user, true)
 			}
 			if el := h.config.EventLogger; el != nil {
-				el.Connect(h.conn.RemoteAddr(), h.user.Uid(), actualTx)
+				el.Connect(h.conn.RemoteAddr(), h.user.Secret(), actualTx)
 			}
 			// Initialize UDP session manager (if UDP is enabled)
 			// We use sync.Once to make sure that only one goroutine is started,

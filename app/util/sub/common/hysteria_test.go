@@ -143,6 +143,43 @@ func TestParseHysteriaFromLink3(t *testing.T) {
 	}
 }
 
+func TestParseHysteriaRealmFromLink(t *testing.T) {
+	link := "hysteria2+realm://public@realm.hy2.io/deeac08s5f83aeddf86f0cdb7f?auth=1d89f1-e12fc&insecure=1&pinSHA256=8b07e3613850554650463e828128883f73b6d68f9dccfcaff&sni=apples.com#RealmServer-realmServer-1"
+	config, err := ParseHysteriaFromLink(link)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hysteriaConfig, err := serial.GetInstanceOf(config.Protocol)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hysteria := hysteriaConfig.(*configs.Hysteria2ClientConfig)
+	if hysteria.Auth != "1d89f1-e12fc" {
+		t.Fatalf("auth mismatch: %q", hysteria.Auth)
+	}
+	if hysteria.TlsConfig.ServerName != "apples.com" {
+		t.Fatalf("sni mismatch: %q", hysteria.TlsConfig.ServerName)
+	}
+	if !hysteria.TlsConfig.AllowInsecure {
+		t.Fatal("expected insecure tls")
+	}
+	if len(hysteria.TlsConfig.PinnedPeerCertificateChainSha256) != 1 {
+		t.Fatal("pinSHA256 mismatch")
+	}
+	if hysteria.Realm.GetRealmAddr() != "realm://public@realm.hy2.io/deeac0810b1a435f83aeddf86f0cdb7f" {
+		t.Fatalf("realm addr mismatch: %q", hysteria.Realm.GetRealmAddr())
+	}
+	if config.Address != "realm.hy2.io" {
+		t.Fatalf("address mismatch: %q", config.Address)
+	}
+	if config.Ports[0].From != 443 || config.Ports[0].To != 443 {
+		t.Fatal("port mismatch")
+	}
+	if config.Tag != "RealmServer-realmServer-1" {
+		t.Fatalf("tag mismatch: %q", config.Tag)
+	}
+}
+
 func TestExtractPortFromURL(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -232,4 +269,13 @@ func TestExtractPortFromURL(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestParseHysteriaRealmFromLink1(t *testing.T) {
+	link := "hysteria2+realm://public@realm.hy2.io/d21bn1810bs2sb7f?auth=1ds1-ef144e7912fc&insecure=1&pinSHA256=8b07e361385055465b76bbf0a38128883f73b6d68f9dccfcaff&sni=apples.com#RealmServer-realmServer-1"
+	config, err := ParseHysteriaFromLink(link)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(config)
 }

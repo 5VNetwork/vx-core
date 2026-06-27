@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	stdHTTP "net/http"
+	"net/netip"
 	"runtime"
 	"slices"
 	"sync"
@@ -27,6 +29,7 @@ import (
 
 	"github.com/apernet/hysteria/core/v2/client"
 	"github.com/apernet/hysteria/extras/v2/obfs"
+	"github.com/apernet/hysteria/extras/v2/realm"
 	"github.com/apernet/quic-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -35,6 +38,7 @@ import (
 type HysClient struct {
 	tag                        string
 	address                    net.Address
+	dialer                     i.Dialer
 	serverPicker               i.PortSelector
 	IpResolverForNodeAddress   i.IPResolver
 	IpResolverForTargetAddress i.IPResolver
@@ -42,14 +46,38 @@ type HysClient struct {
 	config                     *client.Config
 	id                         atomic.Int32
 	RejectQuic                 bool
+	realmConfig                RealmConfig
+	connFactory                *hysConnFactory
+	realmConnFactory           *hysConnFactory
+	salamanderPSK              []byte
 	sync.Mutex
 	clients                   []*wrappedClient
 	concurrentCreateNewClient *concurrentCreateNewClient
 }
 
+type RealmConfig struct {
+	RealmAddr         string
+	LocalPort         uint16
+	STUNServers       []string
+	STUNTimeout       time.Duration
+	PunchTimeout      time.Duration
+	HeartbeatInterval time.Duration
+	Insecure          bool
+	IPMode            string
+	PortMapping       RealmPortMappingConfig
+	Resolver          i.IPResolver
+}
+
+type RealmPortMappingConfig struct {
+	Enabled  bool
+	Timeout  time.Duration
+	Lifetime time.Duration
+}
+
 type Config struct {
 	Tag                      string
 	PacketListener           i.PacketListener
+	Dialer                   i.Dialer
 	HysteriaClientConfig     *client.Config
 	SalamanderPassword       string
 	Address                  net.Address
@@ -57,33 +85,41 @@ type Config struct {
 	IpResolverForNodeAddress i.IPResolver
 	DomainStrategy           domain.DomainStrategy
 	RejectQuic               bool
+	Realm                    RealmConfig
 }
 
 func NewClient(config *Config) (*HysClient, error) {
-	config.HysteriaClientConfig.ConnFactory = &hysConnFactory{
+	connFactory := &hysConnFactory{
 		packetListener: config.PacketListener,
 	}
-	if config.SalamanderPassword != "" {
-		obfuscator, err := obfs.NewSalamanderObfuscator([]byte(config.SalamanderPassword))
-		if err != nil {
-			return nil, fmt.Errorf("failed to create obfuscator: %w", err)
-		}
-		config.HysteriaClientConfig.ConnFactory = &hysConnFactory{
-			packetListener: config.PacketListener,
-			obfuscator:     obfuscator,
-		}
+	realmConnFactory := &hysConnFactory{
+		packetListener: config.PacketListener,
 	}
+	var salamanderPSK []byte
+	if config.SalamanderPassword != "" {
+		if len(config.SalamanderPassword) < 4 {
+			return nil, fmt.Errorf("failed to create obfuscator: password too short")
+		}
+		salamanderPSK = []byte(config.SalamanderPassword)
+		connFactory.salamanderPSK = salamanderPSK
+	}
+	config.HysteriaClientConfig.ConnFactory = connFactory
 	log.Debug().Msgf("keepalive period: %v", config.HysteriaClientConfig.QUICConfig.KeepAlivePeriod.Seconds())
 	log.Debug().Msgf("max idle timeout: %v", config.HysteriaClientConfig.QUICConfig.MaxIdleTimeout.Seconds())
 
 	d := &HysClient{
 		tag:                      config.Tag,
 		address:                  config.Address,
+		dialer:                   config.Dialer,
 		config:                   config.HysteriaClientConfig,
 		serverPicker:             config.PortSelector,
 		IpResolverForNodeAddress: config.IpResolverForNodeAddress,
 		DomainStrategy:           config.DomainStrategy,
 		RejectQuic:               config.RejectQuic,
+		realmConfig:              config.Realm,
+		connFactory:              connFactory,
+		realmConnFactory:         realmConnFactory,
+		salamanderPSK:            salamanderPSK,
 	}
 	return d, nil
 }
@@ -182,6 +218,11 @@ func (hys *HysClient) decreaseUsedSession(c *wrappedClient) {
 }
 
 var streamLimitReachedError = quic.StreamLimitReachedError{}
+var defaultRealmSTUNServers = []string{
+	"stun.nextcloud.com:3478",
+	"stun.sip.us:3478",
+	"global.stun.twilio.com:3478",
+}
 
 func (d *HysClient) Tag() string {
 	return d.tag
@@ -258,8 +299,15 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 	config := *d.config
 	var cl client.Client
 	var err error
-	factory := d.config.ConnFactory
+	factory := d.connFactory
 	var idleTimer *atomic.Int64
+	if d.realmConfig.RealmAddr != "" {
+		if realmAddr, parseErr := d.parseRealmAddr(); parseErr == nil {
+			return d.addNewRealmClient(id, &config, realmAddr)
+		} else {
+			return nil, parseErr
+		}
+	}
 
 	if d.address.Family().IsDomain() {
 		ctx := log.With().Int32("id", id).Str("domain", d.address.Domain()).
@@ -330,6 +378,217 @@ func (d *HysClient) addNewClientCommon() (*wrappedClient, error) {
 	return wrappedClient, nil
 }
 
+func (d *HysClient) parseRealmAddr() (*realm.Addr, error) {
+	raw := d.realmConfig.RealmAddr
+	addr, err := realm.ParseAddr(raw)
+	if err == nil {
+		return addr, nil
+	}
+	return nil, errors.New("invalid realm address")
+}
+
+func (d *HysClient) addNewRealmClient(id int32, config *client.Config, addr *realm.Addr) (*wrappedClient, error) {
+	ctx := log.With().Uint32("sid", rand.Uint32()).Logger().WithContext(context.Background())
+
+	log.Ctx(ctx).Debug().Str("realm", addr.RealmID).Str("realmServer", addr.HostPort).
+		Str("scheme", addr.RendezvousScheme).Msg("realm client mode detected")
+	family, network, err := realmIPMode(d.realmConfig.IPMode)
+	if err != nil {
+		return nil, err
+	}
+	baseConn, err := d.newRealmBaseConn(network)
+	if err != nil {
+		return nil, err
+	}
+	log.Ctx(ctx).Debug().Str("realm", addr.RealmID).Str("local", baseConn.LocalAddr().String()).
+		Msg("realm client UDP socket opened")
+	success := false
+	defer func() {
+		if !success {
+			_ = baseConn.Close()
+		}
+	}()
+	var mapper *realm.PortMapper
+	if d.realmConfig.PortMapping.Enabled {
+		if udpAddr, ok := baseConn.LocalAddr().(*net.UDPAddr); ok {
+			mapper = newRealmPortMapper(ctx, addr.RealmID, udpAddr.Port, d.realmConfig.PortMapping)
+			if mapper != nil {
+				defer func() {
+					if !success {
+						_ = mapper.Close()
+					}
+				}()
+			}
+		}
+	}
+	localAddrs, err := d.realmDiscover(ctx, baseConn, addr, family, mapper)
+	if err != nil {
+		return nil, err
+	}
+	meta, err := realm.NewPunchMetadata()
+	if err != nil {
+		return nil, err
+	}
+	attempt := shortAttempt(meta.Nonce)
+	rClient, err := realm.NewClientFromAddr(addr, d.realmHTTPClient())
+	if err != nil {
+		return nil, err
+	}
+	log.Ctx(ctx).Debug().Str("realm", addr.RealmID).Str("attempt", attempt).
+		Strs("addresses", addrPortStrings(localAddrs)).Msg("realm client connect request started")
+	connectStart := time.Now()
+	connectResp, err := rClient.Connect(ctx, addr.RealmID, realm.ConnectRequest{
+		Addresses:     addrPortStrings(localAddrs),
+		PunchMetadata: meta,
+	})
+	if err != nil {
+		return nil, err
+	}
+	log.Ctx(ctx).Debug().Str("realm", addr.RealmID).Str("attempt", attempt).
+		Strs("serverAddresses", connectResp.Addresses).
+		Str("duration", formatLogDuration(time.Since(connectStart))).Msg("realm client connect response received")
+	peerAddrs, err := parseRealmAddrPorts(connectResp.Addresses)
+	if err != nil {
+		return nil, err
+	}
+	log.Ctx(ctx).Debug().Str("realm", addr.RealmID).Str("attempt", attempt).
+		Strs("candidates", connectResp.Addresses).Msg("realm client punch started")
+	punchStart := time.Now()
+	result, err := realm.Punch(ctx, baseConn, localAddrs, peerAddrs, connectResp.PunchMetadata, realm.PunchConfig{
+		Timeout: d.realmConfig.PunchTimeout,
+		Family:  family,
+	})
+	if err != nil {
+		return nil, err
+	}
+	log.Ctx(ctx).Debug().Str("realm", addr.RealmID).Str("attempt", attempt).Str("peer", result.PeerAddr.String()).
+		Str("packet", punchPacketTypeString(result.Packet.Type)).
+		Str("duration", formatLogDuration(time.Since(punchStart))).Msg("realm client punch completed")
+	log.Ctx(ctx).Debug().Str("realm", addr.RealmID).Str("peer", result.PeerAddr.String()).
+		Msg("realm client handing socket to QUIC")
+	finalConn := baseConn
+	if len(d.salamanderPSK) > 0 {
+		finalConn, err = obfs.WrapPacketConnSalamander(finalConn, d.salamanderPSK)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if mapper != nil {
+		mapCtx, mapCancel := context.WithCancel(context.Background())
+		go realmPortMapLoop(mapCtx, addr.RealmID, mapper)
+		finalConn = &cleanupPacketConn{PacketConn: finalConn, cleanup: mapCancel}
+	}
+	ddlConn := &ddlPacketConn{
+		PacketConn: finalConn,
+		id:         id,
+		debug:      zerolog.GlobalLevel() == zerolog.DebugLevel,
+		idle:       int64(config.QUICConfig.MaxIdleTimeout.Seconds()),
+	}
+	ddlConn.lastReadTime.Store(time.Now().Unix())
+	config.ServerAddr = udpAddrFromAddrPort(result.PeerAddr)
+	config.ConnFactory = &connFactory{
+		PacketConn: ddlConn,
+	}
+	c, _, err := client.NewClient(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create realm client: %w", err)
+	}
+	wrapped := &wrappedClient{
+		Client: c,
+		id:     id,
+		idle:   5,
+	}
+	wrapped.lastActiveTime = &ddlConn.lastReadTime
+	d.Lock()
+	d.clients = append(d.clients, wrapped)
+	d.Unlock()
+	success = true
+	return wrapped, nil
+}
+
+func (d *HysClient) newRealmBaseConn(network string) (net.PacketConn, error) {
+	switch network {
+	case "udp4":
+		return d.realmConnFactory.New(&net.UDPAddr{IP: net.AnyIP.IP(),
+			Port: int(d.realmConfig.LocalPort)})
+	case "udp6":
+		return d.realmConnFactory.New(&net.UDPAddr{IP: net.AnyIPv6.IP(),
+			Port: int(d.realmConfig.LocalPort)})
+	default:
+		return d.realmConnFactory.New(&net.UDPAddr{Port: int(d.realmConfig.LocalPort)})
+	}
+}
+
+func (d *HysClient) realmDiscover(ctx context.Context, baseConn net.PacketConn, addr *realm.Addr, family realm.AddrFamily, mapper *realm.PortMapper) ([]netip.AddrPort, error) {
+	stunServers := d.realmSTUNServers(addr)
+	log.Ctx(ctx).Debug().Str("realm", addr.RealmID).Strs("stunServers", stunServers).Msg("realm client STUN discovery started")
+	stunStart := time.Now()
+	localAddrs, err := realm.Discover(ctx, baseConn, realm.STUNConfig{
+		Servers:  stunServers,
+		Timeout:  d.realmConfig.STUNTimeout,
+		Family:   family,
+		Resolver: &ipResolverAdapter{resolver: d.realmConfig.Resolver},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to discover STUN servers: %w", err)
+	}
+	log.Ctx(ctx).Debug().Str("realm", addr.RealmID).Strs("addresses", addrPortStrings(localAddrs)).
+		Str("duration", formatLogDuration(time.Since(stunStart))).Msg("realm client STUN discovery completed")
+	return withMappedAddr(localAddrs, mapper), nil
+}
+
+func (d *HysClient) realmSTUNServers(addr *realm.Addr) []string {
+	if stunServers := addr.Params["stun"]; len(stunServers) > 0 {
+		return append([]string(nil), stunServers...)
+	}
+	if len(d.realmConfig.STUNServers) > 0 {
+		return append([]string(nil), d.realmConfig.STUNServers...)
+	}
+	return append([]string(nil), defaultRealmSTUNServers...)
+}
+
+func (d *HysClient) realmHTTPClient() *stdHTTP.Client {
+	tr := stdHTTP.DefaultTransport.(*stdHTTP.Transport).Clone()
+	tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		log.Ctx(ctx).Debug().Str("addr", addr).Msg("dialing")
+		dest, err := net.ParseDestination(addr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse destination: %w", err)
+		}
+		dest.Network = net.Network_TCP
+		return d.dialer.Dial(ctx, dest)
+	}
+	tr.TLSClientConfig.InsecureSkipVerify = d.realmConfig.Insecure
+	return &stdHTTP.Client{Transport: tr}
+}
+
+func parseRealmAddrPorts(values []string) ([]netip.AddrPort, error) {
+	addrs := make([]netip.AddrPort, 0, len(values))
+	for _, value := range values {
+		addr, err := netip.ParseAddrPort(value)
+		if err != nil {
+			return nil, err
+		}
+		addrs = append(addrs, addr)
+	}
+	return addrs, nil
+}
+
+func addrPortStrings(addrs []netip.AddrPort) []string {
+	out := make([]string, 0, len(addrs))
+	for _, addr := range addrs {
+		out = append(out, addr.String())
+	}
+	return out
+}
+
+func udpAddrFromAddrPort(addr netip.AddrPort) *net.UDPAddr {
+	return &net.UDPAddr{
+		IP:   net.IP(addr.Addr().AsSlice()),
+		Port: int(addr.Port()),
+	}
+}
+
 type connFactory struct {
 	net.PacketConn
 }
@@ -370,7 +629,7 @@ func (c *ddlPacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
 
 type hysConnFactory struct {
 	packetListener i.PacketListener
-	obfuscator     obfs.Obfuscator
+	salamanderPSK  []byte
 }
 
 // to prevent "connection already exists" panic
@@ -406,7 +665,9 @@ func (c *hysConnFactory) New(addr net.Addr) (net.PacketConn, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to split host port: %w", err)
 		}
-		if net.ParseAddress(ip).Family().IsIPv6() {
+		if ip == "" {
+			network = "udp"
+		} else if net.ParseAddress(ip).Family().IsIPv6() {
 			network = "udp6"
 		} else {
 			network = "udp4"
@@ -444,8 +705,13 @@ func (c *hysConnFactory) New(addr net.Addr) (net.PacketConn, error) {
 	}
 
 	log.Debug().Str("local_addr", conn.LocalAddr().String()).Msg("hysteria2 client listen udp succ")
-	if c.obfuscator != nil {
-		conn = obfs.WrapPacketConn(conn, c.obfuscator)
+	if len(c.salamanderPSK) > 0 {
+		var err error
+		conn, err = obfs.WrapPacketConnSalamander(conn, c.salamanderPSK)
+		if err != nil {
+			_ = conn.Close()
+			return nil, err
+		}
 	}
 	return conn, nil
 }

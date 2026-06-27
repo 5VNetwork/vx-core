@@ -51,6 +51,8 @@ type (
 	BandwidthConfig       = hysteriapb.BandwidthConfig
 	ObfsConfig            = hysteriapb.ObfsConfig
 	ObfsConfig_Salamander = hysteriapb.ObfsConfig_Salamander
+	RealmConfig           = hysteriapb.RealmConfig
+	RealmPortMappingConfig = hysteriapb.RealmPortMappingConfig
 	SalamanderConfig      = hysteriapb.SalamanderConfig
 )
 

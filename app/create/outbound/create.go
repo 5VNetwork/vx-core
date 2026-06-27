@@ -297,7 +297,9 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 			IpResolverForNodeAddress: ipr,
 			DomainStrategy:           domain.DomainStrategy(config.DomainStrategy),
 			PacketListener:           lis,
+			Dialer:                   dialer,
 			RejectQuic:               config.RejectQuic,
+			Realm:                    create.HysteriaRealmConfig(m.GetRealm(), ipr),
 			HysteriaClientConfig: &client.Config{
 				Auth: m.Auth,
 				TLSConfig: client.TLSConfig{
@@ -393,8 +395,6 @@ func getPortSelector(config *configs.OutboundHandlerConfig) (i.PortSelector, err
 		ranges = []*net.PortRange{
 			{From: config.Port, To: config.Port},
 		}
-	} else {
-		return nil, fmt.Errorf("no port and ports")
 	}
 
 	interval, minInterval, maxInterval, useOne := getOnePortStrategySeconds(config)

@@ -37,6 +37,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/xsqlite"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/i"
+	"github.com/5vnetwork/vx-core/transport"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -154,8 +155,8 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 	im := proxy.NewManager()
 	x.InboundManager = im
 	for _, handlerConfig := range config.GetInboundManager().GetHandlers() {
-		err := builder.requireFeature(func(ha *dispatcher.Dispatcher, policy *policy.Policy) error {
-			h, err := inbound.NewInbound(handlerConfig, ha, policy)
+		err := builder.requireFeature(func(ha *dispatcher.Dispatcher, df transport.DialerFactory, policy *policy.Policy, _ *dns.AllDnsServers) error {
+			h, err := inbound.NewInbound(handlerConfig, ha, policy, x.IPResolver, df)
 			if err != nil {
 				return fmt.Errorf("failed to create inbound proxy handler: %w", err)
 			}

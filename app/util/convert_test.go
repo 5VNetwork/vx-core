@@ -3,6 +3,7 @@ package util
 import (
 	"testing"
 
+	"buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/proxy/hysteria"
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/protocol/tls/cert"
 	"github.com/5vnetwork/vx-core/common/serial"
@@ -1567,4 +1568,31 @@ func TestMultiInboundConfigToOutboundConfig_MultipleProtocolsAndTransports(t *te
 	require.NotNil(t, result)
 	// Should generate configs for each combination of protocol and transport
 	assert.Greater(t, len(result), 1)
+}
+
+func TestInboundConfigToOutboundConfig_Realm(t *testing.T) {
+	inboundConfig := &configs.ProxyInboundConfig{
+		Tag: "realm-inbound",
+		Users: []*configs.UserConfig{
+			{
+				Id:     "test-user-id",
+				Secret: "test-secret",
+			},
+		},
+		Protocols: []*anypb.Any{serial.ToTypedMessage(&configs.Hysteria2ServerConfig{
+			Realm: &hysteria.RealmConfig{
+				RealmAddr: "test-realm-id",
+			},
+		})},
+	}
+	result, err := InboundConfigToOutboundConfig("test", inboundConfig, "")
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Greater(t, len(result), 0)
+
+	// Verify the outbound config
+	outbound := result[0]
+	assert.Contains(t, outbound.Tag, "test-realm-inbound")
+	assert.Equal(t, "example.com", outbound.Address)
+	assert.NotNil(t, outbound.Protocol)
 }

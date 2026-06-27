@@ -138,7 +138,8 @@ func DecodeCommon(content string, shareLinkQueryExtra map[string]string) (*sub.D
 				result.FailedNodes = append(result.FailedNodes, line)
 				continue
 			}
-		} else if strings.HasPrefix(line, "hysteria2://") || strings.HasPrefix(line, "hy2://") {
+		} else if strings.HasPrefix(line, "hysteria2://") || strings.HasPrefix(line, "hy2://") ||
+			strings.HasPrefix(line, "hysteria2+realm://") || strings.HasPrefix(line, "hysteria2+realm+http://") {
 			var err error
 			config, err = ParseHysteriaFromLink(line)
 			if err != nil {

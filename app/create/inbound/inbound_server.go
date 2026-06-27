@@ -78,6 +78,7 @@ func NewInboundServer(config *configs.ProxyInboundConfig, ha i.Handler,
 			Tag:                   config.Tag,
 			OnUnauthorizedRequest: onUnauth,
 			Handler:               ha,
+			Realm:                 create.HysteriaRealmConfig(hysteriaConfig.GetRealm(), nil),
 		})
 		if err != nil {
 			return nil, err

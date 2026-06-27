@@ -3,11 +3,11 @@ module github.com/5vnetwork/vx-core
 go 1.25.5
 
 require (
-	buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260617085610-d8cb9ec13a6a.1
+	buf.build/gen/go/vvvvv/vx/protocolbuffers/go v1.36.11-20260627125702-e1d6c097439e.1
 	github.com/anytls/sing-anytls v0.0.11
 	github.com/apernet/hysteria/core/v2 v2.0.0-00010101000000-000000000000
 	github.com/apernet/hysteria/extras/v2 v2.6.5
-	github.com/apernet/quic-go v0.59.1-0.20260425001925-6c6cc9bcb716
+	github.com/apernet/quic-go v0.60.1-0.20260618182935-599b15a1fa26
 	github.com/bits-and-blooms/bloom/v3 v3.7.0
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/golang/mock v1.7.0-rc.1
@@ -19,12 +19,13 @@ require (
 	github.com/jsimonetti/rtnetlink v1.4.0
 	github.com/mdlayher/netlink v1.7.2
 	github.com/miekg/dns v1.1.66
+	github.com/pion/stun/v3 v3.1.2
 	github.com/pires/go-proxyproto v0.8.1
 	github.com/pkg/sftp v1.13.6
 	github.com/quic-go/quic-go v0.59.0
 	github.com/refraction-networking/utls v1.8.2
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/rs/zerolog v1.33.0
+	github.com/rs/zerolog v1.35.1
 	github.com/sagernet/sing v0.7.6
 	github.com/sagernet/sing-shadowsocks v0.2.9
 	github.com/seiflotfy/cuckoofilter v0.0.0-20240715131351-a2f2c23f1771
@@ -65,16 +66,24 @@ require (
 	github.com/go-json-experiment/json v0.0.0-20231102232822-2e55bd4e08b0 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/google/btree v1.1.3 // indirect
+	github.com/huin/goupnp v1.2.0 // indirect
+	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/native v1.1.1-0.20230202152459-5c7d0dd6ab86 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
+	github.com/koron/go-ssdp v0.0.4 // indirect
 	github.com/kr/fs v0.1.0 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/libp2p/go-nat v1.0.1-0.20250821073202-01afc089f138 // indirect
+	github.com/libp2p/go-netroute v0.2.1 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/mdlayher/socket v0.5.0 // indirect
+	github.com/pion/dtls/v3 v3.1.2 // indirect
+	github.com/pion/logging v0.2.4 // indirect
+	github.com/pion/transport/v4 v4.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
@@ -82,6 +91,7 @@ require (
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
+	github.com/wlynxg/anet v0.0.5 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.uber.org/dig v1.19.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
@@ -105,6 +115,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-replace github.com/apernet/hysteria/core/v2 => github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260510171949-b46964b7c610
+replace github.com/apernet/hysteria/core/v2 => github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260627124816-ceaca27708aa
+
+replace github.com/apernet/hysteria/extras/v2 => github.com/5VNetwork/hysteria/extras/v2 v2.0.0-20260627124816-ceaca27708aa
 
 // replace buf.build/gen/go/vvvvv/vx/protocolbuffers/go => ./protos/gen

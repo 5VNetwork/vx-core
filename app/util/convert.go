@@ -39,9 +39,16 @@ func InboundConfigToOutboundConfig(namePrefix string, inboundConfig *inbound.Pro
 	}
 	user := inboundConfig.Users[0]
 
-	clientProtocols, err := proxyProtocolToOutboundConfig(inboundConfig.Protocols, user)
+	var protocolConfigs []*anypb.Any
+	protocolConfigs = append(protocolConfigs, inboundConfig.Protocols...)
+	protocolConfigs = append(protocolConfigs, inboundConfig.Protocol)
+
+	clientProtocols, err := proxyProtocolToOutboundConfig(protocolConfigs, user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert proxy protocol: %w", err)
+	}
+	if len(clientProtocols) == 0 {
+		return nil, fmt.Errorf("no client protocols")
 	}
 	var securityProtocols []any
 	if inboundConfig.GetTransport().GetSecurity() != nil {
@@ -66,7 +73,7 @@ func InboundConfigToOutboundConfig(namePrefix string, inboundConfig *inbound.Pro
 		transportConfig := &configs.TransportConfig{
 			Protocol: inboundConfig.GetTransport().GetProtocol(),
 		}
-		if securityProtocols != nil {
+		if len(securityProtocols) > 0 {
 			for _, securityProtocol := range securityProtocols {
 				switch s := securityProtocol.(type) {
 				case *tls.TlsConfig:
@@ -214,9 +221,10 @@ func proxyProtocolToOutboundConfig(proxyProtocol []*anypb.Any, user *configs.Use
 					Quic:      pc.Quic,
 					Obfs:      pc.Obfs,
 					Auth:      user.Secret,
+					Realm:     pc.Realm,
 					Bandwidth: &configs.BandwidthConfig{
 						MaxTx: 10,
-						MaxRx: 10,
+						MaxRx: 30,
 					},
 				}))
 			}
