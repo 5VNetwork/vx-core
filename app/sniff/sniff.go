@@ -114,7 +114,7 @@ type cReader interface {
 var errSniffingTimeout = errors.New("timeout on sniffing")
 
 // Sniff attempts to identify the protocol from the connection
-func (sniffer *Sniffer) Sniff(ctx context.Context, info *session.Info, rw interface{}) (interface{}, error) {
+func (s *Sniffer) Sniff(ctx context.Context, info *session.Info, rw interface{}) (interface{}, error) {
 	info.Sniffed = true
 
 	startTime := time.Now()
@@ -127,22 +127,22 @@ func (sniffer *Sniffer) Sniff(ctx context.Context, info *session.Info, rw interf
 		if r, ok := rw.(buf.DdlReaderWriter); ok {
 			cReader = &CachedRW{
 				DdlReaderWriter: r,
-				interval:        sniffer.interval,
+				interval:        s.interval,
 			}
 		} else if ddlReaderWriter, ok := rw.(udp.DdlPacketReaderWriter); ok {
 			cReader = &CachedDdlPacketConn{
 				DdlPacketReaderWriter: ddlReaderWriter,
-				interval:              sniffer.interval,
+				interval:              s.interval,
 			}
 		} else if readerWriter, ok := rw.(buf.ReaderWriter); ok {
 			cReader = &CachedReadRw{
-				interval:     sniffer.interval,
+				interval:     s.interval,
 				ReaderWriter: readerWriter,
 			}
 		} else if packetConn, ok := rw.(udp.PacketReaderWriter); ok {
 			cReader = &CachedPacketConn{
 				PacketReaderWriter: packetConn,
-				interval:           sniffer.interval,
+				interval:           s.interval,
 			}
 		} else {
 			return nil, errors.New("unsupported type")
@@ -164,7 +164,7 @@ func (sniffer *Sniffer) Sniff(ctx context.Context, info *session.Info, rw interf
 		default:
 			copied, n, err := cReader.read(bytes)
 			if copied {
-				result, err := sniffer.sniff(ctx, bytes[:n], info.Target.Network, &state)
+				result, err := s.sniff(ctx, bytes[:n], info.Target.Network, &state)
 				if err == nil {
 					info.Protocol = result.Protocol()
 					if domain, err := strmatcher.ToDomain(result.Domain()); err == nil {
@@ -179,7 +179,7 @@ func (sniffer *Sniffer) Sniff(ctx context.Context, info *session.Info, rw interf
 					totalAttempt++
 				} else {
 					// err == protocol.ErrProtoNeedMoreData, do not increase totalAttempt
-					info.Protocol = sniffer.sniffers[state.focusIndex].protocol
+					info.Protocol = s.sniffers[state.focusIndex].protocol
 				}
 			} else if err != nil {
 				return cReader.returnRw(), err

@@ -783,8 +783,15 @@ func (s *TopThroughputStrategy) Select(handlers []OutHandler) []OutHandler {
 		// no usable speed data, fall back to all with GetOk >= 0
 		okHandlers := make([]OutHandler, 0, len(handlers))
 		for _, h := range handlers {
-			if h.GetOk() >= 0 {
+			if h.GetOk() > 0 {
 				okHandlers = append(okHandlers, h)
+			}
+		}
+		if len(okHandlers) == 0 {
+			for _, h := range handlers {
+				if h.GetOk() >= 0 {
+					okHandlers = append(okHandlers, h)
+				}
 			}
 		}
 		return okHandlers
@@ -794,13 +801,6 @@ func (s *TopThroughputStrategy) Select(handlers []OutHandler) []OutHandler {
 	for _, h := range handlers {
 		if h.GetOk() > 0 && h.GetSpeed() >= threshold {
 			selected = append(selected, h)
-		}
-	}
-	if len(selected) == 0 {
-		for _, h := range handlers {
-			if h.GetOk() >= 0 {
-				selected = append(selected, h)
-			}
 		}
 	}
 	return selected

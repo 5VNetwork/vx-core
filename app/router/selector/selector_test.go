@@ -1180,7 +1180,7 @@ func TestSelector_SetHandlers_WithEmptyHandlers(t *testing.T) {
 	sel := newSelector(config)
 
 	// Act
-	sel.setHandlers()
+	sel.SetHandlers()
 
 	// Assert - should not panic
 	sel.handlersLock.RLock()
@@ -1209,7 +1209,7 @@ func TestSelector_SetHandlers_WithClosedSelector(t *testing.T) {
 	sel.closed = true
 
 	// Act
-	sel.setHandlers()
+	sel.SetHandlers()
 
 	// Assert - should not panic and not update handlers
 	sel.handlersLock.RLock()
@@ -1257,7 +1257,7 @@ func TestSelector_SetHandlers_NoValidHandlers_EntersRecovery(t *testing.T) {
 	sel.handlersLock.Unlock()
 
 	// Trigger setHandlers which should enter recovery
-	sel.setHandlers()
+	sel.SetHandlers()
 	time.Sleep(100 * time.Millisecond)
 
 	// Assert - should enter recovery mode
