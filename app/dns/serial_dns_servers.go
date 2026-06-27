@@ -22,15 +22,20 @@ import (
 // returned if no server produces a definitive answer.
 // SERVFAIL/REFUSED/transport errors are ignored.
 type SerialDnsServers struct {
+	name       string
 	DnsServers []DnsServer
 	Interval   time.Duration
 }
 
-func NewSerialDnsServers(interval time.Duration, servers ...DnsServer) *SerialDnsServers {
+func NewSerialDnsServers(name string, interval time.Duration, servers ...DnsServer) *SerialDnsServers {
 	if interval == 0 {
 		interval = time.Second * 4
 	}
-	return &SerialDnsServers{DnsServers: servers, Interval: interval}
+	return &SerialDnsServers{name: name, DnsServers: servers, Interval: interval}
+}
+
+func (s *SerialDnsServers) Name() string {
+	return s.name
 }
 
 func (s *SerialDnsServers) Start() error {

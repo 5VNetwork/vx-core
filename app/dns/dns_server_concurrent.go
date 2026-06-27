@@ -116,6 +116,10 @@ func NewDnsServerConcurrent(opts DnsServerConcurrentOption) *DnsServerConcurrent
 	return ns
 }
 
+func (d *DnsServerConcurrent) Name() string {
+	return d.tag
+}
+
 func (d *DnsServerConcurrent) SetDests(dests []net.AddressPort) {
 	d.destsLock.Lock()
 	defer d.destsLock.Unlock()
@@ -197,7 +201,8 @@ type msgAndResolver struct {
 // opcode is QUERY
 func (ns *DnsServerConcurrent) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool) (*dns.Msg, error) {
 	log.Ctx(ctx).Debug().Str("tag", ns.tag).Str("domain", msg.Question[0].Name).
-		Uint16("id", msg.Id).Msg("dns handle query")
+		Uint16("id", msg.Id).Str("type", dns.Type(msg.Question[0].Qtype).String()).
+		Msg("dns concurrent handle query")
 
 	question := msg.Question[0]
 

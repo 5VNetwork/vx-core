@@ -17,6 +17,7 @@ import (
 )
 
 type DnsServer interface {
+	Name() string
 	common.Runnable
 	i.DnsServer
 }

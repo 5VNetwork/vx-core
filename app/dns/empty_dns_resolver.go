@@ -6,7 +6,17 @@ import (
 	"github.com/miekg/dns"
 )
 
-type EmptyDnsResolver struct{}
+type EmptyDnsResolver struct {
+	name string
+}
+
+func NewEmptyDnsResolver(name string) *EmptyDnsResolver {
+	return &EmptyDnsResolver{name: name}
+}
+
+func (e *EmptyDnsResolver) Name() string {
+	return e.name
+}
 
 func (e *EmptyDnsResolver) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool) (*dns.Msg, error) {
 	reply := emptyReply(msg)

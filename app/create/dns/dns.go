@@ -40,12 +40,13 @@ func NewDnsServer(config *configs.DnsServerConfig, handler i.Handler,
 
 	switch c := config.Type.(type) {
 	case *configs.DnsServerConfig_EmptyDnsServer:
-		return &dns.EmptyDnsResolver{}, nil
+		return dns.NewEmptyDnsResolver(config.Name), nil
 	case *configs.DnsServerConfig_GoDnsServer:
 		return dns.NewGoIpResolver(dns.GoDnsResolverOption{
 			Cache:      rrCache,
 			IpToDomain: ipToDomain,
 			Rewriter:   dnsRewriter,
+			Name:       config.Name,
 		}), nil
 	case *configs.DnsServerConfig_DohDnsServer:
 		return idns.NewDoHNameServer(idns.DoHNameServerOption{

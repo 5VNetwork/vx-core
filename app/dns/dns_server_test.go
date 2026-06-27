@@ -306,6 +306,7 @@ func TestNameserverVLocalRecords(t *testing.T) {
 
 func TestDnsServer1(t *testing.T) {
 	ns := dns.NewDnsServerSerial(
+		"test",
 		[]net.AddressPort{
 			{Address: net.LocalHostIP, Port: net.Port(port)},
 		},
@@ -411,6 +412,7 @@ func TestDnsServer1(t *testing.T) {
 
 func TestDnsServer1Tcp(t *testing.T) {
 	ns := dns.NewDnsServerSerial(
+		"test",
 		[]net.AddressPort{
 			{Address: net.LocalHostIP, Port: net.Port(port)},
 		},

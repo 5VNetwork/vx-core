@@ -17,11 +17,16 @@ import (
 // kept as fallbacks and only returned if no server produces a definitive answer.
 // SERVFAIL/REFUSED/transport errors are ignored entirely.
 type ConcurrentDnsServers struct {
+	name       string
 	DnsServers []DnsServer
 }
 
-func NewConcurrentDnsServers(servers ...DnsServer) *ConcurrentDnsServers {
-	return &ConcurrentDnsServers{DnsServers: servers}
+func NewConcurrentDnsServers(name string, servers ...DnsServer) *ConcurrentDnsServers {
+	return &ConcurrentDnsServers{name: name, DnsServers: servers}
+}
+
+func (c *ConcurrentDnsServers) Name() string {
+	return c.name
 }
 
 func (c *ConcurrentDnsServers) Start() error {

@@ -88,7 +88,7 @@ func (d *InternalDns) LookupIP(ctx context.Context, host string) ([]net.IP, erro
 		var err error
 		ipv6s, err = d.LookupIPv6(ctx, host)
 		if err != nil {
-			log.Ctx(ctx).Debug().Err(err).Dur("time", time.Since(start)).Msg("LookupIPv6 failed")
+			log.Ctx(ctx).Debug().Err(err).Str("host", host).Dur("time", time.Since(start)).Msg("LookupIPv6 failed")
 			return
 		}
 		log.Ctx(ctx).Debug().Dur("elapsed", time.Since(start)).Int("ipv6s", len(ipv6s)).Msg("LookupIPv6 finished")

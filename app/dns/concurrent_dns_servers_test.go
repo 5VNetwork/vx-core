@@ -42,7 +42,7 @@ func servfailReply(msg *mdns.Msg) *mdns.Msg {
 }
 
 func TestConcurrentDnsServers_EmptyReturnsErr(t *testing.T) {
-	s := NewConcurrentDnsServers()
+	s := NewConcurrentDnsServers("test", nil)
 	if _, err := s.HandleQuery(context.Background(), newTestQuery(), false); !errors.Is(err, ErrAllServersFailed) {
 		t.Fatalf("expected ErrAllServersFailed, got %v", err)
 	}
@@ -56,7 +56,7 @@ func TestConcurrentDnsServers_SingleServerDelegates(t *testing.T) {
 			return aReply(msg, "1.1.1.1"), nil
 		},
 	}
-	resp, err := NewConcurrentDnsServers(srv).HandleQuery(context.Background(), newTestQuery(), false)
+	resp, err := NewConcurrentDnsServers("test", srv).HandleQuery(context.Background(), newTestQuery(), false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func TestConcurrentDnsServers_FirstAnswerWinsAndCancelsOthers(t *testing.T) {
 		},
 	}
 
-	resp, err := NewConcurrentDnsServers(fast, slow).HandleQuery(context.Background(), newTestQuery(), false)
+	resp, err := NewConcurrentDnsServers("test", fast, slow).HandleQuery(context.Background(), newTestQuery(), false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func TestConcurrentDnsServers_PositivePreferredOverNxdomain(t *testing.T) {
 		},
 	}
 
-	resp, err := NewConcurrentDnsServers(fastNX, slowAnswer).HandleQuery(context.Background(), newTestQuery(), false)
+	resp, err := NewConcurrentDnsServers("test", fastNX, slowAnswer).HandleQuery(context.Background(), newTestQuery(), false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,7 +129,7 @@ func TestConcurrentDnsServers_FallbackToNxdomain(t *testing.T) {
 		},
 	}
 
-	resp, err := NewConcurrentDnsServers(nx, failing).HandleQuery(context.Background(), newTestQuery(), false)
+	resp, err := NewConcurrentDnsServers("test", nx, failing).HandleQuery(context.Background(), newTestQuery(), false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,7 @@ func TestConcurrentDnsServers_FallbackToNodata(t *testing.T) {
 		},
 	}
 
-	resp, err := NewConcurrentDnsServers(nodata, servfail).HandleQuery(context.Background(), newTestQuery(), false)
+	resp, err := NewConcurrentDnsServers("test", nodata, servfail).HandleQuery(context.Background(), newTestQuery(), false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,7 +171,7 @@ func TestConcurrentDnsServers_AllFailReturnsErr(t *testing.T) {
 		},
 	}
 
-	if _, err := NewConcurrentDnsServers(transportErr, servfail).HandleQuery(context.Background(), newTestQuery(), false); !errors.Is(err, ErrAllServersFailed) {
+	if _, err := NewConcurrentDnsServers("test", transportErr, servfail).HandleQuery(context.Background(), newTestQuery(), false); !errors.Is(err, ErrAllServersFailed) {
 		t.Fatalf("expected ErrAllServersFailed, got %v", err)
 	}
 }
@@ -190,7 +190,7 @@ func TestConcurrentDnsServers_ContextCancellation(t *testing.T) {
 		cancel()
 	}()
 
-	if _, err := NewConcurrentDnsServers(blocked, blocked).HandleQuery(ctx, newTestQuery(), false); !errors.Is(err, context.Canceled) {
+	if _, err := NewConcurrentDnsServers("test", blocked, blocked).HandleQuery(ctx, newTestQuery(), false); !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context.Canceled, got %v", err)
 	}
 }

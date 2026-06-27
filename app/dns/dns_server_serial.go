@@ -19,6 +19,7 @@ import (
 // does not reuse conn for dns query
 type DnsServerSerial struct {
 	sync.RWMutex
+	name       string
 	doen       *done.Instance
 	tcpDests   []net.Destination
 	udpDests   []net.Destination
@@ -32,8 +33,9 @@ type DnsServerSerial struct {
 	closeOnce sync.Once
 }
 
-func NewDnsServerSerial(dests []net.AddressPort, dialer i.Dialer, ipToDomain *IPToDomain) *DnsServerSerial {
+func NewDnsServerSerial(name string, dests []net.AddressPort, dialer i.Dialer, ipToDomain *IPToDomain) *DnsServerSerial {
 	s := &DnsServerSerial{
+		name: name,
 		tcpClient: &dns.Client{
 			Net: "tcp",
 		},
@@ -58,6 +60,10 @@ func NewDnsServerSerial(dests []net.AddressPort, dialer i.Dialer, ipToDomain *IP
 		})
 	}
 	return s
+}
+
+func (d *DnsServerSerial) Name() string {
+	return d.name
 }
 
 func (d *DnsServerSerial) ReplaceDests(dests []net.AddressPort) {

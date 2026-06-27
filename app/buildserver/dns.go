@@ -85,7 +85,7 @@ func NewDNS(lc fx.Lifecycle, params DNSParams) (DNSResult, error) {
 			if !ready {
 				continue
 			}
-			concurrentDns := idns.NewConcurrentDnsServers(servers...)
+			concurrentDns := idns.NewConcurrentDnsServers(concurrentDnsServer.Name, servers...)
 			dnsServers = append(dnsServers, concurrentDns)
 			dnsServerMap[concurrentDnsServer.Name] = concurrentDns
 			createdConcurrent[concurrentDnsServer.Name] = true
@@ -111,6 +111,7 @@ func NewDNS(lc fx.Lifecycle, params DNSParams) (DNSResult, error) {
 				continue
 			}
 			serialDns := idns.NewSerialDnsServers(
+				serialDnsServer.Name,
 				time.Duration(serialDnsServer.Interval)*time.Second, servers...)
 			dnsServers = append(dnsServers, serialDns)
 			dnsServerMap[serialDnsServer.Name] = serialDns

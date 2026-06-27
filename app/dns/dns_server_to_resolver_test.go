@@ -16,6 +16,8 @@ type fakeResolverDnsServer struct {
 	handle func(ctx context.Context, msg *mdns.Msg, tcp bool) (*mdns.Msg, error)
 }
 
+func (f *fakeResolverDnsServer) Name() string { return "fake" }
+
 func (f *fakeResolverDnsServer) Start() error { return nil }
 
 func (f *fakeResolverDnsServer) Close() error { return nil }

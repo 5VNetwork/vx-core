@@ -17,7 +17,7 @@ import (
 )
 
 func TestUDPServer(t *testing.T) {
-	dnsServer1 := d.NewDnsServerSerial([]mynet.AddressPort{
+	dnsServer1 := d.NewDnsServerSerial("test", []mynet.AddressPort{
 		{
 			Address: mynet.ParseAddress("127.0.0.1"),
 			Port:    mynet.Port(port),
@@ -103,7 +103,7 @@ func TestUDPServer(t *testing.T) {
 }
 
 func TestUDPServerIPv6(t *testing.T) {
-	dnsServer1 := d.NewDnsServerSerial([]mynet.AddressPort{
+	dnsServer1 := d.NewDnsServerSerial("test", []mynet.AddressPort{
 		{
 			Address: mynet.ParseAddress("127.0.0.1"),
 			Port:    mynet.Port(port),
@@ -136,7 +136,7 @@ func TestStaticHostDomain(t *testing.T) {
 		},
 	})
 
-	dnsServer1 := d.NewDnsServerSerial([]mynet.AddressPort{
+	dnsServer1 := d.NewDnsServerSerial("test", []mynet.AddressPort{
 		{
 			Address: mynet.ParseAddress("127.0.0.1"),
 			Port:    mynet.Port(port),

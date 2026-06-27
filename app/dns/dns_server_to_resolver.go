@@ -141,7 +141,8 @@ func (d *DnsServerToResolver) resolveIP(ctx context.Context, msg *dns.Msg, index
 		ips, err = d.lookupIPv6FromServer(ctx, dnsServer, msg)
 	}
 	if (err != nil && !errors.Is(err, context.Canceled)) || len(ips) == 0 {
-		log.Ctx(ctx).Debug().Err(err).Msg("one dns server lookup failed")
+		log.Ctx(ctx).Debug().Err(err).Str("dnsServer", dnsServer.Name()).
+			Bool("ipv4", ipv4).Msg("one dns server lookup failed")
 	}
 	resultChan <- resolveIPResult{index: index, ips: ips}
 }

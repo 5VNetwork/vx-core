@@ -21,12 +21,14 @@ type GoDnsResolver struct {
 	cache      *rrCache
 	ipToDomain *IPToDomain
 	rewriter   MsgRewriter
+	name       string
 }
 
 type GoDnsResolverOption struct {
 	Cache      *rrCache
 	IpToDomain *IPToDomain
 	Rewriter   MsgRewriter
+	Name       string
 }
 
 func NewGoIpResolver(option GoDnsResolverOption) *GoDnsResolver {
@@ -34,7 +36,12 @@ func NewGoIpResolver(option GoDnsResolverOption) *GoDnsResolver {
 		cache:      option.Cache,
 		ipToDomain: option.IpToDomain,
 		rewriter:   option.Rewriter,
+		name:       option.Name,
 	}
+}
+
+func (d *GoDnsResolver) Name() string {
+	return d.name
 }
 
 func (d *GoDnsResolver) Start() error {

@@ -107,7 +107,7 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 					if !ready {
 						continue
 					}
-					concurrentDns := idns.NewConcurrentDnsServers(servers...)
+					concurrentDns := idns.NewConcurrentDnsServers(concurrentDnsServer.Name, servers...)
 					dnsServers = append(dnsServers, concurrentDns)
 					dnsServerMap[concurrentDnsServer.Name] = concurrentDns
 					createdConcurrent[concurrentDnsServer.Name] = true
@@ -133,6 +133,7 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 						continue
 					}
 					serialDns := idns.NewSerialDnsServers(
+						serialDnsServer.Name,
 						time.Duration(serialDnsServer.Interval)*time.Second, servers...)
 					dnsServers = append(dnsServers, serialDns)
 					dnsServerMap[serialDnsServer.Name] = serialDns

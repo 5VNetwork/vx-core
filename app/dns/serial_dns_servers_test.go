@@ -14,7 +14,7 @@ import (
 )
 
 func TestSerialDnsServers_EmptyReturnsErr(t *testing.T) {
-	s := NewSerialDnsServers(50 * time.Millisecond)
+	s := NewSerialDnsServers("test", 50*time.Millisecond)
 	if _, err := s.HandleQuery(context.Background(), newTestQuery(), false); !errors.Is(err, ErrAllServersFailed) {
 		t.Fatalf("expected ErrAllServersFailed, got %v", err)
 	}
@@ -35,7 +35,7 @@ func TestSerialDnsServers_FirstSucceedsImmediatelyDoesNotStartSecond(t *testing.
 		},
 	}
 
-	s := NewSerialDnsServers(100*time.Millisecond, first, second)
+	s := NewSerialDnsServers("test", 100*time.Millisecond, first, second)
 	resp, err := s.HandleQuery(context.Background(), newTestQuery(), false)
 	if err != nil {
 		t.Fatal(err)
@@ -65,7 +65,7 @@ func TestSerialDnsServers_KicksOffSecondAfterInterval(t *testing.T) {
 
 	interval := 50 * time.Millisecond
 	start := time.Now()
-	resp, err := NewSerialDnsServers(interval, blocking, second).
+	resp, err := NewSerialDnsServers("test", interval, blocking, second).
 		HandleQuery(context.Background(), newTestQuery(), false)
 	elapsed := time.Since(start)
 
@@ -102,7 +102,7 @@ func TestSerialDnsServers_SlowEarlierBeatsLaterStart(t *testing.T) {
 		},
 	}
 
-	resp, err := NewSerialDnsServers(interval, slowCorrect, blocking).
+	resp, err := NewSerialDnsServers("test", interval, slowCorrect, blocking).
 		HandleQuery(context.Background(), newTestQuery(), false)
 	if err != nil {
 		t.Fatal(err)
@@ -127,7 +127,7 @@ func TestSerialDnsServers_PositivePreferredOverNxdomain(t *testing.T) {
 		},
 	}
 
-	resp, err := NewSerialDnsServers(50*time.Millisecond, nxFirst, answerSecond).
+	resp, err := NewSerialDnsServers("test", 50*time.Millisecond, nxFirst, answerSecond).
 		HandleQuery(context.Background(), newTestQuery(), false)
 	if err != nil {
 		t.Fatal(err)
@@ -149,7 +149,7 @@ func TestSerialDnsServers_FallbackToNxdomain(t *testing.T) {
 		},
 	}
 
-	resp, err := NewSerialDnsServers(20*time.Millisecond, nx, servfail).
+	resp, err := NewSerialDnsServers("test", 20*time.Millisecond, nx, servfail).
 		HandleQuery(context.Background(), newTestQuery(), false)
 	if err != nil {
 		t.Fatal(err)
@@ -171,7 +171,7 @@ func TestSerialDnsServers_AllFailReturnsErr(t *testing.T) {
 		},
 	}
 
-	if _, err := NewSerialDnsServers(20*time.Millisecond, transportErr, servfail).
+	if _, err := NewSerialDnsServers("test", 20*time.Millisecond, transportErr, servfail).
 		HandleQuery(context.Background(), newTestQuery(), false); !errors.Is(err, ErrAllServersFailed) {
 		t.Fatalf("expected ErrAllServersFailed, got %v", err)
 	}
@@ -191,7 +191,7 @@ func TestSerialDnsServers_ContextCancellation(t *testing.T) {
 		cancel()
 	}()
 
-	if _, err := NewSerialDnsServers(50*time.Millisecond, blocked, blocked).
+	if _, err := NewSerialDnsServers("test", 50*time.Millisecond, blocked, blocked).
 		HandleQuery(ctx, newTestQuery(), false); !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context.Canceled, got %v", err)
 	}
