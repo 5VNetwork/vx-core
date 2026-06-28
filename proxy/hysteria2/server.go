@@ -389,8 +389,8 @@ func (in *Inbound) newHysServerConfig(tlsConfig *tls.Config, pc net.PacketConn) 
 		Conn:     pc,
 		Outbound: in.handler,
 		BandwidthConfig: server.BandwidthConfig{
-			MaxTx: uint64(bandwidth.GetMaxTx()),
-			MaxRx: uint64(bandwidth.GetMaxRx()),
+			MaxTx: uint64(bandwidth.GetMaxTx() * 1024 * 1024),
+			MaxRx: uint64(bandwidth.GetMaxRx() * 1024 * 1024),
 		},
 		IgnoreClientBandwidth: config.GetIgnoreClientBandwidth(),
 		Authenticator:         in,
