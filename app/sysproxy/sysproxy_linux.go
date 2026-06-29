@@ -18,7 +18,7 @@ type SysProxy struct {
 }
 
 func NewSysProxy(ps *ProxySetting) *SysProxy {
-	panic("not implemented")
+	return &SysProxy{}
 }
 
 func (s *SysProxy) WithMon(mon i.DefaultInterfaceChangeSubject) {

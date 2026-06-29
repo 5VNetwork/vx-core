@@ -50,38 +50,42 @@ func New(configBytes []byte, aai AndroidApiInterface) (Tm, error) {
 		}
 	}
 
-	defaultNicHasGlobal6, _ := monitor.HasGlobalIPv6()
-	enable6 := (config.Tun.Tun46Setting == configs.TunConfig_BOTH) ||
-		(config.Tun.Tun46Setting == configs.TunConfig_DYNAMIC && defaultNicHasGlobal6)
-	tunConfig := ToTunConfig(config.Tun.Device, enable6)
-	fd, err := aai.GetTun(tunConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get tun: %w", err)
-	}
-	tunDeviceWithInfo, err := getTunDeviceWithInfo(fd, config.Tun, enable6)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get tun device with info: %w", err)
-	}
-
+	var opts []buildclient.Option
 	tm := &tm{}
 
-	opts := []buildclient.Option{
-		buildclient.WithComponents(&monitor),
-		buildclient.WithFeatures(tunDeviceWithInfo),
-		buildclient.WithFeatures(transport.FdFunc(func(fd uintptr) error {
-			return aai.ProtectFd(int32(fd))
-		})),
+	if config.Tun != nil {
+		defaultNicHasGlobal6, _ := monitor.HasGlobalIPv6()
+		enable6 := (config.Tun.Tun46Setting == configs.TunConfig_BOTH) ||
+			(config.Tun.Tun46Setting == configs.TunConfig_DYNAMIC && defaultNicHasGlobal6)
+		tunConfig := ToTunConfig(config.Tun.Device, enable6)
+		fd, err := aai.GetTun(tunConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get tun: %w", err)
+		}
+		tunDeviceWithInfo, err := getTunDeviceWithInfo(fd, config.Tun, enable6)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get tun device with info: %w", err)
+		}
+		opts = []buildclient.Option{
+			buildclient.WithFeatures(tunDeviceWithInfo),
+			buildclient.WithFeatures(transport.FdFunc(func(fd uintptr) error {
+				return aai.ProtectFd(int32(fd))
+			})),
+		}
+
+		if config.Tun.Tun46Setting == configs.TunConfig_DYNAMIC {
+			tunSetter := &tunSetter{
+				tunConfig: config.Tun,
+				aa:        aai,
+				tm:        tm,
+			}
+			ts := tunset.NewTun6FollowsDefaultNIC(&monitor, enable6, tunSetter)
+			opts = append(opts, buildclient.WithComponents(ts))
+		}
+		log.Debug().Bool("enable6", enable6).Msg("tun enable6")
 	}
 
-	if config.Tun.Tun46Setting == configs.TunConfig_DYNAMIC {
-		tunSetter := &tunSetter{
-			tunConfig: config.Tun,
-			aa:        aai,
-			tm:        tm,
-		}
-		ts := tunset.NewTun6FollowsDefaultNIC(&monitor, enable6, tunSetter)
-		opts = append(opts, buildclient.WithComponents(ts))
-	}
+	opts = append(opts, buildclient.WithComponents(&monitor))
 
 	appid.GetPackageName = aai.GetPackageName
 	client, err := buildclient.NewX(&config, opts...)
@@ -102,8 +106,6 @@ func New(configBytes []byte, aai AndroidApiInterface) (Tm, error) {
 			client.Components.AddComponent(trafficNotifier)
 		}
 	}
-
-	log.Debug().Bool("enable6", enable6).Msg("tun enable6")
 
 	return tm, nil
 }

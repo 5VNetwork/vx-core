@@ -210,7 +210,7 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 	common.Must(builder.addComponent(gw))
 	common.Log()
 
-	if config.SysProxy != nil {
+	if config.SysProxy != nil && runtime.GOOS == "darwin" {
 		err = NewSysProxy(config.SysProxy, builder)
 		if err != nil {
 			return nil, fmt.Errorf("NewSysProxy failed")
