@@ -122,6 +122,8 @@ func (in *Inbound) Start() error {
 						int(in.config.Realm.LocalPort), salamanderPSK,
 						tlsConfig, in.config.Realm); err != nil {
 						log.Error().Err(err).Msg("failed to start realm server")
+					} else {
+						break
 					}
 				}
 			}()
