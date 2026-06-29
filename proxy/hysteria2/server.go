@@ -117,7 +117,7 @@ func (in *Inbound) Start() error {
 			ctx, cancel := context.WithCancel(context.Background())
 			in.realmCtxCancel = cancel
 			go func() {
-				for {
+				for ctx.Err() == nil {
 					if err := in.startRealmServer(ctx, realmAddr,
 						int(in.config.Realm.LocalPort), salamanderPSK,
 						tlsConfig, in.config.Realm); err != nil {
