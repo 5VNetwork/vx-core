@@ -138,6 +138,9 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 
 	l, err := lc.Listen(ctx, network, address)
 	l, err = callback(l, err)
+	if err == nil && sockopt != nil && isTCPSocket(network) {
+		l = wrapBrutalListener(l, sockopt.GetTcpBrutalSendRate())
+	}
 	if err == nil && sockopt != nil && sockopt.AcceptProxyProtocol {
 		policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) {
 			return proxyproto.REQUIRE, nil

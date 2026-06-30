@@ -43,7 +43,7 @@ func applyBrutalSocketOptions(fd uintptr, sendBPS uint64) error {
 	}
 	err = setsockopt(int(fd), unix.IPPROTO_TCP, tcpBrutalParamsOpt, unsafe.Pointer(&params), unsafe.Sizeof(params))
 	if err != nil {
-		return fmt.Errorf("failed to set TCP_BRUTAL_PARAMS, %w", os.NewSyscallError("setsockopt IPPROTO_TCP TCP_BRUTAL_PARAMS", err))
+		return fmt.Errorf("failed to set TCP_BRUTAL_PARAMS; ensure tcp-brutal kernel module is loaded and options are applied on an established TCP connection, %w", os.NewSyscallError("setsockopt IPPROTO_TCP TCP_BRUTAL_PARAMS", err))
 	}
 	return nil
 }
