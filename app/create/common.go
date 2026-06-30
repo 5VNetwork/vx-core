@@ -126,5 +126,6 @@ func SocketConfigToMemoryConfig(config *configs.SocketConfig, readCounter, write
 		StatsReadCounter:           readCounter,
 		StatsWriteCounter:          writeCounter,
 		DialTimeout:                time.Duration(config.DialTimeout) * time.Second,
+		TcpBrutalSendRate:          config.TcpBrutalSendRate,
 	}
 }

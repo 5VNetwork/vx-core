@@ -255,9 +255,10 @@ type DialerFactoryOption struct {
 	BindToDefaultNIC        bool
 	DefaultInterfaceMonitor i.DefaultInterfaceInfo
 	// used to bind to default nic
-	FdFunc      FdFunc
-	IpResolver  i.IPResolver
-	DialTimeout time.Duration
+	FdFunc            FdFunc
+	IpResolver        i.IPResolver
+	DialTimeout       time.Duration
+	TcpBrutalSendRate uint64
 }
 
 type FdFunc func(fd uintptr) error
@@ -278,6 +279,10 @@ func (d *DialerFactoryImp) GetDialer(config *Config) (i.Dialer, error) {
 
 	if d.DialTimeout > 0 && config.Socket.DialTimeout == 0 {
 		config.Socket.DialTimeout = d.DialTimeout
+	}
+
+	if d.TcpBrutalSendRate > 0 && config.Socket.TcpBrutalSendRate == 0 {
+		config.Socket.TcpBrutalSendRate = d.TcpBrutalSendRate
 	}
 
 	var dialer i.DialerListener

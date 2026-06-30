@@ -41,6 +41,8 @@ type SocketSetting struct {
 	Resolver          *net.Resolver
 	FdFunc            func(fd uintptr) error
 	DialTimeout       time.Duration
+	// TCP Brutal send rate in bytes per second. Linux only; zero disables.
+	TcpBrutalSendRate uint64
 }
 
 func (s *SocketSetting) Dial(ctx context.Context, dest net1.Destination) (net.Conn, error) {
@@ -253,6 +255,13 @@ func (x *SocketSetting) GetLocalAddr6() string {
 	return ""
 }
 
+func (x *SocketSetting) GetTcpBrutalSendRate() uint64 {
+	if x != nil {
+		return x.TcpBrutalSendRate
+	}
+	return 0
+}
+
 func (m SocketConfig_TProxyMode) IsEnabled() bool {
 	return m != SocketConfig_Off
 }
@@ -284,5 +293,6 @@ func (so *SocketSetting) Dulplicate() *SocketSetting {
 		Resolver:                   so.Resolver,
 		FdFunc:                     so.FdFunc,
 		DialTimeout:                so.DialTimeout,
+		TcpBrutalSendRate:          so.TcpBrutalSendRate,
 	}
 }

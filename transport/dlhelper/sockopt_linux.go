@@ -124,6 +124,12 @@ func applyOutboundSocketOptions(ctx context.Context, network string, address str
 		}
 	}
 
+	if rate := config.GetTcpBrutalSendRate(); rate > 0 {
+		if err := applyBrutalSocketOptions(fd, rate); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -211,6 +217,13 @@ func applyInboundSocketOptions(ctx context.Context, network, address string, fd 
 			return errors.New("failed to set SO_RCVBUF/SO_RCVBUFFORCE").Base(err)
 		}
 	}
+
+	if rate := config.GetTcpBrutalSendRate(); rate > 0 {
+		if err := applyBrutalSocketOptions(fd, rate); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

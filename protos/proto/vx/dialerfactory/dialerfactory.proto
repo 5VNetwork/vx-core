@@ -8,4 +8,7 @@ message DialerFactoryConfig {
   bool should_bind_device = 2;
   // Use internal resolver to resolve domain.
   bool resolve_domain = 3;
+  // TCP Brutal send rate in bytes per second. Linux only; requires the
+  // tcp-brutal kernel module. Zero disables TCP Brutal.
+  uint64 tcp_brutal_send_rate = 4;
 }

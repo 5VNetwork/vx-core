@@ -25,7 +25,8 @@ func DialerFactoryOption(config *vxdialerfactory.DialerFactoryConfig) fx.Option 
 		return fx.Provide(func() transport.DialerFactory {
 			return transport.NewDialerFactoryImp(
 				transport.DialerFactoryOption{
-					DialTimeout: time.Duration(config.GetDialTimeout()) * time.Second,
+					DialTimeout:       time.Duration(config.GetDialTimeout()) * time.Second,
+					TcpBrutalSendRate: config.GetTcpBrutalSendRate(),
 				},
 			)
 		})
@@ -37,6 +38,7 @@ func DialerFactoryOption(config *vxdialerfactory.DialerFactoryConfig) fx.Option 
 					transport.DialerFactoryOption{
 						DefaultInterfaceMonitor: defaultNICMonitor,
 						DialTimeout:             time.Duration(config.GetDialTimeout()) * time.Second,
+						TcpBrutalSendRate:       config.GetTcpBrutalSendRate(),
 					},
 				)
 			})
@@ -47,6 +49,7 @@ func DialerFactoryOption(config *vxdialerfactory.DialerFactoryConfig) fx.Option 
 						IpResolver:              ipResolver,
 						DefaultInterfaceMonitor: defaultNICMonitor,
 						DialTimeout:             time.Duration(config.GetDialTimeout()) * time.Second,
+						TcpBrutalSendRate:       config.GetTcpBrutalSendRate(),
 					},
 				)
 			})
@@ -54,8 +57,9 @@ func DialerFactoryOption(config *vxdialerfactory.DialerFactoryConfig) fx.Option 
 			return fx.Provide(func(ipResolver i.IPResolver) transport.DialerFactory {
 				return transport.NewDialerFactoryImp(
 					transport.DialerFactoryOption{
-						IpResolver:  ipResolver,
-						DialTimeout: time.Duration(config.GetDialTimeout()) * time.Second,
+						IpResolver:        ipResolver,
+						DialTimeout:       time.Duration(config.GetDialTimeout()) * time.Second,
+						TcpBrutalSendRate: config.GetTcpBrutalSendRate(),
 					},
 				)
 			})
@@ -63,7 +67,8 @@ func DialerFactoryOption(config *vxdialerfactory.DialerFactoryConfig) fx.Option 
 			return fx.Provide(func() transport.DialerFactory {
 				return transport.NewDialerFactoryImp(
 					transport.DialerFactoryOption{
-						DialTimeout: time.Duration(config.GetDialTimeout()) * time.Second,
+						DialTimeout:       time.Duration(config.GetDialTimeout()) * time.Second,
+						TcpBrutalSendRate: config.GetTcpBrutalSendRate(),
 					},
 				)
 			})

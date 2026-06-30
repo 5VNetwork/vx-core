@@ -59,4 +59,7 @@ message SocketConfig {
   string local_addr4 = 16;
   string local_addr6 = 17;
   uint32 dial_timeout = 18;
+  // TCP Brutal send rate in bytes per second. Linux only; requires the
+  // tcp-brutal kernel module. Zero disables TCP Brutal.
+  uint64 tcp_brutal_send_rate = 19;
 }
