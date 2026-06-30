@@ -79,7 +79,7 @@ jobs:
         run: |
           ls -la $ANDROID_HOME/ndk/ || echo "NDK directory not found"
           export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/28.2.13676358
-          gomobile bind -ldflags="-s -w" -trimpath -o x.aar -target=android -androidapi=21 -v -javapkg="io.tm.android" ./x_android
+          gomobile bind -ldflags="-s -w -checklinkname=0" -trimpath -o x.aar -target=android -androidapi=21 -v -javapkg="io.tm.android" ./x_android
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
