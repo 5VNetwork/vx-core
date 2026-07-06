@@ -93,7 +93,7 @@ func NewTun(config *TunOption) (TunDeviceWithInfo, error) {
 	}
 	_, err = windows.AddDllDirectory(pathUint16)
 	if err != nil {
-		return nil, fmt.Errorf("failed to add DLL directory: %w", err)
+		return nil, fmt.Errorf("failed to add DLL directory: %w. Path: %s", err, path)
 	}
 	wt, err := wintun.CreateAdapter(config.Name, WintunTunnelType, WintunStaticRequestedGUID)
 	if err != nil {

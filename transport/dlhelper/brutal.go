@@ -1,6 +1,10 @@
 package dlhelper
 
-import "net"
+import (
+	"net"
+
+	"github.com/rs/zerolog/log"
+)
 
 type brutalListener struct {
 	net.Listener
@@ -13,8 +17,7 @@ func (l *brutalListener) Accept() (net.Conn, error) {
 		return nil, err
 	}
 	if err := applyBrutalConn(conn, l.sendBPS); err != nil {
-		conn.Close()
-		return nil, err
+		log.Err(err).Msg("failed to apply brutal options")
 	}
 	return conn, nil
 }
