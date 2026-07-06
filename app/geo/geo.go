@@ -41,13 +41,17 @@ func (g *Geo) UpdateGeo(geoConfig *configs.GeoConfig) error {
 func (g *Geo) AddDomainSet(name string, set i.DomainSet) {
 	g.Lock()
 	defer g.Unlock()
-	g.DomainSets[name] = set
+	if g.DomainSets != nil {
+		g.DomainSets[name] = set
+	}
 }
 
 func (g *Geo) AddIPSet(name string, set i.IPSet) {
 	g.Lock()
 	defer g.Unlock()
-	g.IpSets[name] = set
+	if g.IpSets != nil {
+		g.IpSets[name] = set
+	}
 }
 
 type Geo struct {

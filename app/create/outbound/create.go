@@ -245,8 +245,8 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 		)
 	case *configs.Hysteria2ClientConfig:
 		var rootCAs *x509.CertPool
-		if len(m.GetTlsConfig().RootCas) > 0 {
-			rootCAs, err = tls.CertsToCertPool(m.GetTlsConfig().RootCas)
+		if len(m.GetTlsConfig().GetRootCas()) > 0 {
+			rootCAs, err = tls.CertsToCertPool(m.GetTlsConfig().GetRootCas())
 			if err != nil {
 				return nil, err
 			}

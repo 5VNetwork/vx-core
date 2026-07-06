@@ -207,7 +207,9 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 	if err := gw.UpdateGeo(config.Geo); err != nil {
 		return nil, fmt.Errorf("failed to UpdateGeo: %w", err)
 	}
-	common.Must(builder.addComponent(gw))
+	if err := builder.addComponent(gw); err != nil {
+		return nil, fmt.Errorf("failed to add geo: %w", err)
+	}
 	common.Log()
 
 	if config.SysProxy != nil && runtime.GOOS == "darwin" {
