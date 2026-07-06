@@ -21,6 +21,7 @@ type ReadWriteCloserSplitUdp struct {
 
 	channel chan *buf.Buffer
 	once    sync.Once
+	closed  bool
 }
 
 func NewReadWriteCloserSplitUdp(rw io.ReadWriteCloser, offset int32) *ReadWriteCloserSplitUdp {
@@ -38,10 +39,17 @@ func (u *ReadWriteCloserSplitUdp) Start() error {
 func (u *ReadWriteCloserSplitUdp) Close() error {
 	var err error
 	u.once.Do(func() {
-		close(u.channel)
-		for b := range u.channel {
-			b.Release()
-		}
+		u.closed = true
+		go func() {
+			for {
+				select {
+				case b := <-u.channel:
+					b.Release()
+				default:
+					return
+				}
+			}
+		}()
 		err = u.Rw.Close()
 	})
 	return err
@@ -61,6 +69,9 @@ func (u *ReadWriteCloserSplitUdp) Read(p []byte) (int, error) {
 		}
 
 		if ipPacket.TransportProtocol() == header.UDPProtocolNumber {
+			if u.closed {
+				return n, errors.ErrClosed
+			}
 			b := buf.New()
 			b.Write(p[u.Offset:n])
 			u.channel <- b
