@@ -196,6 +196,10 @@ func (fkdns *Pool) GetFakeIPForDomain(domain string, ipv4 bool) nethelper.Addres
 			fkdns.nextIP = big.NewInt(0).SetBytes(fkdns.ipRange.IP)
 		}
 
+		if ip == nil {
+			continue
+		}
+
 		// if we run for a long time, we may go back to beginning and start seeing the IP in use
 		// if ok, it means that there is already a domain with that ip
 		if _, ok := fkdns.domainToIP.GetKeyFromValue(ip); !ok {
