@@ -139,7 +139,7 @@ func (b *Buffer) Release() {
 	case defaultPool:
 		// Belt-and-suspenders: pool only stores BufferSize-cap slices.
 		if cap(p) == BufferSize {
-			pool.Put(p)
+			pool.Put(p[:BufferSize])
 		} else {
 			log.Warn().Int("cap", cap(p)).Msg("buffer is not of size BufferSize")
 		}
@@ -174,12 +174,12 @@ func (b *Buffer) Bytes() []byte {
 	if b.v == nil {
 		return nil
 	}
-	// if b.start < 0 || b.end < b.start || int(b.end) > len(b.v) {
-	// 	panic(fmt.Sprintf(
-	// 		"buf.Buffer: inconsistent state start=%d end=%d cap=%d ownership=%d",
-	// 		b.start, b.end, len(b.v), b.ownership,
-	// 	))
-	// }
+	if b.start < 0 || b.end < b.start || int(b.end) > len(b.v) {
+		log.Warn().Int32("start", b.start).Int32("end", b.end).
+			Int("cap", len(b.v)).Uint8("ownership", uint8(b.ownership)).
+			Msg("buf.Buffer: inconsistent state")
+		return nil
+	}
 	return b.v[b.start:b.end]
 }
 
@@ -379,10 +379,11 @@ func (b *Buffer) ReadBytes(length int32) ([]byte, error) {
 
 // Read implements io.Reader.Read().
 func (b *Buffer) Read(data []byte) (int, error) {
-	if b.Len() == 0 {
+	payload := b.Bytes()
+	if len(payload) == 0 {
 		return 0, io.EOF
 	}
-	nBytes := copy(data, b.v[b.start:b.end])
+	nBytes := copy(data, payload)
 	if int32(nBytes) == b.Len() {
 		b.Clear()
 	} else {
