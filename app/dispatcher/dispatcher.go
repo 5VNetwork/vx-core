@@ -421,6 +421,7 @@ func infoFromContext(ctx context.Context, dst net.Destination) *session.Info {
 	info.User, _ = proxy.UserFromContext(ctx)
 	id, _ := session.IDFromContext(ctx)
 	info.ID = session.ID(id)
+	info.Protocol, _ = proxy.InboundProxyProtocolFromContext(ctx)
 	return &info
 }
 
