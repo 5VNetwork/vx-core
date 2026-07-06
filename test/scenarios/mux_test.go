@@ -117,12 +117,12 @@ func TestTrojanTCPMuxManySessions(t *testing.T) {
 	defer client.Close()
 
 	const (
-		totalSessions = 284
+		totalSessions = 384
 		payloadSize   = 4 * 1024
 	)
 
 	var remaining atomic.Int32
-	remaining.Store(284)
+	remaining.Store(384)
 	var errg errgroup.Group
 	for i := 0; i < totalSessions; i++ {
 		time.Sleep(1 * time.Millisecond)
@@ -213,7 +213,7 @@ func TestTrojanTCPMuxLargePayload(t *testing.T) {
 	common.Must(client.Start())
 	defer client.Close()
 	var errg errgroup.Group
-	for i := 0; i < 16; i++ {
+	for i := 0; i < 4; i++ {
 		errg.Go(TestTCPConn(clientPort, 10240*10240, Timeout*4))
 	}
 

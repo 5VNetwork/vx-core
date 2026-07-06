@@ -3,6 +3,7 @@ package mux
 import (
 	"bytes"
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/5vnetwork/vx-core/common/buf"
@@ -578,6 +579,37 @@ func TestMuxWriter_WriteMultiBuffer_StreamOverBoundary(t *testing.T) {
 
 	// Should write in chunks
 	assert.Greater(t, len(mock.data), 0)
+}
+
+func TestMuxWriter_WriteMetaOnly_MetaWriteToError(t *testing.T) {
+	mock := &mockWriter{}
+	// A domain over 256 characters makes FrameMetadata.WriteTo fail while
+	// building the address, which writeMetaOnly should propagate.
+	longDomain := strings.Repeat("a", 300)
+	dest := nethelper.TCPDestination(nethelper.DomainAddress(longDomain), nethelper.Port(80))
+	writer := NewMuxWriter(30, dest, mock, TransferTypeStream)
+
+	err := writer.WriteMultiBuffer(nil)
+	assert.Error(t, err)
+}
+
+func TestWriteMetaWithFrame_MetaWriteToError(t *testing.T) {
+	mock := &mockWriter{}
+	longDomain := strings.Repeat("a", 300)
+	dest := nethelper.TCPDestination(nethelper.DomainAddress(longDomain), nethelper.Port(80))
+
+	meta := FrameMetadata{
+		SessionID:     31,
+		SessionStatus: SessionStatusNew,
+		Option:        OptionData,
+		Target:        dest,
+	}
+
+	b := buf.New()
+	b.Write([]byte("payload"))
+
+	err := writeMetaWithFrame(mock, meta, buf.MultiBuffer{b})
+	assert.Error(t, err)
 }
 
 func TestMuxWriter_CloseWrite_AlwaysSucceeds(t *testing.T) {

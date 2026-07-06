@@ -6,15 +6,57 @@ import (
 	"errors"
 	"io"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/net"
+	"github.com/5vnetwork/vx-core/common/pipe"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// flakyReader implements buf.Reader. Its first call returns a fixed
+// MultiBuffer; every subsequent call returns a genuine (non-EOF) error,
+// useful for exercising read-error paths that are distinct from
+// buf.IsWriteError-classified errors.
+type flakyReader struct {
+	calls   int
+	first   buf.MultiBuffer
+	failErr error
+}
+
+func (f *flakyReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
+	f.calls++
+	if f.calls == 1 {
+		return f.first, nil
+	}
+	return nil, f.failErr
+}
+
+// concurrencyDetectingReaderWriter wraps mockServerReaderWriter and detects
+// whether WriteMultiBuffer is ever invoked concurrently with itself. The
+// injected sleep widens the race window so that overlapping calls are
+// observed deterministically, without relying on the -race detector (which
+// is unavailable on this platform's toolchain).
+type concurrencyDetectingReaderWriter struct {
+	*mockServerReaderWriter
+
+	busy       atomic.Bool
+	overlapped atomic.Bool
+}
+
+func (w *concurrencyDetectingReaderWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
+	if !w.busy.CompareAndSwap(false, true) {
+		w.overlapped.Store(true)
+	}
+	time.Sleep(2 * time.Millisecond)
+	err := w.mockServerReaderWriter.WriteMultiBuffer(mb)
+	w.busy.Store(false)
+	return err
+}
 
 // mockServerFlowHandler implements i.FlowHandler for testing
 type mockServerFlowHandler struct {
@@ -1198,6 +1240,121 @@ func TestServer_Run_ReadError(t *testing.T) {
 	cancel()
 }
 
+func TestServe_ContextCancel(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	handler := &mockServerFlowHandler{}
+	rw := newMockServerReaderWriter()
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- Serve(ctx, rw, handler)
+	}()
+
+	cancel()
+
+	select {
+	case err := <-errCh:
+		assert.NoError(t, err)
+	case <-time.After(time.Second):
+		t.Fatal("Serve should return after context cancel")
+	}
+}
+
+func TestServe_ReadError(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	handler := &mockServerFlowHandler{}
+	rw := newMockServerReaderWriter()
+	rw.Interrupt(errors.New("read error"))
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- Serve(ctx, rw, handler)
+	}()
+
+	select {
+	case err := <-errCh:
+		assert.Error(t, err)
+	case <-time.After(time.Second):
+		t.Fatal("Serve should return on read error")
+	}
+}
+
+func TestServer_Run_InterruptsExistingSessionsOnError(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	handler := &mockServerFlowHandler{}
+	rw := newMockServerReaderWriter()
+	iLink, oLink := pipe.NewLinks(64*1024, false)
+	sess := &serverSession{id: 40, link: iLink, ctx: ctx}
+
+	server := &server{
+		link:       rw,
+		sessions:   map[uint16]*serverSession{40: sess},
+		Dispatcher: handler,
+	}
+
+	// Force run()'s read loop to fail so it interrupts existing sessions.
+	rw.Interrupt(errors.New("read error"))
+
+	err := server.run(ctx)
+	assert.Error(t, err)
+
+	// The session's link should have been interrupted as a side effect.
+	_, err2 := oLink.ReadMultiBuffer()
+	assert.Error(t, err2)
+}
+
+func TestServer_HandleFrame_GenericReadError(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	handler := &mockServerFlowHandler{}
+	server := &server{
+		sessions:   make(map[uint16]*serverSession),
+		Dispatcher: handler,
+	}
+
+	// Claim more data than is actually available so the SizedReader has to
+	// go back to the underlying reader, which then fails with a real
+	// (non-EOF, non-write) error.
+	meta := FrameMetadata{
+		SessionID:     41,
+		SessionStatus: SessionStatusKeepAlive,
+		Option:        OptionData,
+	}
+	frame := buf.New()
+	require.NoError(t, meta.WriteTo(frame))
+	_, err := serial.WriteUint16(frame, uint16(100))
+	require.NoError(t, err)
+	partial := buf.New()
+	partial.Write([]byte("x"))
+
+	fr := &flakyReader{first: buf.MultiBuffer{frame, partial}, failErr: errors.New("stream broken")}
+	reader := &buf.BufferedReader{Reader: fr}
+
+	err = server.handleFrame(ctx, reader)
+	assert.Error(t, err)
+}
+
+func TestServerSession_NotifyPeerSessionEOF_WriteError(t *testing.T) {
+	ctx := context.Background()
+	session := &serverSession{
+		id:  42,
+		ctx: ctx,
+	}
+	session.writer = NewResponseMuxWriter(42, &failingBufWriter{}, TransferTypeStream)
+
+	// Should not panic; the write error is only logged.
+	assert.NotPanics(t, func() {
+		session.notifyPeerSessionEOF()
+	})
+	assert.False(t, session.sendSessionEndError.Load())
+}
+
 func TestServer_HandleStatusNew_CopyError(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -1239,4 +1396,96 @@ func TestServer_HandleStatusNew_CopyError(t *testing.T) {
 	// Cleanup
 	cancel()
 	time.Sleep(50 * time.Millisecond)
+}
+
+// TestServer_SessionWriter_SerializesConcurrentWrites is a regression test
+// for a data race where every mux session wrote its response frames
+// directly to the shared connection writer (w.link) from its own
+// handleResponseData goroutine. Real-world connection writers (e.g.
+// buf.BufferToBytesWriter) are not safe for concurrent use, so concurrent
+// sessions could interleave/corrupt each other's frames on the wire. This
+// exercises server.sessionWriter() directly to confirm it serializes
+// concurrent callers.
+func TestServer_SessionWriter_SerializesConcurrentWrites(t *testing.T) {
+	detector := &concurrencyDetectingReaderWriter{mockServerReaderWriter: newMockServerReaderWriter()}
+	w := &server{link: detector}
+
+	const goroutines = 20
+	const writesPerGoroutine = 10
+
+	var wg sync.WaitGroup
+	for i := 0; i < goroutines; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			sw := w.sessionWriter()
+			for j := 0; j < writesPerGoroutine; j++ {
+				b := buf.New()
+				b.Write([]byte("x"))
+				assert.NoError(t, sw.WriteMultiBuffer(buf.MultiBuffer{b}))
+			}
+		}()
+	}
+	wg.Wait()
+
+	assert.False(t, detector.overlapped.Load(), "sessionWriter() must serialize concurrent writes to the shared connection")
+}
+
+// TestServer_ConcurrentSessions_ResponseWritesAreSerialized reproduces
+// TestTrojanTCPMuxManySessions at the unit level: many mux sessions are
+// created concurrently and each streams several response chunks back
+// through handleResponseData. Without synchronizing access to the shared
+// connection writer, these goroutines would race and corrupt the frame
+// stream (see TestServer_SessionWriter_SerializesConcurrentWrites for the
+// underlying mechanism).
+func TestServer_ConcurrentSessions_ResponseWritesAreSerialized(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	const numSessions = 15
+	const chunksPerSession = 5
+
+	handler := &mockServerFlowHandler{
+		handleFlowFunc: func(ctx context.Context, dst net.Destination, rw buf.ReaderWriter) error {
+			for i := 0; i < chunksPerSession; i++ {
+				b := buf.New()
+				b.Write([]byte("response-chunk-data"))
+				if err := rw.WriteMultiBuffer(buf.MultiBuffer{b}); err != nil {
+					return err
+				}
+			}
+			rw.CloseWrite()
+			return nil
+		},
+	}
+
+	rw := &concurrencyDetectingReaderWriter{mockServerReaderWriter: newMockServerReaderWriter()}
+	server := &server{
+		link:       rw,
+		sessions:   make(map[uint16]*serverSession),
+		Dispatcher: handler,
+	}
+
+	for i := 0; i < numSessions; i++ {
+		meta := FrameMetadata{
+			SessionID:     uint16(i + 1),
+			SessionStatus: SessionStatusNew,
+			Option:        0,
+			Target:        net.TCPDestination(net.ParseAddress("127.0.0.1"), net.Port(80)),
+		}
+		require.NoError(t, rw.WriteFrame(meta, nil))
+	}
+
+	reader := &buf.BufferedReader{Reader: rw}
+	for i := 0; i < numSessions; i++ {
+		require.NoError(t, server.handleFrame(ctx, reader))
+	}
+
+	require.Eventually(t, func() bool {
+		server.sessionLock.RLock()
+		defer server.sessionLock.RUnlock()
+		return len(server.sessions) == 0
+	}, 2*time.Second, 10*time.Millisecond, "all sessions should finish and be cleaned up")
+
+	assert.False(t, rw.overlapped.Load(), "concurrent sessions must not interleave writes to the shared connection")
 }

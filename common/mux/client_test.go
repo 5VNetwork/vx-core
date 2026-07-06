@@ -1183,6 +1183,129 @@ func TestClient_Interrupt_EmptySessions(t *testing.T) {
 	assert.True(t, client.IsEmpty())
 }
 
+// failingBufWriter is a buf.Writer whose WriteMultiBuffer always fails,
+// used to exercise the error-logging branches of notify* helpers.
+type failingBufWriter struct {
+	err error
+}
+
+func (f *failingBufWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
+	buf.ReleaseMulti(mb)
+	if f.err != nil {
+		return f.err
+	}
+	return errors.New("write failed")
+}
+
+func (f *failingBufWriter) CloseWrite() error {
+	return nil
+}
+
+func TestClient_HandleStatusKeep_NoOptionData(t *testing.T) {
+	ctx := context.Background()
+	iLink, _ := pipe.NewLinks(64*1024, false)
+	client, _ := NewClient(ctx, iLink, DefaultClientStrategy)
+
+	meta := &FrameMetadata{
+		SessionID:     1,
+		SessionStatus: SessionStatusKeep,
+		Option:        0, // no data present
+	}
+	reader := &buf.BufferedReader{Reader: buf.NewReader(buf.New())}
+
+	err := client.handleStatusKeep(meta, reader)
+	assert.NoError(t, err)
+}
+
+func TestClient_Merge_WriteFirstPayloadError(t *testing.T) {
+	ctx := context.Background()
+	iLink, _ := pipe.NewLinks(64*1024, false)
+	client, _ := NewClient(ctx, iLink, DefaultClientStrategy)
+
+	rw := newMockReaderWriter()
+	session := &clientSession{
+		ID:              21,
+		ctx:             ctx,
+		rw:              rw,
+		errChan:         make(chan error, 1),
+		leftToRightDone: done.New(),
+		rightToLeftDone: done.New(),
+	}
+	client.AddSession(session)
+
+	// Break the client's link so any write attempted by writeFirstPayload fails.
+	iLink.Interrupt(errors.New("link broken"))
+
+	dest := net.TCPDestination(net.ParseAddress("127.0.0.1"), net.Port(80))
+	go client.merge(ctx, dest, session)
+
+	select {
+	case err := <-session.errChan:
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to write first payload")
+	case <-time.After(time.Second):
+		t.Fatal("should receive error when first payload write fails")
+	}
+}
+
+func TestClientSession_NotifyPeerEOF_WriteError(t *testing.T) {
+	ctx := context.Background()
+	session := &clientSession{
+		ID:  22,
+		ctx: ctx,
+	}
+	session.writer = NewMuxWriter(22, net.TCPDestination(net.ParseAddress("127.0.0.1"), net.Port(80)), &failingBufWriter{}, TransferTypeStream)
+
+	// Should not panic; the write error is only logged.
+	assert.NotPanics(t, func() {
+		session.notifyPeerEOF()
+	})
+	assert.False(t, session.sendSessionEndError.Load())
+}
+
+func TestClient_Split_HandleStatusKeep_ReadError(t *testing.T) {
+	ctx := context.Background()
+	iLink, oLink := pipe.NewLinks(64*1024, false)
+	client, _ := NewClient(ctx, iLink, DefaultClientStrategy)
+
+	rw := newMockReaderWriter()
+	session := &clientSession{
+		ID:              23,
+		ctx:             ctx,
+		rw:              rw,
+		errChan:         make(chan error, 1),
+		leftToRightDone: done.New(),
+		rightToLeftDone: done.New(),
+	}
+	client.AddSession(session)
+
+	// Claim more bytes than are actually supplied, then interrupt the
+	// underlying link so the follow-up read fails with a real error
+	// instead of a clean EOF. This exercises split()'s generic
+	// error-handling branch (as opposed to the write-error branch).
+	meta := FrameMetadata{
+		SessionID:     23,
+		SessionStatus: SessionStatusKeep,
+		Option:        OptionData,
+	}
+	frame := buf.New()
+	meta.WriteTo(frame)
+	serial.WriteUint16(frame, uint16(100))
+	partialData := buf.New()
+	partialData.Write([]byte("short"))
+	err := oLink.WriteMultiBuffer(buf.MultiBuffer{frame, partialData})
+	require.NoError(t, err)
+
+	// Give split() a chance to consume the buffered chunk before breaking the link.
+	time.Sleep(50 * time.Millisecond)
+	oLink.Interrupt(errors.New("connection reset"))
+
+	// split() should observe the read error, log it, and stop processing.
+	time.Sleep(100 * time.Millisecond)
+
+	client.Close()
+}
+
 func TestClient_ConcurrentAddRemove(t *testing.T) {
 	ctx := context.Background()
 	iLink, _ := pipe.NewLinks(64*1024, false)

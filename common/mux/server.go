@@ -22,6 +22,36 @@ type server struct {
 
 	sessionLock sync.RWMutex
 	sessions    map[uint16]*serverSession
+
+	// writeLock serializes writes to link. Every mux session gets its own
+	// MuxWriter, but they all write into this same shared connection from
+	// their own goroutine (see handleResponseData), so without this lock
+	// concurrent sessions can interleave/corrupt each other's frames on
+	// the wire.
+	writeLock sync.Mutex
+}
+
+// syncedWriter serializes concurrent WriteMultiBuffer calls made against a
+// shared buf.Writer.
+type syncedWriter struct {
+	mu     *sync.Mutex
+	writer buf.Writer
+}
+
+func (w *syncedWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.writer.WriteMultiBuffer(mb)
+}
+
+func (w *syncedWriter) CloseWrite() error {
+	return w.writer.CloseWrite()
+}
+
+// sessionWriter returns a buf.Writer over the server's shared connection
+// that is safe to use concurrently from multiple sessions' goroutines.
+func (w *server) sessionWriter() buf.Writer {
+	return &syncedWriter{mu: &w.writeLock, writer: w.link}
 }
 
 func Serve(ctx context.Context, rw buf.ReaderWriter, d i.FlowHandler) error {
@@ -117,7 +147,7 @@ func (w *server) handleStatusNew(ctx context.Context, meta *FrameMetadata, reade
 	if meta.Target.Network == net.Network_UDP {
 		transferType = TransferTypePacket
 	}
-	s.writer = NewResponseMuxWriter(s.id, w.link, transferType)
+	s.writer = NewResponseMuxWriter(s.id, w.sessionWriter(), transferType)
 
 	w.sessionLock.Lock()
 	w.sessions[s.id] = s
@@ -156,7 +186,7 @@ func (ms *server) handleStatusKeep(meta *FrameMetadata, reader *buf.BufferedRead
 	ms.sessionLock.RUnlock()
 	if !found {
 		// Notify remote peer to close this session.
-		closingWriter := NewResponseMuxWriter(meta.SessionID, ms.link, TransferTypeStream)
+		closingWriter := NewResponseMuxWriter(meta.SessionID, ms.sessionWriter(), TransferTypeStream)
 		closingWriter.hasError = true
 		closingWriter.SendSessionStatusEnd()
 		return buf.Copy(buf.NewSizedReader(reader), buf.Discard)

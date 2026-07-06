@@ -267,6 +267,58 @@ func TestFrameMetadata_UnmarshalInsufficientBuffer(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestFrameMetadata_UnmarshalFromBuffer_TooSmall(t *testing.T) {
+	b := buf.New()
+	defer b.Release()
+	// Fewer than the 4 bytes required for SessionID+Status+Option.
+	b.Write([]byte{0x00, 0x01, 0x02})
+
+	var meta FrameMetadata
+	err := meta.unmarshalFromBuffer(b)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "insufficient buffer")
+}
+
+func TestFrameMetadata_UnmarshalFromBuffer_SessionStatusNew_TooSmall(t *testing.T) {
+	b := buf.New()
+	defer b.Release()
+	// SessionID(2) + Status(1)=New + Option(1) + Network(1) = 5 bytes, less than the 8 required.
+	b.Write([]byte{0x00, 0x01, byte(SessionStatusNew), 0x00, byte(TargetNetworkTCP)})
+
+	var meta FrameMetadata
+	err := meta.unmarshalFromBuffer(b)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "insufficient buffer")
+}
+
+func TestFrameMetadata_UnmarshalFromBuffer_AddressParseError(t *testing.T) {
+	b := buf.New()
+	defer b.Release()
+	// SessionID(2) + Status(1)=New + Option(1) + Network(1)=TCP, followed by
+	// a port and then an invalid/unmapped address type byte.
+	b.Write([]byte{0x00, 0x01, byte(SessionStatusNew), 0x00, byte(TargetNetworkTCP), 0x00, 0x50, 0xFF})
+
+	var meta FrameMetadata
+	err := meta.unmarshalFromBuffer(b)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to parse target address")
+}
+
+func TestFrameMetadata_UnmarshalFromBuffer_UnknownNetworkType(t *testing.T) {
+	b := buf.New()
+	defer b.Release()
+	// SessionID(2) + Status(1)=New + Option(1) + Network(1)=invalid, followed
+	// by a well-formed port + IPv4 address (the address parser used here
+	// reads the port before the address type/bytes).
+	b.Write([]byte{0x00, 0x01, byte(SessionStatusNew), 0x00, 0x99})
+	b.Write([]byte{0x00, 0x50, byte(AddressTypeIPv4), 127, 0, 0, 1})
+
+	var meta FrameMetadata
+	err := meta.unmarshalFromBuffer(b)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown network type")
+}
+
 func TestFrameMetadata_AllSessionStatuses(t *testing.T) {
 	statuses := []SessionStatus{
 		SessionStatusNew,

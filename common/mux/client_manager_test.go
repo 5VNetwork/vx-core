@@ -650,6 +650,96 @@ func TestClientManager_Close_WithoutStart(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestNewClientManager_DefaultValues(t *testing.T) {
+	// Zero-value strategy fields should fall back to DefaultClientStrategy.
+	manager := NewClientManager(ClientStrategy{}, &mockFlowHandler{})
+
+	assert.Equal(t, DefaultClientStrategy.MaxConcurrency, manager.Strategy.MaxConcurrency)
+	assert.Equal(t, DefaultClientStrategy.MaxConnection, manager.Strategy.MaxConnection)
+}
+
+func TestNewClientManager_PartialDefaultValues(t *testing.T) {
+	// Only one of the two fields set to zero should still get its own default,
+	// while the explicitly-set field is preserved.
+	manager := NewClientManager(ClientStrategy{MaxConcurrency: 5}, &mockFlowHandler{})
+
+	assert.Equal(t, uint32(5), manager.Strategy.MaxConcurrency)
+	assert.Equal(t, DefaultClientStrategy.MaxConnection, manager.Strategy.MaxConnection)
+}
+
+func TestClientManager_HandleReaderWriter_ContextCancelled(t *testing.T) {
+	manager := NewClientManager(DefaultClientStrategy, mocks.NewLoopbackHandler())
+	manager.Start()
+	defer manager.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	// No data sent and the channel is left open, so the session stays
+	// alive well past the point where we cancel below.
+	rw := newMockReaderWriter()
+	dest := net.TCPDestination(net.ParseAddress("127.0.0.1"), net.Port(80))
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- manager.HandleReaderWriter(ctx, dest, rw)
+	}()
+
+	time.Sleep(20 * time.Millisecond)
+	cancel()
+
+	select {
+	case err := <-errCh:
+		assert.ErrorIs(t, err, context.Canceled)
+	case <-time.After(2 * time.Second):
+		t.Fatal("HandleReaderWriter should return after context cancel")
+	}
+}
+
+func TestClientManager_HandleReaderWriter_ClientSwap(t *testing.T) {
+	strategy := ClientStrategy{MaxConnection: 100, MaxConcurrency: 10}
+	manager := NewClientManager(strategy, mocks.NewLoopbackHandler())
+	manager.Start()
+	defer manager.Close()
+
+	ctx := context.Background()
+	iLink1, _ := pipe.NewLinks(64*1024, false)
+	iLink2, _ := pipe.NewLinks(64*1024, false)
+	client1, _ := NewClient(ctx, iLink1, strategy)
+	client2, _ := NewClient(ctx, iLink2, strategy)
+
+	manager.clientsAccessLock.Lock()
+	manager.clients = append(manager.clients, client1, client2)
+	manager.clientsAccessLock.Unlock()
+
+	ctx, cancel := context.WithCancel(ctx)
+	dest := net.TCPDestination(net.ParseAddress("127.0.0.1"), net.Port(80))
+	rw := newMockReaderWriter()
+	close(rw.readChan)
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- manager.HandleReaderWriter(ctx, dest, rw)
+	}()
+
+	// Give HandleReaderWriter enough time to pick (and swap) a client; these
+	// hand-built clients have no dispatcher on the other end of their link,
+	// so the session never naturally completes and must be cancelled.
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+
+	select {
+	case <-errCh:
+	case <-time.After(2 * time.Second):
+		t.Fatal("HandleReaderWriter should return after context cancel")
+	}
+
+	// The first non-full client found (client1, at index 0) should have been
+	// swapped with the last element (client2) before being selected.
+	manager.clientsAccessLock.Lock()
+	assert.Equal(t, client2, manager.clients[0])
+	assert.Equal(t, client1, manager.clients[1])
+	manager.clientsAccessLock.Unlock()
+}
+
 func TestClientManager_Create_HandlerError(t *testing.T) {
 	handler := &mockFlowHandler{
 		handleFlowFunc: func(ctx context.Context, dst net.Destination, rw buf.ReaderWriter) error {
