@@ -73,7 +73,7 @@ func NICSupportIPv6Index(index uint32) bool {
 }
 
 func NICSupportIPv6Name(nicName string) bool {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
 	ctx = log.Logger.With().Uint("id", uint(session.NewID())).Logger().WithContext(ctx)
 	log.Ctx(ctx).Debug().Str("nicName", nicName).Msg("NICSupportIPv6 start")
@@ -81,6 +81,7 @@ func NICSupportIPv6Name(nicName string) bool {
 		net.ParseAddress(AliDNS6), 53,
 	), &dlhelper.SocketSetting{
 		BindToDeviceName: nicName,
+		DialTimeout:      4 * time.Second,
 	})
 	if err != nil {
 		log.Ctx(ctx).Err(err).Str("nicName", nicName).Msg("NICSupportIPv6 dial error")
