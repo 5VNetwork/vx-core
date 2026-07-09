@@ -145,7 +145,7 @@ func NewDNS(lc fx.Lifecycle, params DNSParams) (DNSResult, error) {
 			HijackDns: dns,
 		}
 		dnsServers = append(dnsServers, hijackDnsToDnsServer)
-		dnsServerMap["hijack"] = hijackDnsToDnsServer
+		dnsServerMap["Hijack"] = hijackDnsToDnsServer
 		result.HijackDnsHandler = idns.NewHandlerV().WithTag("dns").WithDns(dns)
 	}
 

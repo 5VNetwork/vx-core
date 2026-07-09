@@ -70,6 +70,7 @@ type InboundConfig struct {
 	Handler               i.Handler
 	Listener              i.PacketListener
 	Realm                 RealmConfig
+	StatsUser             bool
 }
 
 func (in *Inbound) Tag() string {
@@ -155,9 +156,11 @@ func (in *Inbound) Start() error {
 				if err != nil {
 					return err
 				}
-				pc = &statsPacketConn{
-					PacketConn: pc,
-					inbound:    in,
+				if in.config.StatsUser {
+					pc = &statsPacketConn{
+						PacketConn: pc,
+						inbound:    in,
+					}
 				}
 				if len(salamanderPSK) > 0 {
 					pc, err = obfs.WrapPacketConnSalamander(pc, salamanderPSK)
@@ -219,15 +222,18 @@ func (in *Inbound) LogOnlineState(user i.User, online bool) {}
 // data sent back to client is rx, data received from client is tx
 // send(to client) traffic meter happens at the transport layer, so we don't need to count it here
 func (in *Inbound) LogTraffic(user i.User, tx, rx uint64) (ok bool) {
-	if tx != 0 {
-		in.usersLock.RLock()
-		defer in.usersLock.RUnlock()
-		user, ok := in.users[user.Secret()]
-		if !ok {
-			return false
+	if in.config.StatsUser {
+		if tx != 0 {
+			in.usersLock.RLock()
+			defer in.usersLock.RUnlock()
+			user, ok := in.users[user.Secret()]
+			if !ok {
+				return false
+			}
+			user.Counter().Add(tx)
 		}
-		user.Counter().Add(tx + rx)
 	}
+
 	return true
 }
 
@@ -247,17 +253,21 @@ func (in *Inbound) Connect(addr net.Addr, secret string, tx uint64) {
 	log.Debug().Any("src_addr", addr).Str("user_id", user.Uid()).
 		Uint64("tx", tx).Msg("hysteria2 connect")
 
-	in.cLock.Lock()
-	in.srcAddrMap[peerAddrMapKeyFrom(addr)] = &srcAddrInfo{
-		counter: user.Counter(),
+	if in.config.StatsUser {
+		in.cLock.Lock()
+		in.srcAddrMap[peerAddrMapKeyFrom(addr)] = &srcAddrInfo{
+			counter: user.Counter(),
+		}
+		in.cLock.Unlock()
 	}
-	in.cLock.Unlock()
 }
 
 func (in *Inbound) Disconnect(addr net.Addr, id string, err error) {
-	in.cLock.Lock()
-	delete(in.srcAddrMap, peerAddrMapKeyFrom(addr))
-	in.cLock.Unlock()
+	if in.config.StatsUser {
+		in.cLock.Lock()
+		delete(in.srcAddrMap, peerAddrMapKeyFrom(addr))
+		in.cLock.Unlock()
+	}
 
 	log.Debug().Err(err).Any("src_addr", addr).Str("user_id", id).Msgf("hysteria2 disconnect")
 }

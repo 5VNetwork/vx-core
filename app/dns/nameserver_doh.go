@@ -74,8 +74,10 @@ func NewDoHNameServer(option DoHNameServerOption) (*DoHNameServer, error) {
 		ForceAttemptHTTP2:   true,
 		TLSClientConfig:     option.Tls,
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			logger := log.With().Uint32("sid", uint32(session.NewID())).Logger()
+			sid := session.NewID()
+			logger := log.With().Uint32("sid", uint32(sid)).Logger()
 			ctx = logger.WithContext(ctx)
+			ctx = session.ContextWithID(ctx, uint32(sid))
 
 			logger.Debug().Str("addr", addr).Msg("doh dial")
 

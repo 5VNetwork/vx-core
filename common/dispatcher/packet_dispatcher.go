@@ -3,6 +3,7 @@ package dispatcher
 import (
 	"context"
 	"fmt"
+	"math/rand/v2"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -128,6 +129,8 @@ func (s *PacketDispatcher) getTimeoutLink(dest net.Destination) (*tLink, error) 
 	if zerolog.GlobalLevel() == zerolog.DebugLevel {
 		ctx = session.GetCtx(ctx)
 		log.Ctx(ctx).Debug().Any("dst", dest).Msg("new udp sub session")
+	} else {
+		ctx = session.ContextWithID(ctx, rand.Uint32())
 	}
 
 	ctx, cancel := context.WithCancel(ctx)

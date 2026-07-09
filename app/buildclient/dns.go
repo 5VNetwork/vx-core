@@ -167,7 +167,7 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 					HijackDns: dns,
 				}
 				dnsServers = append(dnsServers, hijackDnsToDnsServer)
-				dnsServerMap["hijack"] = hijackDnsToDnsServer
+				dnsServerMap["Hijack"] = hijackDnsToDnsServer
 				client.Dns = dns
 				common.Must(fc.addFeature(dns))
 				om.AddHandlers(idns.NewHandlerV().WithTag("dns").WithDns(dns))

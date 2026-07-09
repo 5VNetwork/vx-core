@@ -243,7 +243,7 @@ type HijackDnsToDnsServer struct {
 }
 
 func (d *HijackDnsToDnsServer) Name() string {
-	return "hijack"
+	return "Hijack"
 }
 
 func (d *HijackDnsToDnsServer) HandleQuery(ctx context.Context, msg *dns.Msg, tcp bool) (*dns.Msg, error) {

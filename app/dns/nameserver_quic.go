@@ -192,8 +192,10 @@ func (s *QUICNameServer) getConnection() (*quic.Conn, error) {
 	s.Lock()
 	defer s.Unlock()
 
-	logger := log.With().Uint32("sid", uint32(session.NewID())).Logger()
+	sid := session.NewID()
+	logger := log.With().Uint32("sid", uint32(sid)).Logger()
 	ctx := logger.WithContext(context.Background())
+	ctx = session.ContextWithID(ctx, uint32(sid))
 	logger.Debug().Msg("dns quic")
 
 	var err error

@@ -2,6 +2,8 @@ package utils
 
 import (
 	"context"
+	"errors"
+	"io"
 	"time"
 
 	"github.com/apernet/quic-go"
@@ -25,7 +27,8 @@ func (s *QStream) StreamID() quic.StreamID {
 }
 
 func (s *QStream) Read(p []byte) (n int, err error) {
-	return s.Stream.Read(p)
+	n, err = s.Stream.Read(p)
+	return n, normalizeStreamError(err)
 }
 
 func (s *QStream) CancelRead(code quic.StreamErrorCode) {
@@ -59,4 +62,20 @@ func (s *QStream) SetWriteDeadline(t time.Time) error {
 
 func (s *QStream) SetDeadline(t time.Time) error {
 	return s.Stream.SetDeadline(t)
+}
+
+// normalizeStreamError maps a QUIC stream cancellation with application error
+// code 0 (the "no error" / normal close code, e.g. from our own Close() ->
+// CancelRead(0), or a peer closing cleanly) to io.EOF. This keeps benign stream
+// teardown from surfacing as a scary "stream N canceled by local with error
+// code 0" error to consumers, while still propagating real (non-zero) errors.
+func normalizeStreamError(err error) error {
+	if err == nil {
+		return nil
+	}
+	var se *quic.StreamError
+	if errors.As(err, &se) && se.ErrorCode == 0 {
+		return io.EOF
+	}
+	return err
 }
