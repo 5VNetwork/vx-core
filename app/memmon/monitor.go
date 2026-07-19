@@ -29,6 +29,7 @@ type MonitorConfig struct {
 	Interval      time.Duration
 	Path          string
 	ListenAddress string
+	Threshold     int
 }
 
 func NewMonitor(config *MonitorConfig) *Monitor {
@@ -59,7 +60,7 @@ func (mon *Monitor) TakeHeapSnapshot() error {
 }
 
 const (
-	memoryThreshold = 25 * 1024 * 1024
+	iosMemoryThreshold = 25 * 1024 * 1024
 	// memoryRearmThreshold provides hysteresis: after a snapshot we only re-arm
 	// once memory falls back below this lower watermark, so the forced GC
 	// dropping just under memoryThreshold doesn't cause repeated snapshots when
@@ -81,7 +82,7 @@ func (mon *Monitor) log() {
 			return
 		case <-time.After(mon.monitorConfig.Interval):
 			runtime.ReadMemStats(&m)
-			log.Debug().
+			log.Info().
 				Int("HeapAlloc", int(units.BytesToMB(m.HeapAlloc))).
 				Int("HeapInuse", int(units.BytesToMB(m.HeapInuse))).
 				Int("HeapIdle", int(units.BytesToMB(m.HeapIdle))).
@@ -97,13 +98,16 @@ func (mon *Monitor) log() {
 				Int32("Conn", mon.Dispatcher.PacketConns.Load()).
 				Msg("Memory stats")
 
-			if (m.Alloc+m.StackInuse > memoryThreshold) && runtime.GOOS == "ios" {
+			if mon.monitorConfig.Threshold != 0 &&
+				m.Alloc+m.StackInuse > uint64(mon.monitorConfig.Threshold) &&
+				mon.monitorConfig.Path != "" {
 				log.Debug().Msg("Memory threshold exceeded, forcing GC")
 				runtime.GC()
 				// Only snapshot on the transition into the over-threshold
 				// state; taking it every tick would itself churn memory.
-				if !overThreshold && zerolog.GlobalLevel() == zerolog.DebugLevel {
+				if !overThreshold {
 					TakeHeapSnapshot(mon.monitorConfig.Path)
+					TakeGoroutineSnapshot(mon.monitorConfig.Path)
 				}
 				overThreshold = true
 			} else if m.Alloc+m.StackInuse < memoryRearmThreshold {

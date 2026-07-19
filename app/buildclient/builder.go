@@ -102,11 +102,15 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 	if config.GetLog().GetLogLevel() == vxlog.Level_DEBUG {
 		interval := time.Second * 1
 		dir := path.Dir(config.RedirectStdErr)
-		monitor := memmon.NewMonitor(&memmon.MonitorConfig{
+		monitorConfig := &memmon.MonitorConfig{
 			Interval:      interval,
 			Path:          dir,
 			ListenAddress: "0.0.0.0:6060",
-		})
+		}
+		if runtime.GOOS == "ios" {
+			monitorConfig.Threshold = 25 * 1024 * 1024
+		}
+		monitor := memmon.NewMonitor(monitorConfig)
 		builder.requireFeature(func(d *dispatcher.Dispatcher) {
 			monitor.Dispatcher = d
 		})
