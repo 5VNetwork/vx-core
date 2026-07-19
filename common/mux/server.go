@@ -227,7 +227,7 @@ func (w *server) handleStatusEnd(meta *FrameMetadata, reader *buf.BufferedReader
 	if found {
 		if meta.Option.Has(OptionError) {
 			s.receivedSessionEndError.Store(true)
-			log.Ctx(s.ctx).Error().Msg("Received sessionStatusEnd with error")
+			log.Ctx(s.ctx).Debug().Msg("Received sessionStatusEnd with error")
 			go w.onSessionError(s, errors.New("session ended by peer"))
 		} else {
 			log.Ctx(s.ctx).Debug().Msg("Received sessionStatusEnd without error")

@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"net/netip"
-	"reflect"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -19,7 +18,6 @@ import (
 	"github.com/5vnetwork/vx-core/app/buildclient"
 	"github.com/5vnetwork/vx-core/app/client"
 	configs "github.com/5vnetwork/vx-core/app/configs"
-	"github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/handlerfactory"
 	"github.com/5vnetwork/vx-core/app/inbound/gvisor"
 	"github.com/5vnetwork/vx-core/app/inbound/reject"
@@ -209,7 +207,7 @@ func (t *tm) CreateInbound(tunConfig *configs.TunConfig, fd int32, support6 bool
 	if err != nil {
 		return fmt.Errorf("failed to get tun device with info: %w", err)
 	}
-	dnsConn := c.Components.GetComponent(reflect.TypeOf(&dns.HijackDns{})).(*dns.HijackDns)
+	dnsConn := c.Dns
 
 	tunInbound, err := buildclient.NewTunSystemInbound(
 		tunDeviceWithInfo, tunConfig.Tag,

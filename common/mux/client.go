@@ -230,7 +230,7 @@ func (m *client) handleStatusEnd(meta *FrameMetadata, reader *buf.BufferedReader
 		// When received a sessionStatusEnd with error, it means that something went wrong and terminate this session.
 		if meta.Option.Has(OptionError) {
 			s.receivedSessionEndError.Store(true)
-			log.Ctx(s.ctx).Error().Msg("Received sessionStatusEnd with error")
+			log.Ctx(s.ctx).Debug().Msg("Received sessionStatusEnd with error")
 			s.onError(errors.New("session ended by peer"))
 		} else {
 			log.Ctx(s.ctx).Debug().Msg("Received sessionStatusEnd without error")

@@ -221,7 +221,12 @@ func WriteMultiBuffer(writer io.Writer, mb MultiBuffer) (MultiBuffer, error) {
 		if b == nil {
 			break
 		}
-		_, err := writer.Write(b.Bytes())
+		data := b.Bytes()
+		if len(data) == 0 {
+			b.Release()
+			continue
+		}
+		_, err := writer.Write(data)
 		b.Release()
 		if err != nil {
 			return mb, err

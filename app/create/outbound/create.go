@@ -256,37 +256,37 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 		if ipr == nil {
 			ipr = &dns.GoDnsResolver{}
 		}
-		serverName := m.GetTlsConfig().ServerName
+		serverName := m.GetTlsConfig().GetServerName()
 		if serverName == "" {
 			serverName = config.Address
 		}
-		initialStreamReceiveWindow := uint64(m.Quic.GetInitialStreamReceiveWindow() * 1024 * 1024)
+		initialStreamReceiveWindow := uint64(m.GetQuic().GetInitialStreamReceiveWindow() * 1024 * 1024)
 		if initialStreamReceiveWindow == 0 {
-			initialStreamReceiveWindow = m.Quic.GetInitialStreamReceiveWindowBytes()
+			initialStreamReceiveWindow = m.GetQuic().GetInitialStreamReceiveWindowBytes()
 			if initialStreamReceiveWindow == 0 && runtime.GOOS == "ios" {
 				initialStreamReceiveWindow = 80 * 1024
 			}
 		}
-		initialConnectionReceiveWindow := uint64(m.Quic.GetInitialConnectionReceiveWindow() * 1024 * 1024)
+		initialConnectionReceiveWindow := uint64(m.GetQuic().GetInitialConnectionReceiveWindow() * 1024 * 1024)
 		if initialConnectionReceiveWindow == 0 {
-			initialConnectionReceiveWindow = m.Quic.GetInitialConnectionReceiveWindowBytes()
+			initialConnectionReceiveWindow = m.GetQuic().GetInitialConnectionReceiveWindowBytes()
 			if initialConnectionReceiveWindow == 0 && runtime.GOOS == "ios" {
 				initialConnectionReceiveWindow = 200 * 1024
 			}
 		}
-		maxStreamReceiveWindow := uint64(m.Quic.GetMaxStreamReceiveWindow() * 1024 * 1024)
+		maxStreamReceiveWindow := uint64(m.GetQuic().GetMaxStreamReceiveWindow() * 1024 * 1024)
 		if maxStreamReceiveWindow == 0 {
-			maxStreamReceiveWindow = m.Quic.GetMaxStreamReceiveWindowBytes()
+			maxStreamReceiveWindow = m.GetQuic().GetMaxStreamReceiveWindowBytes()
 		}
-		maxConnectionReceiveWindow := uint64(m.Quic.GetMaxConnectionReceiveWindow() * 1024 * 1024)
+		maxConnectionReceiveWindow := uint64(m.GetQuic().GetMaxConnectionReceiveWindow() * 1024 * 1024)
 		if maxConnectionReceiveWindow == 0 {
-			maxConnectionReceiveWindow = m.Quic.GetMaxConnectionReceiveWindowBytes()
+			maxConnectionReceiveWindow = m.GetQuic().GetMaxConnectionReceiveWindowBytes()
 		}
-		keepAlive := m.Quic.GetKeepAlivePeriod()
+		keepAlive := m.GetQuic().GetKeepAlivePeriod()
 		if keepAlive == 0 {
 			keepAlive = 10
 		}
-		maxIdleTimeout := m.Quic.GetMaxIdleTimeout()
+		maxIdleTimeout := m.GetQuic().GetMaxIdleTimeout()
 		if maxIdleTimeout == 0 {
 			maxIdleTimeout = 30
 		}
