@@ -111,6 +111,9 @@ func SplitBytes(mb MultiBuffer, b []byte) (MultiBuffer, int) {
 	endIndex := -1
 	for i := range mb {
 		pBuffer := mb[i]
+		if pBuffer == nil {
+			continue
+		}
 		nBytes, _ := pBuffer.Read(b)
 		totalBytes += nBytes
 		b = b[nBytes:]
@@ -337,6 +340,9 @@ func SplitBytesNoRelease(mb MultiBuffer, b []byte) (MultiBuffer, int) {
 	endIndex := -1
 	for i := range mb {
 		pBuffer := mb[i]
+		if pBuffer == nil {
+			continue
+		}
 		nBytes, _ := pBuffer.Read(b)
 		totalBytes += nBytes
 		b = b[nBytes:]

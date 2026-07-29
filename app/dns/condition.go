@@ -25,26 +25,11 @@ func (e *ExcludeDomainCondition) Match(msg *dns.Msg) bool {
 }
 
 type PreferDomainCondition struct {
-	lastMatched   string
-	lastUnmathced string
-	DomainSet     i.DomainSet
+	DomainSet i.DomainSet
 }
 
 func (p *PreferDomainCondition) Match(msg *DnsMsgMeta) bool {
-	domain := UnFqdn(msg.Question[0].Name)
-	if p.lastMatched == domain {
-		return true
-	}
-	if p.lastUnmathced == domain {
-		return false
-	}
-	matched := p.DomainSet.Match(domain)
-	if matched {
-		p.lastMatched = domain
-	} else {
-		p.lastUnmathced = domain
-	}
-	return matched
+	return p.DomainSet.Match(UnFqdn(msg.Question[0].Name))
 }
 
 type IncludedTypesCondition struct {

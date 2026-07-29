@@ -171,7 +171,7 @@ func (b *Buffer) SetByte(index int32, value byte) {
 // pool reuse / use-after-Release bugs surface clearly instead of as opaque
 // "slice bounds out of range" runtime errors.
 func (b *Buffer) Bytes() []byte {
-	if b.v == nil {
+	if b == nil || b.v == nil {
 		return nil
 	}
 	if b.start < 0 || b.end < b.start || int(b.end) > len(b.v) {
