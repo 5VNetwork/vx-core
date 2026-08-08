@@ -38,8 +38,6 @@ import (
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/transport"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 
 	"github.com/rs/zerolog/log"
 )
@@ -223,15 +221,9 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 		}
 	}
 	if config.DbPath != "" {
-		// PRAGMA foreign_keys and busy_timeout are per-connection in SQLite. Put
-		// them in the DSN so every connection GORM opens in its pool inherits them
-		// (a plain db.Exec("PRAGMA ...") after Open only configures one connection).
-		db, err := gorm.Open(sqlite.Open(config.DbPath+"?_foreign_keys=on&_busy_timeout=5000"), &gorm.Config{})
+		db, err := xsqlite.OpenSharedFile(config.DbPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to connect database: %w", err)
-		}
-		if runtime.GOOS != "android" {
-			db.Exec("PRAGMA journal_mode = WAL")
 		}
 		x.DB = &xsqlite.Database{DB: db}
 		err = builder.addComponent(x.DB)

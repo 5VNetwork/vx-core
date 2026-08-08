@@ -4,6 +4,7 @@
 package grpcservice
 
 import (
+	"runtime"
 	"strconv"
 	"time"
 
@@ -12,6 +13,12 @@ import (
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/rs/zerolog/log"
 )
+
+// On Android the Go core shares the SQLite file with Dart in the same process.
+// Persist handler stats only off Android to avoid concurrent writers.
+func persistHandlerStatsToDb() bool {
+	return runtime.GOOS != "android"
+}
 
 func (s *GrpcService) setCommunicateStream(stream GrpcService_CommunicateServer) {
 	s.streamLock.Lock()
@@ -151,7 +158,7 @@ func (s *GrpcService) notifyHandlerBeingUsed(selector string, tags []string) {
 }
 
 func (s *GrpcService) PingResult(tag string, ping int) {
-	if !s.UpdateLantency {
+	if !s.UpdateLantency || !persistHandlerStatsToDb() {
 		return
 	}
 	// store result into DB
@@ -171,6 +178,9 @@ func (s *GrpcService) PingResult(tag string, ping int) {
 }
 
 func (s *GrpcService) UsableResult(tag string, ok bool) {
+	if !persistHandlerStatsToDb() {
+		return
+	}
 	// Store result into DB
 	id, err := strconv.Atoi(tag)
 	if err == nil {
@@ -196,6 +206,9 @@ func (s *GrpcService) UsableResult(tag string, ok bool) {
 }
 
 func (s *GrpcService) SpeedResult(tag string, speed int64) {
+	if !persistHandlerStatsToDb() {
+		return
+	}
 	// store result into DB
 	id, err := strconv.Atoi(tag)
 	if err == nil {
@@ -218,6 +231,9 @@ func (s *GrpcService) SpeedResult(tag string, speed int64) {
 }
 
 func (s *GrpcService) IPv6Result(tag string, ok bool) {
+	if !persistHandlerStatsToDb() {
+		return
+	}
 	if ok {
 		// store result into DB
 		id, err := strconv.Atoi(tag)

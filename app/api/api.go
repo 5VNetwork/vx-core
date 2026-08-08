@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"runtime"
 	sync "sync"
 	"time"
 
@@ -33,7 +32,6 @@ import (
 	"github.com/5vnetwork/vx-core/common/signal"
 	"github.com/5vnetwork/vx-core/i"
 	"github.com/5vnetwork/vx-core/transport"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	vxlog "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/log"
@@ -152,16 +150,9 @@ func StartApiServer(config *ApiServerConfig, options ...ApiOption) (*Api, error)
 
 	// subscription
 	if config.DbPath != "" {
-		// PRAGMA foreign_keys and busy_timeout are per-connection in SQLite. Put
-		// them in the DSN so every connection GORM opens in its pool inherits them
-		// (a plain db.Exec("PRAGMA ...") after Open only configures one connection).
-		db, err := gorm.Open(sqlite.Open(config.DbPath+"?_foreign_keys=on&_busy_timeout=5000"),
-			&gorm.Config{})
+		db, err := xsqlite.OpenSharedFile(config.DbPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to connect database: %w", err)
-		}
-		if runtime.GOOS != "android" {
-			db.Exec("PRAGMA journal_mode = WAL")
 		}
 		api.db = db
 	}
@@ -454,15 +445,9 @@ func (a *Api) CloseDb(ctx context.Context, req *CloseDbRequest) (*Receipt, error
 }
 
 func (a *Api) OpenDb(ctx context.Context, req *OpenDbRequest) (*Receipt, error) {
-	// PRAGMA foreign_keys and busy_timeout are per-connection in SQLite. Put
-	// them in the DSN so every connection GORM opens in its pool inherits them.
-	db, err := gorm.Open(sqlite.Open(req.Path+"?_foreign_keys=on&_busy_timeout=5000"),
-		&gorm.Config{})
+	db, err := xsqlite.OpenSharedFile(req.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
-	}
-	if runtime.GOOS != "android" {
-		db.Exec("PRAGMA journal_mode = WAL")
 	}
 
 	a.dbLock.Lock()
