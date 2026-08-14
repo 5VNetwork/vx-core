@@ -307,7 +307,7 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 					InsecureSkipVerify:             m.GetTlsConfig().GetAllowInsecure(),
 					VerifyPeerCertificate:          tls.VerifyPeerCert(m.GetTlsConfig()),
 					RootCAs:                        rootCAs,
-					EncryptedClientHelloConfigList: m.GetTlsConfig().GetEchConfig(),
+					ECHConfigList: m.GetTlsConfig().GetEchConfig(),
 				},
 				QUICConfig: client.QUICConfig{
 					DisablePathMTUDiscovery:        m.Quic.GetDisablePathMtuDiscovery(),

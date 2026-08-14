@@ -7,7 +7,7 @@ require (
 	github.com/anytls/sing-anytls v0.0.11
 	github.com/apernet/hysteria/core/v2 v2.0.0-00010101000000-000000000000
 	github.com/apernet/hysteria/extras/v2 v2.6.5
-	github.com/apernet/quic-go v0.60.1-0.20260618182935-599b15a1fa26
+	github.com/apernet/quic-go v0.61.1-0.20260806010916-184d081eef3e
 	github.com/bits-and-blooms/bloom/v3 v3.7.0
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/golang/mock v1.7.0-rc.1
@@ -18,8 +18,8 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/jsimonetti/rtnetlink v1.4.0
 	github.com/mdlayher/netlink v1.7.2
-	github.com/miekg/dns v1.1.66
-	github.com/pion/stun/v3 v3.1.2
+	github.com/miekg/dns v1.1.72
+	github.com/pion/stun/v3 v3.1.6
 	github.com/pires/go-proxyproto v0.8.1
 	github.com/pkg/sftp v1.13.6
 	github.com/quic-go/quic-go v0.59.0
@@ -81,9 +81,9 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/mdlayher/socket v0.5.0 // indirect
-	github.com/pion/dtls/v3 v3.1.2 // indirect
+	github.com/pion/dtls/v3 v3.1.4 // indirect
 	github.com/pion/logging v0.2.4 // indirect
-	github.com/pion/transport/v4 v4.0.1 // indirect
+	github.com/pion/transport/v4 v4.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
@@ -97,9 +97,8 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20240314144324-c7f7c6466f7f // indirect
-	golang.org/x/mobile v0.0.0-20260709172247-6129f5bee9d5 // indirect
 	golang.org/x/mod v0.38.0 // indirect
-	golang.org/x/time v0.12.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.48.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251014184007-4626949a642f // indirect
@@ -115,9 +114,11 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-replace github.com/apernet/hysteria/core/v2 => github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260627124816-ceaca27708aa
+replace github.com/apernet/hysteria/core/v2 => github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260814050404-2b1f36a5f126
 
-replace github.com/apernet/hysteria/extras/v2 => github.com/5VNetwork/hysteria/extras/v2 v2.0.0-20260627124816-ceaca27708aa
+// replace github.com/apernet/hysteria/core/v2 => ../hysteria/core
+
+replace github.com/apernet/hysteria/extras/v2 => github.com/5VNetwork/hysteria/extras/v2 v2.0.0-20260814050404-2b1f36a5f126
 
 // Fix bulkBarrierPreWrite: unaligned arguments in WFP AddRule (tailscale/wf#25).
 replace github.com/tailscale/wf => github.com/anywherelan/wf v0.0.0-20260713071430-43b9c6827b85
