@@ -126,6 +126,9 @@ func spliceCopy(ctx context.Context, reader buf.Reader, writer buf.Writer, up bo
 				return err
 			}
 		}
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
 		if err != nil {
 			return err
 		}
