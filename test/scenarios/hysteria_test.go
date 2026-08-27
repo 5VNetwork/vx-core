@@ -3,8 +3,12 @@
 package scenarios
 
 import (
+	"bytes"
 	"context"
+	"crypto/rand"
 	"fmt"
+	"io"
+	stdhttp "net/http"
 	"testing"
 	"time"
 
@@ -19,6 +23,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/uuid"
 	"github.com/5vnetwork/vx-core/test"
 	"github.com/5vnetwork/vx-core/test/realmtest"
+	httptest "github.com/5vnetwork/vx-core/test/servers/http"
 	"github.com/5vnetwork/vx-core/test/servers/tcp"
 	"github.com/5vnetwork/vx-core/test/servers/udp"
 	"github.com/5vnetwork/vx-core/transport/security/tls"
@@ -119,6 +124,194 @@ func TestHysteriaTCP(t *testing.T) {
 	if err := errg.Wait(); err != nil {
 		t.Error(err)
 	}
+}
+
+const hysteriaLargeUploadTimeout = 60 * time.Second
+
+func TestHysteriaTCPLarge(t *testing.T) {
+	clientPort, cleanup := startHysteriaDokodemo(t, tcpDest)
+	defer cleanup()
+
+	var errg errgroup.Group
+	errg.Go(TestTCPConn(clientPort, test.TenMB, hysteriaLargeUploadTimeout))
+	if err := errg.Wait(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestHysteriaTCPLargeConcurrent(t *testing.T) {
+	clientPort, cleanup := startHysteriaDokodemo(t, tcpDest)
+	defer cleanup()
+
+	var errg errgroup.Group
+	for i := 0; i < 2; i++ {
+		errg.Go(TestTCPConn(clientPort, test.OneMB, hysteriaLargeUploadTimeout))
+	}
+	if err := errg.Wait(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestHysteriaHTTPUpload(t *testing.T) {
+	httpPort, httpServer := startHysteriaUploadHTTP(t)
+	defer httpServer.Close()
+
+	clientPort, cleanup := startHysteriaDokodemo(t, net.TCPDestination(net.LocalHostIP, httpPort))
+	defer cleanup()
+
+	if err := hysteriaHTTPPut(fmt.Sprintf("http://127.0.0.1:%d/upload", clientPort), test.OneMB, hysteriaLargeUploadTimeout); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestHysteriaHTTPUploadConcurrent(t *testing.T) {
+	httpPort, httpServer := startHysteriaUploadHTTP(t)
+	defer httpServer.Close()
+
+	clientPort, cleanup := startHysteriaDokodemo(t, net.TCPDestination(net.LocalHostIP, httpPort))
+	defer cleanup()
+
+	url := fmt.Sprintf("http://127.0.0.1:%d/upload", clientPort)
+	var errg errgroup.Group
+	for i := 0; i < 2; i++ {
+		errg.Go(func() error {
+			return hysteriaHTTPPut(url, test.OneMB, hysteriaLargeUploadTimeout)
+		})
+	}
+	if err := errg.Wait(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func startHysteriaDokodemo(t *testing.T, dest net.Destination) (net.Port, func()) {
+	t.Helper()
+	userID := uuid.New()
+	serverPort := net.PickUDPPort()
+	serverConfig := &configs.ServerConfig{
+		Inbounds: []*configs.ProxyInboundConfig{
+			{
+				Port: uint32(serverPort),
+				Protocol: serial.ToTypedMessage(&configs.Hysteria2ServerConfig{
+					IgnoreClientBandwidth: true,
+					TlsConfig: &tls.TlsConfig{
+						Certificates: []*tls.Certificate{
+							tls.ParseCertificate(cert.MustGenerate(nil)),
+						},
+					},
+				}),
+			},
+		},
+		Users: []*configs.UserConfig{
+			{
+				Id:     userID.String(),
+				Secret: userID.String(),
+			},
+		},
+	}
+
+	clientPort := tcp.PickPort()
+	t.Log("client port", clientPort)
+	clientConfig := &configs.TmConfig{
+		InboundManager: &configs.InboundManagerConfig{
+			Handlers: []*configs.ProxyInboundConfig{
+				{
+					Address: net.LocalHostIP.String(),
+					Port:    uint32(clientPort),
+					Protocol: serial.ToTypedMessage(
+						&configs.DokodemoConfig{
+							Address:  dest.Address.String(),
+							Port:     uint32(dest.Port),
+							Networks: []net.Network{net.Network_TCP},
+						},
+					),
+				},
+			},
+		},
+		Outbound: &configs.OutboundConfig{
+			OutboundHandlers: []*configs.OutboundHandlerConfig{
+				{
+					Address: "127.0.0.1",
+					Port:    uint32(serverPort),
+					Protocol: serial.ToTypedMessage(&configs.Hysteria2ClientConfig{
+						Auth: userID.String(),
+						TlsConfig: &tls.TlsConfig{
+							AllowInsecure: true,
+							ServerName:    "example.com",
+						},
+					}),
+				},
+			},
+		},
+	}
+
+	server, err := buildserver.NewX(serverConfig)
+	common.Must(err)
+	common.Must(server.Start(context.Background()))
+
+	client, err := buildclient.NewX(clientConfig)
+	common.Must(err)
+	common.Must(client.Start())
+
+	return clientPort, func() {
+		client.Close()
+		server.Stop(context.Background())
+	}
+}
+
+func startHysteriaUploadHTTP(t *testing.T) (net.Port, *httptest.Server) {
+	t.Helper()
+	httpPort := tcp.PickPort()
+	httpServer := &httptest.Server{
+		Port: httpPort,
+		PathHandler: map[string]stdhttp.HandlerFunc{
+			"/upload": func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
+				n, err := io.Copy(io.Discard, r.Body)
+				r.Body.Close()
+				if err != nil {
+					w.WriteHeader(stdhttp.StatusInternalServerError)
+					fmt.Fprintf(w, "read body: %v", err)
+					return
+				}
+				w.Header().Set("Content-Type", "text/plain")
+				fmt.Fprintf(w, "ok %d", n)
+			},
+		},
+	}
+	_, err := httpServer.Start()
+	common.Must(err)
+	return httpPort, httpServer
+}
+
+func hysteriaHTTPPut(url string, payloadSize int, timeout time.Duration) error {
+	payload := make([]byte, payloadSize)
+	common.Must2(rand.Read(payload))
+
+	req, err := stdhttp.NewRequest(stdhttp.MethodPut, url, bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+	req.ContentLength = int64(len(payload))
+	req.Header.Set("Expect", "100-continue")
+	req.Header.Set("Content-Type", "application/octet-stream")
+
+	client := &stdhttp.Client{Timeout: timeout}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != stdhttp.StatusOK {
+		return fmt.Errorf("status %d: %s", resp.StatusCode, body)
+	}
+	want := fmt.Sprintf("ok %d", payloadSize)
+	if string(body) != want {
+		return fmt.Errorf("unexpected body %q, want %q", body, want)
+	}
+	return nil
 }
 
 func TestHysteriaUDP(t *testing.T) {

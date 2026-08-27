@@ -43,6 +43,13 @@ func (s *QStream) Write(p []byte) (n int, err error) {
 	return s.Stream.Write(p)
 }
 
+// CloseWrite half-closes the write side (QUIC STREAM FIN) without cancelling
+// reads. Relay() calls this when the destination TCP connection EOFs, so the
+// client can still receive the HTTP response after finishing an upload.
+func (s *QStream) CloseWrite() error {
+	return s.Stream.Close()
+}
+
 func (s *QStream) Close() error {
 	s.Stream.CancelRead(0)
 	return s.Stream.Close()

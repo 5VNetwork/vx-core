@@ -30,6 +30,7 @@ type Config struct {
 	TLSConfig             TLSConfig
 	QUICConfig            QUICConfig
 	Conn                  net.PacketConn
+	StatelessResetKey     *quic.StatelessResetKey
 	Cleanup               io.Closer
 	Outbound              i.Handler
 	CongestionConfig      CongestionConfig
@@ -85,9 +86,6 @@ func (c *Config) fill() error {
 		return errors.ConfigError{Field: "QUICConfig.MaxIncomingStreams", Reason: "must be at least 8"}
 	}
 	c.QUICConfig.DisablePathMTUDiscovery = c.QUICConfig.DisablePathMTUDiscovery || pmtud.DisablePathMTUDiscovery
-	if c.Conn == nil {
-		return errors.ConfigError{Field: "Conn", Reason: "must be set"}
-	}
 	var err error
 	c.CongestionConfig.Type, err = congestion.NormalizeType(c.CongestionConfig.Type)
 	if err != nil {
@@ -99,8 +97,8 @@ func (c *Config) fill() error {
 			return errors.ConfigError{Field: "CongestionConfig.BBRProfile", Reason: err.Error()}
 		}
 	}
-	if c.Outbound == nil {
-		return errors.ConfigError{Field: "Outbound", Reason: "must be set"}
+	if c.Conn == nil {
+		return errors.ConfigError{Field: "Conn", Reason: "must be set"}
 	}
 	if c.BandwidthConfig.MaxTx != 0 && c.BandwidthConfig.MaxTx < 65536 {
 		return errors.ConfigError{Field: "BandwidthConfig.MaxTx", Reason: "must be at least 65536"}
@@ -136,6 +134,7 @@ type QUICConfig struct {
 	MaxIdleTimeout                 time.Duration
 	MaxIncomingStreams             int64
 	DisablePathMTUDiscovery        bool // The server may still override this to true on unsupported platforms.
+	DisableGSO                     bool
 }
 
 // RequestHook allows filtering and modifying requests before the server connects to the remote.
@@ -210,6 +209,7 @@ func (c *defaultUDPConn) WriteTo(b []byte, addr string) (int, error) {
 type BandwidthConfig struct {
 	MaxTx uint64
 	MaxRx uint64
+	DisableLossCompensation bool
 }
 
 // Authenticator is an interface that provides authentication logic.

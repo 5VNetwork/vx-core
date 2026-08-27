@@ -66,6 +66,10 @@ func (f *omFilter) GetHandlers() ([]OutHandler, error) {
 		if !inSubset(h, filterConfig) {
 			continue
 		}
+		if outHandler, ok := h.(OutHandler); ok {
+			ret = append(ret, outHandler)
+			continue
+		}
 
 		o := oStats{}
 		if handlerWithSupport6Info, ok := h.(i.HandlerWith6Info); ok {
