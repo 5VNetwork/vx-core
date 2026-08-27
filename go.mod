@@ -114,11 +114,11 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-replace github.com/apernet/hysteria/core/v2 => github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260814050404-2b1f36a5f126
+replace github.com/apernet/hysteria/core/v2 => github.com/5VNetwork/hysteria/core/v2 v2.0.0-20260827134658-9a07b9b5120a
 
 // replace github.com/apernet/hysteria/core/v2 => ../hysteria/core
 
-replace github.com/apernet/hysteria/extras/v2 => github.com/5VNetwork/hysteria/extras/v2 v2.0.0-20260814050404-2b1f36a5f126
+replace github.com/apernet/hysteria/extras/v2 => github.com/5VNetwork/hysteria/extras/v2 v2.0.0-20260827134658-9a07b9b5120a
 
 // Fix bulkBarrierPreWrite: unaligned arguments in WFP AddRule (tailscale/wf#25).
 replace github.com/tailscale/wf => github.com/anywherelan/wf v0.0.0-20260713071430-43b9c6827b85
