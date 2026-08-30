@@ -270,6 +270,9 @@ func (c *Info) GetInboundTag() string {
 
 func (c *Info) GetSourceIPs() net.IP {
 	src := c.Source
+	if src.Address == nil {
+		return nil
+	}
 	if src.Address.Family().IsDomain() {
 		return nil
 	}
