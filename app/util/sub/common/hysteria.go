@@ -126,6 +126,7 @@ func ParseHysteriaFromLink(link string) (*configs.OutboundHandlerConfig, error) 
 		hysteriaConfig.TlsConfig.PinnedPeerCertificateChainSha256 = [][]byte{
 			pinSHA256,
 		}
+		hysteriaConfig.TlsConfig.AllowInsecure = true
 	}
 	if query.Get("tx") != "" {
 		tx, err := strconv.Atoi(query.Get("tx"))
