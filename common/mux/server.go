@@ -125,7 +125,7 @@ func (w *server) handleStatusNew(ctx context.Context, meta *FrameMetadata, reade
 	newCtx := session.GetCtx(ctx)
 	log.Ctx(newCtx).Debug().Uint16("mux_sid", meta.SessionID).Str("dst", meta.Target.String()).Msg("new mux session")
 
-	iLink, oLink := pipe.NewLinks(64*1024, meta.Target.Network == net.Network_UDP)
+	iLink, oLink := pipe.NewLinks(64*1024, false)
 
 	go func() {
 		err := w.Dispatcher.HandleFlow(newCtx, meta.Target, oLink)
