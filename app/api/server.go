@@ -247,7 +247,8 @@ func (a *Api) Deploy(ctx context.Context, req *DeployRequest) (*DeployResponse, 
 		if err != nil {
 			return nil, fmt.Errorf("failed to update xray config: %w", err)
 		}
-	} else if req.HysteriaConfig != nil {
+	}
+	if req.HysteriaConfig != nil {
 		err = InstallHysteria(sshClient, req.SshConfig.Username)
 		if err != nil {
 			return nil, fmt.Errorf("failed to install hysteria: %w", err)
@@ -256,7 +257,8 @@ func (a *Api) Deploy(ctx context.Context, req *DeployRequest) (*DeployResponse, 
 		if err != nil {
 			return nil, fmt.Errorf("failed to update hysteria config: %w", err)
 		}
-	} else if req.VxConfig != nil {
+	}
+	if req.VxConfig != nil {
 		err = InstallVX(sshClient, req.SshConfig.Username)
 		if err != nil {
 			return nil, fmt.Errorf("failed to install vx: %w", err)
