@@ -9,6 +9,7 @@ import (
 	outboundcreate "github.com/5vnetwork/vx-core/app/create/outbound"
 	"github.com/5vnetwork/vx-core/app/dispatcher/linkstats"
 	"github.com/5vnetwork/vx-core/app/dispatcher/variants"
+	"github.com/5vnetwork/vx-core/app/outbound"
 	outboundstats "github.com/5vnetwork/vx-core/app/outbound/stats"
 	"github.com/5vnetwork/vx-core/app/policy"
 	"github.com/5vnetwork/vx-core/common"
@@ -37,7 +38,7 @@ type HandlerFactory struct {
 
 func (c *HandlerFactory) CreateHandler(hs ...*configs.HandlerConfig) (i.Outbound, error) {
 	df := c.DialerFactory
-	var outbound i.Outbound
+	var outboundH i.Outbound
 	if len(hs) > 1 {
 		handlers := make([]*configs.OutboundHandlerConfig, 0)
 		for _, handlerConfig := range hs {
@@ -73,7 +74,7 @@ func (c *HandlerFactory) CreateHandler(hs ...*configs.HandlerConfig) (i.Outbound
 		if err != nil {
 			return nil, err
 		}
-		outbound = ch
+		outboundH = ch
 	} else {
 		handler, err := outboundcreate.NewHandler(&outboundcreate.HandlerConfig{
 			HandlerConfig:               hs[0],
@@ -87,14 +88,19 @@ func (c *HandlerFactory) CreateHandler(hs ...*configs.HandlerConfig) (i.Outbound
 		if err != nil {
 			return nil, err
 		}
-		outbound = handler
+		outboundH = handler
 	}
 
-	if c.OutStats != nil && outbound.Tag() != "direct" && outbound.Tag() != "dns" {
+	handlerWithSupport6Info, hasSupport6 := outboundH.(*outbound.HandlerWithSupport6Info)
+	if hasSupport6 {
+		outboundH = handlerWithSupport6Info.Outbound
+	}
+
+	if c.OutStats != nil && outboundH.Tag() != "direct" && outboundH.Tag() != "dns" {
 		so := &StatsOutbound{
-			Outbound: outbound,
+			Outbound: outboundH,
 			statsFunc: func(ctx context.Context, a any, flow bool) any {
-				stats := c.OutStats.Get(outbound.Tag())
+				stats := c.OutStats.Get(outboundH.Tag())
 				var ups session.UpCounters
 				var downs session.DownCounters
 				if c.HandlerMeter {
@@ -135,22 +141,20 @@ func (c *HandlerFactory) CreateHandler(hs ...*configs.HandlerConfig) (i.Outbound
 				return nil
 			},
 		}
-		return so, nil
+		outboundH = so
 	}
 
-	return outbound, nil
+	if hasSupport6 {
+		handlerWithSupport6Info.Outbound = outboundH
+		return handlerWithSupport6Info, nil
+	}
+
+	return outboundH, nil
 }
 
 type StatsOutbound struct {
 	i.Outbound
 	statsFunc func(ctx context.Context, a any, flow bool) any
-}
-
-func (s *StatsOutbound) Support6() bool {
-	if h, ok := s.Outbound.(i.HandlerWith6Info); ok {
-		return h.Support6()
-	}
-	return false
 }
 
 func (s *StatsOutbound) HandleFlow(ctx context.Context,

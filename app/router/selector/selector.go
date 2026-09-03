@@ -328,6 +328,15 @@ func (s *Selector) SetHandlers() {
 				Outbound:   h,
 				OutHandler: selectedHandler,
 			}
+			// replace filtered handlers with ha
+			s.handlersLock.Lock()
+			index := slices.IndexFunc(s.filteredHandlers, func(h OutHandler) bool {
+				return h.Name() == selectedHandler.Name()
+			})
+			if index != -1 {
+				s.filteredHandlers[index] = ha
+			}
+			s.handlersLock.Unlock()
 		}
 		handlerToBeUsed = append(handlerToBeUsed, ha)
 		handlersBeingUsed = append(handlersBeingUsed, ha)

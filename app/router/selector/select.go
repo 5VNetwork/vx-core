@@ -51,9 +51,12 @@ type handler struct {
 }
 
 func (h *handler) GetHandler() (i.Outbound, error) {
-	return h.Outbound, nil
+	return h, nil
 }
 func (h *handler) Support6() bool {
+	if handlerWithSupport6Info, yes := h.Outbound.(i.HandlerWith6Info); yes {
+		return handlerWithSupport6Info.Support6()
+	}
 	return h.GetSupport6() > 0
 }
 
