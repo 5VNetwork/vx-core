@@ -29,6 +29,7 @@ service GrpcService {
 
   // outbound
   rpc ChangeOutbound(ChangeOutboundRequest) returns (ChangeOutboundResponse);
+  rpc ChangeHandlerStore(ChangeHandlerStoreRequest) returns (ChangeHandlerStoreResponse);
   rpc CurrentOutbound(CurrentOutboundRequest) returns (CurrentOutboundResponse);
   // rpc SetLandHandler(SetLandHandlerRequest) returns (SetLandHandlerResponse);
   rpc SelectedHandlers(SelectedHandlersRequest) returns (SelectedHandlersResponse);
@@ -159,6 +160,12 @@ message ChangeOutboundRequest {
   bool delete_all = 3;
 }
 message ChangeOutboundResponse {}
+message ChangeHandlerStoreRequest {
+  repeated vx.outbound.OutboundHandler outbound_handlers = 1;
+  repeated string tags = 2;
+  bool delete_all = 3;
+}
+message ChangeHandlerStoreResponse {}
 message CurrentOutboundRequest {}
 message CurrentOutboundResponse {
   repeated string outbound_tags = 1;

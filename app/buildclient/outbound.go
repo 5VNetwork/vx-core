@@ -14,6 +14,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/outbound"
 	outboundstats "github.com/5vnetwork/vx-core/app/outbound/stats"
 	"github.com/5vnetwork/vx-core/app/policy"
+	"github.com/5vnetwork/vx-core/app/router/selector"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/i"
@@ -22,10 +23,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func buildOutbound(config *configs.OutboundConfig, builder *Builder, client *client.Client) (*outbound.Manager, error) {
+func buildOutbound(config *configs.TmConfig, builder *Builder, client *client.Client) (*outbound.Manager, error) {
 	om := outbound.NewManager()
 	client.OutboundManager = om
 	common.Must(builder.addComponent(om))
+	outboundConfig := config.GetOutbound()
+	if outboundConfig == nil {
+		outboundConfig = &configs.OutboundConfig{}
+	}
 	err := builder.requireFeature(func(df transport.DialerFactory,
 		policy *policy.Policy, _ *dns.AllDnsServers, outStats *outboundstats.OutStats) error {
 		handlerFactory := &handlerfactory.HandlerFactory{
@@ -34,12 +39,12 @@ func buildOutbound(config *configs.OutboundConfig, builder *Builder, client *cli
 			IPResolver:                  client.IPResolver,
 			IPResolverForRequestAddress: client.IPResolverForRequestAddress,
 			EchResolver:                 client.EchResolver,
-			Hysteria2RejectQuic:         config.GetHysteriaRejectQuic(),
-			HandlerLinkStats:            config.GetHandlerLinkStats(),
-			HandlerMeter:                config.GetHandlerMeter(),
+			Hysteria2RejectQuic:         outboundConfig.GetHysteriaRejectQuic(),
+			HandlerLinkStats:            outboundConfig.GetHandlerLinkStats(),
+			HandlerMeter:                outboundConfig.GetHandlerMeter(),
 			OutStats:                    outStats,
 		}
-		if config.GetTotalCounter() {
+		if outboundConfig.GetTotalCounter() {
 			handlerFactory.TotalUpCounter = &atomic.Uint64{}
 			handlerFactory.TotalDownCounter = &atomic.Uint64{}
 		}
@@ -47,21 +52,21 @@ func buildOutbound(config *configs.OutboundConfig, builder *Builder, client *cli
 		common.Must(builder.addComponent(handlerFactory))
 
 		var handlerConfigs []*configs.HandlerConfig
-		for _, handlerConfig := range config.GetOutboundHandlers() {
+		for _, handlerConfig := range outboundConfig.GetOutboundHandlers() {
 			handlerConfigs = append(handlerConfigs, &configs.HandlerConfig{
 				Type: &configs.HandlerConfig_Outbound{
 					Outbound: handlerConfig,
 				},
 			})
 		}
-		for _, handlerConfig := range config.GetChainHandlers() {
+		for _, handlerConfig := range outboundConfig.GetChainHandlers() {
 			handlerConfigs = append(handlerConfigs, &configs.HandlerConfig{
 				Type: &configs.HandlerConfig_Chain{
 					Chain: handlerConfig,
 				},
 			})
 		}
-		handlerConfigs = append(handlerConfigs, config.GetHandlers()...)
+		handlerConfigs = append(handlerConfigs, outboundConfig.GetHandlers()...)
 		if len(handlerConfigs) == 0 {
 			handlerConfigs = []*configs.HandlerConfig{
 				{
@@ -100,6 +105,10 @@ func buildOutbound(config *configs.OutboundConfig, builder *Builder, client *cli
 			handlers = append(handlers, handler)
 		}
 		om.AddHandlers(handlers...)
+		if rows := config.GetOutboundHandlers(); len(rows) > 0 {
+			client.HandlerStore = selector.NewHandlerStore()
+			client.HandlerStore.ReplaceFromProtos(rows)
+		}
 		return nil
 	})
 	if err != nil {

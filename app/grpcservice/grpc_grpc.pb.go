@@ -28,6 +28,7 @@ const (
 	GrpcService_UserLogStream_FullMethodName             = "/vx.grpcservice.GrpcService/UserLogStream"
 	GrpcService_ResetUserLogging_FullMethodName          = "/vx.grpcservice.GrpcService/ResetUserLogging"
 	GrpcService_ChangeOutbound_FullMethodName            = "/vx.grpcservice.GrpcService/ChangeOutbound"
+	GrpcService_ChangeHandlerStore_FullMethodName        = "/vx.grpcservice.GrpcService/ChangeHandlerStore"
 	GrpcService_CurrentOutbound_FullMethodName           = "/vx.grpcservice.GrpcService/CurrentOutbound"
 	GrpcService_SelectedHandlers_FullMethodName          = "/vx.grpcservice.GrpcService/SelectedHandlers"
 	GrpcService_ChangeRoutingMode_FullMethodName         = "/vx.grpcservice.GrpcService/ChangeRoutingMode"
@@ -46,7 +47,6 @@ const (
 	GrpcService_SetAutoSubscriptionUpdate_FullMethodName = "/vx.grpcservice.GrpcService/SetAutoSubscriptionUpdate"
 	GrpcService_RttTest_FullMethodName                   = "/vx.grpcservice.GrpcService/RttTest"
 	GrpcService_GetRealmStatusStream_FullMethodName      = "/vx.grpcservice.GrpcService/GetRealmStatusStream"
-	GrpcService_RealmInboundToUri_FullMethodName         = "/vx.grpcservice.GrpcService/RealmInboundToUri"
 )
 
 // GrpcServiceClient is the client API for GrpcService service.
@@ -68,6 +68,7 @@ type GrpcServiceClient interface {
 	ResetUserLogging(ctx context.Context, in *ResetUserLoggingRequest, opts ...grpc.CallOption) (*ResetUserLoggingResponse, error)
 	// outbound
 	ChangeOutbound(ctx context.Context, in *ChangeOutboundRequest, opts ...grpc.CallOption) (*ChangeOutboundResponse, error)
+	ChangeHandlerStore(ctx context.Context, in *ChangeHandlerStoreRequest, opts ...grpc.CallOption) (*ChangeHandlerStoreResponse, error)
 	CurrentOutbound(ctx context.Context, in *CurrentOutboundRequest, opts ...grpc.CallOption) (*CurrentOutboundResponse, error)
 	// rpc SetLandHandler(SetLandHandlerRequest) returns (SetLandHandlerResponse);
 	SelectedHandlers(ctx context.Context, in *SelectedHandlersRequest, opts ...grpc.CallOption) (*SelectedHandlersResponse, error)
@@ -93,8 +94,6 @@ type GrpcServiceClient interface {
 	RttTest(ctx context.Context, in *RttTestRequest, opts ...grpc.CallOption) (*RttTestResponse, error)
 	// realm server status (only meaningful when a realm server inbound is active)
 	GetRealmStatusStream(ctx context.Context, in *GetRealmStatusStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[RealmServerStatus], error)
-	// Convert a realm server inbound config to a hysteria2+realm:// share URI.
-	RealmInboundToUri(ctx context.Context, in *RealmInboundToUriRequest, opts ...grpc.CallOption) (*RealmInboundToUriResponse, error)
 }
 
 type grpcServiceClient struct {
@@ -206,6 +205,16 @@ func (c *grpcServiceClient) ChangeOutbound(ctx context.Context, in *ChangeOutbou
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ChangeOutboundResponse)
 	err := c.cc.Invoke(ctx, GrpcService_ChangeOutbound_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *grpcServiceClient) ChangeHandlerStore(ctx context.Context, in *ChangeHandlerStoreRequest, opts ...grpc.CallOption) (*ChangeHandlerStoreResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChangeHandlerStoreResponse)
+	err := c.cc.Invoke(ctx, GrpcService_ChangeHandlerStore_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -401,16 +410,6 @@ func (c *grpcServiceClient) GetRealmStatusStream(ctx context.Context, in *GetRea
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type GrpcService_GetRealmStatusStreamClient = grpc.ServerStreamingClient[RealmServerStatus]
 
-func (c *grpcServiceClient) RealmInboundToUri(ctx context.Context, in *RealmInboundToUriRequest, opts ...grpc.CallOption) (*RealmInboundToUriResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RealmInboundToUriResponse)
-	err := c.cc.Invoke(ctx, GrpcService_RealmInboundToUri_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // GrpcServiceServer is the server API for GrpcService service.
 // All implementations should embed UnimplementedGrpcServiceServer
 // for forward compatibility.
@@ -430,6 +429,7 @@ type GrpcServiceServer interface {
 	ResetUserLogging(context.Context, *ResetUserLoggingRequest) (*ResetUserLoggingResponse, error)
 	// outbound
 	ChangeOutbound(context.Context, *ChangeOutboundRequest) (*ChangeOutboundResponse, error)
+	ChangeHandlerStore(context.Context, *ChangeHandlerStoreRequest) (*ChangeHandlerStoreResponse, error)
 	CurrentOutbound(context.Context, *CurrentOutboundRequest) (*CurrentOutboundResponse, error)
 	// rpc SetLandHandler(SetLandHandlerRequest) returns (SetLandHandlerResponse);
 	SelectedHandlers(context.Context, *SelectedHandlersRequest) (*SelectedHandlersResponse, error)
@@ -455,8 +455,6 @@ type GrpcServiceServer interface {
 	RttTest(context.Context, *RttTestRequest) (*RttTestResponse, error)
 	// realm server status (only meaningful when a realm server inbound is active)
 	GetRealmStatusStream(*GetRealmStatusStreamRequest, grpc.ServerStreamingServer[RealmServerStatus]) error
-	// Convert a realm server inbound config to a hysteria2+realm:// share URI.
-	RealmInboundToUri(context.Context, *RealmInboundToUriRequest) (*RealmInboundToUriResponse, error)
 }
 
 // UnimplementedGrpcServiceServer should be embedded to have
@@ -489,6 +487,9 @@ func (UnimplementedGrpcServiceServer) ResetUserLogging(context.Context, *ResetUs
 }
 func (UnimplementedGrpcServiceServer) ChangeOutbound(context.Context, *ChangeOutboundRequest) (*ChangeOutboundResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ChangeOutbound not implemented")
+}
+func (UnimplementedGrpcServiceServer) ChangeHandlerStore(context.Context, *ChangeHandlerStoreRequest) (*ChangeHandlerStoreResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ChangeHandlerStore not implemented")
 }
 func (UnimplementedGrpcServiceServer) CurrentOutbound(context.Context, *CurrentOutboundRequest) (*CurrentOutboundResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CurrentOutbound not implemented")
@@ -543,9 +544,6 @@ func (UnimplementedGrpcServiceServer) RttTest(context.Context, *RttTestRequest) 
 }
 func (UnimplementedGrpcServiceServer) GetRealmStatusStream(*GetRealmStatusStreamRequest, grpc.ServerStreamingServer[RealmServerStatus]) error {
 	return status.Error(codes.Unimplemented, "method GetRealmStatusStream not implemented")
-}
-func (UnimplementedGrpcServiceServer) RealmInboundToUri(context.Context, *RealmInboundToUriRequest) (*RealmInboundToUriResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method RealmInboundToUri not implemented")
 }
 func (UnimplementedGrpcServiceServer) testEmbeddedByValue() {}
 
@@ -686,6 +684,24 @@ func _GrpcService_ChangeOutbound_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GrpcServiceServer).ChangeOutbound(ctx, req.(*ChangeOutboundRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GrpcService_ChangeHandlerStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangeHandlerStoreRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GrpcServiceServer).ChangeHandlerStore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GrpcService_ChangeHandlerStore_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GrpcServiceServer).ChangeHandlerStore(ctx, req.(*ChangeHandlerStoreRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1007,24 +1023,6 @@ func _GrpcService_GetRealmStatusStream_Handler(srv interface{}, stream grpc.Serv
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type GrpcService_GetRealmStatusStreamServer = grpc.ServerStreamingServer[RealmServerStatus]
 
-func _GrpcService_RealmInboundToUri_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RealmInboundToUriRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GrpcServiceServer).RealmInboundToUri(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: GrpcService_RealmInboundToUri_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GrpcServiceServer).RealmInboundToUri(ctx, req.(*RealmInboundToUriRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // GrpcService_ServiceDesc is the grpc.ServiceDesc for GrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1051,6 +1049,10 @@ var GrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ChangeOutbound",
 			Handler:    _GrpcService_ChangeOutbound_Handler,
+		},
+		{
+			MethodName: "ChangeHandlerStore",
+			Handler:    _GrpcService_ChangeHandlerStore_Handler,
 		},
 		{
 			MethodName: "CurrentOutbound",
@@ -1119,10 +1121,6 @@ var GrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RttTest",
 			Handler:    _GrpcService_RttTest_Handler,
-		},
-		{
-			MethodName: "RealmInboundToUri",
-			Handler:    _GrpcService_RealmInboundToUri_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

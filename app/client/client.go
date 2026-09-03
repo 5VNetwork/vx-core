@@ -36,6 +36,7 @@ type Client struct {
 	InboundManager  *proxy.InboundManager
 	UserLogger      *userlogger.UserLogger
 	OutboundManager *outbound.Manager
+	HandlerStore    *selector.HandlerStore
 	OutStats        *outboundstats.OutStats
 	// might be nil
 	DB         Db

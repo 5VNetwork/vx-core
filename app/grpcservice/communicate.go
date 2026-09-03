@@ -4,7 +4,6 @@
 package grpcservice
 
 import (
-	"runtime"
 	"strconv"
 	"time"
 
@@ -17,7 +16,7 @@ import (
 // On Android the Go core shares the SQLite file with Dart in the same process.
 // Persist handler stats only off Android to avoid concurrent writers.
 func persistHandlerStatsToDb() bool {
-	return runtime.GOOS != "android"
+	return true
 }
 
 func (s *GrpcService) setCommunicateStream(stream GrpcService_CommunicateServer) {

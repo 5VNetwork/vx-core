@@ -46,5 +46,6 @@ message TmConfig {
   vx.grpc.GrpcServiceConfig grpc_service = 36;
   vx.fallbackmon.FallbackMonConfig fallback_mon = 37;
   vx.dialerfactory.DialerFactoryConfig dialer_factory = 38;
+  repeated vx.outbound.OutboundHandler outbound_handlers = 39;
 }
 

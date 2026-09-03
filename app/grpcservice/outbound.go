@@ -6,6 +6,7 @@ package grpcservice
 import (
 	"context"
 	"fmt"
+	"runtime"
 
 	vxrouter "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
 	"github.com/5vnetwork/vx-core/app/router"
@@ -78,6 +79,23 @@ func (s *GrpcService) ChangeOutbound(ctx context.Context, in *ChangeOutboundRequ
 	return &ChangeOutboundResponse{}, nil
 }
 
+func (s *GrpcService) ChangeHandlerStore(ctx context.Context, in *ChangeHandlerStoreRequest) (*ChangeHandlerStoreResponse, error) {
+	log.Debug().Msg("ChangeHandlerStore")
+	if in.GetDeleteAll() {
+		if s.Client.HandlerStore == nil {
+			s.Client.HandlerStore = selector.NewHandlerStore()
+		}
+		s.Client.HandlerStore.ReplaceFromProtos(in.GetOutboundHandlers())
+		return &ChangeHandlerStoreResponse{}, nil
+	}
+	if s.Client.HandlerStore == nil {
+		s.Client.HandlerStore = selector.NewHandlerStore()
+	}
+	s.Client.HandlerStore.RemoveTags(in.GetTags())
+	s.Client.HandlerStore.SetFromProtos(in.GetOutboundHandlers())
+	return &ChangeHandlerStoreResponse{}, nil
+}
+
 func (s *GrpcService) CurrentOutbound(ctx context.Context, in *CurrentOutboundRequest) (*CurrentOutboundResponse, error) {
 	om := s.Client.OutboundManager
 	handlers := GetAllProxyhandlers(om)
@@ -118,17 +136,16 @@ func (s *GrpcService) ChangeSelector(ctx context.Context, in *ChangeSelectorRequ
 		s.Client.Selectors.RemoveAllSelectors()
 	}
 	for _, selectorConfig := range in.GetSelectorsToAdd() {
-		landHandlers := make([]*xsqlite.OutboundHandler, 0, len(selectorConfig.LandHandlers))
-		for _, landHandlerId := range selectorConfig.LandHandlers {
-			handler := s.Client.DB.GetHandler(int(landHandlerId))
-			if handler == nil {
-				return nil, fmt.Errorf("land handler %d not found", landHandlerId)
-			}
-			landHandlers = append(landHandlers, handler)
+		landHandlers, err := selector.ResolveLandHandlers(s.Client.DB, selectorConfig.LandHandlers, s.Client.HandlerStore)
+		if err != nil {
+			return nil, err
 		}
 		var filter selector.Filter
 		if selectorConfig.SelectFromOm {
 			filter = selector.NewOmFilter(selectorConfig.GetFilter(), s.Client.OutboundManager)
+		} else if _, ok := s.Client.DB.(*xsqlite.Db); ok && runtime.GOOS == "android" {
+			filter = selector.NewDbOrOmFilter(s.Client.DB, selectorConfig.GetFilter(),
+				landHandlers, s.Client.HandlerFactory, s.Client.HandlerStore)
 		} else {
 			filter = selector.NewDbFilter(s.Client.DB, selectorConfig.GetFilter(),
 				landHandlers, s.Client.HandlerFactory)

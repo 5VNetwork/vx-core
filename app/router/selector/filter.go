@@ -101,6 +101,72 @@ func inSubset(h i.Outbound, filterConfig *router.SelectorConfig_Filter) bool {
 	return filterConfig.Inverse
 }
 
+// ResolveLandHandlers looks up land handlers by id. When the DB is missing a
+// row (or is unavailable), HandlerStore is used instead.
+func ResolveLandHandlers(db Db, ids []int64, store *HandlerStore) ([]*xsqlite.OutboundHandler, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	landHandlers := make([]*xsqlite.OutboundHandler, 0, len(ids))
+	for _, landHandlerId := range ids {
+		if db != nil {
+			if handler := db.GetHandler(int(landHandlerId)); handler != nil {
+				landHandlers = append(landHandlers, handler)
+				continue
+			}
+		}
+		if store != nil {
+			if handler := store.GetHandler(int(landHandlerId)); handler != nil {
+				landHandlers = append(landHandlers, handler)
+				continue
+			}
+		}
+		return nil, fmt.Errorf("land handler not found: %d", landHandlerId)
+	}
+	return landHandlers, nil
+}
+
+type dbOrOmFilter struct {
+	db     *dbFilter
+	store  *dbFilter
+	lastOK atomic.Value
+}
+
+func NewDbOrOmFilter(db Db, filterConfig *router.SelectorConfig_Filter,
+	landHandlers []*xsqlite.OutboundHandler, createHandler i.HandlerFactory,
+	store *HandlerStore) *dbOrOmFilter {
+	f := &dbOrOmFilter{
+		db: NewDbFilter(db, filterConfig, landHandlers, createHandler),
+	}
+	if store != nil {
+		f.store = NewDbFilter(store, filterConfig, landHandlers, createHandler)
+	}
+	return f
+}
+
+func (f *dbOrOmFilter) UpdateFilterConfig(filterConfig *router.SelectorConfig_Filter) {
+	f.db.UpdateFilterConfig(filterConfig)
+	if f.store != nil {
+		f.store.UpdateFilterConfig(filterConfig)
+	}
+}
+
+func (f *dbOrOmFilter) GetHandlers() ([]OutHandler, error) {
+	handlers, err := f.db.GetHandlers()
+	if err == nil {
+		f.lastOK.Store(handlers)
+		return handlers, nil
+	}
+	log.Warn().Err(err).Msg("db filter failed, falling back to handler store")
+	if v := f.lastOK.Load(); v != nil {
+		return v.([]OutHandler), nil
+	}
+	if f.store == nil {
+		return nil, err
+	}
+	return f.store.GetHandlers()
+}
+
 type dbFilter struct {
 	db            Db
 	filterConfig  atomic.Value

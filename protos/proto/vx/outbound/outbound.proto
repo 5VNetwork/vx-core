@@ -81,6 +81,29 @@ message HandlerConfig {
   optional bool support_ipv6 = 3;
 }
 
+// Mirrors xsqlite.OutboundHandler. Used in TmConfig when the remote DB
+// is unavailable so selectors can still match and build chains.
+message OutboundHandler {
+  int64 id = 1;
+  bool selected = 2;
+  string country_code = 3;
+  int32 ok = 4;
+  double speed = 5;
+  int32 speed_test_time = 6;
+  int32 ping = 7;
+  int32 ping_test_time = 8;
+  optional int64 sub_id = 9;
+  bytes config = 10;
+  string sni = 11;
+  string server_ip = 12;
+  int32 support6 = 13;
+  int32 support6_test_time = 14;
+  // Not on the sqlite row; stored for group filter matching.
+  repeated string group_tags = 15;
+  // Original node name (outbound tag is the numeric id).
+  string name = 16;
+}
+
 message HandlerConfigs {
   repeated HandlerConfig configs = 1;
 }

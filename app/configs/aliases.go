@@ -93,6 +93,7 @@ type (
 	HandlerConfigs         = outboundpb.HandlerConfigs
 	MuxConfig              = outboundpb.MuxConfig
 	OutboundConfig         = outboundpb.OutboundConfig
+	OutboundHandler        = outboundpb.OutboundHandler
 	OutboundHandlerConfig  = outboundpb.OutboundHandlerConfig
 )
 

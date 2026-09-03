@@ -97,16 +97,18 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 			} else {
 				err := fc.requireFeature(func(tester *tester.Tester,
 					db client.Db, handlerFactory *handlerfactory.HandlerFactory) error {
-					landHandlers := make([]*xsqlite.OutboundHandler, 0, len(selectorConfig.LandHandlers))
-					for _, landHandlerId := range selectorConfig.LandHandlers {
-						handler := db.GetHandler(int(landHandlerId))
-						if handler == nil {
-							return fmt.Errorf("land handler %d not found", landHandlerId)
-						}
-						landHandlers = append(landHandlers, handler)
+					landHandlers, err := selector.ResolveLandHandlers(db, selectorConfig.LandHandlers, cc.HandlerStore)
+					if err != nil {
+						return err
 					}
-					filter := selector.NewDbFilter(db, selectorConfig.GetFilter(),
-						landHandlers, handlerFactory)
+					var filter selector.Filter
+					if config.GetDbPath() == "" && config.GetServicePort() != 0 && runtime.GOOS == "android" {
+						filter = selector.NewDbOrOmFilter(db, selectorConfig.GetFilter(),
+							landHandlers, handlerFactory, cc.HandlerStore)
+					} else {
+						filter = selector.NewDbFilter(db, selectorConfig.GetFilter(),
+							landHandlers, handlerFactory)
+					}
 					selectors.AddSelector(selector.NewSelector(selector.SelectorConfig{
 						SelectorConfig:            selectorConfig,
 						CreateHandler:             handlerFactory,

@@ -173,7 +173,7 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 
 	// outbound
 	log.Debug().Msg("outbound")
-	_, err = buildOutbound(config.Outbound, builder, x)
+	_, err = buildOutbound(config, builder, x)
 	if err != nil {
 		return nil, err
 	}
