@@ -25,6 +25,8 @@ type RewriteDestinationHook struct {
 	DestinationOverride []string
 	FakeDns             i.FakeDnsPool
 	Dns                 i.IPResolver
+	ChangeDomainToIpv6  bool
+	ChangeDomainToIpv4  bool
 }
 
 func (p *RewriteDestinationHook) BeforeHandlerSelection(ctx context.Context, si *session.Info,
@@ -69,6 +71,18 @@ func (p *RewriteDestinationHook) BeforeHandlerSelection(ctx context.Context, si 
 		log.Ctx(ctx).Debug().Str("original dest", si.Target.String()).
 			Str("sniff domain", si.SniffedDomain).Msg("replace destination")
 		si.Target.Address = mynet.ParseAddress(si.SniffedDomain)
+	}
+
+	if p.ChangeDomainToIpv6 && si.Target.Address.Family().IsDomain() {
+		ips, err := p.Dns.LookupIPv6(ctx, si.Target.Address.Domain())
+		if err == nil && len(ips) > 0 {
+			si.Target.Address = mynet.IPAddress(ips[0])
+		}
+	} else if p.ChangeDomainToIpv4 && si.Target.Address.Family().IsDomain() {
+		ips, err := p.Dns.LookupIPv4(ctx, si.Target.Address.Domain())
+		if err == nil && len(ips) > 0 {
+			si.Target.Address = mynet.IPAddress(ips[0])
+		}
 	}
 
 	if pc, ok := rw.(udp.PacketReaderWriter); ok && fd != nil && p.Dns != nil {

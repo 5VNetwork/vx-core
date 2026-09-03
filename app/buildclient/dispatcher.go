@@ -4,7 +4,7 @@
 package buildclient
 
 import (
-	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/5vnetwork/vx-core/app/client"
@@ -21,7 +21,6 @@ import (
 	"github.com/5vnetwork/vx-core/app/sniff"
 	"github.com/5vnetwork/vx-core/app/tester"
 	"github.com/5vnetwork/vx-core/app/userlogger"
-	"github.com/5vnetwork/vx-core/app/xsqlite"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/i"
 )
@@ -47,6 +46,8 @@ func Handler(config *configs.TmConfig, fc *Builder, cc *client.Client) error {
 	rewriteDestination := &hooks.RewriteDestinationHook{
 		DestinationOverride: config.GetDispatcher().GetDestinationOverride(),
 		Sniff:               config.GetDispatcher().GetSniff(),
+		ChangeDomainToIpv6:  config.GetDispatcher().GetChangeDomainToIpv6(),
+		ChangeDomainToIpv4:  config.GetDispatcher().GetChangeDomainToIpv4(),
 		Sniffer: sniff.NewSniffer(sniff.SniffSetting{
 			Interval: 10 * time.Millisecond,
 			Sniffers: []sniff.ProtocolSnifferWithNetwork{

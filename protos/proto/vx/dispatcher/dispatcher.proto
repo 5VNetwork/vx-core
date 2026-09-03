@@ -18,4 +18,8 @@ message DispatcherConfig {
   uint32 fallback_timeout = 8;
   // Whether to meter session stats
   bool session_stats = 9;
+  // Change domain to ipv6.
+  bool change_domain_to_ipv6 = 10;
+  // Change domain to ipv4.
+  bool change_domain_to_ipv4 = 11;
 }
