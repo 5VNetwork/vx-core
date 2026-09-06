@@ -40,7 +40,7 @@ func (d *Dispatcher) Relay(ctx context.Context, info *session.Info,
 			if closeWriter, ok := right.(buf.CloseWriter); ok {
 				closeWriter.CloseWrite()
 			}
-			if activityChecker != nil {
+			if activityChecker != nil && d.TimeoutSetting.DownLinkOnlyTimeout() != 0 {
 				activityChecker.SetTimeout(d.TimeoutSetting.DownLinkOnlyTimeout())
 			}
 		}
@@ -57,7 +57,7 @@ func (d *Dispatcher) Relay(ctx context.Context, info *session.Info,
 			if closeWriter, ok := left.(buf.CloseWriter); ok {
 				closeWriter.CloseWrite()
 			}
-			if activityChecker != nil {
+			if activityChecker != nil && d.TimeoutSetting.UpLinkOnlyTimeout() != 0 {
 				activityChecker.SetTimeout(d.TimeoutSetting.UpLinkOnlyTimeout())
 			}
 		}

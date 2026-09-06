@@ -209,7 +209,9 @@ func (h *Handler) Process(ctx context.Context, conn net.Conn) error {
 	serverWriter := iLink // .(*pipe.Writer)
 	trafficState := vless.NewTrafficState(account.ID.Bytes())
 	postRequest := func() error {
-		defer timer.SetTimeout(h.policyManager.DownLinkOnlyTimeout())
+		if h.policyManager.DownLinkOnlyTimeout() != 0 {
+			defer timer.SetTimeout(h.policyManager.DownLinkOnlyTimeout())
+		}
 
 		// default: clientReader := reader
 		clientReader := encoding.DecodeBodyAddons(reader, request, requestAddons)
@@ -233,7 +235,9 @@ func (h *Handler) Process(ctx context.Context, conn net.Conn) error {
 	}
 
 	getResponse := func() error {
-		defer timer.SetTimeout(h.policyManager.UpLinkOnlyTimeout())
+		if h.policyManager.UpLinkOnlyTimeout() != 0 {
+			defer timer.SetTimeout(h.policyManager.UpLinkOnlyTimeout())
+		}
 
 		bufferWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
 		if err := encoding.EncodeResponseHeader(bufferWriter, request, responseAddons); err != nil {

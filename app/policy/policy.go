@@ -95,8 +95,8 @@ var DefaultTimeout = Timeout{
 	tcpConnectionIdleTimeout: time.Second * 60, // 0 means no timeout
 	udpIdleTimeout:           time.Second * 120,
 	dnsIdleTimeout:           time.Second * 16,
-	upLinkOnlyTimeout:        time.Second * 5,
-	downLinkOnlyTimeout:      time.Second * 2,
+	upLinkOnlyTimeout:        0,
+	downLinkOnlyTimeout:      0,
 }
 
 type UserBufferPolicy map[uint32]int32

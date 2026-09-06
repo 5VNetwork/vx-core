@@ -28,8 +28,10 @@ type TimeoutReaderWriter struct {
 }
 
 func (w *TimeoutReaderWriter) CloseWrite() error {
-	log.Ctx(w.Ctx).Debug().Msg("setting uplink only timeout")
-	w.Idle.SetTimeout(w.Timeout.UpLinkOnlyTimeout())
+	if w.Timeout.UpLinkOnlyTimeout() != 0 {
+		log.Ctx(w.Ctx).Debug().Msg("setting uplink only timeout")
+		w.Idle.SetTimeout(w.Timeout.UpLinkOnlyTimeout())
+	}
 	return w.ReaderWriter.CloseWrite()
 }
 
@@ -45,8 +47,10 @@ func (w *TimeoutReaderWriter) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	m, err := w.ReaderWriter.ReadMultiBuffer()
 	if err != nil {
 		if errors.Is(err, io.EOF) {
-			log.Ctx(w.Ctx).Debug().Msg("setting downlink only timeout")
-			w.Idle.SetTimeout(w.Timeout.DownLinkOnlyTimeout())
+			if w.Timeout.DownLinkOnlyTimeout() != 0 {
+				log.Ctx(w.Ctx).Debug().Msg("setting downlink only timeout")
+				w.Idle.SetTimeout(w.Timeout.DownLinkOnlyTimeout())
+			}
 		}
 	}
 	return m, err
@@ -61,7 +65,10 @@ type TimeoutDeadlineRW struct {
 }
 
 func (w *TimeoutDeadlineRW) CloseWrite() error {
-	w.Idle.SetTimeout(w.Timeout.UpLinkOnlyTimeout())
+	if w.Timeout.UpLinkOnlyTimeout() != 0 {
+		log.Ctx(w.Ctx).Debug().Msg("setting uplink only timeout")
+		w.Idle.SetTimeout(w.Timeout.UpLinkOnlyTimeout())
+	}
 	return w.DeadlineRW.CloseWrite()
 }
 
@@ -77,7 +84,10 @@ func (w *TimeoutDeadlineRW) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	m, err := w.DeadlineRW.ReadMultiBuffer()
 	if err != nil {
 		if errors.Is(err, io.EOF) {
-			w.Idle.SetTimeout(w.Timeout.DownLinkOnlyTimeout())
+			if w.Timeout.DownLinkOnlyTimeout() != 0 {
+				log.Ctx(w.Ctx).Debug().Msg("setting downlink only timeout")
+				w.Idle.SetTimeout(w.Timeout.DownLinkOnlyTimeout())
+			}
 		}
 	}
 	return m, err

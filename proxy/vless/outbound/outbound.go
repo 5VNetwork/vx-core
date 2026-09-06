@@ -322,7 +322,9 @@ func (h *Handler) handle(ctx context.Context, dst net.Destination, rw buf.Reader
 	}
 
 	postRequest := func() error {
-		defer timer.SetTimeout(h.TimeoutSetting.DownLinkOnlyTimeout())
+		if h.TimeoutSetting.DownLinkOnlyTimeout() != 0 {
+			defer timer.SetTimeout(h.TimeoutSetting.DownLinkOnlyTimeout())
+		}
 
 		bufferWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
 		if err := encoding.EncodeRequestHeader(bufferWriter, request, requestAddons); err != nil {
@@ -382,7 +384,9 @@ func (h *Handler) handle(ctx context.Context, dst net.Destination, rw buf.Reader
 	}
 
 	getResponse := func() error {
-		defer timer.SetTimeout(h.TimeoutSetting.UpLinkOnlyTimeout())
+		if h.TimeoutSetting.UpLinkOnlyTimeout() != 0 {
+			defer timer.SetTimeout(h.TimeoutSetting.UpLinkOnlyTimeout())
+		}
 
 		responseAddons, err := encoding.DecodeResponseHeader(conn, request)
 		if err != nil {
