@@ -14,7 +14,6 @@ import (
 
 	configs "github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/app/geo"
-	"github.com/5vnetwork/vx-core/app/util/downloader"
 	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
@@ -23,7 +22,6 @@ import (
 // GeoSync runs periodic HTTPS downloads for geo data files (cron from GeoRemoteFile).
 type GeoSync struct {
 	geo *geo.Geo
-	dl  *downloader.Downloader
 
 	mu         sync.Mutex
 	geoConfig  atomic.Pointer[configs.GeoConfig]
@@ -114,10 +112,6 @@ func (s *GeoSync) stopTasksLocked() {
 }
 
 func (s *GeoSync) startTasksLocked() {
-	if s.dl == nil {
-		log.Warn().Msg("geosync: no downloader; periodic geo URL refresh disabled")
-		return
-	}
 	c := cron.New()
 	has := false
 	for _, j := range s.jobs {
