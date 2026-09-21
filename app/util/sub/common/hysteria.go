@@ -99,6 +99,9 @@ func ParseHysteriaFromLink(link string) (*configs.OutboundHandlerConfig, error) 
 		},
 		Bandwidth: &configs.BandwidthConfig{},
 	}
+	if query.Get("auth") != "" {
+		hysteriaConfig.Auth = query.Get("auth")
+	}
 	if query.Get("echConfig") != "" {
 		echConfig, err := base64.StdEncoding.DecodeString(query.Get("echConfig"))
 		if err != nil {
