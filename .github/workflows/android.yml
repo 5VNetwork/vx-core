@@ -38,9 +38,11 @@ jobs:
           java-version: "17"
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        # with:
-        #   cmdline-tools-version: 11479570
+        uses: android-actions/setup-android@v4
+        with:
+          # Google no longer serves the obsolete `tools` package; v3 default
+          # (`tools platform-tools`) fails with "Failed to find package 'tools'".
+          packages: platform-tools
 
       - name: Cache Android SDK
         uses: actions/cache@v4
@@ -66,9 +68,7 @@ jobs:
         run: sdkmanager --list | grep "ndk;" || true
 
       - name: Install NDK
-        run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager --install "ndk;28.2.13676358"
+        run: sdkmanager "ndk;28.2.13676358"
 
       - name: Install gomobile
         run: |
