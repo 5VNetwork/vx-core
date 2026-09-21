@@ -19,14 +19,14 @@ import (
 func DialerFactory(config *configs.TmConfig, fc *Builder, client *client.Client) error {
 	// dialer factory
 	if config.GetDialerFactory() != nil {
-		err := fc.requireFeature(func(bdl i.DefaultInterfaceInfo, ipResolver i.IPResolver) error {
+		err := fc.requireFeature(func(bdl i.DefaultInterfaceInfo) error {
 			opt := transport.DialerFactoryOption{
 				BindToDefaultNIC:        config.GetDialerFactory().GetShouldBindDevice(),
 				DefaultInterfaceMonitor: bdl,
 				DialTimeout:             time.Duration(config.GetDialerFactory().GetDialTimeout()) * time.Second,
 			}
 			if config.GetDialerFactory().GetResolveDomain() {
-				opt.IpResolver = ipResolver
+				opt.IpResolver = client.IPResolver
 			}
 			if config.GetDialerFactory().GetShouldBindDevice() && runtime.GOOS == "android" {
 				fdFunc := fc.getFeature(reflect.TypeOf((*transport.FdFunc)(nil)).Elem())

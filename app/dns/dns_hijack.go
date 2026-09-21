@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"sync"
 	"sync/atomic"
 
 	"github.com/5vnetwork/vx-core/common/net"
@@ -14,7 +15,9 @@ import (
 )
 
 type HijackDns struct {
-	local    *StaticDnsServer
+	local *StaticDnsServer
+
+	ruleLock sync.RWMutex
 	dnsRules []*DnsRule
 
 	done          *done.Instance
@@ -43,6 +46,17 @@ func (dsp *HijackDns) Start() error {
 		}
 	}
 	return nil
+}
+
+func (dsp *HijackDns) UpdateDnsRules(rules []*DnsRule) {
+	dsp.ruleLock.Lock()
+	defer dsp.ruleLock.Unlock()
+	dsp.dnsRules = rules
+	for _, rule := range rules {
+		if dnsConn, ok := rule.dnsServer.(DnsConn); ok {
+			go dsp.handleConnResponse(dnsConn)
+		}
+	}
 }
 
 func (dsp *HijackDns) Close() error {
@@ -94,7 +108,11 @@ func (d *HijackDns) HandleQuery(ctx context.Context, msg *DnsMsgMeta, tcp bool) 
 		}
 	}
 
-	for _, dnsRule := range d.dnsRules {
+	d.ruleLock.RLock()
+	rules := d.dnsRules
+	d.ruleLock.RUnlock()
+
+	for _, dnsRule := range rules {
 		if isFakeDns(dnsRule.dnsServer) && !d.enableFakeDns.Load() {
 			continue
 		}
@@ -170,7 +188,11 @@ func (dsp *HijackDns) dispatchWorker() {
 				}
 			}
 			found := false
-			for _, rule := range dsp.dnsRules {
+			dsp.ruleLock.RLock()
+			rules := dsp.dnsRules
+			dsp.ruleLock.RUnlock()
+
+			for _, rule := range rules {
 				if isFakeDns(rule.dnsServer) && !dsp.enableFakeDns.Load() {
 					continue
 				}

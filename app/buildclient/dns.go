@@ -5,9 +5,7 @@ package buildclient
 
 import (
 	"fmt"
-	"reflect"
 	"runtime"
-	"time"
 
 	"github.com/5vnetwork/vx-core/app/client"
 	cdns "github.com/5vnetwork/vx-core/app/create/dns"
@@ -17,8 +15,6 @@ import (
 	"github.com/5vnetwork/vx-core/app/outbound"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/transport"
-	"github.com/5vnetwork/vx-core/transport/dlhelper"
-	"github.com/rs/zerolog/log"
 
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/i"
@@ -44,109 +40,27 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 	// static
 	staticDnsServer := idns.NewStaticDnsServer(dnsConfig.GetRecords(),
 		dnsConfig.GetRecordStrings()...)
+	client.StaticDnsServer = staticDnsServer
 
 	// dns servers
 	if len(dnsConfig.DnsServers) > 0 {
 		err := fc.requireFeature(func(h *dispatcher.Dispatcher, gh i.GeoHelper,
-			om *outbound.Manager, dii i.DefaultInterfaceInfo) error {
+			om *outbound.Manager, dii i.DefaultInterfaceInfo, df transport.DialerFactory) error {
 			internalDns := &idns.InternalDns{
 				StaticDns: staticDnsServer,
 			}
-			client.IPResolver = internalDns
-			client.EchResolver = internalDns
-			if err := fc.addComponent(internalDns); err != nil {
+			client.IPResolver.UpdateIPResolver(internalDns)
+			client.EchResolver.UpdateECHResolver(internalDns)
+
+			dailer, err := df.GetDialer(&transport.Config{})
+			if err != nil {
 				return err
 			}
-
-			var dailer i.Dialer
-			if config.GetDialerFactory().GetShouldBindDevice() {
-				if runtime.GOOS == "android" {
-					fdFunc := fc.getFeature(reflect.TypeOf((*transport.FdFunc)(nil)).Elem())
-					dailer = &dlhelper.SocketSetting{
-						FdFunc: fdFunc.(transport.FdFunc),
-					}
-				} else {
-					dailer = transport.NewBindToDefaultNICDialer(dii, &dlhelper.SocketSetting{})
-				}
-			} else {
-				dailer = transport.DefaultDialer
-			}
 			// dns
-			var dnsServers []idns.DnsServer
-			dnsServerMap := make(map[string]idns.DnsServer)
-			for _, dsConfig := range config.Dns.DnsServers {
-				ds, err := cdns.NewDnsServer(dsConfig, h, ipToDomain, dii, dailer,
-					internalDns, gh)
-				if err != nil {
-					return err
-				}
-				log.Info().Str("name", dsConfig.Name).Msg("new dns server")
-				dnsServers = append(dnsServers, ds)
-				dnsServerMap[dsConfig.Name] = ds
+			dnsServers, dnsServerMap, err := cdns.GetDnsServers(dnsConfig, internalDns, gh, dii, dailer, ipToDomain, h)
+			if err != nil {
+				return err
 			}
-			createdConcurrent := make(map[string]bool, len(dnsConfig.ConcurrentDnsServers))
-			createdSerial := make(map[string]bool, len(dnsConfig.SerialDnsServers))
-			remaining := len(dnsConfig.ConcurrentDnsServers) + len(dnsConfig.SerialDnsServers)
-			for remaining > 0 {
-				progressed := false
-
-				for _, concurrentDnsServer := range dnsConfig.ConcurrentDnsServers {
-					if createdConcurrent[concurrentDnsServer.Name] {
-						continue
-					}
-					servers := make([]idns.DnsServer, 0, len(concurrentDnsServer.DnsServers))
-					ready := true
-					for _, name := range concurrentDnsServer.DnsServers {
-						ds, ok := dnsServerMap[name]
-						if !ok {
-							ready = false
-							break
-						}
-						servers = append(servers, ds)
-					}
-					if !ready {
-						continue
-					}
-					concurrentDns := idns.NewConcurrentDnsServers(concurrentDnsServer.Name, servers...)
-					dnsServers = append(dnsServers, concurrentDns)
-					dnsServerMap[concurrentDnsServer.Name] = concurrentDns
-					createdConcurrent[concurrentDnsServer.Name] = true
-					remaining--
-					progressed = true
-				}
-
-				for _, serialDnsServer := range dnsConfig.SerialDnsServers {
-					if createdSerial[serialDnsServer.Name] {
-						continue
-					}
-					servers := make([]idns.DnsServer, 0, len(serialDnsServer.DnsServers))
-					ready := true
-					for _, name := range serialDnsServer.DnsServers {
-						ds, ok := dnsServerMap[name]
-						if !ok {
-							ready = false
-							break
-						}
-						servers = append(servers, ds)
-					}
-					if !ready {
-						continue
-					}
-					serialDns := idns.NewSerialDnsServers(
-						serialDnsServer.Name,
-						time.Duration(serialDnsServer.Interval)*time.Second, servers...)
-					dnsServers = append(dnsServers, serialDns)
-					dnsServerMap[serialDnsServer.Name] = serialDns
-					createdSerial[serialDnsServer.Name] = true
-					remaining--
-					progressed = true
-				}
-
-				if !progressed {
-					return fmt.Errorf("unable to resolve dns server dependencies for concurrent/serial dns servers")
-				}
-			}
-
 			// dns hijack
 			{
 				var dnsRules []*idns.DnsRule
@@ -166,55 +80,25 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 				hijackDnsToDnsServer := &idns.HijackDnsToDnsServer{
 					HijackDns: dns,
 				}
-				dnsServers = append(dnsServers, hijackDnsToDnsServer)
 				dnsServerMap["Hijack"] = hijackDnsToDnsServer
 				client.Dns = dns
-				common.Must(fc.addFeature(dns))
+				common.Must(fc.addComponent(dns))
 				om.AddHandlers(idns.NewHandlerV().WithTag("dns").WithDns(dns))
 			}
 
 			// resolver used in dialing
-			{
-				var servers []idns.DnsServer
-				for _, name := range config.GetDns().GetInternalResolver().GetDnsServers() {
-					if ds, ok := dnsServerMap[name]; ok {
-						servers = append(servers, ds)
-					} else {
-						return fmt.Errorf("dns server %s not found", name)
-					}
-				}
-				if len(servers) == 0 {
-					resolver := idns.DefaultCfResolver()
-					internalDns.Resolver = resolver
-				} else {
-					resolver := idns.NewDnsServerToResolver(
-						idns.DnsServerToResolverOption{DnsServers: servers,
-							Interval: time.Duration(config.Dns.InternalResolver.Interval) * time.Second})
-					internalDns.Resolver = resolver
-				}
+			err = cdns.InternalDns(internalDns, config.GetDns().GetInternalResolver(), dnsServerMap)
+			if err != nil {
+				return err
 			}
 
 			// resolver used to lookup request domains in router and dispatcher
-			{
-				var servers []idns.DnsServer
-				for _, name := range config.GetDns().GetRequestDomainResolver().GetDnsServers() {
-					if ds, ok := dnsServerMap[name]; ok {
-						servers = append(servers, ds)
-					} else {
-						return fmt.Errorf("dns server %s not found", name)
-					}
-				}
-				if len(servers) == 0 {
-					resolver := idns.DefaultCfResolver()
-					client.IPResolverForRequestAddress = resolver
-				} else {
-					resolver := idns.NewDnsServerToResolver(
-						idns.DnsServerToResolverOption{DnsServers: servers,
-							Interval: time.Duration(config.Dns.RequestDomainResolver.Interval) * time.Second})
-					client.IPResolverForRequestAddress = resolver
-				}
+			err = cdns.PopulateResolverForRequestAddress(client,
+				config.GetDns().GetRequestDomainResolver(), dnsServerMap)
+			if err != nil {
+				return err
 			}
-			//
+			// all dns servers
 			allDnsServers := idns.NewAllDnsServers(dnsServers)
 			client.AllDnsServers = allDnsServers
 			if err := fc.addComponent(allDnsServers); err != nil {
@@ -227,9 +111,9 @@ func NewDNS(config *configs.TmConfig, fc *Builder, client *client.Client) error 
 			return err
 		}
 	} else {
-		client.IPResolverForRequestAddress = &dns.GoDnsResolver{}
-		client.IPResolver = &dns.GoDnsResolver{}
-		client.EchResolver = dns.DefaultCfResolver()
+		client.IPResolverForRequestAddress.UpdateIPResolver(&dns.GoDnsResolver{})
+		client.IPResolver.UpdateIPResolver(&dns.GoDnsResolver{})
+		client.EchResolver.UpdateECHResolver(dns.DefaultCfResolver())
 		client.Dns = idns.NewHijackDns(staticDnsServer, nil, false)
 		allDnsServers := idns.NewAllDnsServers(nil)
 		client.AllDnsServers = allDnsServers

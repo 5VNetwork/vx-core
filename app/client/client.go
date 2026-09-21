@@ -49,12 +49,13 @@ type Client struct {
 	Dns           *dns.HijackDns
 	AllDnsServers *dns.AllDnsServers
 	// used to resolve domains when dial, typically node address and domains of direct connection
-	IPResolver i.IPResolver
+	IPResolver *dns.IPResolverWrapper
 	// used to resolve ech config
-	EchResolver i.ECHResolver
+	EchResolver *dns.ECHResolverWrapper
 	// used to resolve domains of proxied connections, typically used for converting domain to real ip for udp connections
-	IPResolverForRequestAddress i.IPResolver
+	IPResolverForRequestAddress *dns.IPResolverWrapper
 	IPToDomain                  *dns.IPToDomain
+	StaticDnsServer             *dns.StaticDnsServer
 	HandlerFactory              i.HandlerFactory
 }
 

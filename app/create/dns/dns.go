@@ -7,6 +7,8 @@ import (
 	"sort"
 	"time"
 
+	"github.com/5vnetwork/vx-core/app/client"
+	"github.com/5vnetwork/vx-core/app/dispatcher"
 	"github.com/5vnetwork/vx-core/app/dns"
 	idns "github.com/5vnetwork/vx-core/app/dns"
 	"github.com/5vnetwork/vx-core/app/geo"
@@ -21,6 +23,130 @@ import (
 	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/i"
 )
+
+func GetDnsServers(dnsConfig *configs.DnsConfig, internalDns *idns.InternalDns,
+	gh i.GeoHelper, dii i.DefaultInterfaceInfo, dailer i.Dialer,
+	ipToDomain *idns.IPToDomain, h *dispatcher.Dispatcher) ([]idns.DnsServer, map[string]idns.DnsServer, error) {
+	var dnsServers []idns.DnsServer
+	dnsServerMap := make(map[string]idns.DnsServer)
+	for _, dsConfig := range dnsConfig.DnsServers {
+		ds, err := NewDnsServer(dsConfig, h, ipToDomain, dii, dailer,
+			internalDns, gh)
+		if err != nil {
+			return nil, nil, err
+		}
+		log.Info().Str("name", dsConfig.Name).Msg("new dns server")
+		dnsServers = append(dnsServers, ds)
+		dnsServerMap[dsConfig.Name] = ds
+	}
+	createdConcurrent := make(map[string]bool, len(dnsConfig.ConcurrentDnsServers))
+	createdSerial := make(map[string]bool, len(dnsConfig.SerialDnsServers))
+	remaining := len(dnsConfig.ConcurrentDnsServers) + len(dnsConfig.SerialDnsServers)
+	for remaining > 0 {
+		progressed := false
+
+		for _, concurrentDnsServer := range dnsConfig.ConcurrentDnsServers {
+			if createdConcurrent[concurrentDnsServer.Name] {
+				continue
+			}
+			servers := make([]idns.DnsServer, 0, len(concurrentDnsServer.DnsServers))
+			ready := true
+			for _, name := range concurrentDnsServer.DnsServers {
+				ds, ok := dnsServerMap[name]
+				if !ok {
+					ready = false
+					break
+				}
+				servers = append(servers, ds)
+			}
+			if !ready {
+				continue
+			}
+			concurrentDns := idns.NewConcurrentDnsServers(concurrentDnsServer.Name, servers...)
+			dnsServers = append(dnsServers, concurrentDns)
+			dnsServerMap[concurrentDnsServer.Name] = concurrentDns
+			createdConcurrent[concurrentDnsServer.Name] = true
+			remaining--
+			progressed = true
+		}
+
+		for _, serialDnsServer := range dnsConfig.SerialDnsServers {
+			if createdSerial[serialDnsServer.Name] {
+				continue
+			}
+			servers := make([]idns.DnsServer, 0, len(serialDnsServer.DnsServers))
+			ready := true
+			for _, name := range serialDnsServer.DnsServers {
+				ds, ok := dnsServerMap[name]
+				if !ok {
+					ready = false
+					break
+				}
+				servers = append(servers, ds)
+			}
+			if !ready {
+				continue
+			}
+			serialDns := idns.NewSerialDnsServers(
+				serialDnsServer.Name,
+				time.Duration(serialDnsServer.Interval)*time.Second, servers...)
+			dnsServers = append(dnsServers, serialDns)
+			dnsServerMap[serialDnsServer.Name] = serialDns
+			createdSerial[serialDnsServer.Name] = true
+			remaining--
+			progressed = true
+		}
+
+		if !progressed {
+			return nil, nil, fmt.Errorf("unable to resolve dns server dependencies for concurrent/serial dns servers")
+		}
+	}
+	return dnsServers, dnsServerMap, nil
+}
+
+func InternalDns(internalDns *idns.InternalDns, config *configs.ResolverConfig,
+	dnsServerMap map[string]idns.DnsServer) error {
+	var servers []idns.DnsServer
+	for _, name := range config.DnsServers {
+		if ds, ok := dnsServerMap[name]; ok {
+			servers = append(servers, ds)
+		} else {
+			return fmt.Errorf("dns server %s not found", name)
+		}
+	}
+	if len(servers) == 0 {
+		resolver := idns.DefaultCfResolver()
+		internalDns.Resolver = resolver
+	} else {
+		resolver := idns.NewDnsServerToResolver(
+			idns.DnsServerToResolverOption{DnsServers: servers,
+				Interval: time.Duration(config.Interval) * time.Second})
+		internalDns.Resolver = resolver
+	}
+	return nil
+}
+
+func PopulateResolverForRequestAddress(client *client.Client, config *configs.ResolverConfig,
+	dnsServerMap map[string]idns.DnsServer) error {
+	var servers []idns.DnsServer
+	for _, name := range config.DnsServers {
+		if ds, ok := dnsServerMap[name]; ok {
+			servers = append(servers, ds)
+		} else {
+			return fmt.Errorf("dns server %s not found", name)
+		}
+	}
+	if len(servers) == 0 {
+		resolver := idns.DefaultCfResolver()
+		client.IPResolverForRequestAddress.UpdateIPResolver(resolver)
+	} else {
+		resolver := idns.NewDnsServerToResolver(
+			idns.DnsServerToResolverOption{DnsServers: servers,
+				Interval: time.Duration(config.Interval) * time.Second})
+		client.IPResolverForRequestAddress.UpdateIPResolver(resolver)
+	}
+	return nil
+}
 
 func NewDnsServer(config *configs.DnsServerConfig, handler i.Handler,
 	ipToDomain *idns.IPToDomain, defaultNicInfo i.DefaultInterfaceInfo,

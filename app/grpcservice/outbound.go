@@ -8,7 +8,12 @@ import (
 	"fmt"
 	"runtime"
 
+	vxdns "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/dns"
 	vxrouter "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/router"
+	cdns "github.com/5vnetwork/vx-core/app/create/dns"
+	"github.com/5vnetwork/vx-core/app/dns"
+	idns "github.com/5vnetwork/vx-core/app/dns"
+
 	"github.com/5vnetwork/vx-core/app/router"
 	"github.com/5vnetwork/vx-core/app/router/selector"
 	"github.com/5vnetwork/vx-core/app/xsqlite"
@@ -35,13 +40,85 @@ func (s *GrpcService) ChangeRoutingMode(ctx context.Context, in *ChangeRoutingMo
 		return nil, fmt.Errorf("failed to create geo: %w", err)
 	}
 	log.Debug().Msg("geo updated")
+
+	err = s.updateDns(in.DnsConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update dns: %w", err)
+	}
+	log.Debug().Msg("dns updated")
+
 	if err := s.updateRouter(in.RouterConfig); err != nil {
 		return nil, fmt.Errorf("failed to updateRouter: %w", err)
 	}
-
 	log.Debug().Msg("routing mode changed")
 	return &ChangeRoutingModeResponse{}, nil
 }
+
+func (s *GrpcService) updateDns(dnsConfig *vxdns.DnsConfig) error {
+	client := s.Client
+	if len(dnsConfig.DnsServers) > 0 {
+		internalDns := &idns.InternalDns{
+			StaticDns: client.StaticDnsServer,
+		}
+
+		dailer, err := client.DialerFactory.GetDialer(nil)
+		if err != nil {
+			return err
+		}
+		dnsServers, dnsServerMap, err := cdns.GetDnsServers(dnsConfig,
+			internalDns, client.Geo, client.NetMon,
+			dailer, client.IPToDomain, client.Dispatcher)
+		if err != nil {
+			return err
+		}
+
+		client.AllDnsServers.UpdateDnsServers(dnsServers)
+
+		// dns hijack
+		{
+			var dnsRules []*idns.DnsRule
+			for _, dnsRule := range dnsConfig.GetDnsHijack().GetDnsRules() {
+				if ds, ok := dnsServerMap[dnsRule.DnsServerName]; ok {
+					dr, err := cdns.NewDnsRule(dnsRule, ds, client.Geo)
+					if err != nil {
+						return err
+					}
+					dnsRules = append(dnsRules, dr)
+				} else {
+					return fmt.Errorf("dns server %s not found", dnsRule.DnsServerName)
+				}
+			}
+			client.Dns.UpdateDnsRules(dnsRules)
+			hijackDnsToDnsServer := &idns.HijackDnsToDnsServer{
+				HijackDns: client.Dns,
+			}
+			dnsServerMap["Hijack"] = hijackDnsToDnsServer
+		}
+
+		err = cdns.InternalDns(internalDns, dnsConfig.GetInternalResolver(),
+			dnsServerMap)
+		if err != nil {
+			return err
+		}
+		client.IPResolver.UpdateIPResolver(internalDns)
+		client.EchResolver.UpdateECHResolver(internalDns)
+
+		err = cdns.PopulateResolverForRequestAddress(client,
+			dnsConfig.GetRequestDomainResolver(), dnsServerMap)
+		if err != nil {
+			return err
+		}
+	} else {
+		client.IPResolverForRequestAddress.UpdateIPResolver(&dns.GoDnsResolver{})
+		client.IPResolver.UpdateIPResolver(&dns.GoDnsResolver{})
+		client.EchResolver.UpdateECHResolver(dns.DefaultCfResolver())
+		client.Dns.UpdateDnsRules(nil)
+		client.AllDnsServers.UpdateDnsServers(nil)
+	}
+
+	return nil
+}
+
 func (s *GrpcService) updateRouter(config *vxrouter.RouterConfig) error {
 	newRouter, err := router.NewRouter(&router.RouterConfig{
 		RouterConfig:    config,

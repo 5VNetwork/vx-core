@@ -3,6 +3,7 @@ syntax = "proto3";
 package vx.grpcservice;
 
 import "vx/common/geo/geo.proto";
+import "vx/dns/dns.proto";
 import "vx/geo/geo.proto";
 import "vx/inbound/inbound.proto";
 import "vx/outbound/outbound.proto";
@@ -180,6 +181,7 @@ message CurrentOutboundResponse {
 message ChangeRoutingModeRequest {
   vx.router.RouterConfig router_config = 1;
   vx.geo.GeoConfig geo_config = 2;
+  vx.dns.DnsConfig dns_config = 3;
 }
 message ChangeRoutingModeResponse {}
 message ChangeSelectorRequest {

@@ -4,11 +4,19 @@
 package dns
 
 import (
+	"context"
+	"errors"
+	"sync"
+	"sync/atomic"
+
 	"github.com/5vnetwork/vx-core/common/net"
+	"github.com/5vnetwork/vx-core/i"
 	"github.com/miekg/dns"
+	"github.com/rs/zerolog/log"
 )
 
 type AllDnsServers struct {
+	lock       sync.RWMutex
 	dnsServers []DnsServer
 }
 
@@ -37,7 +45,28 @@ func (dsp *AllDnsServers) Close() error {
 	return nil
 }
 
+func (dsp *AllDnsServers) UpdateDnsServers(dnsServers []DnsServer) {
+	for _, dnsServer := range dnsServers {
+		if err := dnsServer.Start(); err != nil {
+			log.Fatal().Err(err).Msg("failed to start dns server")
+		}
+	}
+	dsp.lock.Lock()
+	oldDnsServers := dsp.dnsServers
+	dsp.dnsServers = dnsServers
+	dsp.lock.Unlock()
+
+	for _, dnsServer := range oldDnsServers {
+		if err := dnsServer.Close(); err != nil {
+			log.Warn().Err(err).Msg("failed to close dns server")
+		}
+	}
+}
+
 func (dsp *AllDnsServers) IsIPInIPPool(ip net.Address) bool {
+	dsp.lock.RLock()
+	defer dsp.lock.RUnlock()
+
 	for _, dnsServer := range dsp.dnsServers {
 		if isFakeDns(dnsServer) {
 			if fakeDns, ok := dnsServer.(*FakeDns); ok {
@@ -51,6 +80,9 @@ func (dsp *AllDnsServers) IsIPInIPPool(ip net.Address) bool {
 }
 
 func (dsp *AllDnsServers) GetDomainFromFakeDNS(ip net.Address) string {
+	dsp.lock.RLock()
+	defer dsp.lock.RUnlock()
+
 	for _, dnsServer := range dsp.dnsServers {
 		if isFakeDns(dnsServer) {
 			if fakeDns, ok := dnsServer.(*FakeDns); ok {
@@ -87,4 +119,76 @@ func addClientIP(msg *dns.Msg, clientIp net.IP) {
 	}
 	o.Option = append(o.Option, subnet)
 	msg.Extra = append(msg.Extra, o)
+}
+
+type IPResolverWrapper struct {
+	atomic.Value
+}
+
+func (r *IPResolverWrapper) GetIPResolver() i.IPResolver {
+	resolver := r.Value.Load()
+	if resolver == nil {
+		return nil
+	}
+	return resolver.(i.IPResolver)
+}
+
+func (r *IPResolverWrapper) UpdateIPResolver(resolver i.IPResolver) {
+	r.Value.Store(resolver)
+}
+
+func (r *IPResolverWrapper) LookupIP(ctx context.Context, domain string) ([]net.IP, error) {
+	resolver := r.Value.Load()
+	if resolver == nil {
+		return nil, errors.New("ip resolver not found")
+	}
+	return resolver.(i.IPResolver).LookupIP(ctx, domain)
+}
+
+func (r *IPResolverWrapper) LookupIPv4(ctx context.Context, domain string) ([]net.IP, error) {
+	resolver := r.Value.Load()
+	if resolver == nil {
+		return nil, errors.New("ip resolver not found")
+	}
+	return resolver.(i.IPResolver).LookupIPv4(ctx, domain)
+}
+
+func (r *IPResolverWrapper) LookupIPv6(ctx context.Context, domain string) ([]net.IP, error) {
+	resolver := r.Value.Load()
+	if resolver == nil {
+		return nil, errors.New("ip resolver not found")
+	}
+	return resolver.(i.IPResolver).LookupIPv6(ctx, domain)
+}
+
+func (r *IPResolverWrapper) LookupIPSpeed(ctx context.Context, domain string) ([]net.IP, error) {
+	resolver := r.Value.Load()
+	if resolver == nil {
+		return nil, errors.New("ip resolver not found")
+	}
+	return resolver.(i.IPResolver).LookupIPSpeed(ctx, domain)
+}
+
+type ECHResolverWrapper struct {
+	atomic.Value
+}
+
+func (r *ECHResolverWrapper) GetECHResolver() i.ECHResolver {
+	resolver := r.Value.Load()
+	if resolver == nil {
+		return nil
+	}
+	return resolver.(i.ECHResolver)
+}
+
+func (r *ECHResolverWrapper) UpdateECHResolver(resolver i.ECHResolver) {
+	r.Value.Store(resolver)
+}
+
+func (r *ECHResolverWrapper) LookupECH(ctx context.Context, domain string) ([]byte, error) {
+	resolver := r.Value.Load()
+	if resolver == nil {
+		return nil, errors.New("ech resolver not found")
+	}
+	return resolver.(i.ECHResolver).LookupECH(ctx, domain)
 }

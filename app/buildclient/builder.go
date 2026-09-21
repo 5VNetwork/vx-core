@@ -71,8 +71,11 @@ func NewX(config *vx.TmConfig, opts ...Option) (*client.Client, error) {
 	}
 
 	x := &client.Client{
-		Components: &common.Components{},
-		OutStats:   outboundstats.NewOutStats(),
+		Components:                  &common.Components{},
+		OutStats:                    outboundstats.NewOutStats(),
+		IPResolver:                  &dns.IPResolverWrapper{},
+		EchResolver:                 &dns.ECHResolverWrapper{},
+		IPResolverForRequestAddress: &dns.IPResolverWrapper{},
 	}
 	builder.addComponent(x.OutStats)
 

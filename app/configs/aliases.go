@@ -30,6 +30,7 @@ type (
 // DNS
 type (
 	DnsConfig                      = dnspb.DnsConfig
+	ResolverConfig                 = dnspb.Resolver
 	DnsRuleConfig                  = dnspb.DnsRuleConfig
 	DnsHijackConfig                = dnspb.DnsHijackConfig
 	DnsServerConfig                = dnspb.DnsServerConfig
