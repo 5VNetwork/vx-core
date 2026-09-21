@@ -30,23 +30,26 @@ func OpenSharedFile(path string) (*gorm.DB, error) {
 }
 
 func configureSharedFile(db *gorm.DB) error {
+	if runtime.GOOS == "android" {
+		return nil
+	}
 	if err := db.Exec("PRAGMA journal_mode = WAL").Error; err != nil {
 		log.Warn().Err(err).Msg("failed to enable WAL journal mode")
 	}
 
-	sqlDB, err := db.DB()
-	if err != nil {
-		return fmt.Errorf("get sql.DB: %w", err)
-	}
+	// sqlDB, err := db.DB()
+	// if err != nil {
+	// 	return fmt.Errorf("get sql.DB: %w", err)
+	// }
 
-	if runtime.GOOS == "android" {
-		// One long-lived connection: avoid open/close churn that drops locks
-		// held by the Dart-side SQLite library in the same process.
-		sqlDB.SetMaxOpenConns(1)
-		sqlDB.SetMaxIdleConns(1)
-		sqlDB.SetConnMaxLifetime(0)
-		sqlDB.SetConnMaxIdleTime(0)
-	}
+	// if runtime.GOOS == "android" {
+	// 	// One long-lived connection: avoid open/close churn that drops locks
+	// 	// held by the Dart-side SQLite library in the same process.
+	// 	sqlDB.SetMaxOpenConns(1)
+	// 	sqlDB.SetMaxIdleConns(1)
+	// 	sqlDB.SetConnMaxLifetime(0)
+	// 	sqlDB.SetConnMaxIdleTime(0)
+	// }
 	return nil
 }
 
