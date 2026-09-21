@@ -4,6 +4,7 @@
 package tunset
 
 import (
+	"runtime"
 	"sync"
 
 	i "github.com/5vnetwork/vx-core/i"
@@ -58,13 +59,19 @@ func (t *Tun6FollowsDefaultNIC) OnDefaultInterfaceChanged() {
 		return
 	}
 
-	defaultNICHasGlobalIPv6, err := t.DefaultNICMon.HasGlobalIPv6()
+	var tunShouldSupport6 bool
+	var err error
+	if runtime.GOOS == "windows" {
+		tunShouldSupport6 = t.DefaultNICMon.DefaultInterface6() != 0
+	} else {
+		tunShouldSupport6, err = t.DefaultNICMon.HasGlobalIPv6()
+	}
 	if err != nil {
 		log.Err(err).Msg("HasGlobalIPv6")
 		// in this case, make tun support 6
 		if !t.TunSupport6 {
 			log.Info().Msg("make tun support 6")
-			err := t.TunSetter.SetTunSupport6(defaultNICHasGlobalIPv6)
+			err := t.TunSetter.SetTunSupport6(tunShouldSupport6)
 			if err != nil {
 				log.Fatal().Err(err).Msg("failed to set tun support6")
 				return
@@ -74,14 +81,14 @@ func (t *Tun6FollowsDefaultNIC) OnDefaultInterfaceChanged() {
 		return
 	}
 
-	if defaultNICHasGlobalIPv6 != t.TunSupport6 {
-		log.Debug().Bool("defaultNICHasGlobalIPv6", defaultNICHasGlobalIPv6).
+	if tunShouldSupport6 != t.TunSupport6 {
+		log.Debug().Bool("defaultNICHasGlobalIPv6", tunShouldSupport6).
 			Bool("tunSupport6", t.TunSupport6).Msg("SetTunSupport6")
-		err := t.TunSetter.SetTunSupport6(defaultNICHasGlobalIPv6)
+		err := t.TunSetter.SetTunSupport6(tunShouldSupport6)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to set tun support6")
 			return
 		}
-		t.TunSupport6 = defaultNICHasGlobalIPv6
+		t.TunSupport6 = tunShouldSupport6
 	}
 }
