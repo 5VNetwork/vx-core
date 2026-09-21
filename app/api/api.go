@@ -73,6 +73,10 @@ type Api struct {
 
 	// mac only
 	sysProxy *sysproxy.SysProxy
+
+	ftLock         sync.Mutex
+	receiveSession *fileSession
+	sendSession    *fileSession
 }
 
 type ApiOption func(*Api)

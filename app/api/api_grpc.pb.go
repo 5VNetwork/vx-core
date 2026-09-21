@@ -58,6 +58,8 @@ const (
 	Api_ToUrl_FullMethodName                         = "/vx.api.Api/ToUrl"
 	Api_SetLog_FullMethodName                        = "/vx.api.Api/SetLog"
 	Api_HandlerCountryTest_FullMethodName            = "/vx.api.Api/HandlerCountryTest"
+	Api_StartFileReceive_FullMethodName              = "/vx.api.Api/StartFileReceive"
+	Api_StartFileSend_FullMethodName                 = "/vx.api.Api/StartFileSend"
 )
 
 // ApiClient is the client API for Api service.
@@ -107,6 +109,8 @@ type ApiClient interface {
 	ToUrl(ctx context.Context, in *ToUrlRequest, opts ...grpc.CallOption) (*ToUrlResponse, error)
 	SetLog(ctx context.Context, in *log.LoggerConfig, opts ...grpc.CallOption) (*Receipt, error)
 	HandlerCountryTest(ctx context.Context, in *HandlerCountryTestRequest, opts ...grpc.CallOption) (*HandlerCountryTestResponse, error)
+	StartFileReceive(ctx context.Context, in *StartFileReceiveRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[FileTransferEvent], error)
+	StartFileSend(ctx context.Context, in *StartFileSendRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[FileTransferEvent], error)
 }
 
 type apiClient struct {
@@ -515,6 +519,44 @@ func (c *apiClient) HandlerCountryTest(ctx context.Context, in *HandlerCountryTe
 	return out, nil
 }
 
+func (c *apiClient) StartFileReceive(ctx context.Context, in *StartFileReceiveRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[FileTransferEvent], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Api_ServiceDesc.Streams[2], Api_StartFileReceive_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[StartFileReceiveRequest, FileTransferEvent]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Api_StartFileReceiveClient = grpc.ServerStreamingClient[FileTransferEvent]
+
+func (c *apiClient) StartFileSend(ctx context.Context, in *StartFileSendRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[FileTransferEvent], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Api_ServiceDesc.Streams[3], Api_StartFileSend_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[StartFileSendRequest, FileTransferEvent]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Api_StartFileSendClient = grpc.ServerStreamingClient[FileTransferEvent]
+
 // ApiServer is the server API for Api service.
 // All implementations should embed UnimplementedApiServer
 // for forward compatibility.
@@ -562,6 +604,8 @@ type ApiServer interface {
 	ToUrl(context.Context, *ToUrlRequest) (*ToUrlResponse, error)
 	SetLog(context.Context, *log.LoggerConfig) (*Receipt, error)
 	HandlerCountryTest(context.Context, *HandlerCountryTestRequest) (*HandlerCountryTestResponse, error)
+	StartFileReceive(*StartFileReceiveRequest, grpc.ServerStreamingServer[FileTransferEvent]) error
+	StartFileSend(*StartFileSendRequest, grpc.ServerStreamingServer[FileTransferEvent]) error
 }
 
 // UnimplementedApiServer should be embedded to have
@@ -684,6 +728,12 @@ func (UnimplementedApiServer) SetLog(context.Context, *log.LoggerConfig) (*Recei
 }
 func (UnimplementedApiServer) HandlerCountryTest(context.Context, *HandlerCountryTestRequest) (*HandlerCountryTestResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method HandlerCountryTest not implemented")
+}
+func (UnimplementedApiServer) StartFileReceive(*StartFileReceiveRequest, grpc.ServerStreamingServer[FileTransferEvent]) error {
+	return status.Error(codes.Unimplemented, "method StartFileReceive not implemented")
+}
+func (UnimplementedApiServer) StartFileSend(*StartFileSendRequest, grpc.ServerStreamingServer[FileTransferEvent]) error {
+	return status.Error(codes.Unimplemented, "method StartFileSend not implemented")
 }
 func (UnimplementedApiServer) testEmbeddedByValue() {}
 
@@ -1375,6 +1425,28 @@ func _Api_HandlerCountryTest_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Api_StartFileReceive_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(StartFileReceiveRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ApiServer).StartFileReceive(m, &grpc.GenericServerStream[StartFileReceiveRequest, FileTransferEvent]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Api_StartFileReceiveServer = grpc.ServerStreamingServer[FileTransferEvent]
+
+func _Api_StartFileSend_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(StartFileSendRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ApiServer).StartFileSend(m, &grpc.GenericServerStream[StartFileSendRequest, FileTransferEvent]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Api_StartFileSendServer = grpc.ServerStreamingServer[FileTransferEvent]
+
 // Api_ServiceDesc is the grpc.ServiceDesc for Api service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1536,6 +1608,16 @@ var Api_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "MonitorServer",
 			Handler:       _Api_MonitorServer_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "StartFileReceive",
+			Handler:       _Api_StartFileReceive_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "StartFileSend",
+			Handler:       _Api_StartFileSend_Handler,
 			ServerStreams: true,
 		},
 	},

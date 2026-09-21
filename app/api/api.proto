@@ -71,6 +71,8 @@ service Api {
   rpc ToUrl(ToUrlRequest) returns (ToUrlResponse);
   rpc SetLog(vx.log.LoggerConfig) returns (Receipt);
   rpc HandlerCountryTest(HandlerCountryTestRequest) returns (HandlerCountryTestResponse);
+  rpc StartFileReceive(StartFileReceiveRequest) returns (stream FileTransferEvent);
+  rpc StartFileSend(StartFileSendRequest) returns (stream FileTransferEvent);
 }
 
 message XStatusChangeNotifyRequest {
@@ -421,4 +423,34 @@ message ToUrlRequest {
 message ToUrlResponse {
   repeated string urls = 1;
   repeated string failed_nodes = 2;
+}
+
+message StartFileReceiveRequest {
+  string save_dir = 1;
+  vx.inbound.ProxyInboundConfig inbound = 2;
+}
+
+message StartFileSendRequest {
+  string realm_url = 1;
+  string file_path = 2;
+}
+
+message FileTransferEvent {
+  enum State {
+    STATE_UNSPECIFIED = 0;
+    STATE_STARTING = 1;
+    STATE_WAITING = 2;
+    STATE_CONNECTING = 3;
+    STATE_TRANSFERRING = 4;
+    STATE_COMPLETED = 5;
+    STATE_FAILED = 6;
+    STATE_CANCELLED = 7;
+  }
+  State state = 1;
+  string share_url = 2;
+  string filename = 3;
+  uint64 bytes_done = 4;
+  uint64 bytes_total = 5;
+  string save_path = 6;
+  string error = 7;
 }
