@@ -297,6 +297,56 @@ func (m *DefaultInterfaceMonitor) Close() error {
 	return nil
 }
 
+// EnsureDefaultRouteMetricAboveZero finds the default NIC (excluding excludeIdx) and, if its
+// default route has an effective metric of 0 (route + interface), raises the route metric so
+// it no longer ties with a VPN default route that also uses metric 0.
+func EnsureDefaultRouteMetricAboveZero(family winipcfg.AddressFamily, excludeIdx int) error {
+	const raisedMetric uint32 = 1
+
+	r, err := winipcfg.GetIPForwardTable2(family)
+	if err != nil {
+		return err
+	}
+	lowestMetric := ^uint32(0)
+	var best *winipcfg.MibIPforwardRow2
+	for i := range r {
+		if r[i].DestinationPrefix.PrefixLength != 0 || r[i].InterfaceIndex == uint32(excludeIdx) {
+			continue
+		}
+		ifrow, err := r[i].InterfaceLUID.Interface()
+		if err != nil || ifrow.OperStatus != winipcfg.IfOperStatusUp {
+			continue
+		}
+		iface, err := r[i].InterfaceLUID.IPInterface(family)
+		if err != nil {
+			continue
+		}
+		metric := r[i].Metric + iface.Metric
+		if metric < lowestMetric {
+			lowestMetric = metric
+			best = &r[i]
+		}
+	}
+	if best == nil || lowestMetric > 0 {
+		return nil
+	}
+
+	name := ""
+	if ifrow, err := best.InterfaceLUID.Interface(); err == nil {
+		name = ifrow.Alias()
+	}
+	best.Metric = raisedMetric
+	if err := best.Set(); err != nil {
+		return fmt.Errorf("failed to raise default route metric on %s (idx %d): %w", name, best.InterfaceIndex, err)
+	}
+	log.Info().
+		Str("interface", name).
+		Uint32("index", best.InterfaceIndex).
+		Uint32("metric", raisedMetric).
+		Msg("raised default NIC route metric from 0 to avoid competing with VPN")
+	return nil
+}
+
 // find the default interface with the lowest metric that is not the interface with index idx
 func FindDefaultLUID(family winipcfg.AddressFamily, idx int) (string, winipcfg.LUID, uint32, error) {
 	r, err := winipcfg.GetIPForwardTable2(family)

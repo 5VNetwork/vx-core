@@ -17,6 +17,7 @@ import (
 	_ "unsafe"
 
 	"github.com/5vnetwork/vx-core/common/buf"
+	"github.com/5vnetwork/vx-core/nic"
 	"github.com/5vnetwork/vx-core/tun/internal/wintun"
 
 	"github.com/rs/zerolog/log"
@@ -112,6 +113,11 @@ func NewTun(config *TunOption) (TunDeviceWithInfo, error) {
 
 	/* configure the TUN device */
 	tunLuid := winipcfg.LUID(tun.LUID())
+	tunIf, err := tunLuid.Interface()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get TUN interface: %v", err)
+	}
+	tunIdx := int(tunIf.InterfaceIndex)
 	if config.Ip4.IsValid() {
 		err = tunLuid.AddIPAddress(config.Ip4)
 		if err != nil {
@@ -125,6 +131,9 @@ func NewTun(config *TunOption) (TunDeviceWithInfo, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to set ipv4 DNS for interface: %v", err)
 			}
+		}
+		if err = nic.EnsureDefaultRouteMetricAboveZero(windows.AF_INET, tunIdx); err != nil {
+			log.Warn().Err(err).Msg("failed to raise default IPv4 NIC route metric")
 		}
 		for _, route := range config.Route4 {
 			err = tunLuid.AddRoute(route, netip.IPv4Unspecified(), 0)
@@ -174,6 +183,9 @@ func NewTun(config *TunOption) (TunDeviceWithInfo, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to set ipv6 DNS for interface: %v", err)
 			}
+		}
+		if err = nic.EnsureDefaultRouteMetricAboveZero(windows.AF_INET6, tunIdx); err != nil {
+			log.Warn().Err(err).Msg("failed to raise default IPv6 NIC route metric")
 		}
 		for _, route := range config.Route6 {
 			err = tunLuid.AddRoute(route, netip.IPv6Unspecified(), 0)
@@ -504,6 +516,11 @@ func (t *TunManager) SetTunSupport6(support6 bool) error {
 		// 		return fmt.Errorf("failed to set ipv6 DNS for interface: %v", err)
 		// 	}
 		// }
+		if tunIf, err := tunLuid.Interface(); err == nil {
+			if err = nic.EnsureDefaultRouteMetricAboveZero(windows.AF_INET6, int(tunIf.InterfaceIndex)); err != nil {
+				log.Warn().Err(err).Msg("failed to raise default IPv6 NIC route metric")
+			}
+		}
 		for _, route := range t.option.Route6 {
 			err := tunLuid.AddRoute(route, netip.IPv6Unspecified(), 0)
 			if err != nil {
