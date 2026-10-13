@@ -128,9 +128,9 @@ func (c *Engine) Listener(l net.Listener) net.Listener {
 }
 
 var (
-	Version_x byte = 25
-	Version_y byte = 5
-	Version_z byte = 16
+	Version_x byte = 26
+	Version_y byte = 9
+	Version_z byte = 9
 )
 
 type Conn struct {
