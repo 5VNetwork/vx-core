@@ -491,7 +491,7 @@ func (s *Selector) testItems(items []OutHandler,
 func (s *Selector) getOutHandlers() []OutHandler {
 	s.handlersLock.RLock()
 	defer s.handlersLock.RUnlock()
-	return s.filteredHandlers
+	return slices.Clone(s.filteredHandlers)
 }
 
 func (s *Selector) enterRecoveryIfNot() {

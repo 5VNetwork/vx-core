@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"sync"
 
+	vxgeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/5vnetwork/vx-core/common"
 	"github.com/5vnetwork/vx-core/common/errors"
-	vxgeo "buf.build/gen/go/vvvvv/vx/protocolbuffers/go/vx/common/geo"
 	"github.com/5vnetwork/vx-core/common/net"
 	"github.com/5vnetwork/vx-core/common/uuid"
 	"github.com/5vnetwork/vx-core/i"
@@ -119,32 +119,6 @@ func (gi *TunGvisorInbound) Close() error {
 		endpoint.Abort()
 	}
 	log.Debug().Msg("endpoints closed")
-	// gi.stack.Destroy()
-	gi.option.LinkEndpoint.Close()
-	log.Debug().Msg("link endpoint closed")
-	return nil
-}
-
-func (gi *TunGvisorInbound) CloseBlocking() error {
-	if gi.closed {
-		return nil
-	}
-	gi.closed = true
-	if gi.option.OnClose != nil {
-		gi.option.OnClose()
-	}
-	gi.cancel(errors.ErrClosed)
-
-	gi.option.LinkEndpoint.Attach(nil)
-	gi.stack.Close()
-	log.Debug().Msg("stack closed")
-	for _, endpoint := range gi.stack.CleanupEndpoints() {
-		endpoint.Abort()
-	}
-	log.Debug().Msg("endpoints closed")
-	gi.stack.Wait()
-	log.Debug().Msg("stack wait done")
-	// gi.stack.Destroy()
 	gi.option.LinkEndpoint.Close()
 	log.Debug().Msg("link endpoint closed")
 	return nil

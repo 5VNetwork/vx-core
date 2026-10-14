@@ -91,7 +91,10 @@ func NewTunGvisorInbound(config *configs.TunConfig, f *Builder,
 			LinkEndpoint: ep,
 			Handler:      h,
 			OnClose: func() {
-				unix.Close(newFd)
+				err := unix.Close(newFd)
+				if err != nil {
+					log.Error().Err(err).Msg("failed to close fd")
+				}
 			},
 		})
 		if err != nil {

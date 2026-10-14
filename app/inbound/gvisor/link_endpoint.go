@@ -73,6 +73,10 @@ func NewFilterLinkEndpoint(linkEndpoint stack.LinkEndpoint, reject inboundcommon
 func (l *FilterLinkEndpoint) Attach(dispatcher stack.NetworkDispatcher) {
 	log.Info().Interface("dispatcher", dispatcher).Msg("attach")
 	l.dispatcher = dispatcher
+	if dispatcher == nil {
+		l.LinkEndpoint.Attach(nil)
+		return
+	}
 	l.LinkEndpoint.Attach(l)
 }
 

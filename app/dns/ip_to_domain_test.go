@@ -243,6 +243,18 @@ func TestIPToDomain_GetDomain_MultipleDifferentDomains(t *testing.T) {
 	assert.Len(t, domains, 2)
 }
 
+func TestIPToDomain_GetDomain_SameDomainDifferentResolvers(t *testing.T) {
+	ipToDomain := NewIPToDomain(100, 4)
+
+	msg := createDNSMessage("example.com.", "192.168.1.1")
+	ipToDomain.SetDomain(msg, net.ParseAddress("8.8.8.8"))
+	ipToDomain.SetDomain(msg, net.ParseAddress("1.1.1.1"))
+
+	ip := net.ParseIP("192.168.1.1")
+	domains := ipToDomain.GetDomain(ip)
+	assert.Equal(t, []string{"example.com"}, domains)
+}
+
 func TestIPToDomain_GetResolvers_NotFound(t *testing.T) {
 	ipToDomain := NewIPToDomain(100, 4)
 

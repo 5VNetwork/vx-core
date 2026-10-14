@@ -27,7 +27,7 @@ type LinkStats struct {
 
 func NewLinkStats(ctx context.Context, ohStats linkStatsAdder, size uint64) *LinkStats {
 	if size == 0 {
-		size = common.OneKB * 10
+		size = common.OneKB * 20
 	}
 	return &LinkStats{
 		ctx:     ctx,
@@ -50,8 +50,7 @@ func (w *LinkStats) DownTraffic(n uint64) {
 	if !w.hasDoneCalculatingRate {
 		if w.initialWriteTime.IsZero() {
 			w.initialWriteTime = time.Now()
-		}
-		if !w.prevWriteTime.IsZero() && time.Since(w.prevWriteTime).Seconds() > 1 {
+		} else if !w.prevWriteTime.IsZero() && time.Since(w.prevWriteTime).Seconds() > 1 {
 			w.hasDoneCalculatingRate = true
 		} else {
 			w.prevWriteTime = time.Now()

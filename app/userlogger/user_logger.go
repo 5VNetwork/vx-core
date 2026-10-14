@@ -103,7 +103,7 @@ func (s *UserLogger) LogReject(info *session.Info, reason string) {
 		return
 	}
 
-	if info.AppId == "" && s.LogAppId.Load() {
+	if info.AppId == "" && s.LogAppId.Load() && info.Source.IsValid() {
 		target := &info.Target
 		if info.FakeIP != nil {
 			target = &net.Destination{

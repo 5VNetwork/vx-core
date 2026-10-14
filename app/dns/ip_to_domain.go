@@ -84,7 +84,12 @@ func (i *IPToDomain) GetDomain(ip net.IP) []string {
 	defer entry.lock.RUnlock()
 
 	domains := make([]string, 0, len(entry.domainAndResolvers))
+	seen := make(map[string]struct{}, len(entry.domainAndResolvers))
 	for _, dr := range entry.domainAndResolvers {
+		if _, ok := seen[dr.Domain]; ok {
+			continue
+		}
+		seen[dr.Domain] = struct{}{}
 		domains = append(domains, dr.Domain)
 	}
 	return domains

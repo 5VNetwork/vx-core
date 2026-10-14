@@ -7,7 +7,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"runtime"
+	"strings"
 
 	"github.com/5vnetwork/vx-core/common/buf"
 	"github.com/5vnetwork/vx-core/common/errors"
@@ -20,6 +22,34 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// EnableSpliceCopy turns on Linux splice/zero-copy relay when set to "1"/"true"/"on"/"yes".
+// Off by default. Set at build time:
+//
+//	go build -ldflags "-X github.com/5vnetwork/vx-core/proxy/helper.EnableSpliceCopy=1"
+//
+// Runtime override (takes precedence when set): VX_ENABLE_SPLICE=1
+var EnableSpliceCopy = "0"
+
+// UseSpliceCopy reports whether Linux splice copy should be used for relay.
+func UseSpliceCopy() bool {
+	if runtime.GOOS != "linux" {
+		return false
+	}
+	if v, ok := os.LookupEnv("VX_ENABLE_SPLICE"); ok {
+		return isTruthy(v)
+	}
+	return isTruthy(EnableSpliceCopy)
+}
+
+func isTruthy(v string) bool {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "1", "true", "yes", "on":
+		return true
+	default:
+		return false
+	}
+}
+
 // read from leftReader, write to rightWriter, read from rightReader, write to leftWriter.
 // When any direction met an error, returns the error.
 // When both directions return nil, the function returns nil.
@@ -27,18 +57,18 @@ func Relay(ctx context.Context, leftReader buf.Reader, leftWriter buf.Writer,
 	rightReader buf.Reader, rightWriter buf.Writer) error {
 	leftToRight := func() error {
 		var err error
-		if runtime.GOOS == "linux" {
+		if UseSpliceCopy() {
 			err = spliceCopy(ctx, leftReader, rightWriter, true)
-			if err == nil {
-				rightWriter.CloseWrite()
-			}
 		} else {
 			err = buf.Copy(leftReader, rightWriter)
-			if err == nil {
-				rightWriter.CloseWrite()
-			}
 		}
-		if err != nil {
+		if err == nil {
+			log.Ctx(ctx).Debug().Msg("close write to right")
+			err1 := rightWriter.CloseWrite()
+			if err1 != nil {
+				return fmt.Errorf("failed to close write to right: %w", err1)
+			}
+		} else {
 			err = errors.NewLeftToRightError(err)
 		}
 		return err
@@ -46,18 +76,18 @@ func Relay(ctx context.Context, leftReader buf.Reader, leftWriter buf.Writer,
 
 	rightToLeft := func() error {
 		var err error
-		if runtime.GOOS == "linux" {
+		if UseSpliceCopy() {
 			err = spliceCopy(ctx, rightReader, leftWriter, false)
-			if err == nil {
-				leftWriter.CloseWrite()
-			}
 		} else {
 			err = buf.Copy(rightReader, leftWriter)
-			if err == nil {
-				leftWriter.CloseWrite()
-			}
 		}
-		if err != nil {
+		if err == nil {
+			log.Ctx(ctx).Debug().Msg("close write to left")
+			err1 := leftWriter.CloseWrite()
+			if err1 != nil {
+				return fmt.Errorf("failed to close write to left: %w", err1)
+			}
+		} else {
 			err = errors.NewRightToLeftError(err)
 		}
 		return err

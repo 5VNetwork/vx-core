@@ -6,7 +6,6 @@ package dispatcher
 import (
 	"context"
 	"io"
-	"runtime"
 	"time"
 
 	"github.com/5vnetwork/vx-core/common/buf"
@@ -16,6 +15,7 @@ import (
 	"github.com/5vnetwork/vx-core/common/signal"
 	"github.com/5vnetwork/vx-core/common/task"
 	"github.com/5vnetwork/vx-core/i"
+	"github.com/5vnetwork/vx-core/proxy/helper"
 	"github.com/rs/zerolog/log"
 )
 
@@ -75,8 +75,8 @@ func (d *Dispatcher) Relay(ctx context.Context, info *session.Info,
 func (d *Dispatcher) copyReaderToWriter(ctx context.Context, info *session.Info,
 	reader, writer any, up bool, activityChecker *signal.ActivityChecker) error {
 
-	// try splice copy on linux
-	if runtime.GOOS == "linux" {
+	// try splice copy on linux when explicitly enabled
+	if helper.UseSpliceCopy() {
 		// unwrap both reader and writer until they are not Unwrapper
 		unwrapReader, unwrapWriter := true, true
 		var innerMostReader any
