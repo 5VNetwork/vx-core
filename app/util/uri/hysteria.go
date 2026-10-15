@@ -51,10 +51,10 @@ func toHysteria(outboundConfig *configs.OutboundHandlerConfig) (string, error) {
 		queryParameters.Add("obfs-password", hysteriaConfig.Obfs.GetSalamander().GetPassword())
 	}
 	if hysteriaConfig.GetBandwidth().GetMaxRx() != 0 {
-		queryParameters.Add("rx", strconv.Itoa(int(hysteriaConfig.Bandwidth.MaxRx/1024/1024)))
+		queryParameters.Add("rx", strconv.Itoa(int(hysteriaConfig.Bandwidth.MaxRx)))
 	}
 	if hysteriaConfig.GetBandwidth().GetMaxTx() != 0 {
-		queryParameters.Add("tx", strconv.Itoa(int(hysteriaConfig.Bandwidth.MaxTx/1024/1024)))
+		queryParameters.Add("tx", strconv.Itoa(int(hysteriaConfig.Bandwidth.MaxTx)))
 	}
 
 	u := &url.URL{
