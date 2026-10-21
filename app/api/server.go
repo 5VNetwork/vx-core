@@ -110,6 +110,16 @@ type SshClientCacheItem struct {
 	err  error
 }
 
+// removeSshClientCacheLocked deletes item from the cache only if it is still
+// the entry for its key. Caller must hold sshClientCacheLock.
+func (a *Api) removeSshClientCacheLocked(item *SshClientCacheItem) bool {
+	if existing, ok := a.sshClientCache[item.key]; ok && existing == item {
+		delete(a.sshClientCache, item.key)
+		return true
+	}
+	return false
+}
+
 func (a *Api) DecreaseClientUser(c *SshClientCacheItem) error {
 	a.sshClientCacheLock.Lock()
 	defer a.sshClientCacheLock.Unlock()
@@ -118,10 +128,17 @@ func (a *Api) DecreaseClientUser(c *SshClientCacheItem) error {
 		c.timer = time.AfterFunc(time.Second*10, func() {
 			a.sshClientCacheLock.Lock()
 			defer a.sshClientCacheLock.Unlock()
-			if c.Users == 0 {
-				log.Info().Msg("ssh client closed")
+			if c.Users != 0 {
+				return
+			}
+			// Only close/remove if this item is still the cached client.
+			// A stale timer must not delete a newer client for the same key.
+			if !a.removeSshClientCacheLocked(c) {
+				return
+			}
+			log.Info().Msg("ssh client closed")
+			if c.client != nil {
 				c.client.Close()
-				delete(a.sshClientCache, c.key)
 			}
 		})
 	}
@@ -157,18 +174,22 @@ func (a *Api) getSshClient(ctx context.Context, config *ServerSshConfig) (*SshCl
 					log.Info().Msg("ssh client connected")
 					cacheItem.client = sshClient
 					// remove the ssh connection when the connection is closed
-					go func(sshClient *sshhelper.Client) {
+					go func() {
 						sshClient.Client.Wait()
 						a.sshClientCacheLock.Lock()
-						delete(a.sshClientCache, key)
+						if cacheItem.timer != nil {
+							cacheItem.timer.Stop()
+							cacheItem.timer = nil
+						}
+						a.removeSshClientCacheLocked(cacheItem)
 						a.sshClientCacheLock.Unlock()
 						sshClient.Close()
-					}(cacheItem.client)
+					}()
 					return
 				}
 			}
 			a.sshClientCacheLock.Lock()
-			delete(a.sshClientCache, key)
+			a.removeSshClientCacheLocked(cacheItem)
 			a.sshClientCacheLock.Unlock()
 		}()
 	} else {
@@ -177,6 +198,7 @@ func (a *Api) getSshClient(ctx context.Context, config *ServerSshConfig) (*SshCl
 			if cacheItem.err != nil {
 				return nil, cacheItem.err
 			}
+			// Increment before Stop so a timer blocked on this lock sees Users > 0.
 			cacheItem.Users++
 			if cacheItem.timer != nil {
 				cacheItem.timer.Stop()
@@ -197,6 +219,14 @@ func (a *Api) getSshClient(ctx context.Context, config *ServerSshConfig) (*SshCl
 	}
 
 	a.sshClientCacheLock.Lock()
+	// Dial finished, but a concurrent Wait cleanup may have already removed us.
+	if existing, ok := a.sshClientCache[key]; !ok || existing != cacheItem || cacheItem.client == nil {
+		a.sshClientCacheLock.Unlock()
+		if cacheItem.err != nil {
+			return nil, cacheItem.err
+		}
+		return nil, errors.New("ssh client closed during connect")
+	}
 	cacheItem.Users++
 	a.sshClientCacheLock.Unlock()
 
