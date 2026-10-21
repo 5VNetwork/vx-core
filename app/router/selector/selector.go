@@ -298,7 +298,7 @@ func (s *Selector) SetHandlers() {
 	filteredHandlers := s.getOutHandlers()
 	if len(filteredHandlers) == 0 {
 		log.Warn().Msg("no handlers")
-		return
+		// return
 	}
 	log.Debug().Int("len", len(filteredHandlers)).Msg("filtered handlers")
 
