@@ -5,6 +5,7 @@ package grpcservice
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -65,12 +66,18 @@ func (s *GrpcService) Close() error {
 
 func (s *GrpcService) SetSubscriptionInterval(ctx context.Context, req *SetSubscriptionIntervalRequest) (*SetSubscriptionIntervalResponse, error) {
 	log.Debug().Msgf("set subscription interval: %d", req.Interval)
+	if s.Client.Subscription == nil {
+		return nil, fmt.Errorf("subscription manager is not available")
+	}
 	s.Client.Subscription.SetInterval(time.Duration(req.Interval) * time.Minute)
 	return &SetSubscriptionIntervalResponse{}, nil
 }
 
 func (s *GrpcService) SetAutoSubscriptionUpdate(ctx context.Context, req *SetAutoSubscriptionUpdateRequest) (*Receipt, error) {
 	log.Debug().Msgf("set auto subscription update: %t", req.Enable)
+	if s.Client.Subscription == nil {
+		return nil, fmt.Errorf("subscription manager is not available")
+	}
 	s.Client.Subscription.SetAutoUpdate(req.Enable)
 	return &Receipt{}, nil
 }
