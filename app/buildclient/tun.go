@@ -52,9 +52,9 @@ func newTunSystemInbound(
 	if err != nil {
 		return fmt.Errorf("failed to create tun device: %w", err)
 	}
-	return fc.requireFeature(func(h *dispatcher.Dispatcher, dnsConns *dns.HijackDns) error {
+	return fc.requireFeature(func(h *dispatcher.Dispatcher, dnsConns *dns.HijackDns, r i.Router) error {
 		tunInbound, err := NewTunSystemInbound(device, config.Tag, h, dnsConns,
-			rejector)
+			rejector, r)
 		if err != nil {
 			return fmt.Errorf("failed to create tun system inbound: %w", err)
 		}
@@ -65,7 +65,7 @@ func newTunSystemInbound(
 
 func NewTunSystemInbound(
 	device tun.TunDeviceWithInfo, tag string, handler i.Handler, dnsConns *dns.HijackDns,
-	rejector *reject.Rejector) (*system.TunSystemInbound, error) {
+	rejector *reject.Rejector, r i.Router) (*system.TunSystemInbound, error) {
 	dnsAddress := make([]net.Destination, 0)
 	for _, dns := range device.DnsServers() {
 		dnsAddress = append(dnsAddress, net.UDPDestination(net.IPAddress(dns.AsSlice()), 53))
@@ -88,6 +88,22 @@ func NewTunSystemInbound(
 		opts = append(opts, system.With6(napIp6, device.IP6().AsSlice(), 0))
 	}
 	tunInbound := system.New(opts...)
+
+	if r != nil {
+		var listen6 net.IP
+		if device.IP6().IsValid() {
+			listen6 = device.IP6().AsSlice()
+		}
+		system.WithICMPHandler(system.NewICMPEchoHandler(system.ICMPEchoHandlerOption{
+			Tun:      device,
+			Router:   r,
+			Tag:      tag,
+			Listen4:  device.IP4().AsSlice(),
+			Listen6:  listen6,
+			Ctx:      tunInbound.Context(),
+			IsClosed: tunInbound.Closed,
+		}))(tunInbound)
+	}
 
 	return tunInbound, nil
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/5vnetwork/vx-core/app/dns"
 	idns "github.com/5vnetwork/vx-core/app/dns"
 
+	"github.com/5vnetwork/vx-core/app/inbound/system"
 	"github.com/5vnetwork/vx-core/app/router"
 	"github.com/5vnetwork/vx-core/app/router/selector"
 	"github.com/5vnetwork/vx-core/app/xsqlite"
@@ -49,6 +50,11 @@ func (s *GrpcService) ChangeRoutingMode(ctx context.Context, in *ChangeRoutingMo
 
 	if err := s.updateRouter(in.RouterConfig); err != nil {
 		return nil, fmt.Errorf("failed to updateRouter: %w", err)
+	}
+	for _, inbound := range s.Client.Inbounds {
+		if sys, ok := inbound.(*system.TunSystemInbound); ok {
+			sys.ClearICMPRoutes()
+		}
 	}
 	log.Debug().Msg("routing mode changed")
 	return &ChangeRoutingModeResponse{}, nil

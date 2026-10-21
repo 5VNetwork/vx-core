@@ -28,6 +28,7 @@ const (
 	Network_TCP     Network = 2
 	Network_UDP     Network = 3
 	Network_UNIX    Network = 4
+	Network_ICMP    Network = 5
 )
 
 // pickPort returns an unused UDP port of the system.
@@ -56,6 +57,8 @@ func SystemString(n Network) string {
 		return "udp"
 	case Network_UNIX:
 		return "unix"
+	case Network_ICMP:
+		return "icmp"
 	default:
 		return "unknown"
 	}
@@ -78,6 +81,8 @@ func UnmarshalJSON(n *Network, b []byte) error {
 		*n = Network_UDP
 	case "unix":
 		*n = Network_UNIX
+	case "icmp":
+		*n = Network_ICMP
 	default:
 		return errors.New("invalid config: invalid network ")
 	}

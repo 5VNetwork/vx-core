@@ -220,6 +220,8 @@ func FetchSubscription(ctx context.Context, link string, downloader downloader, 
 	uriContent, err = util.Decode(string(body), shareLinkQueryExtra)
 	// if failed to decode, try again with user agent
 	if err != nil || len(uriContent.Configs) == 0 {
+		log.Debug().Err(err).Msg("failed to decode subscription with user agent v2ray-core")
+
 		body, header, err = downloader.Download(ctx, link, map[string]string{
 			"User-Agent": "shadowrocket",
 		})
@@ -249,6 +251,8 @@ func FetchSubscription(ctx context.Context, link string, downloader downloader, 
 				if err == nil {
 					description = uriContent1.Description
 				}
+			} else {
+				log.Error().Err(err).Msg("failed to download subscription with shadowrocket")
 			}
 		}
 	}

@@ -36,6 +36,31 @@ func (c *FreedomHandler) Tag() string {
 	return c.tag
 }
 
+func (c *FreedomHandler) SupportsICMP() bool {
+	return true
+}
+
+func (c *FreedomHandler) OpenICMP(ctx context.Context, dst net.Destination) (net.PacketConn, error) {
+	if !dst.IsValid() || dst.Address == nil {
+		return nil, errors.New("freedom: invalid icmp destination")
+	}
+	var network, address string
+	if dst.Address.Family().IsIPv4() {
+		network = "ip4:icmp"
+		address = "0.0.0.0"
+	} else if dst.Address.Family().IsIPv6() {
+		network = "ip6:ipv6-icmp"
+		address = "::"
+	} else {
+		return nil, errors.New("freedom: icmp requires ip destination")
+	}
+	pc, err := c.PacketListener.ListenPacket(ctx, network, address)
+	if err != nil {
+		return nil, fmt.Errorf("freedom listen icmp: %w", err)
+	}
+	return pc, nil
+}
+
 func (c *FreedomHandler) HandleFlow(ctx context.Context, dst net.Destination, rw buf.ReaderWriter) error {
 	target := dst
 	if !target.IsValid() {

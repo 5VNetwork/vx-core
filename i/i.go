@@ -79,6 +79,39 @@ type HandlerWith6Info interface {
 	Support6() bool
 }
 
+// ICMPOutbound is implemented by outbounds that can forward ICMP echo (e.g. freedom/direct).
+type ICMPOutbound interface {
+	Outbound
+	SupportsICMP() bool
+	// OpenICMP returns a packet conn for ICMP to dst (network ip4:icmp / ip6:ipv6-icmp).
+	OpenICMP(ctx context.Context, dst net.Destination) (net.PacketConn, error)
+}
+
+// OutboundUnwrapper is implemented by wrappers that hide an inner Outbound
+// (e.g. HandlerWithSupport6Info).
+type OutboundUnwrapper interface {
+	UnwrapOutbound() Outbound
+}
+
+// AsICMPOutbound walks wrapper layers until it finds an ICMPOutbound.
+func AsICMPOutbound(h Outbound) (ICMPOutbound, bool) {
+	for h != nil {
+		if icmp, ok := h.(ICMPOutbound); ok {
+			return icmp, true
+		}
+		u, ok := h.(OutboundUnwrapper)
+		if !ok {
+			return nil, false
+		}
+		inner := u.UnwrapOutbound()
+		if inner == nil || inner == h {
+			return nil, false
+		}
+		h = inner
+	}
+	return nil, false
+}
+
 // the only error would be returned is ErrSetNotFound
 type GeoHelper interface {
 	MatchDomain(domain string, tag string) (bool, error)

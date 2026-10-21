@@ -143,6 +143,14 @@ func UnixDestination(address Address) Destination {
 	}
 }
 
+// ICMPDestination creates an ICMP destination with given address (no port).
+func ICMPDestination(address Address) Destination {
+	return Destination{
+		Network: Network_ICMP,
+		Address: address,
+	}
+}
+
 // NetAddr returns the network address in this Destination in string form.
 func (d Destination) NetAddr() string {
 	addr := ""
@@ -151,7 +159,7 @@ func (d Destination) NetAddr() string {
 	}
 	if d.Network == Network_TCP || d.Network == Network_UDP {
 		addr = d.Address.String() + ":" + d.Port.String()
-	} else if d.Network == Network_UNIX {
+	} else if d.Network == Network_UNIX || d.Network == Network_ICMP {
 		addr = d.Address.String()
 	}
 	return addr

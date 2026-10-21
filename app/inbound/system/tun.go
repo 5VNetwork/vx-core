@@ -62,6 +62,8 @@ type TunSystemInbound struct {
 	// udp
 	udpSessionManager *udp_session.SessionManager
 	udpPackets        chan *buf.Buffer
+	// icmp (optional; inbound only demuxes)
+	icmpHandler ICMPHandler
 	// dns dispatcher
 	dnsConn    dnsConn
 	dnsAddress []mynet.Destination
@@ -153,6 +155,19 @@ func WithRejector(rejector inboundcommon.Rejector) Option {
 	}
 }
 
+func WithICMPHandler(h ICMPHandler) Option {
+	return func(t *TunSystemInbound) {
+		t.icmpHandler = h
+	}
+}
+
+// ClearICMPRoutes drops cached ICMP outbound routes (e.g. after routing mode changes).
+func (t *TunSystemInbound) ClearICMPRoutes() {
+	if t.icmpHandler != nil {
+		t.icmpHandler.ClearRoutes()
+	}
+}
+
 func (ti *TunSystemInbound) Start() error {
 	var err error
 	ti.startOnce.Do(func() {
@@ -201,6 +216,10 @@ func (t *TunSystemInbound) Close() error {
 		}
 
 		t.udpSessionManager.Close()
+
+		if t.icmpHandler != nil {
+			_ = t.icmpHandler.Close()
+		}
 
 		t.nat.Lock()
 		for _, s := range t.nat.srcToSession {
@@ -294,6 +313,14 @@ func (t *TunSystemInbound) Tag() string {
 	return t.tag
 }
 
+func (t *TunSystemInbound) Context() context.Context {
+	return t.ctx
+}
+
+func (t *TunSystemInbound) Closed() bool {
+	return t.done.Done()
+}
+
 func (t *TunSystemInbound) readPackets() {
 	for {
 		b, err := t.tun.ReadPacket()
@@ -322,15 +349,12 @@ func (t *TunSystemInbound) processIPPakcet(p *buf.Buffer) {
 	}
 	isIpv4 := header.IPVersion(p.Bytes()) == header.IPv4Version
 	switch ipPacket.TransportProtocol() {
-	case header.ICMPv4ProtocolNumber:
-		log.Debug().Any("src", ipPacket.SourceAddress()).
-			Any("dst", ipPacket.DestinationAddress()).Msg("drop icmpv4 packet")
-		p.Release()
-		return
-	case header.ICMPv6ProtocolNumber:
-		log.Debug().Any("src", ipPacket.SourceAddress()).
-			Any("dst", ipPacket.DestinationAddress()).Msg("drop icmpv6 packet")
-		p.Release()
+	case header.ICMPv4ProtocolNumber, header.ICMPv6ProtocolNumber:
+		if t.icmpHandler != nil {
+			t.icmpHandler.Handle(p, ipPacket)
+		} else {
+			p.Release()
+		}
 		return
 	case header.TCPProtocolNumber:
 		// check valid?

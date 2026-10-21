@@ -29,6 +29,10 @@ func (h *HandlerWithSupport6Info) Support6() bool {
 	return h.support6
 }
 
+func (h *HandlerWithSupport6Info) UnwrapOutbound() i.Outbound {
+	return h.Outbound
+}
+
 func (h *HandlerWithSupport6Info) SetSupport6(support6 bool) {
 	if h.support6 == support6 {
 		return

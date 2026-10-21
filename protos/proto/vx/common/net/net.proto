@@ -5,9 +5,12 @@ enum Network {
   TCP = 2;
   UDP = 3;
   UNIX = 4;
+  ICMP = 5;
 }
 
-message NetworkList { repeated Network network = 1; }
+message NetworkList {
+  repeated Network network = 1;
+}
 
 message Endpoint {
   Network network = 1;
