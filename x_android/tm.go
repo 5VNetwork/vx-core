@@ -211,7 +211,7 @@ func (t *tm) CreateInbound(tunConfig *configs.TunConfig, fd int32, support6 bool
 
 	tunInbound, err := buildclient.NewTunSystemInbound(
 		tunDeviceWithInfo, tunConfig.Tag,
-		c.Dispatcher, dnsConn, rejector)
+		c.Dispatcher, dnsConn, rejector, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create tun system inbound: %w", err)
 	}
