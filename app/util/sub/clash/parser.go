@@ -457,28 +457,28 @@ func parseHysteria(mapping map[string]any, name string) (*configs.OutboundHandle
 			},
 		}
 	}
-	// bandwidth
+	// Clash up/down are Mbps; BandwidthConfig is MB/s.
 	if up, ok := mapping["up"].(string); ok {
 		if strings.Contains(up, "Mbps") {
 			if u := strings.Split(up, " ")[0]; u != "" {
 				upValue, _ := strconv.Atoi(u)
-				hysteriaConfig.Bandwidth.MaxTx = uint32(upValue * 1024 * 1024 / 8)
+				hysteriaConfig.Bandwidth.MaxTxMbps = uint32(upValue)
 			}
 		} else {
 			upValue, _ := strconv.Atoi(up)
-			hysteriaConfig.Bandwidth.MaxTx = uint32(upValue * 1024 * 1024 / 8)
+			hysteriaConfig.Bandwidth.MaxTxMbps = uint32(upValue)
 		}
 	}
 	if down, ok := mapping["down"].(string); ok {
 		if strings.Contains(down, "Mbps") {
 			if d := strings.Split(down, " ")[0]; d != "" {
 				downValue, _ := strconv.Atoi(d)
-				hysteriaConfig.Bandwidth.MaxRx = uint32(downValue * 1024 * 1024 / 8)
+				hysteriaConfig.Bandwidth.MaxRxMbps = uint32(downValue)
 			}
+		} else {
+			downValue, _ := strconv.Atoi(down)
+			hysteriaConfig.Bandwidth.MaxRxMbps = uint32(downValue)
 		}
-	} else {
-		downValue, _ := strconv.Atoi(down)
-		hysteriaConfig.Bandwidth.MaxRx = uint32(downValue * 1024 * 1024 / 8)
 	}
 	transport, err := parseTransportConfig(mapping)
 	if err != nil {

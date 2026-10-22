@@ -29,10 +29,14 @@ message QuicConfig {
 }
 
 message BandwidthConfig {
-  // for client, this is upload
+  // for client, this is upload. MB
   uint32 max_tx = 1;
-  // for client, this is download
+  // for client, this is download. MB
   uint32 max_rx = 2;
+  // for client, this is upload. Mb
+  uint32 max_tx_mbps = 3;
+  // for client, this is download. Mb
+  uint32 max_rx_mbps = 4;
 }
 
 message Hysteria2ClientConfig {

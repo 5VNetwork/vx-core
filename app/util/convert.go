@@ -223,8 +223,7 @@ func proxyProtocolToOutboundConfig(proxyProtocol []*anypb.Any, user *configs.Use
 					Auth:      user.Secret,
 					Realm:     pc.Realm,
 					Bandwidth: &configs.BandwidthConfig{
-						MaxTx: 10,
-						MaxRx: 30,
+						MaxRxMbps: 240,
 					},
 				}))
 			}

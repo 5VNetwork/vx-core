@@ -4,7 +4,7 @@ import (
 	"log"
 	"testing"
 
-		"github.com/5vnetwork/vx-core/app/configs"
+	"github.com/5vnetwork/vx-core/app/configs"
 	"github.com/5vnetwork/vx-core/common/serial"
 	"github.com/5vnetwork/vx-core/transport/protocols/websocket"
 	"github.com/5vnetwork/vx-core/transport/security/tls"
@@ -189,6 +189,10 @@ func TestHysteria(t *testing.T) {
 							Password: "asdfwqr",
 						},
 					},
+				},
+				Bandwidth: &configs.BandwidthConfig{
+					MaxTx: 10,
+					MaxRx: 30,
 				},
 			},
 		),

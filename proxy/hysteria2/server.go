@@ -401,8 +401,8 @@ func (in *Inbound) newHysServerConfig(tlsConfig *tls.Config, pc net.PacketConn) 
 		Conn:     pc,
 		Outbound: in.handler,
 		BandwidthConfig: server.BandwidthConfig{
-			MaxTx: uint64(bandwidth.GetMaxTx() * 1024 * 1024),
-			MaxRx: uint64(bandwidth.GetMaxRx() * 1024 * 1024),
+			MaxTx: bandwidthBytesPerSec(bandwidth.GetMaxTxMbps(), bandwidth.GetMaxTx()),
+			MaxRx: bandwidthBytesPerSec(bandwidth.GetMaxRxMbps(), bandwidth.GetMaxRx()),
 		},
 		IgnoreClientBandwidth: config.GetIgnoreClientBandwidth(),
 		Authenticator:         in,
@@ -418,6 +418,15 @@ func (in *Inbound) startHysServer(s server.Server) {
 			log.Error().Err(err).Msg("hysteria2 server serve error")
 		}
 	}()
+}
+
+// bandwidthBytesPerSec converts BandwidthConfig fields to bytes/sec.
+// Mbps takes priority over the legacy MB field.
+func bandwidthBytesPerSec(mbps, mb uint32) uint64 {
+	if mbps > 0 {
+		return uint64(mbps) * 1024 * 1024 / 8
+	}
+	return uint64(mb) * 1024 * 1024
 }
 
 // RealmStatus returns a snapshot of the realm server state.

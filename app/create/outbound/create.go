@@ -290,6 +290,18 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 		if maxIdleTimeout == 0 {
 			maxIdleTimeout = 30
 		}
+		var maxTx, maxRx uint64
+		if m.Bandwidth.GetMaxTxMbps() > 0 {
+			maxTx = uint64(m.Bandwidth.GetMaxTxMbps() * 1024 * 1024 / 8)
+		} else {
+			maxTx = uint64(m.Bandwidth.GetMaxTx() * 1024 * 1024)
+		}
+		if m.Bandwidth.GetMaxRxMbps() > 0 {
+			maxRx = uint64(m.Bandwidth.GetMaxRxMbps() * 1024 * 1024 / 8)
+		} else {
+			maxRx = uint64(m.Bandwidth.GetMaxRx() * 1024 * 1024)
+		}
+
 		hys, err := hysteria2.NewClient(&hysteria2.Config{
 			Tag:                      config.Tag,
 			Address:                  address,
@@ -303,11 +315,11 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 			HysteriaClientConfig: &client.Config{
 				Auth: m.Auth,
 				TLSConfig: client.TLSConfig{
-					ServerName:                     serverName,
-					InsecureSkipVerify:             m.GetTlsConfig().GetAllowInsecure(),
-					VerifyPeerCertificate:          tls.VerifyPeerCert(m.GetTlsConfig()),
-					RootCAs:                        rootCAs,
-					ECHConfigList: m.GetTlsConfig().GetEchConfig(),
+					ServerName:            serverName,
+					InsecureSkipVerify:    m.GetTlsConfig().GetAllowInsecure(),
+					VerifyPeerCertificate: tls.VerifyPeerCert(m.GetTlsConfig()),
+					RootCAs:               rootCAs,
+					ECHConfigList:         m.GetTlsConfig().GetEchConfig(),
 				},
 				QUICConfig: client.QUICConfig{
 					DisablePathMTUDiscovery:        m.Quic.GetDisablePathMtuDiscovery(),
@@ -319,8 +331,8 @@ func NewOutHandler(config *Config) (i.Outbound, error) {
 					MaxStreamReceiveWindow:         maxStreamReceiveWindow,
 				},
 				BandwidthConfig: client.BandwidthConfig{
-					MaxTx: uint64(m.Bandwidth.GetMaxTx() * 1024 * 1024),
-					MaxRx: uint64(m.Bandwidth.GetMaxRx() * 1024 * 1024),
+					MaxTx: maxTx,
+					MaxRx: maxRx,
 				},
 				FastOpen: m.FastOpen,
 			},

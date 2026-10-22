@@ -30,8 +30,7 @@ import (
 )
 
 const (
-	fileTransferBandwidthMbps = 1000
-	realmReadyTimeout         = 30 * time.Second
+	realmReadyTimeout = 30 * time.Second
 )
 
 func (a *Api) StartFileReceive(req *StartFileReceiveRequest, stream Api_StartFileReceiveServer) error {
@@ -340,12 +339,7 @@ func tweakHysteriaServer(in *configs.ProxyInboundConfig) {
 		if h.Bandwidth == nil {
 			h.Bandwidth = &configs.BandwidthConfig{}
 		}
-		if h.Bandwidth.MaxRx == 0 {
-			h.Bandwidth.MaxRx = fileTransferBandwidthMbps
-		}
-		if h.Bandwidth.MaxTx == 0 {
-			h.Bandwidth.MaxTx = fileTransferBandwidthMbps
-		}
+
 		return serial.ToTypedMessage(h)
 	}
 	in.Protocol = tweak(in.Protocol)
@@ -369,8 +363,7 @@ func tweakHysteriaClient(out *configs.OutboundHandlerConfig) {
 	if h.Bandwidth == nil {
 		h.Bandwidth = &configs.BandwidthConfig{}
 	}
-	h.Bandwidth.MaxTx = fileTransferBandwidthMbps
-	h.Bandwidth.MaxRx = fileTransferBandwidthMbps
+
 	out.Protocol = serial.ToTypedMessage(h)
 }
 
